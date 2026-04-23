@@ -1,0 +1,159 @@
+from .....bls12_381 import fr
+from .mod import WitnessValues, delta
+from .arithmetic import poly_mul_const
+import torch.nn.functional as F
+import torch
+
+
+# The identity we want to check is `q_logic * A = 0` where:
+# A = B + E
+# B = q_c * [9c - 3(a+b)]
+# E = 3(a+b+c) - 2F
+# F = w[w(4w - 18(a+b) + 81) + 18(a^2 + b^2) - 81(a+b) + 83]
+def _delta_xor_and(
+    a: torch.Tensor,
+    b: torch.Tensor,
+    w: torch.Tensor,
+    c: torch.Tensor,
+    q_c: torch.Tensor,
+):
+    
+    two = fr.make_tensor(2).to("cuda")
+    three = fr.make_tensor(3).to("cuda")
+    four = fr.make_tensor(4).to("cuda")
+    nine = fr.make_tensor(9).to("cuda")
+    eighteen = fr.make_tensor(18).to("cuda")
+    eighty_one = fr.make_tensor(81).to("cuda")
+    eighty_three = fr.make_tensor(83).to("cuda")
+
+    a_plus_b = F.add_mod(a, b)
+    f_1_1 = F.mul_mod_scalar(w, four)
+    f_1_2 = F.mul_mod_scalar(a_plus_b, eighteen)
+    f_1 = F.sub_mod(f_1_1, f_1_2)
+    del f_1_1,f_1_2
+    
+    f_1 = F.add_mod_scalar(f_1, eighty_one)
+    f_1 = F.mul_mod(f_1, w)
+
+    f_2_1_1 = F.mul_mod(a, a)
+    f_2_1_2 = F.mul_mod(b, b)
+    f_2 = F.add_mod(f_2_1_1, f_2_1_2)
+    f_2 = F.mul_mod_scalar(f_2, eighteen)
+    del f_2_1_1,f_2_1_2
+
+    f = F.add_mod(f_1, f_2)
+    del f_1,f_2
+
+    f_3 = F.mul_mod_scalar(a_plus_b, eighty_one)
+    f = F.sub_mod(f, f_3)
+    del f_3
+
+    e_1 = F.add_mod(a_plus_b, c)
+    b_2 = F.mul_mod_scalar(a_plus_b, three)
+    b_1 = F.mul_mod_scalar(c, nine)
+    b = F.sub_mod(b_1, b_2)
+    b = F.mul_mod(q_c, b)
+    del b_1,b_2
+
+    f = F.add_mod_scalar(f, eighty_three)
+    f = F.mul_mod(w, f)
+    
+    e_1 = F.mul_mod_scalar(e_1, three)
+    e_2 = F.mul_mod_scalar(f, two)
+    e = F.sub_mod(e_1, e_2)
+    del e_1,e_2
+
+    res = F.add_mod(b, e)
+    return res
+
+
+def _constraints(separation_challenge: fr.Fr, wit_vals: WitnessValues, custom_vals, mul_func=None):
+
+    four = fr.make_tensor(4)
+    four = four.to("cuda")
+    kappa = F.mul_mod(separation_challenge, separation_challenge)
+    kappa_sq = F.mul_mod(kappa, kappa)
+    kappa_cu = F.mul_mod(kappa_sq, kappa)
+    kappa_qu = F.mul_mod(kappa_cu, kappa)
+
+    a_1 = F.mul_mod_scalar(wit_vals.a_val, four)
+    a = F.sub_mod(custom_vals["a_next_eval"], a_1)
+    c_0 = delta(a)
+
+    b_1 = F.mul_mod_scalar(wit_vals.b_val, four)
+    b = F.sub_mod(custom_vals["b_next_eval"], b_1)
+    c_1 = delta(b)
+
+    d_1 = F.mul_mod_scalar(wit_vals.d_val, four)
+    d = F.sub_mod(custom_vals["d_next_eval"], d_1)
+    c_2 = delta(d)
+
+    w = wit_vals.c_val
+    w_1 = F.mul_mod(a, b)
+    w_2 = F.sub_mod(w, w_1)
+    c_3 = F.mul_mod(w_2, kappa_cu)
+
+    c_4_1 = _delta_xor_and(a, b, w, d, custom_vals["q_c_eval"])
+    c_4 = F.mul_mod(c_4_1, kappa_qu)
+
+    mid1 = F.add_mod(c_0, c_1)
+    mid2 = F.add_mod(mid1, c_2)
+    mid3 = F.add_mod(mid2, c_3)
+    mid4 = F.add_mod(mid3, c_4)
+    res = F.mul_mod(mid4, separation_challenge)
+
+    return res
+
+
+def quotient_term(
+    selector: torch.Tensor,
+    separation_challenge: torch.Tensor,
+    wit_vals: WitnessValues,
+    custom_vals,
+):
+    four = fr.make_tensor(4)
+    four = four.to("cuda")
+    #single scalar OP on CPU
+    kappa = F.mul_mod(separation_challenge, separation_challenge)
+    kappa_sq = F.mul_mod(kappa, kappa)
+    kappa_cu = F.mul_mod(kappa_sq, kappa)
+    kappa_qu = F.mul_mod(kappa_cu, kappa)
+
+    a = F.mul_mod_scalar(wit_vals.a_val, four)
+    a = F.sub_mod(custom_vals["a_next_eval"], a)
+    c_0 = delta(a)
+    
+    b = F.mul_mod_scalar(wit_vals.b_val, four)
+    b = F.sub_mod(custom_vals["b_next_eval"], b)
+    c_1 = delta(b)
+    res = F.add_mod(c_0, c_1)
+    del c_0,c_1
+    
+    d = F.mul_mod_scalar(wit_vals.d_val, four)
+    d = F.sub_mod(custom_vals["d_next_eval"], d)
+    c_2 = delta(d)
+    res = F.add_mod(res, c_2)
+    del c_2
+
+    c_3 = F.mul_mod(a, b)
+    c_4 = _delta_xor_and(a, b, wit_vals.c_val, d, custom_vals["q_c_eval"])
+    del a,b,d
+
+    c_3 = F.sub_mod(wit_vals.c_val, c_3)
+    c_3 = F.mul_mod_scalar(c_3, kappa_cu.to("cuda"))
+    res = F.add_mod(res, c_3)
+    del c_3
+
+    c_4 = F.mul_mod_scalar(c_4, kappa_qu.to("cuda"))
+    res = F.add_mod(res, c_4)
+    del c_4
+    
+    res = F.mul_mod_scalar(res, separation_challenge.to("cuda"))
+    res = F.mul_mod(selector, res)
+    return res
+
+
+def linearisation_term(selector_poly, separation_challenge, wit_vals, custom_vals):
+    temp = _constraints(separation_challenge, wit_vals, custom_vals)
+    res = poly_mul_const(selector_poly, temp)
+    return res
