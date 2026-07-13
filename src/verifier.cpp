@@ -303,8 +303,19 @@ Fr * init_book_keeping_fast(int m,int n,int* vec,vector<Fr> & ra)
                 for(int R=0;R<(1<<(n/2));R++)
                 {
                     int j=((L<<(n/2))+R)<<m;
-                    if(vec[kp+j]!=0)
-                        sumL+=fm[R][vec[kp+j]];
+                    int w = vec[kp+j];
+                    if(w>0) {
+                        if(w < (1<<16))
+                            sumL+=fm[R][w];
+                        else
+                            sumL+=Fr(w)*eq2[R];
+                    } else if(w<0) {
+                        int abs_w = -w;
+                        if(abs_w < (1<<16))
+                            sumL-=fm[R][abs_w];
+                        else
+                            sumL+=Fr(w)*eq2[R];
+                    }
                 }
                 sum+=eq1[L]*sumL;
             }

@@ -5,6 +5,8 @@
 #ifndef ZKCNN_NEURALNETWORK_HPP
 #define ZKCNN_NEURALNETWORK_HPP
 
+#include <cstddef>
+#include <string>
 #include <vector>
 #include <fstream>
 #include "circuit.h"
@@ -13,6 +15,7 @@
 using std::vector;
 using std::tuple;
 using std::pair;
+using std::string;
 
 enum convType {
     FFT, NAIVE, NAIVE_FAST
@@ -71,6 +74,12 @@ public:
     int layer_num;
     int* mat_values[300];
 protected:
+    struct Input0Segment {
+        string name;
+        size_t original_scalar_count;
+        size_t padded_scalar_count;
+        size_t start_scalar;
+    };
 
     void initParam(prover& pr,int d);
 
@@ -135,7 +144,8 @@ protected:
     int ln_aux_start;
     int softmax_aux_start;
     int len;
-    int table[655360];
+    static const int EXP_TABLE_SIZE = 655360;
+    vector<int> table;
    
     int positive_check;
     int exp_check;
@@ -175,6 +185,21 @@ protected:
     void printLayerValues(prover &pr);
 
     void printInfer(prover &pr);
+
+    void resetInput0SegmentMap();
+    void recordInput0Segment(const string &name, size_t original_scalar_count,
+                             size_t padded_scalar_count, size_t start_scalar);
+    void writeInput0SegmentMap() const;
+    void resetScalarDumpBuffers();
+    void recordGeluDelta3Scalar(__int128 value);
+    void recordRoundDeltaScalar(__int128 value);
+    void writeScalarDumpFiles() const;
+    static string input0SegmentMapPath();
+    static string sourceModuleOutputPath(const string &filename);
+
+    vector<Input0Segment> input0_segments;
+    vector<uint64_t> gelu_delta3_limbs;
+    vector<uint64_t> round_delta_limbs;
 };
 
 

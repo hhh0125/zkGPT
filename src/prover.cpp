@@ -745,68 +745,68 @@ bool write_ec_data_to_npy(
 ) {
     if (!vi || !g1_data) return false;
 
-    // // ---------- vi: (vi_len, 2) ----------
+
     // std::vector<uint64_t> vi_mat;
     // vi_mat.reserve(vi_len * 4);
+
+    // size_t max_bit_width = 0;   // 最大 bit 宽度
+    // size_t min_bit_width = 128; // 最小 bit 宽度（非零元素可单独统计）
+    // size_t zero_count = 0;      // 0 元素个数
+    // std::vector<size_t> bit_cnt(129, 0); // 统计每种 bit 宽度出现次数，范围 0~128
+
     // for (size_t i = 0; i < vi_len; ++i) {
+    // // for (size_t i = 0; i < 32*1024; ++i) {
     //     __uint128_t x = (__uint128_t)vi[i];
+
+    //     // 统计 bit 宽度
+    //     size_t bits = 0;
+    //     if (x == 0) {
+    //         bits = 0;
+    //         ++zero_count;
+    //     } else {
+    //         uint64_t hi = (uint64_t)(x >> 64);
+    //         uint64_t lo = (uint64_t)x;
+
+    //         if (hi != 0) {
+    //             bits = 64 + (64 - __builtin_clzll(hi));
+    //         } else {
+    //             bits = 64 - __builtin_clzll(lo);
+    //         }
+
+    //         max_bit_width = std::max(max_bit_width, bits);
+    //         min_bit_width = std::min(min_bit_width, bits);
+    //     }
+
+    //     bit_cnt[bits]++;
+
     //     vi_mat.push_back((uint64_t)x);
     //     vi_mat.push_back((uint64_t)(x >> 64));
     //     vi_mat.push_back((uint64_t)0);
-    //     vi_mat.push_back((uint64_t)0);        
+    //     vi_mat.push_back((uint64_t)0);
     // }
 
+    // std::cout << "total elements: " << vi_len << "\n";
+    // std::cout << "zero elements : " << zero_count << "\n";
+    // std::cout << "max bit width : " << max_bit_width << "\n";
+    // if (zero_count < vi_len) {
+    //     std::cout << "min nonzero bit width: " << min_bit_width << "\n";
+    // }
+
+    // // 输出每种 bit 宽度的分布
+    // for (size_t b = 0; b <= 128; ++b) {
+    //     if (bit_cnt[b] > 0) {
+    //         std::cout << "bit width " << b << ": " << bit_cnt[b] << "\n";
+    //     }
+    // }
+    //---------- vi: (vi_len, 2) ----------
     std::vector<uint64_t> vi_mat;
     vi_mat.reserve(vi_len * 4);
-
-    size_t max_bit_width = 0;   // 最大 bit 宽度
-    size_t min_bit_width = 128; // 最小 bit 宽度（非零元素可单独统计）
-    size_t zero_count = 0;      // 0 元素个数
-    std::vector<size_t> bit_cnt(129, 0); // 统计每种 bit 宽度出现次数，范围 0~128
-
     for (size_t i = 0; i < vi_len; ++i) {
-    // for (size_t i = 0; i < 32*1024; ++i) {
         __uint128_t x = (__uint128_t)vi[i];
-
-        // 统计 bit 宽度
-        size_t bits = 0;
-        if (x == 0) {
-            bits = 0;
-            ++zero_count;
-        } else {
-            uint64_t hi = (uint64_t)(x >> 64);
-            uint64_t lo = (uint64_t)x;
-
-            if (hi != 0) {
-                bits = 64 + (64 - __builtin_clzll(hi));
-            } else {
-                bits = 64 - __builtin_clzll(lo);
-            }
-
-            max_bit_width = std::max(max_bit_width, bits);
-            min_bit_width = std::min(min_bit_width, bits);
-        }
-
-        bit_cnt[bits]++;
-
         vi_mat.push_back((uint64_t)x);
         vi_mat.push_back((uint64_t)(x >> 64));
         vi_mat.push_back((uint64_t)0);
-        vi_mat.push_back((uint64_t)0);
-    }
-
-    std::cout << "total elements: " << vi_len << "\n";
-    std::cout << "zero elements : " << zero_count << "\n";
-    std::cout << "max bit width : " << max_bit_width << "\n";
-    if (zero_count < vi_len) {
-        std::cout << "min nonzero bit width: " << min_bit_width << "\n";
-    }
-
-    // 输出每种 bit 宽度的分布
-    for (size_t b = 0; b <= 128; ++b) {
-        if (bit_cnt[b] > 0) {
-            std::cout << "bit width " << b << ": " << bit_cnt[b] << "\n";
-        }
+        vi_mat.push_back((uint64_t)0);        
     }
 
     cnpy::npy_save(vi_file, vi_mat.data(), {vi_len, 4}, "w");
@@ -863,7 +863,7 @@ void prover::commitInput(const vector<G1> &gens,int thr)
     // printf("vi[2]=%lld,vi[5]=%lld,vi[10]=%lld\n",vi[2],vi[5],vi[10]);
     // timer copy_timer;
     // copy_timer.start();
-    // bool temp=write_ec_data_to_npy("vi_0402.npy","g1_0402.npy",vi,val[0].size(),gens.data(),gens.size());
+    //bool temp=write_ec_data_to_npy("vi_old.npy","g1.npy",vi,val[0].size(),gens.data(),gens.size());
     // copy_timer.stop();
     // printf("=============保存数据耗时: %.2f 秒！======================\n", copy_timer.elapse_sec());
     // if (temp==true){

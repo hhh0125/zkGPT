@@ -6,10 +6,17 @@
 #include "stats.hpp"
 #include "utils.hpp"
 #include "global_var.hpp"
+#include "cnpy.h"
 #include <polynomial.h>
 #include <circuit.h>
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <cmath>
+#include <sstream>
+#include <stdexcept>
 
 using std::cerr;
 using std::endl;
@@ -70,6 +77,202 @@ void Out_group(Fr a,Fr b,Fr c)
 
 inline void track_val0_bits(const std::string &name, __int128 v) {
     stats::update_bitwidth(std::string("val0_") + name, v);
+}
+
+namespace {
+void append_signed_int128_limbs(std::vector<uint64_t> &out, __int128 value) {
+    const __uint128_t encoded = static_cast<__uint128_t>(value);
+    out.push_back(static_cast<uint64_t>(encoded));
+    out.push_back(static_cast<uint64_t>(encoded >> 64));
+    out.push_back(0);
+    out.push_back(0);
+}
+
+std::string markdown_escape_cell(const std::string &text) {
+    std::string escaped;
+    escaped.reserve(text.size());
+    for (char ch : text) {
+        if (ch == '|') {
+            escaped += "\\|";
+        } else {
+            escaped += ch;
+        }
+    }
+    return escaped;
+}
+} // namespace
+
+void neuralNetwork::resetInput0SegmentMap()
+{
+    input0_segments.clear();
+}
+
+void neuralNetwork::recordInput0Segment(const string &name, size_t original_scalar_count,
+                                        size_t padded_scalar_count, size_t start_scalar)
+{
+    Input0Segment segment{name, original_scalar_count, padded_scalar_count, start_scalar};
+    input0_segments.push_back(segment);
+
+    const size_t end_scalar_exclusive = start_scalar + padded_scalar_count;
+    const size_t padding_scalar_count =
+        padded_scalar_count >= original_scalar_count ? padded_scalar_count - original_scalar_count : 0;
+
+    if (padded_scalar_count == 0) {
+        printf(
+            "[INPUT0_SEGMENT] "
+            "name=%s "
+            "original_scalar_count=%zu "
+            "padded_scalar_count=0 "
+            "padding_scalar_count=0 "
+            "start_scalar=%zu "
+            "end_scalar_exclusive=%zu "
+            "range=[%zu,%zu) "
+            "last_scalar=NA\n",
+            name.c_str(),
+            original_scalar_count,
+            start_scalar,
+            start_scalar,
+            start_scalar,
+            start_scalar
+        );
+        return;
+    }
+
+    printf(
+        "[INPUT0_SEGMENT] "
+        "name=%s "
+        "original_scalar_count=%zu "
+        "padded_scalar_count=%zu "
+        "padding_scalar_count=%zu "
+        "start_scalar=%zu "
+        "end_scalar_exclusive=%zu "
+        "range=[%zu,%zu) "
+        "last_scalar=%zu\n",
+        name.c_str(),
+        original_scalar_count,
+        padded_scalar_count,
+        padding_scalar_count,
+        start_scalar,
+        end_scalar_exclusive,
+        start_scalar,
+        end_scalar_exclusive,
+        end_scalar_exclusive - 1
+    );
+}
+
+string neuralNetwork::input0SegmentMapPath()
+{
+    return sourceModuleOutputPath("input0_scalar_segment_map.md");
+}
+
+string neuralNetwork::sourceModuleOutputPath(const string &filename)
+{
+    string source_path = __FILE__;
+    const size_t slash = source_path.find_last_of("/\\");
+    if (slash == string::npos) {
+        return filename;
+    }
+    return source_path.substr(0, slash + 1) + filename;
+}
+
+void neuralNetwork::writeInput0SegmentMap() const
+{
+    const string path = input0SegmentMapPath();
+    ofstream map_out(path);
+    if (!map_out) {
+        cerr << "Failed to write input[0] scalar segment map: " << path << endl;
+        return;
+    }
+
+    size_t total_original_scalar_count = 0;
+    size_t total_padded_scalar_count = 0;
+    size_t total_padding_scalar_count = 0;
+    size_t final_input0_scalar_length = 0;
+
+    map_out << "# input[0] Scalar Segment Map\n\n";
+    map_out << "- Index convention: zero-based\n";
+    map_out << "- Range convention: left-closed, right-open `[start, end)`\n";
+    map_out << "- Padding value: 0\n";
+    map_out << "- Segment order: identical to the actual append/write order of `input[0]`\n\n";
+    map_out << "| order | name | original_scalar_count | padded_scalar_count | padding_scalar_count | start_scalar | end_scalar_exclusive | range | last_scalar |\n";
+    map_out << "|---:|---|---:|---:|---:|---:|---:|---|---:|\n";
+
+    for (size_t order = 0; order < input0_segments.size(); ++order) {
+        const Input0Segment &segment = input0_segments[order];
+        const size_t end_scalar_exclusive = segment.start_scalar + segment.padded_scalar_count;
+        const size_t padding_scalar_count =
+            segment.padded_scalar_count >= segment.original_scalar_count
+                ? segment.padded_scalar_count - segment.original_scalar_count
+                : 0;
+
+        total_original_scalar_count += segment.original_scalar_count;
+        total_padded_scalar_count += segment.padded_scalar_count;
+        total_padding_scalar_count += padding_scalar_count;
+        final_input0_scalar_length = end_scalar_exclusive;
+
+        map_out << "| " << order
+                << " | " << markdown_escape_cell(segment.name)
+                << " | " << segment.original_scalar_count
+                << " | " << segment.padded_scalar_count
+                << " | " << padding_scalar_count
+                << " | " << segment.start_scalar
+                << " | " << end_scalar_exclusive
+                << " | `[" << segment.start_scalar << ", " << end_scalar_exclusive << ")`"
+                << " | ";
+        if (segment.padded_scalar_count == 0) {
+            map_out << "NA";
+        } else {
+            map_out << end_scalar_exclusive - 1;
+        }
+        map_out << " |\n";
+    }
+
+    map_out << "\n## Summary\n\n";
+    map_out << "- Total segment count: " << input0_segments.size() << "\n";
+    map_out << "- Total original scalar count: " << total_original_scalar_count << "\n";
+    map_out << "- Total padded scalar count: " << total_padded_scalar_count << "\n";
+    map_out << "- Total padding scalar count: " << total_padding_scalar_count << "\n";
+    map_out << "- Final input[0] scalar length: " << final_input0_scalar_length << "\n";
+}
+
+void neuralNetwork::resetScalarDumpBuffers()
+{
+    gelu_delta3_limbs.clear();
+    round_delta_limbs.clear();
+}
+
+void neuralNetwork::recordGeluDelta3Scalar(__int128 value)
+{
+    append_signed_int128_limbs(gelu_delta3_limbs, value);
+}
+
+void neuralNetwork::recordRoundDeltaScalar(__int128 value)
+{
+    append_signed_int128_limbs(round_delta_limbs, value);
+}
+
+void neuralNetwork::writeScalarDumpFiles() const
+{
+    const string gelu_path = sourceModuleOutputPath("gelu_delta3.npy");
+    const string round_path = sourceModuleOutputPath("round_delta.npy");
+
+    cnpy::npy_save(
+        gelu_path,
+        gelu_delta3_limbs.data(),
+        {gelu_delta3_limbs.size() / 4, 4},
+        "w"
+    );
+    cnpy::npy_save(
+        round_path,
+        round_delta_limbs.data(),
+        {round_delta_limbs.size() / 4, 4},
+        "w"
+    );
+
+    cout << "Saved gelu_delta3 scalars to " << gelu_path
+         << " count=" << (gelu_delta3_limbs.size() / 4) << endl;
+    cout << "Saved round_delta scalars to " << round_path
+         << " count=" << (round_delta_limbs.size() / 4) << endl;
 }
 
 // input:   [data]
@@ -300,6 +503,8 @@ void neuralNetwork::create(prover &pr, bool merge)
     compute_e_table();
 
     initParam(pr,layer_num);
+    resetInput0SegmentMap();
+    resetScalarDumpBuffers();
     //printf("Total layers num: %d\n", SIZE);
     // 初始化电路
     pr.C.init(Q_BIT_SIZE, SIZE);
@@ -372,9 +577,9 @@ void neuralNetwork::create(prover &pr, bool merge)
         if(i%4==0)
         {
             multi_head_matrix_QK(pr.C.circuit[layer_id], layer_id);
-            softmax_layer_1(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(1,-8));
-            softmax_layer_2(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(1,-8));
-            softmax_layer_3(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(1,-8));
+            softmax_layer_1(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,-8));
+            softmax_layer_2(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,-8));
+            softmax_layer_3(pr.C.circuit[layer_id], layer_id,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,e_C)*c_C,pow(2,-8));
         }
         // GELU激活函数，前馈网络层
         if(i%4==2)
@@ -395,6 +600,8 @@ void neuralNetwork::create(prover &pr, bool merge)
     assert(total_in_size == pr.val[0].size());
     printf("Total input size: 2^%lld\n", pr.C.circuit[0].bit_length);
     printf("layer_id: %lld\n",layer_id);
+    // writeInput0SegmentMap();
+    // writeScalarDumpFiles();
     
     pr.C.initSubset();
     
@@ -481,6 +688,14 @@ void neuralNetwork::read_layer_norm(int ln_id)
         val[0][i+layer_norm_b_q_start[ln_id]]=1;
         track_val0_bits("ln_b", 1);
     }
+    // recordInput0Segment("layer_norm_" + std::to_string(ln_id) + "_weight",
+    //                     static_cast<size_t>(channel_out),
+    //                     static_cast<size_t>(channel_out),
+    //                     static_cast<size_t>(layer_norm_w_q_start[ln_id]));
+    // recordInput0Segment("layer_norm_" + std::to_string(ln_id) + "_bias",
+    //                     static_cast<size_t>(channel_out),
+    //                     static_cast<size_t>(channel_out),
+    //                     static_cast<size_t>(layer_norm_b_q_start[ln_id]));
 
 }   
 std::ostream& operator<<(std::ostream& os, __int128_t value) {
@@ -488,28 +703,18 @@ std::ostream& operator<<(std::ostream& os, __int128_t value) {
         os << '-';
         value = -value;
     }
-    // save flags to restore them
-    std::ios_base::fmtflags flags(os.flags());
-    // set zero fill
-    os << std::setfill('0') << std::setw(13);
+    if (value == 0) {
+        os << '0';
+        return os;
+    }
 
-    // 128-bit number has at most 39 digits,
-    // so the below loop will run at most 3 times
-    const int64_t modulus = 10000000000000; // 10**13
-    bool first = true;
-    do {
-        int64_t part = value % modulus;
-        value /= modulus;
-        if (first) {
-            os << part;
-            first = false;
-        } else {
-            os << std::setw(13) << part;
-        }
-    } while (value > 0);
-
-    // restore flags
-    os.flags(flags);
+    std::string digits;
+    while (value > 0) {
+        digits.push_back(char('0' + (value % 10)));
+        value /= 10;
+    }
+    std::reverse(digits.begin(), digits.end());
+    os << digits;
     return os;
 }
 
@@ -614,7 +819,8 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
             // stats::update_max("ln_term2", term2);
             // stats::update_max("ln_y", qy);
             val[0][d2_off]=Fr(term1)*Fr(term2); // 保存约束条件delta2
-            track_val0_bits("ln_delta2", term1 * term2);
+            track_val0_bits("ln_delta2", (__int128)term1 * (__int128)term2);
+
             positive_check+=1;  //add one d2
         }
         // 保存中间计算的结果 sum、B、sigma、delta1
@@ -632,6 +838,10 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         track_val0_bits("ln_delta1", convert(delta1));
         positive_check+=1;  //add one d1
     }
+    // recordInput0Segment("ln_checker_layer1_aux",
+    //                     static_cast<size_t>(10 + 2 * len * real_cn_in + 4 * len),
+    //                     static_cast<size_t>(10 + block_len * 2 + 4 * len),
+    //                     static_cast<size_t>(orgsize));
     Fr SUM=0;
     // 构建计算中间值的电路
     for (i64 i = 0; i < len; i++)
@@ -911,10 +1121,17 @@ void neuralNetwork::gelu_checker_layer1(layer &circuit, i64 &layer_id, int real_
         // stats::update_max("gelu_term2", term2);
         // stats::update_max("gelu_y", y);
         // stats::update_max("gelu_abs", abs);
+        __int128 gelu_delta3 = (__int128)term1 * (__int128)term2;
         val[0][d3_off+gp]= Fr(term1)*Fr(term2);
-        track_val0_bits("gelu_delta3", term1 * term2);
+        track_val0_bits("gelu_delta3", gelu_delta3);
+        recordGeluDelta3Scalar(gelu_delta3);
+
     }
     val[0][orgsize]=1; 
+    // recordInput0Segment("gelu_checker_layer1_aux",
+    //                     static_cast<size_t>(10 + 6 * len * real_cn_out),
+    //                     static_cast<size_t>(10 + block_len * 3 + len * real_cn_out * 3),
+    //                     static_cast<size_t>(orgsize));
     for (i64 g = 0; g < block_len; ++g) 
     {
         if(g%channel_out>=real_cn_out)
@@ -1116,10 +1333,16 @@ void neuralNetwork::roundLayer(layer &circuit, i64 &layer_id, float scale,bool* 
         long long term2 = q*(1ll<<(M+1)) + (1ll<<M) - c*(1ll<<(m+M+1))*p;
         // stats::update_max("round_term1", term1);
         // stats::update_max("round_term2", term2);
+        __int128 round_delta = (__int128)term1 * (__int128)term2;
         val[0][s]=Fr(term1) * Fr(term2);
-        track_val0_bits("round_delta", (__int128)term1 * (__int128)term2);
+        track_val0_bits("round_delta", round_delta);
+        recordRoundDeltaScalar(round_delta);
         assert(!val[0][s].isNegative());
     }
+    // recordInput0Segment("roundLayer_aux",
+    //                     static_cast<size_t>(20 + block_len * 2),
+    //                     static_cast<size_t>(20 + block_len * 2),
+    //                     static_cast<size_t>(orgsize));
     for (i64 g = 0; g < block_len; ++g) 
     {
         int p=g;
@@ -1192,7 +1415,8 @@ void neuralNetwork::multi_head_matrix_QK(layer &circuit, i64 &layer_id)
 void neuralNetwork::compute_e_table()
 {
     double St=pow(2,-9),Se=pow(2,-20);
-    for(int i=0;i<655360;i++)
+    table.resize(EXP_TABLE_SIZE);
+    for(int i=0;i<EXP_TABLE_SIZE;i++)
     {
         int t=round(exp(-St*i)/Se);
         table[i]=max(t,1);  //TODO: avoid sum_Ei=0, occasionally happens
@@ -1206,6 +1430,9 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
 {
     const int HEAD=12;
     const int HSIZE=64;
+    ll max_abs_score = 0;
+    ll max_pj = 0;
+    ll max_tj = 0;
     int orgsize=val[0].size();
     val[0].resize(orgsize+10+HEAD*2*len+4*HEAD*len*(len+1)/2+HEAD*len*HSIZE+len*channel_in);//sumE,pmax（每个位置i的最大分数）,delta1,delta2,t,E,delta3,Y
     for(int i=orgsize;i<val[0].size();i++)
@@ -1244,6 +1471,7 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
             {
                 int offset=head*len*(len+1)/2+i*(i-1)/2+j;
                 ll S=convert(val[layer_id-1][offset]);
+                max_abs_score = max(max_abs_score, S >= 0 ? S : -S);
                 mx=max(mx,S);
             }
             val[0][pmax_offset]=Fr(mx);
@@ -1258,27 +1486,46 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
                 int E_off=orgsize+10+HEAD*2*len+3*HEAD*len*(len+1)/2+offset;
                 val[0][dt1_off]=val[0][pmax_offset]-val[layer_id-1][offset]; //delta1=pmax-pj，用来判断pmax > pj
                 ll pj_=convert(val[0][dt1_off]);
+                max_pj = max(max_pj, pj_);
                 track_val0_bits("softmax_delta1", pj_);
                 // 把pj_=pmax-pj放缩成整数索引tj
                 ll tj=round(c1*pow(2,e1+eprime+1)*pj_/pow(2,eprime+1));
+                max_tj = max(max_tj, tj);
                 val[0][t_off]=tj;
                 track_val0_bits("softmax_t", tj);
-                assert(tj>=0 && tj<655360);  //TODO change to 65536
+                if (tj < 0) {
+                    std::cout << "softmax overflow: "
+                            << "head=" << head
+                            << ", i=" << i
+                            << ", j=" << j
+                            << ", pj_=" << pj_
+                            << ", tj=" << tj
+                            << ", coeff=" << ((__int128)c1) << "*2^" << e1
+                            << "\n";
+                    assert(false);
+                }
+
                 // 通过查表得到e的pj_次方的近似值
-                val[0][E_off]=table[tj];
-                track_val0_bits("softmax_E", table[tj]);
+                int exp_value = tj < EXP_TABLE_SIZE ? table[tj] : 1;
+                val[0][E_off]=exp_value;
+                track_val0_bits("softmax_E", exp_value);
                 // delta2 判断 tj=round（pmax-pj）
                 ll sm_t1 = c1 * (1 << (e1 + eprime + 1)) * pj_ + (1 << eprime) - tj * (1 << (eprime + 1));
                 ll sm_t2 = -c1 * (1 << (e1 + eprime + 1)) * pj_ + (1 << eprime) + tj * (1 << (eprime + 1));
                 val[0][dt2_off]=Fr(sm_t1) * Fr(sm_t2);
-                track_val0_bits("softmax_delta2", sm_t1 * sm_t2);
+                track_val0_bits("softmax_delta2", (__int128)sm_t1 * (__int128)sm_t2);
+
                 // sumE
-                val[0][sum_E_offset]+=table[tj];
+                val[0][sum_E_offset]+=exp_value;
                 ++T;
             }
             track_val0_bits("softmax_sumE", convert(val[0][sum_E_offset]));
         }
     }
+    // std::cout << "softmax stats: coeff=" << ((__int128)c1) << "*2^" << e1
+    //           << ", max|score|=" << max_abs_score
+    //           << ", max_pj=" << max_pj
+    //           << ", max_tj=" << max_tj << "\n";
     for(int head=0;head<HEAD;head++)
     {
         for(int i=0;i<len;i++)
@@ -1381,7 +1628,7 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
                 // 计算 S=Qij/sumE
                 ll S=(ll)round(Qij*c1*pow(2,e1)/sumE);
                 val[0][s_ij]=S;
-                track_val0_bits("softmax_S", S);
+                // track_val0_bits("softmax_S", S);
                 // stats::update_max("softmax_S", S);
                 // stats::update_max("softmax_sumE", sumE);
                 // stats::update_max("softmax_Qij", Qij);
@@ -1391,7 +1638,7 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
                 // stats::update_max("softmax_d1", d1);
                 // stats::update_max("softmax_d2", d2);
                 val[0][d3_off]=Fr(d1)*Fr(d2);
-                track_val0_bits("softmax_delta3", d1 * d2);
+                track_val0_bits("softmax_delta3", (__int128)d1 * (__int128)d2);
                 f2=min(f2,S);
                 // 构建d1的电路
                 circuit.uni_gates.emplace_back(term1_off, out_ij,layer_id-1,c1*(1ll<<(e1+eprime)));
@@ -1433,6 +1680,17 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
     {
         // 判断d1、d2是否为正数（delta3=d1*d2）
         assert(!val[layer_id][i].isNegative());
+    }
+    {
+        const size_t tri = static_cast<size_t>(HEAD) * static_cast<size_t>(len) *
+                           static_cast<size_t>(len + 1) / 2;
+        const size_t head_len = static_cast<size_t>(HEAD) * static_cast<size_t>(len);
+        const size_t head_hidden = head_len * static_cast<size_t>(HSIZE);
+        // recordInput0Segment("softmax_aux",
+        //                     static_cast<size_t>(10) + 2 * head_len + 4 * tri + 2 * head_hidden,
+        //                     static_cast<size_t>(10) + 2 * head_len + 4 * tri +
+        //                         head_hidden + static_cast<size_t>(len) * static_cast<size_t>(channel_in),
+        //                     static_cast<size_t>(orgsize));
     }
     layer_id++;
     
@@ -1530,11 +1788,20 @@ void neuralNetwork::calcInputLayer(layer &circuit)
     double num, mx = -10000, mn = 10000;
     vector<double> input_dat;
     int hidden=768;
+    double random_input_abs = 350.0;
+    if (const char *env = std::getenv("ZKGPT_RANDOM_INPUT_ABS")) {
+        double configured = std::atof(env);
+        if (configured > 0) {
+            random_input_abs = configured;
+        }
+    }
     for (i64 i=0;i<len;i++)
     {
         for(i64 j=0;j<hidden;j++)
         {
-            in >> num; 
+            //in >> num; 
+            num = static_cast<double>(rand()) / static_cast<double>(RAND_MAX) * (2 * random_input_abs) - random_input_abs;
+            // printf("input %d: %f\t", i*hidden+j, num);
             input_dat.push_back(num);
             mx = max(mx, num);
             mn = min(mn, num);
@@ -1555,8 +1822,9 @@ void neuralNetwork::calcInputLayer(layer &circuit)
             ll s=input_dat[k++]/sc;
             val[0][i*1024+j] = F(s); // Q bit？
             track_val0_bits("input_x", s);
-            // if(i==j)
-            //     printf("input %d: %f, scaled: %lld/%lld\n", k-1, input_dat[k-1], s/F(s));
+            if(i==j)
+                std::cout << "input " << (k - 1) << ": " << input_dat[k - 1]
+                          << ", scaled: " << s << "/" << convert(val[0][i * 1024 + j]) << "\n";
         }
         for(i64 j=hidden;j<1024;j++)
             val[0][i*1024+j] =0;
@@ -1565,6 +1833,10 @@ void neuralNetwork::calcInputLayer(layer &circuit)
     val_0=val[0].begin()+len*1024;
     for (; val_0 < val[0].begin() + circuit.size; ++val_0) 
         val_0 -> clear();
+    // recordInput0Segment("input_values",
+    //                     static_cast<size_t>(len) * static_cast<size_t>(hidden),
+    //                     static_cast<size_t>(len) * 1024,
+    //                     0);
 }
 
 
@@ -1586,19 +1858,75 @@ void neuralNetwork::readBias(i64 first_bias_id) {
         *val_0++ = F((i64) (i * exp2(w_bit + x_bit)));
 
 }
-// 读取权重，测试代码使用随机生成的权重代替实际权重
+namespace {
+std::string get_fc_weight_path(int id) {
+    const char *dir = std::getenv("ZKGPT_FC_WEIGHT_DIR");
+    std::ostringstream path;
+    path << (dir ? dir : "data/gpt2_int") << "/fc_" << id << ".bin";
+    return path.str();
+}
+
+bool allow_random_fc_weights() {
+    const char *flag = std::getenv("ZKGPT_ALLOW_RANDOM_FC_WEIGHTS");
+    return flag && std::string(flag) == "1";
+}
+} // namespace
+
+// 读取量化后的 GPT-2 全连接权重。文件格式：
+// int32 rows(out_dim), int32 cols(in_dim), int32 data[rows * cols]，row-major。
 void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id) 
 {
-    double num, mx = -10000, mn = 10000;
     auto val_0 = val[0].begin() + first_fc_id;
-    mat_values[id]=new int[4096*1024];
+    mat_values[id]=new int[channel_out*channel_in];
+    std::fill(mat_values[id], mat_values[id] + channel_out * channel_in, 0);
+
+    std::string weight_path = get_fc_weight_path(id);
+    std::ifstream weight_file(weight_path, std::ios::binary);
+    std::vector<int32_t> raw_weights;
+
+    if (weight_file) {
+        int32_t rows = 0;
+        int32_t cols = 0;
+        weight_file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+        weight_file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+
+        if (!weight_file) {
+            throw std::runtime_error("Failed to read weight header from " + weight_path);
+        }
+        if (rows != real_c || cols != real_r) {
+            std::ostringstream err;
+            err << "GPT-2 FC weight shape mismatch in " << weight_path
+                << ": file has [" << rows << ", " << cols << "]"
+                << ", expected [" << real_c << ", " << real_r << "]";
+            throw std::runtime_error(err.str());
+        }
+
+        raw_weights.resize(static_cast<size_t>(rows) * static_cast<size_t>(cols));
+        weight_file.read(
+            reinterpret_cast<char*>(raw_weights.data()),
+            static_cast<std::streamsize>(raw_weights.size() * sizeof(int32_t))
+        );
+        if (!weight_file) {
+            throw std::runtime_error("Failed to read full weight payload from " + weight_path);
+        }
+    } else if (!allow_random_fc_weights()) {
+        throw std::runtime_error(
+            "Cannot open GPT-2 FC weight file " + weight_path +
+            ". Run scripts/export_gpt2_fc_weights.py first, set ZKGPT_FC_WEIGHT_DIR, "
+            "or set ZKGPT_ALLOW_RANDOM_FC_WEIGHTS=1 for old random-weight debugging."
+        );
+    }
+
     for (i64 co = 0; co < channel_out; ++co)
         for (i64 ci = 0; ci < channel_in; ++ci) 
         {
             if(co<real_c && ci<real_r)
             {
-                mat_values[id][co*channel_in+ci]=rand()%1024;
+                
+                    //mat_values[id][co*channel_in+ci] = (rand() % 65) - 32;
+                    mat_values[id][co*channel_in+ci] = raw_weights[co*real_r+ci];
                 val_0[co*channel_in+ci]=mat_values[id][co*channel_in+ci];
+                track_val0_bits("fc_weight", mat_values[id][co*channel_in+ci]);
             }
             else
             {
@@ -1606,6 +1934,10 @@ void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
                 val_0[co*channel_in+ci]=0;
             }
         }
+    // recordInput0Segment("fc_" + std::to_string(id) + "_weight",
+    //                     static_cast<size_t>(real_r) * static_cast<size_t>(real_c),
+    //                     static_cast<size_t>(channel_in) * static_cast<size_t>(channel_out),
+    //                     static_cast<size_t>(first_fc_id));
 }
 
 void neuralNetwork::prepareDecmpBit(i64 layer_id, i64 idx, i64 dcmp_id, i64 bit_shift) {

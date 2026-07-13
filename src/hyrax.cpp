@@ -280,6 +280,9 @@ G1 compute_RT(Fr *w, Fr *R, int l, G1 *g, Fr *&ret) // L is row number length
 G1 gen_gi(G1* g,int n)
 {
     G1 base;
+    base.setStr("1 0x2523648240000001ba344d80000000086121000000000013a700000000000012 0x1");
+    assert(base.isValid());
+    assert(!base.isZero());
     for(int i=0;i<n;i++)
     {
         Fr tmp;
