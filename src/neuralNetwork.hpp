@@ -140,6 +140,8 @@ protected:
 
     int input_e,input_c;
     int q_offset;
+    int block_residual_offset;
+    int attention_residual_offset;
     int gelu_aux_start;
     int ln_aux_start;
     int softmax_aux_start;
@@ -155,7 +157,14 @@ protected:
     void compute_e_table();
     void addBiasLayer(layer &circuit, i64 &layer_id, i64 first_bias_id);
 
-    void roundLayer(layer &circuit, i64 &layer_id, float scale,bool* sparsity_map=NULL);
+    void roundLayer(layer &circuit, i64 &layer_id, float scale,
+                    bool* sparsity_map=NULL, int bias_offset=-1);
+
+    // Store y = x + residual as input advice and constrain y-x-residual = 0.
+    // GPT-2 additions are performed only after both operands have been exported
+    // with the same quantization scale (Section 2.1 of the paper).
+    void residualLayer(layer &circuit, i64 &layer_id, int residual_offset,
+                       int element_count, const string &name);
 
     void multi_head_matrix_QK(layer &circuit, i64 &layer_id);
 
@@ -177,6 +186,8 @@ protected:
     static void printLayerInfo(const layer &circuit, i64 layer_id);
 
     void readBias(i64 first_bias_id);
+
+    void readFconBias(i64 first_bias_id, int real_count, int id);
 
     void readFconWeight(i64 first_fc_id,int real_r,int real_c,int id);
 

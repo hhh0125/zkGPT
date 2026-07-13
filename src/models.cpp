@@ -23,7 +23,9 @@ LLM::LLM(int depth, int headnum, int headdim, int attn_dim, int linear_dim):
     for(int i=0;i<depth;i++)
     {
         // 对应每个block里面的4个FC层
-        full_conn.emplace_back(linear_dim,attn_dim);  //now debugging which act made trouble
+        // Fused QKV projection has 3*d outputs; GPT-2's MLP width is a
+        // separate parameter (3072 for GPT-2 small).
+        full_conn.emplace_back(3*attn_dim,attn_dim);
         full_conn.emplace_back(attn_dim,attn_dim);
         full_conn.emplace_back(linear_dim,attn_dim);
         full_conn.emplace_back(attn_dim,linear_dim);
