@@ -60,7 +60,7 @@ public:
     
     layeredCircuit C;
     vector<vector<F>> val;        // the output of each gate
-    F getCirValue(u8 layer_id, const vector<u32> &ori, u32 u);
+    F getCirValue(u32 layer_id, const vector<u32> &ori, u32 u);
     u64 proof_size;
     vector<G> gens;
     Commit_return cc;
@@ -83,7 +83,7 @@ private:
 
     
     u8 round;          // step within a sumcheck
-    u8 sumcheck_id;    // the level
+    u32 sumcheck_id;    // the level
 
     friend neuralNetwork;
 };

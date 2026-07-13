@@ -220,8 +220,18 @@ void initLayer(layer &circuit, long size, layerType ty)
     circuit.size = circuit.zero_start_id = size;
     circuit.bit_length = ceilPow2BitLength(size);
     circuit.ty = ty;
-    //circuit.uni_gates.clear();
-    //circuit.bin_gates.clear();
+    circuit.need_phase2 = false;
+    circuit.size_u[0] = circuit.size_u[1] = 0;
+    circuit.size_v[0] = circuit.size_v[1] = 0;
+    circuit.bit_length_u[0] = circuit.bit_length_u[1] = -1;
+    circuit.bit_length_v[0] = circuit.bit_length_v[1] = -1;
+    circuit.max_bl_u = circuit.max_bl_v = 0;
+    circuit.uni_interval.clear();
+    circuit.bin_interval.clear();
+    circuit.uni_gates.clear();
+    circuit.bin_gates.clear();
+    circuit.ori_id_u.clear();
+    circuit.ori_id_v.clear();
 }
 
 long sqr(long x) {

@@ -1,5 +1,6 @@
 #include "circuit.h"
 #include "utils.hpp"
+#include <stdexcept>
 
 void layeredCircuit::initSubset() 
 {
@@ -91,8 +92,11 @@ void layeredCircuit::initSubset()
     }
 }
 
-void layeredCircuit::init(u8 q_bit_size, u8 _layer_sz) 
+void layeredCircuit::init(u8 q_bit_size, u32 _layer_sz) 
 {
+    if (_layer_sz == 0) {
+        throw std::invalid_argument("Circuit must contain at least one layer");
+    }
     size = _layer_sz;
     circuit.resize(size);
 }

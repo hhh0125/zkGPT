@@ -17,7 +17,7 @@ linear_poly interpolate(const F &zero_v, const F &one_v)
     return {one_v - zero_v, zero_v};
 }
 
-F prover::getCirValue(u8 layer_id, const vector<u32> &ori, u32 u) {
+F prover::getCirValue(u32 layer_id, const vector<u32> &ori, u32 u) {
     return !layer_id ? val[0][ori[u]] : val[layer_id][u];
 }
 
@@ -94,7 +94,7 @@ void sc_phase1_uni_worker(vector<uniGate> &beg, std::vector<linear_poly> (&mult_
     }
 }
 
-void sc_phase1_bin_worker(layer& cur, vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<vector<F> >& val,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u8 sumcheck_id) //F*& uni_value, layer &cur_layer,
+void sc_phase1_bin_worker(layer& cur, vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<vector<F> >& val,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u32 sumcheck_id) //F*& uni_value, layer &cur_layer,
 {
     int idx;
     while (true)
@@ -236,7 +236,7 @@ void sc_phase2_uni_worker( vector<uniGate> &beg, F& sum_value,F& V_u0,F&V_u1,vec
     }
 }
 
-void sc_phase2_bin_worker( vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u8 sumcheck_id) //F*& uni_value, layer &cur_layer,
+void sc_phase2_bin_worker( vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u32 sumcheck_id) //F*& uni_value, layer &cur_layer,
 {
     int idx;
     while (true)

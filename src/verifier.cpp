@@ -38,7 +38,7 @@ F verifier::getFinalValue(const F &claim_u0, const F &claim_u1, const F &claim_v
     return test_value;
 }
 
-void verifier::betaInitPhase1(u8 depth, const F &alpha, const F &beta, const vector<F>::const_iterator &r_0, const vector<F>::const_iterator &r_1, const F &relu_rou) {
+void verifier::betaInitPhase1(u32 depth, const F &alpha, const F &beta, const vector<F>::const_iterator &r_0, const vector<F>::const_iterator &r_1, const F &relu_rou) {
     i8 bl = C.circuit[depth].bit_length;
     i8 fft_bl = C.circuit[depth].fft_bit_length;
     i8 fft_blh = C.circuit[depth].fft_bit_length - 1;
@@ -56,7 +56,7 @@ void verifier::betaInitPhase1(u8 depth, const F &alpha, const F &beta, const vec
     
 }
 
-void verifier::betaInitPhase2(u8 depth) {
+void verifier::betaInitPhase2(u32 depth) {
     beta_v.resize(1ULL << C.circuit[depth].max_bl_v);
     initBetaTable(beta_v, C.circuit[depth].max_bl_v, r_v[depth].begin(), F_ONE);
 }
@@ -96,7 +96,7 @@ void pred2_worker(const vector<binGate> &beg, vector<F>& bin_value,vector<F>& be
     }
 }
 
-void verifier::predicatePhase1(u8 layer_id) 
+void verifier::predicatePhase1(u32 layer_id) 
 {    
     auto &cur_layer = C.circuit[layer_id];
     uni_value[0].clear();
@@ -141,7 +141,7 @@ void verifier::predicatePhase1(u8 layer_id)
     bin_value[0] = bin_value[1] = bin_value[2] = F_ZERO;
 }
 
-void verifier::predicatePhase2(u8 layer_id) 
+void verifier::predicatePhase2(u32 layer_id) 
 {
     uni_value[0] = uni_value[0] * beta_v[0];
     uni_value[1] = uni_value[1] * beta_v[0];

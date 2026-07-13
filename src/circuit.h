@@ -35,9 +35,9 @@ struct binGate
         {
     }
     // 获取输入u的层ID
-    [[nodiscard]] u8 getLayerIdU(u8 layer_id) const { return !l ? 0 : layer_id - 1; }
+    [[nodiscard]] u32 getLayerIdU(u8 layer_id) const { return !l ? 0 : layer_id - 1; }
     // 获取输入v的层ID
-    [[nodiscard]] u8 getLayerIdV(u8 layer_id) const { return !(l & 1) ? 0 : layer_id - 1; }
+    [[nodiscard]] u32 getLayerIdV(u8 layer_id) const { return !(l & 1) ? 0 : layer_id - 1; }
 };
 
 enum class layerType {
@@ -90,8 +90,8 @@ public:
 class layeredCircuit {
 public:
 	vector<layer> circuit;  // 数组，i表示层数，circuit[i]:存储该层数据？
-    u8 size;
-    void init(u8 q_bit_size, u8 _layer_sz);
+    u32 size;
+    void init(u8 q_bit_size, u32 _layer_sz);
 	void initSubset();
 };
 
