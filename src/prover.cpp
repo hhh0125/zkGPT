@@ -158,6 +158,11 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
     prove_timer.start();
     
     initBetaTable(beta_g, cur.bit_length, r_0, r_1, alpha, beta);
+    if (cur.zero_start_id < cur.size) {
+        const u32 padded_size = 1ULL << cur.bit_length;
+        for (u32 g = cur.zero_start_id; g < padded_size; ++g)
+            beta_g.at(g) *= relu_rou;
+    }
     
     if(cur.uni_interval.size()>=2)
     {
@@ -649,10 +654,6 @@ void prover::sumcheckFinalize1(const F &previous_random, F &claim_0, F &claim_1)
     V_u1 = claim_1 = total[1] ? V_mult[1][0].eval(previous_random) : (~C.circuit[sumcheck_id].bit_length_u[1]) ? V_mult[1][0].b : F_ZERO;
     prove_timer.stop();
 
-    mult_array[0].clear();
-    mult_array[1].clear();
-    V_mult[0].clear();
-    V_mult[1].clear();
     proof_size += F_BYTE_SIZE * 2;
 }
 
@@ -663,10 +664,6 @@ void prover::sumcheckFinalize2(const F &previous_random, F &claim_0, F &claim_1)
     claim_1 = total[1] ? V_mult[1][0].eval(previous_random) : (~C.circuit[sumcheck_id].bit_length_v[1]) ? V_mult[1][0].b : F_ZERO;
     prove_timer.stop();
 
-    mult_array[0].clear();
-    mult_array[1].clear();
-    V_mult[0].clear();
-    V_mult[1].clear();
     proof_size += F_BYTE_SIZE * 2;
 }
 

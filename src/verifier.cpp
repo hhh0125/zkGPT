@@ -496,6 +496,7 @@ bool verifier::verifyGKR()
         timer tmp;
         tmp.start();
         auto &cur = C.circuit.at(i);
+        final_claim_v0.at(i).clear();
 
         ptimer.start();
         p->sumcheckInit(alpha, beta);
@@ -636,6 +637,10 @@ bool verifier::verifyGKR()
                 predicatePhase2(i);
                 ptimer.stop();
                 prover_time+=ptimer.elapse_sec();     
+            }
+            else
+            {
+                final_claim_v1.clear();
             }
             
         }
