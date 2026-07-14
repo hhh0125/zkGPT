@@ -2,6 +2,7 @@
 #include <iostream>
 #include <utils.hpp>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <cstdint>
 //#include <Python.h>
@@ -18,7 +19,7 @@ linear_poly interpolate(const F &zero_v, const F &one_v)
 }
 
 F prover::getCirValue(u32 layer_id, const vector<u32> &ori, u32 u) {
-    return !layer_id ? val[0][ori[u]] : val[layer_id][u];
+    return !layer_id ? val.at(0).at(ori.at(u)) : val.at(layer_id).at(u);
 }
 
 void prover::init() 
@@ -47,12 +48,14 @@ void prover::init()
  */
 void prover::sumcheckInitAll(const vector<F>::const_iterator &r_0_from_v) 
 {
+    if (C.size == 0 || C.circuit.size() != C.size)
+        throw std::runtime_error("sumcheckInitAll: invalid circuit size");
     sumcheck_id = C.size;
-    i8 last_bl = C.circuit[sumcheck_id - 1].bit_length;
-    r_u[sumcheck_id].resize(last_bl);
+    const i8 last_bl = C.circuit.at(sumcheck_id - 1).bit_length;
+    r_u.at(sumcheck_id).resize(last_bl);
     prove_timer.start();
     for (int i = 0; i < last_bl; ++i) 
-        r_u[sumcheck_id][i] = r_0_from_v[i];
+        r_u.at(sumcheck_id).at(i) = r_0_from_v[i];
     prove_timer.stop();
 }
 
@@ -64,11 +67,12 @@ void prover::sumcheckInitAll(const vector<F>::const_iterator &r_0_from_v)
 void prover::sumcheckInit(const F &alpha_0, const F &beta_0) 
 {
     prove_timer.start();
-    auto &cur = C.circuit[sumcheck_id];
+    if (sumcheck_id == 0 || sumcheck_id > C.size)
+        throw std::out_of_range("sumcheckInit: invalid sumcheck layer");
     alpha = alpha_0;
     beta = beta_0;
-    r_0 = r_u[sumcheck_id].begin();
-    r_1 = r_v[sumcheck_id].begin();
+    r_0 = r_u.at(sumcheck_id).begin();
+    r_1 = r_v.at(sumcheck_id).begin();
     --sumcheck_id;
     prove_timer.stop();
 }
@@ -358,53 +362,115 @@ void prover::sumcheckInitPhase2()
     prove_timer.stop();
 }
 
-void prover::sumcheckLassoInit(const vector<F> &s_u, const vector<F> &s_v,const vector<vector<F>>& r_uu, const vector<vector<F>>& r_vv) 
+void prover::sumcheckLassoInit(
+    const vector<F> &s_u,
+    const vector<F> &s_v,
+    const vector<vector<F>> &r_uu,
+    const vector<vector<F>> &r_vv)
 {
-    
+    prove_timer.start();
     sumcheck_id = 0;
-    total[1] = (1ULL << C.circuit[sumcheck_id].bit_length);
-    total_size[1] = C.circuit[sumcheck_id].size;
+    if (C.size == 0 || C.circuit.size() != C.size)
+        throw std::runtime_error("sumcheckLassoInit: invalid circuit size");
+    if (s_u.size() < C.size - 1 || s_v.size() < C.size - 1)
+        throw std::length_error("sumcheckLassoInit: sigma vector is too short");
+    if (r_u.size() <= C.size - 1 || r_v.size() <= C.size - 1)
+        throw std::length_error("sumcheckLassoInit: prover random-point table is too short");
 
-    r_u[0].resize(C.circuit[0].bit_length);
-    timer ggg;
-    ggg.start();
+    const layer &input_layer = C.circuit.at(0);
+    if (input_layer.bit_length < 0)
+        throw std::runtime_error("sumcheckLassoInit: invalid input bit length");
+    total[1] = 1ULL << static_cast<u32>(input_layer.bit_length);
+    total_size[1] = input_layer.size;
+    r_u.at(0).resize(static_cast<u32>(input_layer.bit_length));
 
     i8 max_bl = 0;
-    for (int i = sumcheck_id + 1; i < C.size; ++i)
-        max_bl = max(max_bl, max(C.circuit[i].bit_length_u[0], C.circuit[i].bit_length_v[0]));
-    beta_g.resize(1ULL << max_bl);
-    for (u8 i = sumcheck_id + 1; i < C.size; ++i) 
-    {
-        i8 bit_length_i = C.circuit[i].bit_length_u[0];
-        u32 size_i = C.circuit[i].size_u[0];
-        //timer a,b;
-        if (~bit_length_i) 
-        {
-            r_u[i].resize(C.circuit[i].max_bl_u);
-            for(int j=0;j<C.circuit[i].max_bl_u;j++)
-                r_u[i][j]=r_uu[i][j];
-            initBetaTable(beta_g, bit_length_i, r_u[i].begin(), s_u[i - 1],32);
-            for (u32 hu = 0; hu < size_i; ++hu) 
-            {
-                u32 u = C.circuit[i].ori_id_u[hu];
-                lasso_mult_v[u] += beta_g[hu];
+    for (u32 i = 1; i < C.size; ++i) {
+        const layer &cur = C.circuit.at(i);
+        max_bl = std::max(max_bl,
+                          std::max(cur.bit_length_u[0], cur.bit_length_v[0]));
+    }
+    beta_g.resize(1ULL << static_cast<u32>(max_bl));
+
+    auto copy_random_point = [](
+        const vector<vector<F>> &source, vector<vector<F>> &target,
+        u32 layer_id, u32 required, const char *name) {
+        if (layer_id >= source.size() || layer_id >= target.size()) {
+            std::ostringstream error;
+            error << "sumcheckLassoInit: " << name << " layer " << layer_id
+                  << " is outside source/target tables (source=" << source.size()
+                  << ", target=" << target.size() << ')';
+            throw std::out_of_range(error.str());
+        }
+        const vector<F> &source_point = source.at(layer_id);
+        if (source_point.size() < required) {
+            std::ostringstream error;
+            error << "sumcheckLassoInit: " << name << '[' << layer_id
+                  << "] has " << source_point.size() << " coordinates, expected "
+                  << required;
+            throw std::length_error(error.str());
+        }
+        target.at(layer_id).assign(source_point.begin(),
+                                   source_point.begin() + required);
+    };
+
+    for (u32 i = 1; i < C.size; ++i) {
+        const layer &cur = C.circuit.at(i);
+        const i8 bit_length_u = cur.bit_length_u[0];
+        const u32 size_u = cur.size_u[0];
+        if (bit_length_u >= 0) {
+            const u32 required_u = static_cast<u32>(cur.max_bl_u);
+            if (required_u < static_cast<u32>(bit_length_u) ||
+                size_u > cur.ori_id_u.size() ||
+                size_u > (1ULL << static_cast<u32>(bit_length_u))) {
+                std::ostringstream error;
+                error << "sumcheckLassoInit: inconsistent U metadata at layer " << i;
+                throw std::length_error(error.str());
+            }
+            copy_random_point(r_uu, r_u, i, required_u, "r_u");
+            initBetaTable(beta_g, bit_length_u, r_u.at(i).begin(),
+                          s_u.at(i - 1), 32);
+            for (u32 hu = 0; hu < size_u; ++hu) {
+                const u32 u = cur.ori_id_u.at(hu);
+                if (u >= lasso_mult_v.size()) {
+                    std::ostringstream error;
+                    error << "sumcheckLassoInit: U target " << u
+                          << " at layer " << i << " exceeds lasso input size "
+                          << lasso_mult_v.size();
+                    throw std::out_of_range(error.str());
+                }
+                lasso_mult_v.at(u) += beta_g.at(hu);
             }
         }
-        bit_length_i = C.circuit[i].bit_length_v[0];
-        size_i = C.circuit[i].size_v[0];
-        if (~bit_length_i) 
-        {
-            r_v[i].resize(C.circuit[i].max_bl_v);
-            for(int j=0;j<C.circuit[i].max_bl_v;j++)
-                r_v[i][j]=r_vv[i][j];
-            initBetaTable( beta_g, bit_length_i, r_v[i].begin(), s_v[i - 1],32);
-            for (u32 hv = 0; hv < size_i; ++hv) 
-            {
-                u32 v = C.circuit[i].ori_id_v[hv];
-                lasso_mult_v[v] += beta_g[hv];
+
+        const i8 bit_length_v = cur.bit_length_v[0];
+        const u32 size_v = cur.size_v[0];
+        if (bit_length_v >= 0) {
+            const u32 required_v = static_cast<u32>(cur.max_bl_v);
+            if (required_v < static_cast<u32>(bit_length_v) ||
+                size_v > cur.ori_id_v.size() ||
+                size_v > (1ULL << static_cast<u32>(bit_length_v))) {
+                std::ostringstream error;
+                error << "sumcheckLassoInit: inconsistent V metadata at layer " << i;
+                throw std::length_error(error.str());
+            }
+            copy_random_point(r_vv, r_v, i, required_v, "r_v");
+            initBetaTable(beta_g, bit_length_v, r_v.at(i).begin(),
+                          s_v.at(i - 1), 32);
+            for (u32 hv = 0; hv < size_v; ++hv) {
+                const u32 v = cur.ori_id_v.at(hv);
+                if (v >= lasso_mult_v.size()) {
+                    std::ostringstream error;
+                    error << "sumcheckLassoInit: V target " << v
+                          << " at layer " << i << " exceeds lasso input size "
+                          << lasso_mult_v.size();
+                    throw std::out_of_range(error.str());
+                }
+                lasso_mult_v.at(v) += beta_g.at(hv);
             }
         }
     }
+
     round = 0;
     prove_timer.stop();
 }
@@ -546,15 +612,19 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
  * @param the value of the array & random point & the size of the array & the size of the random point
  * @return sum of `values`, or 0.0 if `values` is empty.
  */
-F prover::Vres(const vector<F>::const_iterator &r, u32 output_size, u8 r_size,int layer_id,int start) 
+F prover::Vres(const vector<F>::const_iterator &r, u32 output_size, u32 r_size, u32 layer_id, u32 start) 
 {
     prove_timer.start();
 
+    const vector<F> &layer_values = val.at(layer_id);
+    if (start > layer_values.size() ||
+        output_size > layer_values.size() - start)
+        throw std::out_of_range("Vres: requested range exceeds layer values");
     vector<F> output(output_size);
     for (u32 i = 0; i < output_size; ++i)
-        output[i] = val[layer_id][i+start];
+        output.at(i) = layer_values.at(i + start);
     u32 whole = 1ULL << r_size;
-    for (u8 i = 0; i < r_size; ++i) {
+    for (u32 i = 0; i < r_size; ++i) {
         for (u32 j = 0; j < (whole >> 1); ++j) {
             if (j > 0)
                 output[j].clear();

@@ -510,7 +510,7 @@ void neuralNetwork::merge_layer(prover &pr,i64 layer_id)
 
     
     pr.C.size=pr.C.circuit.size();
-    for(int i=1;i<pr.C.size;i++)
+    for(u32 i=1;i<pr.C.size;i++)
     {
         initLayer(pr.C.circuit[i], pr.val[i].size(), pr.C.circuit[i].ty);
         if(pr.C.circuit[i].ty!=layerType::FCONN)
@@ -660,12 +660,12 @@ void neuralNetwork::create(prover &pr, bool merge)
     cout<<"Model weight commit time: "<<T.elapse_sec()<<"s"<<endl;
 
     int cnt=0;
-    for(int i=0;i<pr.C.size;i++)
+    for(u32 i=0;i<pr.C.size;i++)
         cnt+=pr.val[i].size();
     //printf("Total values size in circuit: %d\n", cnt);
     int bin=0,uni=0;
     // 统计门数量
-    for(int i=0;i<pr.C.size;i++)
+    for(u32 i=0;i<pr.C.size;i++)
     {
         bin+=pr.C.circuit[i].bin_gates.size();
         uni+=pr.C.circuit[i].uni_gates.size();
@@ -2085,44 +2085,57 @@ void neuralNetwork::prepareMax(i64 layer_id, i64 idx, i64 max_id) {
 
 void neuralNetwork::calcNormalLayer(const layer &circuit, i64 layer_id,bool output) 
 {
-    val[layer_id].resize(circuit.size);
-    for (auto &x: val[layer_id]) 
+    if (layer_id < 0)
+        throw std::out_of_range("calcNormalLayer: negative layer_id");
+    const u32 current_layer = static_cast<u32>(layer_id);
+    if (current_layer >= static_cast<u32>(SIZE))
+        throw std::out_of_range("calcNormalLayer: layer_id exceeds value table");
+    auto &current_values = val[current_layer];
+    current_values.resize(circuit.size);
+    for (auto &x: current_values) 
         x.clear();
     for (auto &gate: circuit.uni_gates) 
     {
-        val[layer_id].at(gate.g) = val[layer_id].at(gate.g) + val[gate.lu].at(gate.u) * gate.sc;
+        if (gate.lu >= static_cast<u32>(SIZE))
+            throw std::out_of_range("calcNormalLayer: uni gate source layer exceeds value table");
+        current_values.at(gate.g) += val[gate.lu].at(gate.u) * gate.sc;
     }
 
     for (auto &gate: circuit.bin_gates) 
     {
-        u8 bin_lu = gate.getLayerIdU(layer_id), bin_lv = gate.getLayerIdV(layer_id);
-        
-        val[layer_id].at(gate.g) = val[layer_id].at(gate.g) + val[bin_lu].at(gate.u) * val[bin_lv][gate.v] * gate.sc;
+        const u32 bin_lu = gate.getLayerIdU(current_layer);
+        const u32 bin_lv = gate.getLayerIdV(current_layer);
+        if (bin_lu >= static_cast<u32>(SIZE) ||
+            bin_lv >= static_cast<u32>(SIZE))
+            throw std::out_of_range("calcNormalLayer: bin gate source layer exceeds value table");
+        current_values.at(gate.g) +=
+            val[bin_lu].at(gate.u) * val[bin_lv].at(gate.v) * gate.sc;
     }
 }
 
 void neuralNetwork::checkNormalLayer(const layer &circuit, i64 layer_id,const vector<vector<F> > & val) 
 {
-    vector<F> valp;
-
-    valp.resize(val[layer_id].size());
+    if (layer_id < 0)
+        throw std::out_of_range("checkNormalLayer: negative layer_id");
+    const u32 current_layer = static_cast<u32>(layer_id);
+    const auto &current_values = val.at(current_layer);
+    vector<F> valp(current_values.size());
     
     for (auto &x: valp) 
         x.clear();
     for (auto &gate: circuit.uni_gates) 
     {
-        assert(gate.g>=0 && gate.g<valp.size());
-        assert(gate.u>=0 && gate.u<val[gate.lu].size());
-        valp.at(gate.g) += val[gate.lu].at(gate.u) * gate.sc;
+        valp.at(gate.g) += val.at(gate.lu).at(gate.u) * gate.sc;
     }
     for (auto &gate: circuit.bin_gates) 
     {
-        u8 bin_lu = gate.getLayerIdU(layer_id), bin_lv = gate.getLayerIdV(layer_id);
-        assert(gate.g>=0 && gate.g<valp.size());
-        valp.at(gate.g)+=  val[bin_lu].at(gate.u) * val[bin_lv][gate.v] * gate.sc;
+        const u32 bin_lu = gate.getLayerIdU(current_layer);
+        const u32 bin_lv = gate.getLayerIdV(current_layer);
+        valp.at(gate.g) +=
+            val.at(bin_lu).at(gate.u) * val.at(bin_lv).at(gate.v) * gate.sc;
     }
-    for(int i=0;i<circuit.size;i++)
-        assert(valp[i]==val[layer_id][i]);
+    for (u32 i = 0; i < circuit.size; ++i)
+        assert(valp.at(i) == current_values.at(i));
 }
 
 void neuralNetwork::calcDotProdLayer(const layer &circuit, i64 layer_id) {
@@ -2131,7 +2144,7 @@ void neuralNetwork::calcDotProdLayer(const layer &circuit, i64 layer_id) {
 
     char fft_bit = circuit.fft_bit_length;
     u32 fft_len = 1 << fft_bit;
-    u8 l = layer_id - 1;
+    u32 l = layer_id - 1;
     for (auto &gate: circuit.bin_gates)
         for (int s = 0; s < fft_len; ++s)
             val[layer_id][gate.g << fft_bit | s] = val[layer_id][gate.g << fft_bit | s] +

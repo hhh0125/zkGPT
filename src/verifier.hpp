@@ -36,13 +36,13 @@ private:
     
 
     vector<F> beta_g;
-    void betaInitPhase1(u8 depth, const F &alpha, const F &beta, const vector<F>::const_iterator &r_0, const vector<F>::const_iterator &r_1, const F &relu_rou);
-    void betaInitPhase2(u8 depth);
+    void betaInitPhase1(u32 depth, const F &alpha, const F &beta, const vector<F>::const_iterator &r_0, const vector<F>::const_iterator &r_1, const F &relu_rou);
+    void betaInitPhase2(u32 depth);
 
     F uni_value[2];
     F bin_value[3];
-    void predicatePhase1(u8 layer_id);
-    void predicatePhase2(u8 layer_id);
+    void predicatePhase1(u32 layer_id);
+    void predicatePhase2(u32 layer_id);
 
     F getFinalValue(const F &claim_u0, const F &claim_u1, const F &claim_v0, const F &claim_v1);
 

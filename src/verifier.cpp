@@ -189,9 +189,12 @@ void verifier::prove(int commit_thread)
 {
     cout<<"Circuit Initiation finished"<<endl;
     cout<<"++++++++++++++++++++++Proving Service started+++++++++++++++++++++++"<<endl;
-    verifyGKR(); 
-    verifyLasso(); 
-    openCommit();
+    if (!verifyGKR())
+        throw std::runtime_error("GKR verification failed");
+    if (!verifyLasso())
+        throw std::runtime_error("Lasso verification failed");
+    if (!openCommit())
+        throw std::runtime_error("commitment opening failed");
     cout<<"=========================Our results:================================"<<endl;
     cout<<"Matrix multiplication Prover time: "<<matrix_time<<"s"<<endl;
     cout<<"Total Prover time(GKR+range):"<<prover_time + range_prover_time<<"="<<prover_time<<"+"<<range_prover_time<<"s"<<endl;
@@ -459,15 +462,18 @@ pair<Fr,Fr> sum_check_product(Fr* f,Fr* g,int m,Fr* r,Fr ans)
 
 bool verifier::verifyGKR() 
 {
-    
+    if (C.size < 2 || C.circuit.size() != C.size)
+        throw std::runtime_error("verifyGKR: invalid circuit size");
     F alpha = F_ONE, beta = F_ZERO, relu_rou, final_claim_u1, final_claim_v1;
-    r_u[C.size].resize(C.circuit[C.size - 1].bit_length);
-    for (i8 i = 0; i < C.circuit[C.size - 1].bit_length; ++i)
-        r_u[C.size][i].setByCSPRNG();
-    vector<F>::const_iterator r_0 = r_u[C.size].begin();
+    const layer &output_layer = C.circuit.at(C.size - 1);
+    r_u.at(C.size).resize(output_layer.bit_length);
+    for (u32 i = 0; i < static_cast<u32>(output_layer.bit_length); ++i)
+        r_u.at(C.size).at(i).setByCSPRNG();
+    vector<F>::const_iterator r_0 = r_u.at(C.size).begin();
     vector<F>::const_iterator r_1;
 
-    auto previousSum = p->Vres(r_0, C.circuit[C.size - 1].size, C.circuit[C.size - 1].bit_length,C.size-1);
+    auto previousSum = p->Vres(r_0, output_layer.size,
+                               output_layer.bit_length, C.size - 1);
     timer ptimer,vtimer;
     timer mat_timer; // 矩阵乘的时间
     ptimer.start();
@@ -476,20 +482,20 @@ bool verifier::verifyGKR()
     prover_time+=ptimer.elapse_sec();
     int fc_cnt=0,now_fc_id;
     Fr prev_u1=0,prev_v1=0;
-    for (int i = C.size - 1; i; --i)
+    for (u32 i = C.size; i-- > 1; )
     {
-        if(C.circuit[i].ty==layerType::FCONN)
+        if(C.circuit.at(i).ty==layerType::FCONN)
             fc_cnt++;
     } 
     
     timer init,sc;
     double init_t=0,sc_t=0;
     double matrix_tt_time=0;
-    for (int i = C.size - 1; i; --i) 
+    for (u32 i = C.size; i-- > 1; )
     {
         timer tmp;
         tmp.start();
-        auto &cur = C.circuit[i];
+        auto &cur = C.circuit.at(i);
 
         ptimer.start();
         p->sumcheckInit(alpha, beta);
@@ -505,7 +511,7 @@ bool verifier::verifyGKR()
             relu_rou = F_ONE;
         F previousRandom = F_ZERO;
         // 全连接层使用高效的验证
-        if(C.circuit[i].ty==layerType::FCONN)   //substitute matrix with thaler13
+        if(cur.ty==layerType::FCONN)   //substitute matrix with thaler13
         {
             now_fc_id=--fc_cnt;
             int n,m,k;
@@ -515,13 +521,13 @@ bool verifier::verifyGKR()
             r_u[i].resize(m+n);
             r_v[i].resize(m+k);
             for (int j = m; j < m+n; ++j)
-                r_u[i][j]=r_u[i+1][j-m+k];
+                r_u.at(i).at(j)=r_u.at(i+1).at(j-m+k);
             for (int j = m; j < m+k; ++j)
-                r_v[i][j]=r_u[i+1][j-m];
+                r_v.at(i).at(j)=r_u.at(i+1).at(j-m);
             for(int j=0;j<m;j++)
             {
-                r_u[i][j].setByCSPRNG();
-                r_v[i][j]=r_u[i][j];
+                r_u.at(i).at(j).setByCSPRNG();
+                r_v.at(i).at(j)=r_u.at(i).at(j);
             }
         
             prev_u1=final_claim_u1;
@@ -551,12 +557,12 @@ bool verifier::verifyGKR()
             p->sumcheckInitPhase1(relu_rou);
             ptimer.stop();
             prover_time+=ptimer.elapse_sec();            
-            r_u[i].resize(cur.max_bl_u);
+            r_u.at(i).resize(cur.max_bl_u);
             for (int j = 0; j < cur.max_bl_u; ++j) 
-                r_u[i][j].setByCSPRNG();
+                r_u.at(i).at(j).setByCSPRNG();
                 
             sc.start();
-            for (i8 j = 0; j < cur.max_bl_u; ++j) 
+            for (u32 j = 0; j < static_cast<u32>(cur.max_bl_u); ++j) 
             {
                 F cur_claim, nxt_claim;
                 ptimer.start();
@@ -566,17 +572,17 @@ bool verifier::verifyGKR()
 
                 vtimer.start();
                 cur_claim = poly.eval(F_ZERO) + poly.eval(F_ONE);
-                nxt_claim = poly.eval(r_u[i][j]);
+                nxt_claim = poly.eval(r_u.at(i).at(j));
 
                 if (cur_claim != previousSum) 
                 {
                     cerr << cur_claim << ' ' << previousSum << endl;
-                    fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
+                    fprintf(stderr, "Verification fail, phase1, circuit %u, current bit %u\n", i, j);
                     return false;
                 }
                 vtimer.stop();
                 verifier_time+=vtimer.elapse_sec();
-                previousRandom = r_u[i][j];
+                previousRandom = r_u.at(i).at(j);
                 previousSum = nxt_claim;
             }
             sc.stop();
@@ -593,9 +599,9 @@ bool verifier::verifyGKR()
             {
                 timer normal_timer2;
                 normal_timer2.start();
-                r_v[i].resize(cur.max_bl_v);
+                r_v.at(i).resize(cur.max_bl_v);
                 for (int j = 0; j < cur.max_bl_v; ++j) 
-                    r_v[i][j].setByCSPRNG();
+                    r_v.at(i).at(j).setByCSPRNG();
               
                 ptimer.start();
                 p->sumcheckInitPhase2();
@@ -612,13 +618,13 @@ bool verifier::verifyGKR()
                         vtimer.start();
                         if (poly.eval(F_ZERO) + poly.eval(F_ONE) != previousSum) 
                         {
-                            fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d, total is %d\n", i, j,
+                            fprintf(stderr, "Verification fail, phase2, circuit level %u, current bit %u, total is %d\n", i, j,
                                     cur.max_bl_v);
                             return false;
                         }
                         vtimer.stop();
                         verifier_time+=vtimer.elapse_sec();
-                        previousRandom = r_v[i][j];
+                        previousRandom = r_v.at(i).at(j);
                         previousSum = poly.eval(previousRandom);
                 }
                 sc.stop();
@@ -635,12 +641,14 @@ bool verifier::verifyGKR()
         }
         // 最终值验证
         vtimer.start();
-        if (C.circuit[i].ty!=layerType::FCONN )  // for thaler13 no need to check this
+        if (cur.ty!=layerType::FCONN )  // for thaler13 no need to check this
         {
             F test_value = getFinalValue(final_claim_u0[i], final_claim_u1, final_claim_v0[i], final_claim_v1);
             if(previousSum != test_value)
             {
-                std::cerr << test_value << ' ' << previousSum << std::endl;
+                std::cerr << "Verification fail, final claim, circuit level "
+                          << i << ": expected " << test_value
+                          << ", got " << previousSum << std::endl;
                 return false;
             }
         }
@@ -675,23 +683,23 @@ bool verifier::verifyLasso()
     auto &cur = C.circuit[0];
 
     vector<F> sig_u(C.size - 1);
-    for (int i = 0; i < C.size - 1; ++i) 
-        sig_u[i].setByCSPRNG();
+    for (u32 i = 0; i < C.size - 1; ++i) 
+        sig_u.at(i).setByCSPRNG();
     vector<F> sig_v(C.size - 1);
-    for (int i = 0; i < C.size - 1; ++i) 
-        sig_v[i].setByCSPRNG();
-    r_u[0].resize(cur.bit_length);
+    for (u32 i = 0; i < C.size - 1; ++i) 
+        sig_v.at(i).setByCSPRNG();
+    r_u.at(0).resize(cur.bit_length);
     for (int i = 0; i < cur.bit_length; ++i) 
-        r_u[0][i].setByCSPRNG();
-    auto r_0 = r_u[0].begin();
+        r_u.at(0).at(i).setByCSPRNG();
+    auto r_0 = r_u.at(0).begin();
     
     F previousSum = F_ZERO;
-    for (int i = 1; i < C.size; ++i) 
+    for (u32 i = 1; i < C.size; ++i) 
     {
-        if (~C.circuit[i].bit_length_u[0])
-            previousSum = previousSum + sig_u[i - 1] * final_claim_u0[i];
-        if (~C.circuit[i].bit_length_v[0])
-            previousSum = previousSum + sig_v[i - 1] * final_claim_v0[i];
+        if (~C.circuit.at(i).bit_length_u[0])
+            previousSum += sig_u.at(i - 1) * final_claim_u0.at(i);
+        if (~C.circuit.at(i).bit_length_v[0])
+            previousSum += sig_v.at(i - 1) * final_claim_v0.at(i);
     }
 
     ptimer.start();
@@ -850,22 +858,25 @@ bool verifier::verifyLasso()
     ptimer.start();
     
     initBetaTable(beta_g, cur.bit_length, r_0, F_ONE);
-    for (int i = 1; i < C.size; ++i) 
+    for (u32 i = 1; i < C.size; ++i) 
     {
-        if (~C.circuit[i].bit_length_u[0]) 
+        const layer &lasso_layer = C.circuit.at(i);
+        if (~lasso_layer.bit_length_u[0]) 
         {
-            beta_u.resize(1ULL << C.circuit[i].bit_length_u[0]);
-            initBetaTable(beta_u, C.circuit[i].bit_length_u[0], r_u[i].begin(), sig_u[i - 1]);
-            for (u32 j = 0; j < C.circuit[i].size_u[0]; ++j)
-                gr = gr + beta_g[C.circuit[i].ori_id_u[j]] * beta_u[j];
+            beta_u.resize(1ULL << lasso_layer.bit_length_u[0]);
+            initBetaTable(beta_u, lasso_layer.bit_length_u[0],
+                          r_u.at(i).begin(), sig_u.at(i - 1));
+            for (u32 j = 0; j < lasso_layer.size_u[0]; ++j)
+                gr += beta_g.at(lasso_layer.ori_id_u.at(j)) * beta_u.at(j);
         }
 
-        if (~C.circuit[i].bit_length_v[0]) 
+        if (~lasso_layer.bit_length_v[0]) 
         {
-            beta_v.resize(1ULL << C.circuit[i].bit_length_v[0]);
-            initBetaTable(beta_v, C.circuit[i].bit_length_v[0], r_v[i].begin(), sig_v[i - 1]);
-            for (u32 j = 0; j < C.circuit[i].size_v[0]; ++j)
-                gr = gr + beta_g[C.circuit[i].ori_id_v[j]] * beta_v[j];
+            beta_v.resize(1ULL << lasso_layer.bit_length_v[0]);
+            initBetaTable(beta_v, lasso_layer.bit_length_v[0],
+                          r_v.at(i).begin(), sig_v.at(i - 1));
+            for (u32 j = 0; j < lasso_layer.size_v[0]; ++j)
+                gr += beta_g.at(lasso_layer.ori_id_v.at(j)) * beta_v.at(j);
         }
     }
     ptimer.stop();

@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
-
+#include <stdexcept>
 #include <unordered_set>
 #include <iostream>
 #include "global_var.hpp"
@@ -16,10 +16,10 @@ struct uniGate {
     // 目标门索引，源门索引
     u32 g, u; 
     // 源门所在层
-    u8 lu;
+    u32 lu;
     // 缩放系数
     ll sc;
-    uniGate(u32 _g, u32 _u, u8 _lu, ll _sc) :
+    uniGate(u32 _g, u32 _u, u32 _lu, ll _sc) :
         g(_g), u(_u), lu(_lu), sc(_sc) {
     }
 };
@@ -35,9 +35,31 @@ struct binGate
         {
     }
     // 获取输入u的层ID
-    [[nodiscard]] u32 getLayerIdU(u8 layer_id) const { return !l ? 0 : layer_id - 1; }
+    u32 getLayerIdU(u32 layer_id) const
+    {
+        if (l == 0)
+            return 0U;
+
+        if (layer_id == 0)
+            throw std::out_of_range(
+                "binGate::getLayerIdU: layer_id is zero"
+            );
+
+        return layer_id - 1U;
+    }
     // 获取输入v的层ID
-    [[nodiscard]] u32 getLayerIdV(u8 layer_id) const { return !(l & 1) ? 0 : layer_id - 1; }
+    u32 getLayerIdV(u32 layer_id) const
+    {
+        if ((l & 1U) == 0)
+            return 0U;
+
+        if (layer_id == 0)
+            throw std::out_of_range(
+                "binGate::getLayerIdV: layer_id is zero"
+            );
+
+        return layer_id - 1U;
+    }
 };
 
 enum class layerType {
@@ -91,7 +113,7 @@ class layeredCircuit {
 public:
 	vector<layer> circuit;  // 数组，i表示层数，circuit[i]:存储该层数据？
     u32 size;
-    void init(u8 q_bit_size, u32 _layer_sz);
+    void init(u32 q_bit_size, u32 _layer_sz);
 	void initSubset();
 };
 

@@ -8,7 +8,7 @@ void layeredCircuit::initSubset()
     vector<u64> subset_uidx(circuit[0].size);   // the subset index of the i-th layer, j-th gate
     vector<int> visited_vidx(circuit[0].size);  // whether the i-th layer, j-th gate has been visited in the current layer
     vector<u64> subset_vidx(circuit[0].size);   // the subset index of the i-th layer, j-th gate
-    for (int i = 1; i < size; ++i) 
+    for (u32 i = 1; i < size; ++i) 
     {
         auto &cur = circuit[i], &lst = circuit[i - 1];
         bool has_pre_layer_u = circuit[i].ty == layerType::FFT || circuit[i].ty == layerType::IFFT;
@@ -92,7 +92,7 @@ void layeredCircuit::initSubset()
     }
 }
 
-void layeredCircuit::init(u8 q_bit_size, u32 _layer_sz) 
+void layeredCircuit::init(u32 q_bit_size, u32 _layer_sz) 
 {
     if (_layer_sz == 0) {
         throw std::invalid_argument("Circuit must contain at least one layer");

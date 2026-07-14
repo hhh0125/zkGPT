@@ -39,7 +39,7 @@ public:
     quadratic_poly sumcheckUpdate1(const F &previous_random);
     quadratic_poly sumcheckUpdate2(const F &previous_random);
 
-    F Vres(const vector<F>::const_iterator &r, u32 output_size, u8 r_size,int layer_id,int start=0) ;
+    F Vres(const vector<F>::const_iterator &r, u32 output_size, u32 r_size, u32 layer_id, u32 start=0);
     vector<F> lasso_mult_v,lasso_v_mult;
     void sumcheckDotProdFinalize1(const F &previous_random, F &claim_1);
     void sumcheckFinalize1(const F &previous_random, F &claim_0, F &claim_1);
@@ -82,7 +82,7 @@ private:
     F alpha, beta, relu_rou;
 
     
-    u8 round;          // step within a sumcheck
+    u32 round;         // step within a sumcheck
     u32 sumcheck_id;    // the level
 
     friend neuralNetwork;
