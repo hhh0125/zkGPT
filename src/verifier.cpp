@@ -204,7 +204,8 @@ void verifier::prove(int commit_thread)
 
 Fr * init_book_keeping(int m,int n,vector<Fr> &vec,int offset, vector<Fr> & ra)
 {
-    assert(ra.size()==m+n);
+    if (ra.size()!=static_cast<size_t>(m+n))
+        throw std::length_error("init_book_keeping random point has wrong size");
     Fr* pa[30];
     for(int j=0;j<=n;j++)
     {
@@ -231,7 +232,8 @@ Fr * init_book_keeping(int m,int n,vector<Fr> &vec,int offset, vector<Fr> & ra)
 Fr fm[1<<8][65536];
 Fr * init_book_keeping_fast(int m,int n,int* vec,vector<Fr> & ra)
 {
-    assert(ra.size()==m+n);
+    if (ra.size()!=static_cast<size_t>(m+n))
+        throw std::length_error("init_book_keeping_fast random point has wrong size");
     timer tt;
     
     Fr* ret=new Fr[1<<m];
@@ -452,7 +454,8 @@ pair<Fr,Fr> sum_check_product(Fr* f,Fr* g,int m,Fr* r,Fr ans)
     Fr new_ans=send_r*send_r*a+send_r*b+c; //g(r)
     if(m==0)
     {
-        assert((new_ans-new_f[0]*new_g[0]).isZero());
+        if (!(new_ans-new_f[0]*new_g[0]).isZero())
+            throw std::runtime_error("matrix sumcheck final claim failed");
         return make_pair(new_f[0],new_g[0]);
     }
     else
@@ -508,7 +511,7 @@ bool verifier::verifyGKR()
         {
             relu_rou.setByCSPRNG();
         }
-        else 
+        else
             relu_rou = F_ONE;
         F previousRandom = F_ZERO;
         // 全连接层使用高效的验证
@@ -642,7 +645,7 @@ bool verifier::verifyGKR()
             {
                 final_claim_v1.clear();
             }
-            
+
         }
         // 最终值验证
         vtimer.start();
@@ -843,8 +846,8 @@ bool verifier::verifyLasso()
         vtimer.start();
         Fr aa=(C+A)/2-B,bb=2*B-C/2-3*A/2,cc=A;
         Fr g1=aa+bb+cc,g0=cc;
-        if(i!=n)
-            assert(previousSum==g0+g1);
+        if(i!=n && previousSum!=g0+g1)
+            throw std::runtime_error("Lasso sumcheck round claim failed");
         if(i!=n)
             previousSum=aa*r_u[0][i]*r_u[0][i]+bb*r_u[0][i]+cc; 
         vtimer.stop();
@@ -892,7 +895,8 @@ bool verifier::verifyLasso()
     beta_v.clear();
 
     vtimer.start();
-    assert (eval_in * gr == previousSum);
+    if (eval_in*gr!=previousSum)
+        throw std::runtime_error("Lasso final input evaluation check failed");
     vtimer.stop();
     verifier_time+=vtimer.elapse_sec();
 

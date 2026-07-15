@@ -1,4 +1,3 @@
-#undef NDEBUG
 #include "hyrax_rp.hpp"
 #include <cmath>
 #include <iostream>
@@ -120,7 +119,8 @@ G1 range_proof_perdersen_commit_classic(G1* g,Fr* f,int n)
 
 Fr range_proof_lagrange(Fr *r,int l,int k)
 {
-    assert(k>=0 && k<(1<<l));
+    if (k<0 || k>=(1<<l))
+        throw std::out_of_range("range proof Lagrange index is out of bounds");
     Fr ret=1;
     for(int i=0;i<l;i++)
     {
@@ -205,8 +205,10 @@ bool range_proof_prove_dot_product(G1 comm_x, G1 comm_y, Fr* a, Fr* x,Fr y,G1*g 
     //timer blt;
     //blt.start();
     Pack p=bullet_reduce(gamma,a,x,y,g,G,n,false);
-    assert(p.y==p.x*p.a);
-    assert(p.gamma==p.g*p.x+G*p.y);
+    if (p.y!=p.x*p.a)
+        throw std::runtime_error("range proof inner-product scalar check failed");
+    if (p.gamma!=p.g*p.x+G*p.y)
+        throw std::runtime_error("range proof inner-product commitment check failed");
     //blt.stop("bullet reduce ");
     return true;
     
@@ -228,6 +230,7 @@ void ll_commit_worker(G1*& Tk,G1*& g, ll*& w,int rownum,int colnum,G1*& W)
             for(int i=0;i<colnum;i++)
                 f1[i]=w[idx+i*rownum];
             Tk[idx]=range_proof_perdersen_commit(g,f1,colnum,W);
+            delete[] f1;
             endq.Push(idx);
     }
 }
@@ -260,7 +263,8 @@ G1* range_proof_prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, in
     while(endq.Size()!=rownum)
         this_thread::sleep_for (std::chrono::microseconds(10));
     endq.Clear();
-    assert(endq.Size()==0);
+    if (endq.Size()!=0)
+        throw std::runtime_error("range proof commit worker queue did not drain");
    // t.stop("commit time(PPG) ");
     for(int i=0;i<thread_n;i++)
         delete [] W[i];
@@ -280,8 +284,9 @@ void fr_commit_worker(G1*& Tk,G1*& g, ll*& w,Fr* f,int m,int rownum,int colnum)
             Tk[idx].clear();
             ll* f1=new ll[colnum];
             for(int i=0;i<colnum;i++)
-                f1[i]=w[idx+i*rownum];     
+                f1[i]=w[idx+i*rownum];
             Tk[idx]=range_proof_perdersen_commit_redundant(g,f,f1,colnum,m);  // f1[clonum], f[m]
+            delete[] f1;
             endq.Push(idx);
     }
 }
@@ -308,7 +313,8 @@ G1* range_proof_prover_commit_fr(ll* w, Fr* f,int m,G1* g, int l,int thread_n)
     while(endq.Size()!=rownum)
         this_thread::sleep_for (std::chrono::microseconds(10));
     endq.Clear();
-    assert(endq.Size()==0);
+    if (endq.Size()!=0)
+        throw std::runtime_error("range proof redundant commit queue did not drain");
    // t.stop("commit time Fr ");
     return Tk;
 }
@@ -326,6 +332,7 @@ void fr_commit_worker_general(G1*& Tk,G1*& g, Fr*& w,int rownum,int colnum)
             for(int i=0;i<colnum;i++)
                 f1[i]=w[idx+i*rownum];
             Tk[idx]=range_proof_perdersen_commit_classic(g,f1,colnum);
+            delete[] f1;
             endq.Push(idx);
     }
 }
@@ -351,7 +358,8 @@ G1* range_proof_prover_commit_fr_general(Fr* w, G1* g, int l,int thread_n)
     while(endq.Size()!=rownum)
         this_thread::sleep_for (std::chrono::microseconds(10));
     endq.Clear();
-    assert(endq.Size()==0);
+    if (endq.Size()!=0)
+        throw std::runtime_error("range proof field commit queue did not drain");
  //   t.stop("commit time Fr ");
     return Tk;
 }
@@ -359,6 +367,10 @@ G1* range_proof_prover_commit_fr_general(Fr* w, G1* g, int l,int thread_n)
 Fr* range_proof_get_eq(Fr*r, int l)
 {
     Fr* eq=new Fr[1<<l];
+    if (l==0) {
+        eq[0]=1;
+        return eq;
+    }
     eq[0]=1-r[0];
     eq[1]=r[0];
     for(int i=2;i<=l;i++)
@@ -382,6 +394,7 @@ Fr range_proof_prover_evaluate(ll*ww ,Fr*r, int l)
     Fr* lag=range_proof_get_eq(r,l);
     for(int k=0;k<(1<<l);k++)
         eval+=lag[k]*Fr(ww[k]);
+    delete[] lag;
   //  t.stop("eval total ",true,false);
     return eval;
 }
@@ -415,6 +428,9 @@ void range_proof_open(ll*w,Fr*r,Fr eval,G1&G,G1*g,G1*comm,int l)
         auto end4 = high_resolution_clock::now();
     auto duration_ms4 = duration_cast<milliseconds>(end4 - start4);
     //cout << "open group: " << duration_ms4.count() << " ms" << endl;
+    delete[] L;
+    delete[] R;
+    delete[] LT;
     //verf.stop("total verify :");
 }
 void range_proof_open(Fr*w,Fr*r,Fr eval,G1&G,G1*g,G1*comm,int l)
@@ -448,5 +464,8 @@ void range_proof_open(Fr*w,Fr*r,Fr eval,G1&G,G1*g,G1*comm,int l)
     auto end4 = high_resolution_clock::now();
     auto duration_ms4 = duration_cast<milliseconds>(end4 - start4);
     //cout << "open group: " << duration_ms4.count() << " ms" << endl;
+    delete[] L;
+    delete[] R;
+    delete[] LT;
     //verf.stop("total verify :");
 }

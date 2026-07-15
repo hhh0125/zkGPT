@@ -11,6 +11,7 @@
 #include <fstream>
 #include "circuit.h"
 #include "prover.hpp"
+#include "witness_registry.hpp"
 
 using std::vector;
 using std::tuple;
@@ -67,6 +68,14 @@ public:
                   i64 start_channel, poolType pool_ty);
 
     void create(prover &pr, bool merge);
+    void validateCurrentWitness(const prover &pr) const;
+    const WitnessRegistry &getWitnessRegistry() const { return witness_registry; }
+    int getSequenceLength() const { return len; }
+    int getLayerCount() const { return layer_num; }
+    int getHeadCount() const { return headnum; }
+    int getHeadDimension() const { return headdim; }
+    int getHiddenDimension() const { return attn_dim; }
+    int getMlpDimension() const { return linear_dim; }
     int layer_norm_w_c[30], layer_norm_w_e[30],layer_norm_b_c[30], layer_norm_b_e[30];
     int layer_norm_w_q_start[30],layer_norm_b_q_start[30];
     int layer_norm_c1[30], layer_norm_e1[30], layer_norm_c2[30], layer_norm_e2[30];
@@ -207,11 +216,17 @@ protected:
     void writeScalarDumpFiles() const;
     static string input0SegmentMapPath();
     static string sourceModuleOutputPath(const string &filename);
+    void validateWitnessRegistry(const vector<F> &val0) const;
+    void validateMappedCircuitWitness(const prover &pr) const;
 
     vector<Input0Segment> input0_segments;
     vector<uint64_t> gelu_delta3_limbs;
     vector<uint64_t> round_delta_limbs;
+    WitnessRegistry witness_registry;
+    size_t rounding_witness_instance = 0;
+    size_t layer_norm_witness_instance = 0;
+    size_t gelu_witness_instance = 0;
+    size_t softmax_witness_instance = 0;
 };
-
 
 #endif //ZKCNN_NEURALNETWORK_HPP

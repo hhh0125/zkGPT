@@ -174,16 +174,19 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
                 L[j]=cur.uni_interval[j].first;
                 R[j]=cur.uni_interval[j].second;
         }
+        vector<thread> workers;
         for(int i=0;i<thd;i++)
-        {
-            thread t(sc_phase1_uni_worker, std::ref(cur.uni_gates),std::ref(mult_array),std::ref(beta_g),std::ref(beta_u),std::ref(L),std::ref(R)); 
-            t.detach();
-        }
+            workers.emplace_back(sc_phase1_uni_worker, std::ref(cur.uni_gates),
+                std::ref(mult_array), std::ref(beta_g), std::ref(beta_u),
+                std::ref(L), std::ref(R));
         while(!workerq.Empty())
             this_thread::sleep_for (std::chrono::microseconds(1));
         while(endq.Size()!=cur.uni_interval.size())
             this_thread::sleep_for (std::chrono::microseconds(1));
+        for (auto &worker : workers) worker.join();
         endq.Clear();
+        delete[] L;
+        delete[] R;
     }
     else for (auto &gate: cur.uni_gates) 
         {
@@ -200,16 +203,20 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
                 L[j]=cur.bin_interval[j].first;
                 R[j]=cur.bin_interval[j].second;
         }
+        vector<thread> workers;
         for(int i=0;i<thd;i++)
-        {
-            thread t(sc_phase1_bin_worker, std::ref(cur),std::ref(cur.bin_gates),std::ref(mult_array),std::ref(V_u0),std::ref(V_u1),std::ref(val),std::ref(beta_g),std::ref(beta_u),std::ref(L),std::ref(R),sumcheck_id); 
-            t.detach();
-        }
+            workers.emplace_back(sc_phase1_bin_worker, std::ref(cur),
+                std::ref(cur.bin_gates), std::ref(mult_array), std::ref(V_u0),
+                std::ref(V_u1), std::ref(val), std::ref(beta_g),
+                std::ref(beta_u), std::ref(L), std::ref(R), sumcheck_id);
         while(!workerq.Empty())
             this_thread::sleep_for (std::chrono::microseconds(1));
         while(endq.Size()!=cur.bin_interval.size())
             this_thread::sleep_for (std::chrono::microseconds(1));
+        for (auto &worker : workers) worker.join();
         endq.Clear();
+        delete[] L;
+        delete[] R;
     }
     else  for (auto &gate: cur.bin_gates) 
         {
@@ -316,19 +323,25 @@ void prover::sumcheckInitPhase2()
                 L[j]=cur.uni_interval[j].first;
                 R[j]=cur.uni_interval[j].second;
         }
+            vector<thread> workers;
             for(int i=0;i<thd;i++)
             {
-                sum[i].clear(); 
-                thread t(sc_phase2_uni_worker, std::ref(cur.uni_gates),std::ref(sum[i]),std::ref(V_u0),std::ref(V_u1),std::ref(beta_g),std::ref(beta_u),std::ref(L),std::ref(R)); 
-                t.detach();
+                sum[i].clear();
+                workers.emplace_back(sc_phase2_uni_worker,
+                    std::ref(cur.uni_gates), std::ref(sum[i]), std::ref(V_u0),
+                    std::ref(V_u1), std::ref(beta_g), std::ref(beta_u),
+                    std::ref(L), std::ref(R));
             }
             while(!workerq.Empty())
                 this_thread::sleep_for (std::chrono::microseconds(1));
             while(endq.Size()!=cur.uni_interval.size())
                 this_thread::sleep_for (std::chrono::microseconds(1));
+            for (auto &worker : workers) worker.join();
             endq.Clear();
             for(int i=0;i<thd;i++)
                 add_term+=sum[i];
+            delete[] L;
+            delete[] R;
     }
     else for (auto &gate: cur.uni_gates) 
     {
@@ -345,16 +358,20 @@ void prover::sumcheckInitPhase2()
                 L[j]=cur.bin_interval[j].first;
                 R[j]=cur.bin_interval[j].second;
         }
+            vector<thread> workers;
             for(int i=0;i<thd;i++)
-            {
-                thread t(sc_phase2_bin_worker, std::ref(cur.bin_gates),std::ref(mult_array),std::ref(V_u0),std::ref(V_u1),std::ref(beta_g),std::ref(beta_u),std::ref(L),std::ref(R),sumcheck_id); 
-                t.detach();
-            }
+                workers.emplace_back(sc_phase2_bin_worker,
+                    std::ref(cur.bin_gates), std::ref(mult_array),
+                    std::ref(V_u0), std::ref(V_u1), std::ref(beta_g),
+                    std::ref(beta_u), std::ref(L), std::ref(R), sumcheck_id);
             while(!workerq.Empty())
                 this_thread::sleep_for (std::chrono::microseconds(1));
             while(endq.Size()!=cur.bin_interval.size())
                 this_thread::sleep_for (std::chrono::microseconds(1));
+            for (auto &worker : workers) worker.join();
             endq.Clear();
+            delete[] L;
+            delete[] R;
     }
     else for (auto &gate: cur.bin_gates) 
     {
@@ -545,7 +562,10 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
 
     quadratic_poly ret;
     ret.clear();
-    if(total[idx]<(1<<15))
+    // The shared-queue implementation below is not yet proven
+    // equivalent for sparse mixed-source layers. Keep the sound path
+    // deterministic; Stage A prioritizes witness integrity over throughput.
+    if(total[idx]<(1U<<29))
     {
         for (u32 i = 0; i < (total[idx] >> 1); ++i) 
         {
@@ -576,16 +596,22 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
             R[j]=(total_work>>k)*(1+j);
         }
         quadratic_poly qp[thd];
+        for (int j=0; j<thd; ++j)
+            qp[j].clear();
+        vector<thread> workers;
         for(int j=0;j<thd;j++)
-        {
-            thread t(sumcheckUpdate_worker,std::ref(qp[j]),std::ref(tmp_v),std::ref(tmp_mult),std::ref(tmp_v_2),std::ref(tmp_mult_2),std::ref(L),std::ref(R),previous_random,total_size[idx]); 
-            t.detach();
-        }
+            workers.emplace_back(sumcheckUpdate_worker, std::ref(qp[j]),
+                std::ref(tmp_v), std::ref(tmp_mult), std::ref(tmp_v_2),
+                std::ref(tmp_mult_2), std::ref(L), std::ref(R),
+                previous_random, total_size[idx]);
         while(endq.Size()!=(1<<k))
             this_thread::sleep_for(std::chrono::microseconds(1));
+        for (auto &worker : workers) worker.join();
         endq.Clear();
         for(int j=0;j<thd;j++)
             ret=ret+qp[j];
+        delete[] L;
+        delete[] R;
         tt_f1.stop();
         tt_f2.start();
         for(int i=0;i<total_work;i++)

@@ -5,6 +5,7 @@
 #include "circuit.h"
 #include "polynomial.h"
 #include "hyrax_rp.hpp"
+#include "witness_registry.hpp"
 using std::unique_ptr;
 const int MAXL=24;  
 
@@ -20,16 +21,27 @@ inline int next_power_of_two_exp(int n) {
 
 class Constraint {
 public:
-    int query_size;
-    int range_size;
-    ll * inputs;
-    void prepare();
+    std::size_t actual_query_size = 0;
+    int query_size = 0;
+    unsigned range_size = 0;
+    vector<ll> inputs;
 };
 
 class OP {
 public:
     NonlinearOpType op_type;
     vector<Constraint> constraints;
+};
+
+struct RangeQueryRegion {
+    WitnessKind kind;
+    string name;
+    std::size_t val0_offset;
+    std::size_t count;
+    unsigned bits;
+    bool is_signed;
+    std::size_t proof_constraint_index;
+    std::size_t proof_start;
 };
 
 class range_prover {
@@ -55,17 +67,28 @@ public:
     vector<OP> ops;
     G1 g[1<<(MAXL/2)],GG;
     Fr r[MAXL];
-    ll * inputs = new ll[1<<MAXL];
     void init();
     void push_back(NonlinearOpType op_type, const std::vector<std::pair<int, int>>& constraint_params);
     timer prove_timer;
     timer prepare_timer;
-    void range_prove(ll * inputs,int range,int query_size,int thread_num);
+    void range_prove(const ll * inputs,unsigned range,int query_size,int thread_num);
     void logup(ll * f,ll * t,int m,int n,int thread_num);
     double prove();
     void build();
+    void buildFromWitness(const vector<F> &val0,
+                          const WitnessRegistry &registry);
+    void verifyWitnessConsistency() const;
+    const vector<RangeQueryRegion> &queryRegions() const { return query_regions; }
+    void tamperBuiltValueForTest(std::size_t region_index = 0);
 private:
-    
+    const vector<F> *witness_source = nullptr;
+    vector<RangeQueryRegion> query_regions;
+    bool built_from_witness = false;
+
+    static ll encodeWitnessValue(const F &field_value,
+                                 const RangeConstraint &constraint,
+                                 std::size_t absolute_offset);
+    void validateShape(const WitnessShape &shape);
 };
 __int128 convert(Fr x)	;
 
