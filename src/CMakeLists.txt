@@ -35,3 +35,6 @@ target_link_libraries(gpt_lib
 
 add_executable(demo_llm_run main_demo_llm.cpp)
 target_link_libraries(demo_llm_run PRIVATE gpt_lib)
+
+add_executable(range_tests main_range_tests.cpp)
+target_link_libraries(range_tests PRIVATE gpt_lib)

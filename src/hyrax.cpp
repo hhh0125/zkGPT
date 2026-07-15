@@ -24,9 +24,9 @@ G1 perdersen_commit(G1* g,ll* f,int n,G1* W)
     
     bool *used=new bool[COMM_OPT_MAX*block_num];
     memset(used,0,sizeof(bool)*COMM_OPT_MAX*block_num);
-    ll bar[10]; // bar[i]=2^(16*i)：1，2^16，2^32，... 分块画分割线作用
-    ll bar_t=1;
-    for(int i=0;i<8;i++)
+    unsigned __int128 bar[block_num]; // bar[i]=2^(16*i)
+    unsigned __int128 bar_t=1;
+    for(int i=0;i<block_num;i++)
     {
         bar[i]=bar_t;
         bar_t<<=logmax;
@@ -39,24 +39,28 @@ G1 perdersen_commit(G1* g,ll* f,int n,G1* W)
             
             if(f[i]<0)
             {
-                ll tmp=-f[i];
+                const unsigned __int128 tmp=
+                    static_cast<unsigned __int128>(-(f[i]+1))+1;
                 for(int j=0;j<block_num;j++)
                 {
                     if(tmp<bar[j])
                         break;
-                    ll fnow=(tmp>>(logmax*j))&65535;
+                    const std::size_t fnow=static_cast<std::size_t>(
+                        (tmp>>(logmax*j))&65535);
                     W[fnow+(j<<logmax)]-=g[i];
                     used[fnow+(j<<logmax)]=1;
                 }
             }
             else
             {
-                ll tmp=f[i];
+                const unsigned __int128 tmp=
+                    static_cast<unsigned __int128>(f[i]);
                 for(int j=0;j<block_num;j++)
                 {
                     if(tmp<bar[j])
                         break;
-                    ll fnow=(tmp>>(logmax*j))&65535;
+                    const std::size_t fnow=static_cast<std::size_t>(
+                        (tmp>>(logmax*j))&65535);
                     W[fnow+(j<<logmax)]+=g[i];
                     used[fnow+(j<<logmax)]=1;
                 }
@@ -108,15 +112,18 @@ G1 perdersen_commit(G1* g,int* f,int n,G1* W)
             
             if(f[i]<0)
             {
-                W[-f[i]]-=g[i];
-                used[-f[i]]=1;
-                assert(-f[i]<COMM_OPT_MAX);
+                const i64 index=-static_cast<i64>(f[i]);
+                if (index>=COMM_OPT_MAX)
+                    throw std::range_error("integer commitment scalar is too large");
+                W[index]-=g[i];
+                used[index]=1;
             }
             else
             {
+                if (f[i]>=COMM_OPT_MAX)
+                    throw std::range_error("integer commitment scalar is too large");
                 W[f[i]]+=g[i];
                 used[f[i]]=1;
-                assert(f[i]<COMM_OPT_MAX);
             }
     }
     //t.stop("add ",false);
@@ -156,7 +163,8 @@ G1 perdersen_commit(G1* g,Fr* f,int n)
 
 Fr lagrange(Fr *r,int l,int k)
 {
-    assert(k>=0 && k<(1<<l));
+    if (l<0 || l>30 || k<0 || k>=(1<<l))
+        throw std::out_of_range("Hyrax Lagrange index is out of bounds");
     Fr ret=1;
     for(int i=0;i<l;i++)
     {
@@ -281,8 +289,8 @@ G1 gen_gi(G1* g,int n)
 {
     G1 base;
     base.setStr("1 0x2523648240000001ba344d80000000086121000000000013a700000000000012 0x1");
-    assert(base.isValid());
-    assert(!base.isZero());
+    if (!base.isValid() || base.isZero())
+        throw std::runtime_error("invalid Hyrax base generator");
     for(int i=0;i<n;i++)
     {
         Fr tmp;
@@ -374,8 +382,10 @@ void prove_dot_product(G1 comm_x, G1 comm_y, Fr* a, G1*g ,G1& G,Fr* x,Fr y,int n
 {
     G1 gamma=comm_x+comm_y;
     Pack p=bullet_reduce(gamma,a,g,n,G,x,y);
-    assert(p.y==p.x*p.a);
-    assert(p.gamma==p.g*p.x+G*p.y);
+    if (p.y!=p.x*p.a)
+        throw std::runtime_error("Hyrax inner-product scalar check failed");
+    if (p.gamma!=p.g*p.x+G*p.y)
+        throw std::runtime_error("Hyrax inner-product commitment check failed");
 }
 static ThreadSafeQueue<int> workerq,endq;
 
@@ -397,7 +407,6 @@ G1* prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, int version wi
     int halfl=l/2;
     int rownum=(1<<halfl),colnum=(1<<(l-halfl));
     G1 *Tk=new G1[rownum];
-    ll* row=new ll[1<<l];
     G1** W=new G1*[thread_n];
     for(int i=0;i<thread_n;i++)
         W[i]=new G1[COMM_OPT_MAX*block_num];
@@ -405,17 +414,17 @@ G1* prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, int version wi
         memset(W[i],0,sizeof(G1)*COMM_OPT_MAX*block_num);
     for (u64 i = 0; i < rownum; ++i)  //work for rownum 
         workerq.Push(i);
+    vector<thread> workers;
+    workers.reserve(thread_n);
     for(int i=0;i<thread_n;i++)
-    {
-        thread t(ll_commit_worker,std::ref(Tk),std::ref(g),std::ref(w),colnum,std::ref(W[i])); 
-        t.detach();
-    }
-    while(!workerq.Empty())
-        this_thread::sleep_for (std::chrono::microseconds(10));
-    while(endq.Size()!=rownum)
-        this_thread::sleep_for (std::chrono::microseconds(10));
+        workers.emplace_back(ll_commit_worker,std::ref(Tk),std::ref(g),
+                             std::ref(w),colnum,std::ref(W[i]));
+    for (auto &worker : workers) worker.join();
+    if (endq.Size()!=static_cast<std::size_t>(rownum))
+        throw std::runtime_error("Hyrax commitment worker count mismatch");
     endq.Clear();
-    assert(endq.Size()==0);
+    if (!workerq.Empty() || endq.Size()!=0)
+        throw std::runtime_error("Hyrax commitment worker queue did not drain");
     for(int i=0;i<thread_n;i++)
         delete [] W[i];
     delete []W;
@@ -459,6 +468,7 @@ pair<double,double> open(Fr*w,Fr*r,Fr eval,G1&G,G1*g,Fr*L,Fr*R,G1*tk,int l)
     verifier_time+=verf.elapse_sec();
     verf.start();
     prove_dot_product(tprime, G*eval, L, g , G,RT,eval,colnum);
+    delete[] RT;
     verf.stop();
     prover_time+=verf.elapse_sec();
     verifier_time+=blt_vtime;

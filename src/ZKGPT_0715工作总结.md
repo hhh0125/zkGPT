@@ -2,18 +2,21 @@
 
 ## 1. 当前阶段结论
 
-最近完成的是 zkGPT 的阶段 A：把 Range Proof 和 GKR 使用的 witness 数据统一到同一份内存 witness，也就是 `prover.val[0]`。
+当前已经完成阶段 A，并完成了本轮“宽整数与 Range sumcheck 正确性修复”。阶段 B 已推进到公共 statement、proof 对象、Fiat-Shamir transcript、真实 chunk commitments、批量重构证明和独立 reconstruction verifier，但真正的 `val[0]`/chunk commitment opening 等值证明仍未完成。
 
 阶段 A 的目标不是直接完成完整、安全的 zkGPT 证明系统，而是先解决一个基础一致性问题：Range Proof 不能再使用随机伪造数据或独立构造的数据，而必须从真实的模型 witness 中读取需要证明范围的值。
 
-当前阶段 A 可以认为已经达到功能性完成：
+阶段 A 可以认为已经达到功能性完成；本轮新增的 Range 正确性修复也已经通过完整 Release 运行和 sanitizer kernel 测试：
 
 - Range Proof 从真实 `val[0]` 中抽取注册过的 witness 区域。
 - GKR 和 Range Proof 使用同一份内存 witness。
 - 对超过 255 层后出现的整数截断、vector 越界、层编号映射错误等问题做了修复。
 - 加入了 witness 注册、范围检查、越界检查、重叠检查和运行时一致性检查。
-- Release 和 Debug 编译通过。
+- Debug、Release、UBSan 和 ASan 构建及相关测试通过。
 - 端到端运行已经能够通过，并输出 `All verification passed!!`。
+- 64/76/100/126 位宽整数可以安全编码、分片并无损重构。
+- Range degree-1/degree-3 sumcheck 已恢复每轮和最终 claim 检查。
+- 完整运行中的 30,647,808 个受约束 witness 已完成批量 chunk 重构验证。
 
 但必须明确：阶段 A 只是功能一致性阶段，不等于已经实现完整密码学安全绑定。
 
@@ -159,14 +162,19 @@ v.prove(32)
 
 ## 7. 已验证结果
 
-端到端 Release 运行已通过，关键结果如下：
+本轮最新端到端 Release 运行已通过，关键结果如下：
 
 ```text
-Range Proof: 468.595 s
-GKR + Lasso: 87.526 s
-Total prover time: 556.121 s
+val[0] size:                 195,414,944
+Registered regions:         624
+Constrained witness values: 30,647,808
+Range queries:              10
+Range Proof + reconstruction: 479.765 s
+Reconstruction proof:          36.2982 s
+GKR + Lasso:                   82.7566 s
+Total prover time:            562.522 s
 All verification passed!!
-Open commit time: prover 1.516373 s, verifier 0.364063 s
+Open commit time: prover 1.369165 s, verifier 0.336966 s
 Proof size: 347.078KB
 ```
 
@@ -239,96 +247,206 @@ Debug 下 exact-64-bit Range kernel test 已通过，包括最后一个 1-bit ch
 
 - Range Proof commitment 与主 witness commitment 的 shared opening。
 - 或者 Range Proof 输入数组与主 `val[0]` 对应位置之间的 equality proof。
-- 完整修复 Range Proof verifier 中被注释掉的 sumcheck round equation。
+- Range membership proof 的完整可序列化对象和独立 verifier。
+- 将 Range membership 的所有 `setByCSPRNG()` 挑战迁移到统一 transcript。
 - 对 Softmax `pmax` 确实是最大值的证明。
 - 对 `E == table[t]` 的 lookup proof。
 
 另外，底层 GKR 对某些 post-`create()` 后的 within-range mutation 曾经存在接受风险。当前 `validateCurrentWitness()` 能在 proving 前拒绝这些 mutation，但这仍然是运行时防护，不是完整密码学证明。
 
-## 11. Range Proof Verifier 的已知问题
+## 11. 宽整数编码与安全分片修复
 
-目前 Range Proof 已经改为使用真实 witness，但 Range Proof verifier 本身仍有历史遗留问题。
+本轮首先核对了附件中关于 `vector<ll>` 的风险。当前仓库的 `ll` 实际定义为 `__int128`，不是 64 位 `long long`，所以旧实现不一定会在 64 位后立即截断；但类型名含义不明确、有符号移位和隐式字段转换仍然存在风险。
 
-旧代码中部分 sumcheck round equation 曾被注释掉。临时恢复类似下面的检查后：
+新增 `src/range_wide.hpp`，明确使用：
 
-```text
-sum0 + sum1 == current claim
+```cpp
+using SignedWide = __int128;
+using UnsignedWide = unsigned __int128;
 ```
 
-当前 transcript 会立即失败。
+主要修复包括：
 
-因此，这部分没有简单地强行恢复，而是保留为后续阶段需要系统性修复的问题。原因是 Range Proof verifier 的修复需要重新核对协议数学推导、prover transcript 和 verifier claim 更新逻辑，不能只靠添加一行检查解决。
+- 完整编码值只使用 `unsigned __int128` 保存。
+- signed 值严格检查 `-2^(bits-1) <= x < 2^(bits-1)`。
+- signed 编码执行 `z = x + 2^(bits-1)`。
+- unsigned 值严格检查 `0 <= x < 2^bits`。
+- 每个 Range chunk 使用 `uint16_t`，默认最多 9 位。
+- 最后一个 chunk 使用真实剩余位数。
+- `reconstructWide()` 检查 chunk 数量、位宽和无损重构。
+- `buildFromWitness()` 对每个完整值执行 `reconstructWide(chunks) == encoded` 自检。
+- Range 路径读取 `Fr` 时先检查完整字段绝对值，避免先截断后验证。
+- 宽整数转换为 `Fr` 时使用完整十进制 `setStr()`，避免 mcl 隐式 `__int128 -> Fr` 构造截断。
 
-结论：当前 Range Proof 已经使用真实 witness，但还不能说 Range Proof 协议本身已经完整安全。
+完整 126 位值不再进入旧 Hyrax 的 `ll*` 接口；该接口只接收已经验证过的最多 9 位临时 chunk。
 
-## 12. 线程和内存相关修复
+## 12. Range sumcheck 协议检查修复
 
-当前阶段还完成或缓解了部分线程和内存问题：
-
-- GKR worker thread 改为 join，不再遗留 detached worker。
-- 防止 worker 消费后续 round 的任务。
-- 修复 Range Proof sumcheck 临时数组泄漏。
-- 修复 range commitment worker 泄漏。
-- 修复 opening array 泄漏。
-- 限制 query size，降低内存峰值。
-- 将部分关键协议检查从 `assert` 改为 exception。
-- 移除强制 `#undef NDEBUG`。
-- 绕过不稳定的 shared-queue parallel folding，改为确定性的 serial folding。
-
-当前仍有一些 C++17 inline variable 相关 warning，主要来自 `stats.hpp`，但不影响当前编译通过。
-
-## 13. GitHub 和目录清理
-
-之前已经完成并推送过一次仓库清理：
-
-- 从 Git tracking 中删除根目录下的 `PNP/`。
-- 从 Git tracking 中删除根目录下的 `PNP-hyperplonk/`。
-- 将两者加入 `.gitignore`。
-- 本地目录副本保留。
-
-最后已知推送 commit 为：
+`sumcheck_deg1()` 和 `sumcheck_deg3()` 现在每轮都执行：
 
 ```text
-5194d245 Fix GKR verification and remove PNP directories
+g_i(0) + g_i(1) == previous_claim
 ```
 
-注意：阶段 A 后续修改是否已经全部推送，需要以当前 `git status` 和远端状态为准。
+最后一轮还会检查折叠后的最终值是否等于最终 claim。失败通过 `std::runtime_error` 拒绝，不依赖 Release 中可能失效的 `assert`。
 
-## 14. 下一阶段建议
+启用检查后发现并修复了一个真实协议错误：查表侧 `H` 原本只有 `1/(r+t_i)`，但证明使用的是频数多项式 `c` 的开口。现在恢复：
 
-下一阶段建议优先做阶段 B：把 Range Proof 数据和主 `val[0]` commitment 做密码学绑定。
+```cpp
+H[i] = H[i] * Fr(c[i]);
+```
 
-阶段 B 的核心目标应该是让 verifier 能够确认：
+因此当前诚实 Range kernel 可以在启用每轮检查后通过，而错误初始 claim 会被 degree-1/degree-3 测试拒绝。
+
+## 13. Hyrax、线程和内存修复
+
+UBSan 发现主 Hyrax 和 Range Hyrax 使用有符号 `__int128` 连续左移生成 `2^(16*i)`，会产生 signed overflow。现在基数和标量绝对值分解均使用 `unsigned __int128`，并安全处理最小负数。
+
+另外完成：
+
+- 主 Hyrax 最终标量关系和 commitment 关系改为显式运行时检查。
+- Range Hyrax 内积检查继续使用显式异常。
+- Hyrax 和 Range Hyrax detached workers 改为 `join()`。
+- 返回前检查 worker 数量和队列是否清空。
+- 删除 `prover_commit()` 中未使用的 `2^l` 大 `ll` 数组。
+- 删除 verifier opening 中另一个未使用的 `2^comm.l` 大 `ll` 数组。
+- 两个数组在 `l=28` 时合计避免约 8 GiB 无用分配。
+- 释放 `Lp`、`Rp`、`RT`、redundant commitment 临时数组。
+- 本地根目录 CMake 构建配置已调整为 C++17，并允许外部 sanitizer flags 生效；该根目录文件按本次 `src/`-only 上传要求不进入提交。
+
+## 14. Stage B 已实现部分
+
+新增：
+
+- `src/range_protocol.hpp`
+- `src/range_protocol.cpp`
+- `Transcript`
+- `RangePublicStatement`
+- `PublicRangeRegion`
+- `PublicRangeQuery`
+- `RangeProof`
+- `ReconstructionProof`
+- `range_verifier`
+
+`RangePublicStatement` 当前包含：
+
+- GKR 使用的真实 `val[0]` commitment。
+- 公开 witness shape。
+- 每个 region 的 kind/name/offset/count/bits/signed。
+- region 到 Range query 的映射。
+- query 实际长度、padding 长度和每个 chunk 位宽。
+
+`RangeProof` 当前保存：
+
+- Range membership 过程中产生的真实 chunk Hyrax 行承诺。
+- 批量重构 sumcheck 消息。
+- 最终 encoded evaluation。
+- 每个 chunk 的最终 evaluation。
+- transcript binding。
+
+Transcript 已吸收 shape、`val[0]` commitment、region/query 元数据、chunk commitments、重构每轮消息和最终 evaluations。
+
+独立 `range_verifier::verifyReconstruction()` 只读取公共 statement、commitments 和 proof 消息，不读取 `p.val[0]`，也不读取私有 chunks。主程序已经接入该路径。
+
+## 15. Stage B 负面协议测试
+
+新增 `src/main_range_tests.cpp` 和 `range_tests` 构建目标。当前确认以下修改都会被 reconstruction verifier 拒绝：
+
+- 修改一个 chunk commitment。
+- 修改一个 reconstruction sumcheck round。
+- 修改最终 chunk evaluation。
+- 修改公共 `val[0]` commitment。
+- 修改 region bits/布局元数据。
+- 修改 Fiat-Shamir transcript binding。
+
+测试还明确断言：在 commitment opening proof 尚未实现时，完整 `range_verifier::verify()` 必须返回 `false`，不能因为 reconstruction 通过就声称 Stage B 完成。
+
+## 16. 边界与构建测试结果
+
+以下值和位宽均通过编码、分片和无损重构测试：
 
 ```text
-Range Proof 中被证明范围的数据
-==
-主 witness commitment 中对应 offset 的数据
+2^63-1
+2^63
+2^76-1
+2^100+123
+2^125-1
+signed -1 with 64-bit bias
+signed -2^63 with 64-bit bias
+1/9/10/63/64/76/100/125/126-bit maxima
 ```
 
-可选方向包括：
+端到端 kernel 结果：
 
-- 对注册过的 `val[0]` offset 做 shared opening。
-- 或构造 Range commitment 与主 witness commitment 之间的 equality proof。
-- 或重构 commitment 结构，使 Range Proof 和主证明共享同一组可验证 opening。
+- 126 位值成功执行 14 个 9-bit chunks。
+- 64 位值成功执行 7 个 9-bit chunks 和最后一个 1-bit chunk。
+- Debug：通过。
+- Release：通过。
+- UBSan：通过，没有非法移位或 signed overflow。
+- ASan：地址越界和 UAF 检查通过。
+- LeakSanitizer 因当前 ptrace 沙箱环境无法执行；已修复代码审查中发现的确定泄漏。
 
-阶段 B 完成后，再继续处理：
+完整 Release LLM 运行成功，10 个 Range queries、Stage B reconstruction、GKR、Lasso 和主 commitment opening 全部运行结束，最终输出：
 
-- 修复 Range Proof verifier 的 sumcheck equation。
-- 补齐 Softmax maximum proof。
-- 补齐 Softmax lookup proof。
-- 扩展到 tokenizer、embedding lookup、final LayerNorm、LM head、argmax/next-token proof 和多 token autoregressive decoding。
+```text
+Range chunk reconstruction proof verified
+Range/GKR use the same in-memory witness,
+but commitment-level binding is not implemented.
+All verification passed!!
+```
 
-## 15. 总体评价
+最终修改 Hyrax 显式检查和内存清理后，Release `gkr-only` 再次以退出码 0 通过并输出 `All verification passed!!`。
+
+## 17. 当前安全边界与下一步
+
+当前可以确认：
+
+- 宽整数编码和 126 位分片不会经过 64 位完整值存储。
+- 所有 chunk 可以无损重构。
+- 重构关系已有批量 transcript/sumcheck 验证框架。
+- Range sumcheck 每轮和最终 claim 已显式检查。
+- reconstruction verifier 不读取私有 witness。
+- 篡改 statement、chunk commitment、重构消息或 transcript 会被拒绝。
+
+但真正的 Stage B commitment binding 仍未完成。缺少的是把最终 reconstruction evaluations 密码学绑定到：
+
+```text
+GKR val[0] commitment
+Range chunk commitments
+```
+
+的可序列化 Hyrax/IPA opening proof。因此 `range_verifier::verify()` 当前会明确返回：
+
+```text
+Stage B incomplete: commitment opening proofs are not implemented
+```
+
+下一步应优先完成：
+
+- 为 `val[0]` 注册位置的随机线性组合生成独立 opening proof。
+- 为 chunk commitments 的最终 evaluations 生成独立 opening proof。
+- 将两侧 opening 和重构等式放入同一 transcript。
+- 将 Range membership 的 `setByCSPRNG()` 全部迁移到 transcript。
+- 将 membership logup/sumcheck 消息序列化为真正的 `RangeProof` 并由独立 verifier 验证。
+- 完成后再将主程序提示改为 `Range/GKR commitment binding verified.`。
+
+在上述 opening binding 完成以前，不能把当前版本描述为完整、安全的 zkGPT 证明系统。
+
+## 18. GitHub 状态
+
+阶段 A 已在提交 `a783f104 Update zkGPT src stage A changes` 中推送。本文档与本轮代码修改属于同一次 `src/`-only 提交；根目录 `CMakeLists.txt`、`build.sh`、`llm.sh`、MSM/RUN_MSM 和其他非 `src/` 工作树内容不包含在本次提交范围内。
+
+## 19. 总体评价
 
 截至 2026-07-15，zkGPT 当前进展可以概括为：
 
 ```text
 阶段 A：功能性 witness 一致性已经完成。
-阶段 B：密码学绑定尚未完成。
-Range Proof：已经接入真实 witness，但 verifier 协议完整性仍需修复。
-GKR：大层数运行和基础验证已通过，但仍需要更强的密码学约束闭环。
+Range 正确性修复：宽整数、安全分片、重构和 sumcheck 检查已完成。
+阶段 B：statement/proof/transcript/reconstruction verifier 已实现，opening 绑定未完成。
+Range Proof：已接入真实 witness，membership 独立 verifier 和 transcript 迁移仍待完成。
+GKR：大层数运行、主 commitment opening 和显式 Hyrax 检查已通过。
 Softmax：范围约束已有，最大值证明和 lookup proof 未完成。
 ```
 
-因此，当前代码已经从“能运行的 demo”推进到“使用真实 witness 的阶段 A 原型”，但还不能对外宣称为完整、安全、可审计的 zkGPT 证明系统。
+因此，当前代码已经从“使用真实 witness 的阶段 A 原型”推进到“具备宽整数正确性和 Stage B 重构验证骨架的实现”，但在 commitment opening equality proof、完整 Fiat-Shamir 化和独立 membership verifier 完成前，仍不能对外宣称为完整、安全、可审计的 zkGPT 证明系统。

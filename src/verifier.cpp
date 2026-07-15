@@ -942,10 +942,9 @@ bool verifier::openCommit()
     timer verify_input;
     verify_input.start();
     brute_force_compute_LR(Lp,Rp,r_u[0].data(),comm.l);  // 计算拉格朗日插值
-    int rownum=(1<<comm.l/2),colnum=(1<<(comm.l-comm.l/2));
-    
-    ll* row=new ll[1<<comm.l];
     pair<double,double> tim=hyrax::open(comm.w,r_u[0].data(),eval_in,comm.G,comm.g,Lp,Rp,comm.comm,comm.l);
+    delete[] Lp;
+    delete[] Rp;
     prover_time+=tim.first;
     verifier_time+=tim.second;
     printf("Open commit time: prover %f s, verifier %f s\n",tim.first,tim.second);

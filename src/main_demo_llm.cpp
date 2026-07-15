@@ -225,7 +225,20 @@ int main(int argc, char **argv)
         }
         throw runtime_error("tampered Range Proof copy was accepted");
     }
-    double range_prover_time=range_prover.prove();
+    const std::size_t val0_commitment_count=static_cast<std::size_t>(1)
+        << (p.cc.l/2);
+    const auto range_statement=range_prover.makePublicStatement(
+        p.cc.l, p.cc.comm, val0_commitment_count);
+    const auto range_proof=range_prover.proveStageB(range_statement);
+    range_verifier range_verifier;
+    string range_error;
+    if (!range_verifier.verifyReconstruction(
+            range_statement, range_proof, &range_error))
+        throw runtime_error("Range reconstruction verification failed: "+
+                            range_error);
+    const double range_prover_time=range_proof.totalProverTime();
+    cout << "Range chunk reconstruction proof verified; prover time="
+         << range_proof.reconstruction_prover_time << "s" << endl;
 
     cout << "Range/GKR use the same in-memory witness, but commitment-level "
             "binding is not implemented." << endl;

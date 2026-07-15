@@ -5,6 +5,8 @@
 #include "circuit.h"
 #include "polynomial.h"
 #include "hyrax_rp.hpp"
+#include "range_protocol.hpp"
+#include "range_wide.hpp"
 #include "witness_registry.hpp"
 using std::unique_ptr;
 const int MAXL=24;  
@@ -24,7 +26,8 @@ public:
     std::size_t actual_query_size = 0;
     int query_size = 0;
     unsigned range_size = 0;
-    vector<ll> inputs;
+    vector<range_wide::EncodedWitnessValue> inputs;
+    vector<range_wide::RangeChunkQuery> chunk_queries;
 };
 
 class OP {
@@ -71,9 +74,13 @@ public:
     void push_back(NonlinearOpType op_type, const std::vector<std::pair<int, int>>& constraint_params);
     timer prove_timer;
     timer prepare_timer;
-    void range_prove(const ll * inputs,unsigned range,int query_size,int thread_num);
-    void logup(ll * f,ll * t,int m,int n,int thread_num);
+    vector<vector<G1>> range_prove(const Constraint &constraint, int thread_num);
+    vector<G1> logup(ll * f,ll * t,int m,int n,int thread_num);
     double prove();
+    RangeProof proveStageB(const RangePublicStatement &statement);
+    RangePublicStatement makePublicStatement(
+        int val0_log_size, const G1 *val0_commitments,
+        std::size_t commitment_count) const;
     void build();
     void buildFromWitness(const vector<F> &val0,
                           const WitnessRegistry &registry);
@@ -83,11 +90,18 @@ public:
 private:
     const vector<F> *witness_source = nullptr;
     vector<RangeQueryRegion> query_regions;
+    WitnessShape witness_shape;
     bool built_from_witness = false;
 
-    static ll encodeWitnessValue(const F &field_value,
-                                 const RangeConstraint &constraint,
-                                 std::size_t absolute_offset);
+    static range_wide::EncodedWitnessValue encodeWitnessValue(
+        const F &field_value, const RangeConstraint &constraint,
+        std::size_t absolute_offset);
+    static void buildChunkQueries(Constraint &constraint);
+    double proveMembership(
+        vector<vector<vector<G1>>> *chunk_commitments);
+    ReconstructionProof proveReconstruction(
+        std::size_t query_index, const Constraint &constraint,
+        Transcript &transcript) const;
     void validateShape(const WitnessShape &shape);
 };
 __int128 convert(Fr x)	;

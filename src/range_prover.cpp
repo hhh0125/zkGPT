@@ -1,4 +1,5 @@
 #include "range_prover.hpp"
+#include <array>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -24,9 +25,16 @@ Fr poly_eval(Fr x0,Fr x1,Fr x2,Fr x3,Fr u)  //lagrange poly for degree 3
 
 range_prover::SC_Return range_prover::sumcheck_deg1(int l, Fr* f, Fr S) // sum_i f_i=S
 {
+    if (l < 0 || l > MAXL)
+        throw std::invalid_argument("invalid degree-1 sumcheck length");
     // P send V sum S
     Fr *ran=new Fr[l];
     bool owns_f=false;
+    auto fail = [&](const char *message) {
+        delete[] ran;
+        if (owns_f) delete[] f;
+        throw std::runtime_error(message);
+    };
     for(int i=l;i>=1;i--) // round i
     {
         Fr sum0=0,sum1=0;
@@ -39,7 +47,8 @@ range_prover::SC_Return range_prover::sumcheck_deg1(int l, Fr* f, Fr S) // sum_i
                 sum1+=f[j];
             }
         }
-        // TODO(protocol): the verifier must check sum0 + sum1 == S.
+        if (sum0 + sum1 != S)
+            fail("range degree-1 sumcheck round consistency failed");
         //send poly: sum0,sum1
         Fr new_chlg;
         new_chlg.setByCSPRNG();
@@ -54,6 +63,8 @@ range_prover::SC_Return range_prover::sumcheck_deg1(int l, Fr* f, Fr S) // sum_i
         f=new_f;
         owns_f=true;
     }
+    if (f[0] != S)
+        fail("range degree-1 sumcheck final claim failed");
     SC_Return s;
     s.random=ran;
     s.claim_f=f[0];
@@ -63,12 +74,25 @@ range_prover::SC_Return range_prover::sumcheck_deg1(int l, Fr* f, Fr S) // sum_i
 
 range_prover::SC_Return range_prover::sumcheck_deg3(int l, Fr* r, Fr* f, Fr* g, Fr S) // sum_i eq(r,i) f_i g_i=S
 {
+    if (l < 0 || l > MAXL)
+        throw std::invalid_argument("invalid degree-3 sumcheck length");
     Fr* lag=range_proof_get_eq(r,l);
     // P send V sum S
     Fr *ran=new Fr[l];
     Fr *S0=new Fr[1<<l],*S1=new Fr[1<<l],*S2=new Fr[1<<l],*S3=new Fr[1<<l];
     bool owns_f=false;
     bool owns_g=false;
+    auto fail = [&](const char *message) {
+        delete[] ran;
+        if (owns_f) delete[] f;
+        if (owns_g) delete[] g;
+        delete[] lag;
+        delete[] S0;
+        delete[] S1;
+        delete[] S2;
+        delete[] S3;
+        throw std::runtime_error(message);
+    };
     for(int i=l;i>=1;i--) // round i
     {
         memset(S0,0,sizeof(Fr)*(1<<i));
@@ -120,7 +144,8 @@ range_prover::SC_Return range_prover::sumcheck_deg3(int l, Fr* r, Fr* f, Fr* g, 
             sum2=s2[0]+s2[1]+s2[2]+s2[3]+s2[4]+s2[5]+s2[6]+s2[7];
             sum3=s3[0]+s3[1]+s3[2]+s3[3]+s3[4]+s3[5]+s3[6]+s3[7];
         }
-        // TODO(protocol): the verifier must check sum0 + sum1 == S.
+        if (sum0 + sum1 != S)
+            fail("range degree-3 sumcheck round consistency failed");
         //send poly: sum0,sum1,sum2,sum3
         Fr new_chlg;
         new_chlg.setByCSPRNG();
@@ -147,6 +172,8 @@ range_prover::SC_Return range_prover::sumcheck_deg3(int l, Fr* r, Fr* f, Fr* g, 
         owns_f=true;
         owns_g=true;
     }
+    if (lag[0] * f[0] * g[0] != S)
+        fail("range degree-3 sumcheck final claim failed");
     SC_Return s;
     s.random=ran;
     s.claim_f=f[0];
@@ -174,7 +201,8 @@ void range_prover::push_back(NonlinearOpType op_type, const std::vector<std::pai
         c.query_size = query_size;
         c.range_size = range_size;
         c.actual_query_size = query_size;
-        c.inputs.assign(query_size, 0);
+        c.inputs.assign(query_size, range_wide::EncodedWitnessValue{});
+        buildChunkQueries(c);
         op.constraints.push_back(c);
     }
     ops.push_back(op);
@@ -189,45 +217,30 @@ double range_proof_sumcheck_time=0;
 timer temp_timer;
 double temp_time=0;
 // range_prove(constraint.inputs, constraint.range_size, constraint.query_size, 32);
-void range_prover::range_prove(const ll * x,unsigned range,int m,int thread_num) {
-    
-    int log = 9; // range = 16 or 32
-    //assert(range%log==0);
-    int l=(range+log-1)/log;
-    // 构造一个data矩阵l x m：m是x的元素个数
-    ll** data=new ll*[l];
-    for(int i=0;i<l;i++)
-        data[i]=new ll[m];
-
-    // 把x的每个元素拆分成log位，存入data矩阵，竖着存放
-    for(int i=0;i<l;i++)
+vector<vector<G1>> range_prover::range_prove(
+    const Constraint &constraint, int thread_num) {
+    const int m=constraint.query_size;
+    vector<vector<G1>> commitments;
+    commitments.reserve(constraint.chunk_queries.size());
+    for(std::size_t i=0;i<constraint.chunk_queries.size();++i)
     {
-        const int chunk_bits=std::min(log, static_cast<int>(range)-log*i);
-        const ll chunk_mask=(static_cast<ll>(1)<<chunk_bits)-1;
-        for(int j=0;j<m;j++)
-        {
-            data[i][j]=(x[j]>>(log*i))&chunk_mask;
-        }
-    }
-    for(int i=0;i<l;i++)
-    {
-        const int chunk_bits=std::min(log, static_cast<int>(range)-log*i);
+        const auto &query=constraint.chunk_queries[i];
+        const int chunk_bits=static_cast<int>(query.chunk_bits);
         const int table_size=1<<chunk_bits;
         std::cout << "  proving chunk " << i << " (" << chunk_bits
                   << " bits)" << std::endl;
-        ll* t=new ll[table_size];
-        for(int j=0;j<table_size;j++) t[j]=j;
-        logup(data[i],t,m,table_size,thread_num);
-        delete[] t;
-        delete[] data[i];
+        vector<ll> chunk_values(query.chunks.begin(), query.chunks.end());
+        vector<ll> table(table_size);
+        for(int j=0;j<table_size;j++) table[j]=j;
+        commitments.push_back(logup(chunk_values.data(),table.data(),m,
+                                    table_size,thread_num));
     }
-    delete[] data;
     printf("range proof time: commit time %.6f s, open time %.6f s,sumcheck_time %.6f s\n",range_proof_commit_time,range_proof_open_time,range_proof_sumcheck_time);
     printf("temp time: %.6f s\n",temp_time);
-    
+    return commitments;
 }
 // 证明分片f[m]的所有元素都属于集合t[n]
-void range_prover::logup(ll * f,ll *t,int m,int n,int thread)
+vector<G1> range_prover::logup(ll * f,ll *t,int m,int n,int thread)
 {
     Fr* G=new Fr[m];  // 存储1/(f[i]+r)
     Fr* F=new Fr[m];  // 存储f[i]+r（隐藏原始值）
@@ -248,19 +261,15 @@ void range_prover::logup(ll * f,ll *t,int m,int n,int thread)
     
     invVec(G,F,m);  // 1/(r+fi)
     invVec(H,Hp,n);  // 1/(r+ti)
-    // Fr s1=0,s2=0;
-    // for(int i=0;i<m;i++)
-    //     s1+=G[i];
-    // for(int i=0;i<n;i++)
-    // {
-    //     H[i]=H[i]*Fr(c[i]);
-    //     s2+=H[i];
-    // }
+    for(int i=0;i<n;i++)
+        H[i]=H[i]*Fr(c[i]);
     temp_timer.stop();
     temp_time+=temp_timer.elapse_sec();
 
     range_proof_commit_timer.start();
     G1* f_comm=range_proof_prover_commit(f,g,lg2(m),thread);
+    const int f_commitment_count=1<<(lg2(m)/2);
+    vector<G1> f_commitments(f_comm, f_comm+f_commitment_count);
     G1* t_comm=range_proof_prover_commit(t,g,lg2(n),thread);
     G1* c_comm=range_proof_prover_commit(c,g,lg2(n),thread);
     Fr *diff=new Fr[n];
@@ -323,21 +332,28 @@ void range_prover::logup(ll * f,ll *t,int m,int n,int thread)
     delete[] c_comm;
     delete[] g_comm;
     delete[] h_comm;
-
+    return f_commitments;
 }
 
 double range_prover::prove() {
+    return proveMembership(nullptr);
+}
+
+double range_prover::proveMembership(
+    vector<vector<vector<G1>>> *chunk_commitments) {
     if (!built_from_witness)
         throw std::logic_error("Range Proof must be built from the registered witness");
     verifyWitnessConsistency();
+    if (chunk_commitments) chunk_commitments->clear();
     double prover_time = 0;
     for (auto& op : ops) {
         for (auto& constraint : op.constraints) {
             cout << "start range prove"<<" query_size "<< constraint.query_size<<"\t";
             cout << " range_size "<< constraint.range_size << endl;
             prove_timer.start();
-            range_prove(constraint.inputs.data(), constraint.range_size,
-                        constraint.query_size, thread_num);
+            auto commitments=range_prove(constraint, thread_num);
+            if (chunk_commitments)
+                chunk_commitments->push_back(std::move(commitments));
             cout << "end range prove" << endl;
             prove_timer.stop();
             prover_time += prove_timer.elapse_sec();
@@ -345,6 +361,146 @@ double range_prover::prove() {
         }
     }
     return prover_time;
+}
+
+RangePublicStatement range_prover::makePublicStatement(
+    int val0_log_size, const G1 *val0_commitments,
+    std::size_t commitment_count) const {
+    if (!built_from_witness || val0_commitments==nullptr)
+        throw std::logic_error("cannot make a public statement before buildFromWitness");
+    if (val0_log_size<0 || val0_log_size>62)
+        throw std::invalid_argument("invalid val[0] commitment log size");
+    const std::size_t expected=static_cast<std::size_t>(1)
+                               << (val0_log_size/2);
+    if (commitment_count!=expected)
+        throw std::invalid_argument("val[0] commitment row count mismatch");
+    const std::size_t val0_capacity=static_cast<std::size_t>(1)<<val0_log_size;
+    if (witness_source==nullptr || witness_source->size()>val0_capacity)
+        throw std::invalid_argument("val[0] witness exceeds commitment capacity");
+
+    RangePublicStatement statement;
+    statement.val0_log_size=val0_log_size;
+    statement.val0_commitment.assign(val0_commitments,
+                                     val0_commitments+commitment_count);
+    statement.shape=witness_shape;
+    statement.regions.reserve(query_regions.size());
+    for (const auto &region : query_regions)
+        statement.regions.push_back({region.kind, region.name,
+            region.val0_offset, region.count, region.bits, region.is_signed,
+            region.proof_constraint_index, region.proof_start});
+    const auto &constraints=ops.front().constraints;
+    statement.queries.reserve(constraints.size());
+    for (const auto &constraint : constraints) {
+        PublicRangeQuery query;
+        query.bits=constraint.range_size;
+        query.actual_query_size=constraint.actual_query_size;
+        query.padded_query_size=constraint.query_size;
+        for (const auto &chunk : constraint.chunk_queries)
+            query.chunk_bits.push_back(chunk.chunk_bits);
+        statement.queries.push_back(std::move(query));
+    }
+    return statement;
+}
+
+namespace {
+
+Fr evaluateMultilinear(vector<Fr> values, const vector<Fr> &challenges) {
+    std::size_t active=values.size();
+    for (const Fr &challenge : challenges) {
+        if (active<2 || (active&1)!=0)
+            throw std::logic_error("invalid multilinear evaluation shape");
+        for (std::size_t i=0;i<active/2;++i)
+            values[i]=values[2*i]+challenge*(values[2*i+1]-values[2*i]);
+        active/=2;
+    }
+    if (active!=1)
+        throw std::logic_error("multilinear evaluation challenge count mismatch");
+    return values[0];
+}
+
+}  // namespace
+
+ReconstructionProof range_prover::proveReconstruction(
+    std::size_t query_index, const Constraint &constraint,
+    Transcript &transcript) const {
+    ReconstructionProof proof;
+    proof.query_index=query_index;
+    proof.initial_claim=0;
+
+    const std::size_t query_size=static_cast<std::size_t>(constraint.query_size);
+    unsigned rounds=0;
+    for (std::size_t n=query_size;n>1;n>>=1) ++rounds;
+    vector<Fr> challenges;
+    challenges.reserve(rounds);
+    for (unsigned round=0;round<rounds;++round) {
+        ReconstructionRound message;
+        message.sum0=0;
+        message.sum1=0;
+        proof.rounds.push_back(message);
+        transcript.appendFr("reconstruction.sum0", message.sum0);
+        transcript.appendFr("reconstruction.sum1", message.sum1);
+        challenges.push_back(transcript.challenge("reconstruction-round"));
+    }
+    proof.final_claim=0;
+
+    vector<Fr> encoded(query_size);
+    for (std::size_t i=0;i<query_size;++i) {
+        std::vector<std::uint16_t> chunks;
+        chunks.reserve(constraint.chunk_queries.size());
+        for (const auto &chunk : constraint.chunk_queries)
+            chunks.push_back(chunk.chunks[i]);
+        const auto reconstructed=range_wide::reconstructWide(
+            chunks, constraint.range_size);
+        if (reconstructed!=constraint.inputs[i].encoded)
+            throw std::logic_error("cannot prove an invalid chunk reconstruction");
+        encoded[i].setStr(range_wide::unsignedWideToString(
+            constraint.inputs[i].encoded));
+    }
+    proof.encoded_evaluation=evaluateMultilinear(std::move(encoded), challenges);
+
+    proof.chunk_evaluations.reserve(constraint.chunk_queries.size());
+    for (const auto &chunk : constraint.chunk_queries) {
+        vector<Fr> values(query_size);
+        for (std::size_t i=0;i<query_size;++i) values[i]=Fr(chunk.chunks[i]);
+        proof.chunk_evaluations.push_back(
+            evaluateMultilinear(std::move(values), challenges));
+    }
+
+    Fr reconstructed_evaluation=0;
+    Fr weight=1;
+    for (std::size_t i=0;i<proof.chunk_evaluations.size();++i) {
+        reconstructed_evaluation+=proof.chunk_evaluations[i]*weight;
+        for (unsigned bit=0;bit<constraint.chunk_queries[i].chunk_bits;++bit)
+            weight+=weight;
+    }
+    if (proof.encoded_evaluation-reconstructed_evaluation!=proof.final_claim)
+        throw std::logic_error("batched reconstruction evaluation failed");
+
+    transcript.appendFr("reconstruction.final_claim", proof.final_claim);
+    transcript.appendFr("reconstruction.encoded_evaluation",
+                        proof.encoded_evaluation);
+    for (const auto &evaluation : proof.chunk_evaluations)
+        transcript.appendFr("reconstruction.chunk_evaluation", evaluation);
+    return proof;
+}
+
+RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
+    RangeProof proof;
+    proof.membership_prover_time=proveMembership(&proof.chunk_commitments);
+    timer reconstruction_timer;
+    reconstruction_timer.start();
+    Transcript transcript("zkGPT-range-stage-b-v1");
+    appendRangeStatement(transcript, statement);
+    appendChunkCommitments(transcript, proof);
+    const auto &constraints=ops.front().constraints;
+    proof.reconstruction_proofs.reserve(constraints.size());
+    for (std::size_t i=0;i<constraints.size();++i)
+        proof.reconstruction_proofs.push_back(
+            proveReconstruction(i, constraints[i], transcript));
+    proof.transcript_binding=transcript.challenge("range-proof-final");
+    reconstruction_timer.stop();
+    proof.reconstruction_prover_time=reconstruction_timer.elapse_sec();
+    return proof;
 }
 
 int next_power_of_2(int n) {
@@ -384,30 +540,74 @@ void range_prover::validateShape(const WitnessShape &shape) {
         throw std::invalid_argument("Range Proof attention dimensions are inconsistent");
 }
 
-ll range_prover::encodeWitnessValue(const F &field_value,
-                                    const RangeConstraint &constraint,
-                                    std::size_t absolute_offset) {
-    const __int128 value=convert(field_value);
-    const bool fits=constraint.is_signed
-        ? fitsSignedBits(value, constraint.bits)
-        : fitsUnsignedBits(value, constraint.bits);
-    if (!fits) {
+range_wide::EncodedWitnessValue range_prover::encodeWitnessValue(
+    const F &field_value, const RangeConstraint &constraint,
+    std::size_t absolute_offset) {
+    const bool negative=field_value.isNegative();
+    F magnitude_field=negative ? -field_value : field_value;
+    std::array<std::uint8_t, 32> bytes{};
+    const int byte_count=magnitude_field.getLittleEndian(
+        bytes.data(), bytes.size());
+    range_wide::UnsignedWide magnitude=0;
+    bool magnitude_too_large=byte_count<0 || byte_count>16;
+    if (!magnitude_too_large) {
+        for (int i=byte_count-1;i>=0;--i)
+            magnitude=magnitude*256+bytes[static_cast<std::size_t>(i)];
+        magnitude_too_large=
+            magnitude>=range_wide::limitForBits(range_wide::kMaxBits);
+    }
+    try {
+        if (magnitude_too_large)
+            throw std::range_error("field magnitude exceeds Range Proof capacity");
+        const range_wide::SignedWide value=negative
+            ? -static_cast<range_wide::SignedWide>(magnitude)
+            : static_cast<range_wide::SignedWide>(magnitude);
+        const auto encoded=constraint.is_signed
+            ? range_wide::encodeSigned(value, constraint.bits)
+            : range_wide::encodeUnsigned(value, constraint.bits);
+        return {encoded};
+    } catch (const std::exception &) {
         std::ostringstream message;
         message << "Range Proof value out of bounds for " << constraint.name
-                << " at val[0][" << absolute_offset << "]: value="
-                << int128ToString(value) << ", bits=" << constraint.bits
+                << " at val[0][" << absolute_offset << "]: magnitude=";
+        if (magnitude_too_large)
+            message << ">=2^" << range_wide::kMaxBits;
+        else
+            message << (negative ? "-" : "")
+                    << range_wide::unsignedWideToString(magnitude);
+        message << ", bits=" << constraint.bits
                 << ", signed=" << (constraint.is_signed ? "true" : "false");
         throw std::range_error(message.str());
     }
-    if (!constraint.is_signed) return value;
-    const __int128 bias=static_cast<__int128>(1)<<(constraint.bits-1);
-    return value+bias;
+}
+
+void range_prover::buildChunkQueries(Constraint &constraint) {
+    const unsigned chunk_count=(constraint.range_size+
+        range_wide::kDefaultChunkBits-1)/range_wide::kDefaultChunkBits;
+    constraint.chunk_queries.assign(chunk_count, {});
+    for (unsigned chunk_index=0;chunk_index<chunk_count;++chunk_index) {
+        auto &query=constraint.chunk_queries[chunk_index];
+        const unsigned offset=chunk_index*range_wide::kDefaultChunkBits;
+        query.chunk_bits=std::min(range_wide::kDefaultChunkBits,
+                                  constraint.range_size-offset);
+        query.chunks.reserve(constraint.inputs.size());
+    }
+    for (const auto &input : constraint.inputs) {
+        const auto chunks=range_wide::decomposeWide(
+            input.encoded, constraint.range_size);
+        if (range_wide::reconstructWide(chunks, constraint.range_size)!=
+            input.encoded)
+            throw std::logic_error("Range Proof wide-value reconstruction failed");
+        for (unsigned i=0;i<chunk_count;++i)
+            constraint.chunk_queries[i].chunks.push_back(chunks[i]);
+    }
 }
 
 void range_prover::buildFromWitness(const vector<F> &val0,
                                     const WitnessRegistry &registry) {
     registry.validateLayout(val0.size());
     validateShape(registry.shape());
+    witness_shape=registry.shape();
     ops.clear();
     query_regions.clear();
     witness_source=&val0;
@@ -456,8 +656,9 @@ void range_prover::buildFromWitness(const vector<F> &val0,
         while (padded<constraint.actual_query_size) padded<<=1;
         if (padded>max_query_size)
             throw std::length_error("Range Proof query exceeds 2^MAXL");
-        constraint.inputs.resize(padded, 0);
+        constraint.inputs.resize(padded, range_wide::EncodedWitnessValue{});
         constraint.query_size=static_cast<int>(padded);
+        buildChunkQueries(constraint);
     }
     if (op.constraints.empty())
         throw std::invalid_argument("witness registry contains no range constraints");
@@ -488,7 +689,7 @@ void range_prover::verifyWitnessConsistency() const {
         const Constraint &proof_constraint=
             ops.front().constraints.at(region.proof_constraint_index);
         for (std::size_t i=0;i<region.count;++i) {
-            const ll expected=encodeWitnessValue(
+            const auto expected=encodeWitnessValue(
                 witness_source->at(region.val0_offset+i), constraint,
                 region.val0_offset+i);
             if (proof_constraint.inputs.at(region.proof_start+i)!=expected) {
@@ -497,6 +698,13 @@ void range_prover::verifyWitnessConsistency() const {
                         << region.name << " at relative index " << i;
                 throw std::logic_error(message.str());
             }
+            std::vector<std::uint16_t> chunks;
+            chunks.reserve(proof_constraint.chunk_queries.size());
+            for (const auto &query : proof_constraint.chunk_queries)
+                chunks.push_back(query.chunks.at(region.proof_start+i));
+            if (range_wide::reconstructWide(chunks, region.bits)!=
+                expected.encoded)
+                throw std::logic_error("Range Proof chunks no longer reconstruct val[0]");
         }
     }
 }
@@ -506,5 +714,5 @@ void range_prover::tamperBuiltValueForTest(std::size_t region_index) {
         throw std::logic_error("cannot tamper an uninitialized Range Proof");
     const auto &region=query_regions.at(region_index);
     Constraint &constraint=ops.front().constraints.at(region.proof_constraint_index);
-    constraint.inputs.at(region.proof_start)+=1;
+    constraint.inputs.at(region.proof_start).encoded+=1;
 }

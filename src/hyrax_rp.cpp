@@ -23,9 +23,9 @@ G1 range_proof_perdersen_commit(G1* g,ll* f,int n,G1* W)
     
     bool *used=new bool[COMM_OPT_MAX*block_num];
     memset(used,0,sizeof(bool)*COMM_OPT_MAX*block_num);
-    ll bar[10];
-    ll bar_t=1;
-    for(int i=0;i<8;i++)
+    unsigned __int128 bar[block_num];
+    unsigned __int128 bar_t=1;
+    for(int i=0;i<block_num;i++)
     {
         bar[i]=bar_t;
         bar_t<<=logmax;
@@ -37,24 +37,28 @@ G1 range_proof_perdersen_commit(G1* g,ll* f,int n,G1* W)
             
             if(f[i]<0)
             {
-                ll tmp=-f[i];
+                const unsigned __int128 tmp=
+                    static_cast<unsigned __int128>(-(f[i]+1))+1;
                 for(int j=0;j<block_num;j++)
                 {
                     if(tmp<bar[j])
                         break;
-                    ll fnow=(tmp>>(logmax*j))&65535;
+                    const std::size_t fnow=static_cast<std::size_t>(
+                        (tmp>>(logmax*j))&65535);
                     W[fnow+(j<<logmax)]-=g[i];
                     used[fnow+(j<<logmax)]=1;
                 }
             }
             else
             {
-                ll tmp=f[i];
+                const unsigned __int128 tmp=
+                    static_cast<unsigned __int128>(f[i]);
                 for(int j=0;j<block_num;j++)
                 {
                     if(tmp<bar[j])
                         break;
-                    ll fnow=(tmp>>(logmax*j))&65535;
+                    const std::size_t fnow=static_cast<std::size_t>(
+                        (tmp>>(logmax*j))&65535);
                     W[fnow+(j<<logmax)]+=g[i];
                     used[fnow+(j<<logmax)]=1;
                 }
@@ -106,6 +110,7 @@ G1 range_proof_perdersen_commit_redundant(G1* g,Fr* f,ll* id,int n,int m) // com
         base2[id[i]]+=g[i];
     }
     G1::mulVec(ret,base2,f,m);
+    delete[] base2;
     return ret;
 }
 
@@ -253,17 +258,16 @@ G1* range_proof_prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, in
     for (u64 i = 0; i < rownum; ++i)  //work for rownum 
         workerq.Push(i);
 
+    vector<thread> workers;
+    workers.reserve(thread_n);
     for(int i=0;i<thread_n;i++)
-    {
-        thread t(ll_commit_worker,std::ref(Tk),std::ref(g),std::ref(w),rownum,colnum,std::ref(W[i])); 
-        t.detach();
-    }
-    while(!workerq.Empty())
-        this_thread::sleep_for (std::chrono::microseconds(10));
-    while(endq.Size()!=rownum)
-        this_thread::sleep_for (std::chrono::microseconds(10));
+        workers.emplace_back(ll_commit_worker,std::ref(Tk),std::ref(g),
+                             std::ref(w),rownum,colnum,std::ref(W[i]));
+    for (auto &worker : workers) worker.join();
+    if (endq.Size()!=static_cast<std::size_t>(rownum))
+        throw std::runtime_error("range proof commit worker count mismatch");
     endq.Clear();
-    if (endq.Size()!=0)
+    if (!workerq.Empty() || endq.Size()!=0)
         throw std::runtime_error("range proof commit worker queue did not drain");
    // t.stop("commit time(PPG) ");
     for(int i=0;i<thread_n;i++)
@@ -303,17 +307,16 @@ G1* range_proof_prover_commit_fr(ll* w, Fr* f,int m,G1* g, int l,int thread_n)
     for (u64 i = 0; i < rownum; ++i)  //work for rownum 
         workerq.Push(i);
 
+    vector<thread> workers;
+    workers.reserve(thread_n);
     for(int i=0;i<thread_n;i++)
-    {
-        thread t(fr_commit_worker,std::ref(Tk),std::ref(g),std::ref(w),std::ref(f),m,rownum,colnum); 
-        t.detach();
-    }
-    while(!workerq.Empty())
-        this_thread::sleep_for (std::chrono::microseconds(10));
-    while(endq.Size()!=rownum)
-        this_thread::sleep_for (std::chrono::microseconds(10));
+        workers.emplace_back(fr_commit_worker,std::ref(Tk),std::ref(g),
+                             std::ref(w),std::ref(f),m,rownum,colnum);
+    for (auto &worker : workers) worker.join();
+    if (endq.Size()!=static_cast<std::size_t>(rownum))
+        throw std::runtime_error("range proof redundant worker count mismatch");
     endq.Clear();
-    if (endq.Size()!=0)
+    if (!workerq.Empty() || endq.Size()!=0)
         throw std::runtime_error("range proof redundant commit queue did not drain");
    // t.stop("commit time Fr ");
     return Tk;
@@ -348,17 +351,16 @@ G1* range_proof_prover_commit_fr_general(Fr* w, G1* g, int l,int thread_n)
     for (u64 i = 0; i < rownum; ++i)  //work for rownum 
         workerq.Push(i);
 
+    vector<thread> workers;
+    workers.reserve(thread_n);
     for(int i=0;i<thread_n;i++)
-    {
-        thread t(fr_commit_worker_general,std::ref(Tk),std::ref(g),std::ref(w),rownum,colnum); 
-        t.detach();
-    }
-    while(!workerq.Empty())
-        this_thread::sleep_for (std::chrono::microseconds(10));
-    while(endq.Size()!=rownum)
-        this_thread::sleep_for (std::chrono::microseconds(10));
+        workers.emplace_back(fr_commit_worker_general,std::ref(Tk),std::ref(g),
+                             std::ref(w),rownum,colnum);
+    for (auto &worker : workers) worker.join();
+    if (endq.Size()!=static_cast<std::size_t>(rownum))
+        throw std::runtime_error("range proof field worker count mismatch");
     endq.Clear();
-    if (endq.Size()!=0)
+    if (!workerq.Empty() || endq.Size()!=0)
         throw std::runtime_error("range proof field commit queue did not drain");
  //   t.stop("commit time Fr ");
     return Tk;
