@@ -1,4 +1,7 @@
 #include "range_prover.hpp"
+#include "hyrax_opening.hpp"
+#include "sparse_opening.hpp"
+#include "range_logup.hpp"
 #include <array>
 #include <iostream>
 #include <limits>
@@ -365,8 +368,10 @@ double range_prover::proveMembership(
 
 RangePublicStatement range_prover::makePublicStatement(
     int val0_log_size, const G1 *val0_commitments,
-    std::size_t commitment_count) const {
-    if (!built_from_witness || val0_commitments==nullptr)
+    std::size_t commitment_count, const G1 *val0_generators,
+    std::size_t generator_count, const G1 &val0_u) const {
+    if (!built_from_witness || val0_commitments==nullptr ||
+        val0_generators==nullptr)
         throw std::logic_error("cannot make a public statement before buildFromWitness");
     if (val0_log_size<0 || val0_log_size>62)
         throw std::invalid_argument("invalid val[0] commitment log size");
@@ -374,6 +379,10 @@ RangePublicStatement range_prover::makePublicStatement(
                                << (val0_log_size/2);
     if (commitment_count!=expected)
         throw std::invalid_argument("val[0] commitment row count mismatch");
+    const std::size_t expected_generators=static_cast<std::size_t>(1)
+        << (val0_log_size-val0_log_size/2);
+    if (generator_count!=expected_generators)
+        throw std::invalid_argument("val[0] generator count mismatch");
     const std::size_t val0_capacity=static_cast<std::size_t>(1)<<val0_log_size;
     if (witness_source==nullptr || witness_source->size()>val0_capacity)
         throw std::invalid_argument("val[0] witness exceeds commitment capacity");
@@ -382,6 +391,11 @@ RangePublicStatement range_prover::makePublicStatement(
     statement.val0_log_size=val0_log_size;
     statement.val0_commitment.assign(val0_commitments,
                                      val0_commitments+commitment_count);
+    statement.val0_generators.assign(val0_generators,
+                                     val0_generators+generator_count);
+    statement.val0_u=val0_u;
+    statement.range_generators.assign(g, g+(1<<(MAXL-MAXL/2)));
+    statement.range_u=GG;
     statement.shape=witness_shape;
     statement.regions.reserve(query_regions.size());
     for (const auto &region : query_regions)
@@ -422,7 +436,7 @@ Fr evaluateMultilinear(vector<Fr> values, const vector<Fr> &challenges) {
 
 ReconstructionProof range_prover::proveReconstruction(
     std::size_t query_index, const Constraint &constraint,
-    Transcript &transcript) const {
+    Transcript &transcript, vector<Fr> *point) const {
     ReconstructionProof proof;
     proof.query_index=query_index;
     proof.initial_claim=0;
@@ -430,17 +444,14 @@ ReconstructionProof range_prover::proveReconstruction(
     const std::size_t query_size=static_cast<std::size_t>(constraint.query_size);
     unsigned rounds=0;
     for (std::size_t n=query_size;n>1;n>>=1) ++rounds;
-    vector<Fr> challenges;
-    challenges.reserve(rounds);
     for (unsigned round=0;round<rounds;++round) {
         ReconstructionRound message;
         message.sum0=0;
         message.sum1=0;
         proof.rounds.push_back(message);
-        transcript.appendFr("reconstruction.sum0", message.sum0);
-        transcript.appendFr("reconstruction.sum1", message.sum1);
-        challenges.push_back(transcript.challenge("reconstruction-round"));
     }
+    vector<Fr> challenges=deriveReconstructionPoint(transcript, proof);
+    if (point) *point=challenges;
     proof.final_claim=0;
 
     vector<Fr> encoded(query_size);
@@ -486,17 +497,74 @@ ReconstructionProof range_prover::proveReconstruction(
 
 RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
     RangeProof proof;
-    proof.membership_prover_time=proveMembership(&proof.chunk_commitments);
+    if (!built_from_witness || ops.empty())
+        throw std::logic_error("Stage B Range Proof is not initialized");
+    verifyWitnessConsistency();
+    timer membership_timer;
+    membership_timer.start();
+    const auto &constraints=ops.front().constraints;
+    proof.membership_proofs.resize(constraints.size());
+    proof.chunk_commitments.resize(constraints.size());
+    for (std::size_t query_index=0;query_index<constraints.size();++query_index) {
+        const auto &constraint=constraints[query_index];
+        auto &query_proofs=proof.membership_proofs[query_index];
+        auto &query_commitments=proof.chunk_commitments[query_index];
+        query_proofs.reserve(constraint.chunk_queries.size());
+        query_commitments.reserve(constraint.chunk_queries.size());
+        std::cout << "start Stage B membership query_size "
+                  << constraint.query_size << "\t range_size "
+                  << constraint.range_size << std::endl;
+        for (std::size_t chunk_index=0;
+             chunk_index<constraint.chunk_queries.size();++chunk_index) {
+            const auto &chunk=constraint.chunk_queries[chunk_index];
+            std::cout << "  proving independent LogUp chunk " << chunk_index
+                      << " (" << chunk.chunk_bits << " bits)" << std::endl;
+            query_proofs.push_back(proveLogUp(
+                query_index, chunk_index, chunk.chunk_bits, chunk.chunks,
+                statement.range_generators, statement.range_u, thread_num));
+            query_commitments.push_back(
+                query_proofs.back().value_commitment);
+        }
+    }
+    membership_timer.stop();
+    proof.membership_prover_time=membership_timer.elapse_sec();
     timer reconstruction_timer;
     reconstruction_timer.start();
     Transcript transcript("zkGPT-range-stage-b-v1");
     appendRangeStatement(transcript, statement);
     appendChunkCommitments(transcript, proof);
-    const auto &constraints=ops.front().constraints;
     proof.reconstruction_proofs.reserve(constraints.size());
-    for (std::size_t i=0;i<constraints.size();++i)
+    proof.chunk_openings.resize(constraints.size());
+    proof.val0_openings.reserve(constraints.size());
+    for (std::size_t i=0;i<constraints.size();++i) {
+        vector<Fr> point;
         proof.reconstruction_proofs.push_back(
-            proveReconstruction(i, constraints[i], transcript));
+            proveReconstruction(i, constraints[i], transcript, &point));
+        auto &openings=proof.chunk_openings[i];
+        openings.reserve(constraints[i].chunk_queries.size());
+        for (std::size_t chunk_index=0;
+             chunk_index<constraints[i].chunk_queries.size();++chunk_index) {
+            ChunkOpeningProof opening;
+            opening.query_index=i;
+            opening.chunk_index=chunk_index;
+            opening.claimed_evaluation=
+                proof.reconstruction_proofs.back().chunk_evaluations[chunk_index];
+            const std::string label="chunk-mle/"+std::to_string(i)+"/"+
+                                    std::to_string(chunk_index);
+            opening.opening=hyraxMleOpenProve(
+                constraints[i].chunk_queries[chunk_index].chunks,
+                proof.chunk_commitments[i][chunk_index], point,
+                statement.range_generators, statement.range_u,
+                opening.claimed_evaluation, transcript, label);
+            openings.push_back(std::move(opening));
+        }
+        if (witness_source==nullptr)
+            throw std::logic_error("val[0] witness is unavailable for opening");
+        proof.val0_openings.push_back(proveSparseVal0Opening(
+            statement, i, point, *witness_source,
+            proof.reconstruction_proofs.back().encoded_evaluation,
+            transcript));
+    }
     proof.transcript_binding=transcript.challenge("range-proof-final");
     reconstruction_timer.stop();
     proof.reconstruction_prover_time=reconstruction_timer.elapse_sec();

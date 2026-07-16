@@ -937,17 +937,6 @@ void prover::commitInput(const vector<G1> &gens,int thr)
     }
     
     int l=ceil(log2(val[0].size()));
-    ll* vi=new ll[1<<l];
-    memset(vi,0,sizeof(ll)*(1<<l));
-    ll mx=-1e9,mn=1e9;
-    for(int i=0;i<val[0].size();i++)
-    {
-        vi[i]=convert(val[0][i]);   //存储input数据的ll形式,转化为128bit
-        mx=max(mx,vi[i]);
-        mn=min(mn,vi[i]);
-        
-    }
-    
     Fr* dat=new Fr[1<<l];  // 存储input数据的fr形式
     memset(dat,0,sizeof(Fr)*(1<<l));
     memcpy(dat,val[0].data(),sizeof(Fr)*val[0].size());
@@ -963,14 +952,16 @@ void prover::commitInput(const vector<G1> &gens,int thr)
     //     printf("=============保存数据完成！======================\n");
     // }
 
-    G1* ret=prover_commit(vi,(G1*)gens.data(),l,thr);
+    // Commit the field witness directly. Converting through ll truncates the
+    // 126-bit values that Stage B is required to bind.
+    G1* ret=prover_commit(dat,(G1*)gens.data(),l,thr);
     
     cc.comm=ret;
     cc.G=gens.back();
     cc.g=(G1*)gens.data();
     cc.l=l;
     cc.w=dat;
-    cc.ww=vi;
+    cc.ww=nullptr;
     val[0].resize(len);
 }
 
@@ -987,11 +978,21 @@ __int128 convert(Fr x)
         abs=x;	
 
     uint8_t bf[16]={0};	 //128 bit
-    int size=abs.getLittleEndian(bf,16);	
-    ll V=0;	
-    for(int j=size-1;j>=0;j--)	
-        V=V*256+bf[j];	
-    if(sign)	
-        V=-V;	
-    return V;	
+    int size=abs.getLittleEndian(bf,16);
+    if(size<=0)
+        throw std::range_error("field value exceeds the signed 128-bit range");
+    unsigned __int128 V=0;
+    for(int j=size-1;j>=0;j--)
+        V=V*256+bf[j];
+    const unsigned __int128 sign_bit=static_cast<unsigned __int128>(1)<<127;
+    if(sign) {
+        if(V>sign_bit)
+            throw std::range_error("field value is below the signed 128-bit range");
+        if(V==sign_bit)
+            return -static_cast<__int128>(V-1)-1;
+        return -static_cast<__int128>(V);
+    }
+    if(V>=sign_bit)
+        throw std::range_error("field value exceeds the signed 128-bit range");
+    return static_cast<__int128>(V);
 }

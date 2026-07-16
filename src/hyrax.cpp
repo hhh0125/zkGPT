@@ -6,13 +6,15 @@
 #include <mutex>
 #include <iostream>
 #include <chrono>
+#include <atomic>
+#include <exception>
 using namespace std;
 using namespace mcl::bn;
 
 const int MAX_MSM_LEN=1e4;
 const int COMM_OPT_MAX=65536; //don't optimize if larger than this  2^16
 const int logmax=16;  /// max number=2^18-1
-const int block_num=5;  //2^80
+const int block_num=8;  // Full signed/unsigned 128-bit scalar decomposition.
 
 
 G1 perdersen_commit(G1* g,ll* f,int n,G1* W)
@@ -84,15 +86,10 @@ G1 perdersen_commit(G1* g,ll* f,int n,G1* W)
             used[j]=0;            
         }
     }
-    for(int j=0;j<logmax*block_num;j++)
-    {
-        if(j>60)
-        {
-            G1 gd=gg[j]*(1ll<<48);
-            ret+=gd*(1ll<<(j-48)); //split
-        }
-        else
-            ret+=gg[j]*(1ll<<j);
+    for(int j=0;j<logmax*block_num;j++) {
+        G1 weighted=gg[j];
+        for(int bit=0;bit<j;++bit) weighted+=weighted;
+        ret+=weighted;
     }
     delete []used;
     return ret;
@@ -287,18 +284,81 @@ G1 compute_RT(Fr *w, Fr *R, int l, G1 *g, Fr *&ret) // L is row number length
 
 G1 gen_gi(G1* g,int n)
 {
-    G1 base;
-    base.setStr("1 0x2523648240000001ba344d80000000086121000000000013a700000000000012 0x1");
-    if (!base.isValid() || base.isZero())
-        throw std::runtime_error("invalid Hyrax base generator");
-    for(int i=0;i<n;i++)
-    {
-        Fr tmp;
-        tmp.setByCSPRNG();
-        g[i]=base*tmp;
+    if (g==nullptr || n<=0)
+        throw std::invalid_argument("invalid Hyrax generator request");
+    for(int i=0;i<n;i++) {
+        const std::string label="zkGPT/main/g/"+std::to_string(i);
+        hashAndMapToG1(g[i], label);
+        if (!g[i].isValid() || g[i].isZero())
+            throw std::runtime_error("invalid deterministic Hyrax generator");
     }
-    return base;
+    G1 u;
+    hashAndMapToG1(u, "zkGPT/main/u");
+    if (!u.isValid() || u.isZero())
+        throw std::runtime_error("invalid deterministic Hyrax U generator");
+    return u;
 }
+
+namespace {
+
+std::pair<bool, unsigned __int128> fieldSignedMagnitude(const Fr &value)
+{
+    const bool negative=value.isNegative();
+    const Fr magnitude_field=negative ? -value : value;
+    uint8_t bytes[16]={0};
+    const int size=magnitude_field.getLittleEndian(bytes, sizeof(bytes));
+    if (size<=0)
+        throw std::range_error("Hyrax scalar exceeds signed 128-bit range");
+    unsigned __int128 magnitude=0;
+    for(int i=size-1;i>=0;--i) magnitude=magnitude*256+bytes[i];
+    const unsigned __int128 sign_bit=static_cast<unsigned __int128>(1)<<127;
+    if ((!negative && magnitude>=sign_bit) ||
+        (negative && magnitude>sign_bit))
+        throw std::range_error("Hyrax scalar exceeds signed 128-bit range");
+    return {negative, magnitude};
+}
+
+G1 perdersen_commit(G1* g, Fr* f, int n, G1* W)
+{
+    G1 result;
+    result.clear();
+    bool *used=new bool[COMM_OPT_MAX*block_num];
+    memset(used, 0, sizeof(bool)*COMM_OPT_MAX*block_num);
+
+    for(int i=0;i<n;++i) {
+        const auto scalar=fieldSignedMagnitude(f[i]);
+        unsigned __int128 remaining=scalar.second;
+        for(int block=0;block<block_num && remaining!=0;
+            ++block, remaining>>=logmax) {
+            const std::size_t digit=static_cast<std::size_t>(remaining&65535);
+            if (digit==0) continue;
+            const std::size_t bucket=digit+(block<<logmax);
+            if (scalar.first) W[bucket]-=g[i];
+            else W[bucket]+=g[i];
+            used[bucket]=true;
+        }
+    }
+
+    G1 bit_sums[logmax*block_num];
+    for(G1 &sum : bit_sums) sum.clear();
+    for(int bucket=0;bucket<COMM_OPT_MAX*block_num;++bucket) {
+        if (!used[bucket]) continue;
+        const int digit=bucket%COMM_OPT_MAX;
+        const int block=bucket/COMM_OPT_MAX;
+        for(int bit=0;bit<logmax;++bit)
+            if (digit&(1<<bit)) bit_sums[bit+logmax*block]+=W[bucket];
+        W[bucket].clear();
+    }
+    for(int bit=0;bit<logmax*block_num;++bit) {
+        G1 weighted=bit_sums[bit];
+        for(int shift=0;shift<bit;++shift) weighted+=weighted;
+        result+=weighted;
+    }
+    delete[] used;
+    return result;
+}
+
+}  // namespace
 
 double blt_vtime=0;
 Pack bullet_reduce(G1 gamma, Fr*a,G1*g,int n,G1& G,Fr* x,Fr y,bool need_free) // length n
@@ -429,6 +489,47 @@ G1* prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, int version wi
         delete [] W[i];
     delete []W;
     return Tk;
+}
+
+G1* prover_commit(Fr* w, G1* g, int l, int thread_n)
+{
+    if (w==nullptr || g==nullptr || l<0 || l>30 || thread_n<=0)
+        throw std::invalid_argument("invalid field Hyrax commitment request");
+    const int rownum=1<<(l/2);
+    const int colnum=1<<(l-l/2);
+    G1 *commitments=new G1[rownum];
+    const int worker_count=std::min(thread_n, rownum);
+    std::atomic<int> next_row{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr worker_error;
+    std::mutex error_mutex;
+    std::vector<std::thread> workers;
+    workers.reserve(worker_count);
+    for(int worker=0;worker<worker_count;++worker) {
+        workers.emplace_back([&] {
+            G1 *buckets=new G1[COMM_OPT_MAX*block_num];
+            memset(buckets, 0, sizeof(G1)*COMM_OPT_MAX*block_num);
+            while(!failed.load(std::memory_order_relaxed)) {
+                const int row=next_row.fetch_add(1);
+                if (row>=rownum) break;
+                try {
+                    commitments[row]=perdersen_commit(
+                        g, w+row*colnum, colnum, buckets);
+                } catch (...) {
+                    failed.store(true, std::memory_order_relaxed);
+                    std::lock_guard<std::mutex> lock(error_mutex);
+                    if (!worker_error) worker_error=std::current_exception();
+                }
+            }
+            delete[] buckets;
+        });
+    }
+    for(auto &worker : workers) worker.join();
+    if (worker_error) {
+        delete[] commitments;
+        std::rethrow_exception(worker_error);
+    }
+    return commitments;
 }
 
 

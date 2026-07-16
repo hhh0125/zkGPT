@@ -54,8 +54,21 @@ int main(int argc, char **argv)
         range_prover kernel(12, 12, 64, 768, 3072, 32, 4, 1);
         kernel.init();
         kernel.buildFromWitness(val0, registry);
-        kernel.prove();
-        cout << "Stage A Range Proof kernel test passed" << endl;
+        std::vector<G1> val0_generators(32);
+        const G1 val0_u=gen_gi(val0_generators.data(),
+                               val0_generators.size());
+        G1 *val0_commitments=prover_commit(
+            val0.data(), val0_generators.data(), 10, 4);
+        const auto statement=kernel.makePublicStatement(
+            10, val0_commitments, 32, val0_generators.data(),
+            val0_generators.size(), val0_u);
+        delete[] val0_commitments;
+        const auto proof=kernel.proveStageB(statement);
+        range_verifier range_verifier;
+        string error;
+        if (!range_verifier.verify(statement, proof, &error))
+            throw runtime_error("Stage B kernel verification failed: "+error);
+        cout << "Stage B Range Proof kernel test passed" << endl;
         return 0;
     }
 
@@ -227,21 +240,23 @@ int main(int argc, char **argv)
     }
     const std::size_t val0_commitment_count=static_cast<std::size_t>(1)
         << (p.cc.l/2);
+    const std::size_t val0_generator_count=static_cast<std::size_t>(1)
+        << (p.cc.l-p.cc.l/2);
     const auto range_statement=range_prover.makePublicStatement(
-        p.cc.l, p.cc.comm, val0_commitment_count);
+        p.cc.l, p.cc.comm, val0_commitment_count, p.cc.g,
+        val0_generator_count, p.cc.G);
     const auto range_proof=range_prover.proveStageB(range_statement);
     range_verifier range_verifier;
     string range_error;
-    if (!range_verifier.verifyReconstruction(
+    if (!range_verifier.verify(
             range_statement, range_proof, &range_error))
-        throw runtime_error("Range reconstruction verification failed: "+
+        throw runtime_error("Range verification failed: "+
                             range_error);
     const double range_prover_time=range_proof.totalProverTime();
     cout << "Range chunk reconstruction proof verified; prover time="
          << range_proof.reconstruction_prover_time << "s" << endl;
 
-    cout << "Range/GKR use the same in-memory witness, but commitment-level "
-            "binding is not implemented." << endl;
+    cout << "Range/GKR commitment binding verified." << endl;
     verifier v(&p, p.C);
     v.range_prove(range_prover_time);
     v.prove(32); // prove with 32 threads

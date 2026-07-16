@@ -1,8 +1,125 @@
 # zkGPT 0715 工作总结
 
+> 更新说明：本文档第 14-19 节保留的是提交 `df28bcf` 时的 Stage B
+> 历史基线。下面的“Stage B 最新进展”是当前实现状态，并覆盖旧基线中
+> “commitment opening 尚未实现”的结论。
+
+## Stage B 最新进展（2026-07-15）
+
+Stage B 的协议实现已经完成到可独立验证状态：`range_verifier` 不读取
+私有 `val[0]`、chunk、multiplicity 或 reciprocal witness；诚实 proof 在
+Debug/Release、UBSan 和 ASan 小规模/宽位测试中返回 `true`，全部协议负面
+测试返回 `false`。完整 GPT Release 流程已进入全规模独立 LogUp proving，
+但在 900 秒测试上限内未完成，所以目前不能写成“完整 GPT 已端到端通过”。
+
+原版本存在五个安全缺口：`encoded_evaluation` 没有绑定
+`val0_commitment`、`chunk_evaluations` 没有绑定 `chunk_commitments`、公共
+region 映射未被证明、signed bias 未被证明、padding 为零未被证明。当前
+分别通过 sparse val0 opening、chunk MLE opening、公共稀疏系数映射、
+verifier 计算的 `2^(bits-1)` bias 和公开 region 覆盖规则完成约束。
+
+### 新增协议模块
+
+- `hyrax_opening.hpp/.cpp`：可序列化 Hyrax IPA 与 MLE opening。
+- `range_sumcheck.hpp/.cpp`：可序列化 degree-1/degree-3 sumcheck。
+- `range_logup.hpp/.cpp`：独立 LogUp prover/verifier。
+- `sparse_opening.hpp/.cpp`：`val[0]` 公共稀疏线性函数 opening。
+- `range_protocol.hpp/.cpp`：完整 proof 结构、Transcript、验证流程和 proof
+  payload 大小估算。
+- `main_range_tests.cpp`：126 位 honest proof、混合 signed/unsigned/padding
+  和逐步骤负面测试。
+
+### Chunk MLE opening
+
+每个 `(query, chunk)` 保存 `ChunkOpeningProof`，其中包含 query/chunk 索引、
+claimed evaluation 和 `MleOpeningProof`。重构 sumcheck 从 Transcript 派生
+统一随机点 `r` 后，prover 证明：
+
+```text
+chunk_evaluation[j] = MLE(chunk_vector[j], r)
+```
+
+IPA 每轮保存左右两个 `G1` 消息；挑战由 verifier 重放 Transcript 得到，
+最终检查 folded commitment equation。verifier 不读取 chunk 向量。
+
+### val0 稀疏映射 opening
+
+公开 region 将 query 位置映射为 `val[0]` 位置，并构造公开稀疏系数：
+
+```text
+encoded_eval - signed_bias_eval = <val0, public_sparse_coefficients>
+```
+
+region 会按主 Hyrax commitment 行边界和 query low-bit block 边界切分；相同
+系数模式分组后聚合行承诺，再对每组生成 IPA inner-product opening。padding
+没有 region，因此系数和 bias 都为零。
+
+signed region 的公开偏移为 `2^(region.bits-1)`，unsigned region 和 padding
+为零。bias 按每个 region 独立累加，不会把 signed 偏移应用到同 query 的
+unsigned region。
+
+### 独立 LogUp
+
+每个 chunk 的 `LogUpProof` 保存 value/table/multiplicity/两侧 reciprocal
+commitments、两个 degree-3 reciprocal sumchecks、两个 degree-1 sum-equality
+sumchecks、六个 MLE openings 和 LogUp transcript binding。verifier 独立检查：
+
+```text
+G_i * (offset + f_i) = 1
+H_i * (offset + t_i) = c_i
+sum(G) = sum(H)
+```
+
+所有 offset、statement point、sumcheck 和 IPA 挑战均来自 Transcript；主
+Stage B 路径不再调用旧 LogUp 的 `setByCSPRNG()`。
+
+### Transcript 与完整 verifier
+
+顶层消息顺序为：公共 `RangePublicStatement`（含 shape、region、query、
+deterministic generators） -> 所有 chunk commitments -> 每个 reconstruction
+round 消息与挑战 -> final/claimed evaluations -> chunk openings -> sparse val0
+openings -> `range-proof-final` binding。LogUp 子协议先吸收其所有 commitments，
+再派生 offset 和后续挑战。
+
+`range_verifier::verify()` 当前执行：公共维度与确定性 generator 检查 -> 所有
+独立 LogUp -> reconstruction sumcheck -> chunk MLE openings -> sparse val0
+mapping 与 signed bias -> 顶层 transcript binding。旧的固定失败返回已经删除。
+
+### 128 位主承诺修复
+
+主 GKR `val[0]` commitment 不再先把 `Fr` 截断到 `ll`。当前直接接受 field
+witness，做受检查的 signed-128 解码，再用 8 个 16-bit block 聚合基点。
+这既覆盖最高 126 位，也保留大规模承诺的分块优化。完整 `2^28` `val[0]`
+承诺实测为 `8.64s`。
+
+### 测试和测量
+
+- Debug `range_protocol_tests` 与 `--prove-wide`：通过。
+- Release `range_protocol_tests --prove-wide`：通过。
+- Debug/Release 1024 元素 Stage B kernel：通过。
+- UBSan 126 位 honest/negative/mixed 测试：通过，无非法移位或 signed overflow。
+- ASan 同一组测试：通过，无越界、UAF 或分配释放错误。
+- LeakSanitizer：当前 ptrace 执行环境不支持；以 `detect_leaks=0` 完成 ASan。
+- 8 元素、126 位、14 chunks 的 Release proof payload：`88,352` bytes。
+- 同一 Release 样例：prover `0.85s`，verifier `0.75s`（单次运行值）。
+
+负面测试明确打印拒绝步骤，覆盖 chunk commitment/evaluation/opening、encoded
+evaluation、相同重构总和但不同 chunk evaluations、val0 commitment、另一份
+val0 witness commitment、region bits/signed/offset、signed bias、LogUp
+multiplicity/sumcheck/reciprocal opening，以及独立 transcript tampering。承诺
+篡改均在 commitment/opening equation 处拒绝，不依赖最终 binding 才失败。
+
+完整 Release GPT 使用 624 个 regions、10 个 queries、30,647,808 个受约束
+witness。900 秒内完成前 7 个 membership queries，并推进到第 8 个 126 位
+query 的 chunk 9；随后被测试超时终止。没有协议错误或崩溃，但 reconstruction、
+全 verifier 和后续 GKR 尚未在该次全规模运行中到达。下一步属于 Stage B 性能
+工作：批处理/聚合 LogUp 和 openings；不能把本次超时描述为完整端到端通过。
+
 ## 1. 当前阶段结论
 
-当前已经完成阶段 A，并完成了本轮“宽整数与 Range sumcheck 正确性修复”。阶段 B 已推进到公共 statement、proof 对象、Fiat-Shamir transcript、真实 chunk commitments、批量重构证明和独立 reconstruction verifier，但真正的 `val[0]`/chunk commitment opening 等值证明仍未完成。
+当前已经完成阶段 A；Stage B 的 commitment opening、独立 LogUp 和完整
+`range_verifier::verify()` 已实现并通过协议测试。全规模 GPT 流程仍受 proving
+时间限制，当前状态以文档开头的“Stage B 最新进展”为准。
 
 阶段 A 的目标不是直接完成完整、安全的 zkGPT 证明系统，而是先解决一个基础一致性问题：Range Proof 不能再使用随机伪造数据或独立构造的数据，而必须从真实的模型 witness 中读取需要证明范围的值。
 
@@ -314,7 +431,7 @@ UBSan 发现主 Hyrax 和 Range Hyrax 使用有符号 `__int128` 连续左移生
 - 释放 `Lp`、`Rp`、`RT`、redundant commitment 临时数组。
 - 本地根目录 CMake 构建配置已调整为 C++17，并允许外部 sanitizer flags 生效；该根目录文件按本次 `src/`-only 上传要求不进入提交。
 
-## 14. Stage B 已实现部分
+## 14. Stage B 历史基线（已被文档开头的最新进展覆盖）
 
 新增：
 

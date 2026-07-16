@@ -46,6 +46,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="gpt2")
     parser.add_argument("--output", type=Path, default=Path("data/gpt2_int"))
+    parser.add_argument(
+        "--mlp-hidden-size",
+        type=int,
+        default=3072,
+        help="MLP width used by the zkGPT circuit (the current demo uses 3072).",
+    )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
 
@@ -54,10 +60,16 @@ def main() -> None:
     ln_id = 0
     for block in model.transformer.h:
         # Conv1D stores [in, out]; the prover consumes [out, in].
-        for linear in (block.attn.c_attn, block.attn.c_proj,
-                       block.mlp.c_fc, block.mlp.c_proj):
+        for linear_index, linear in enumerate((
+                block.attn.c_attn, block.attn.c_proj,
+                block.mlp.c_fc, block.mlp.c_proj)):
             weight = linear.weight.detach().cpu().numpy().T
             bias = linear.bias.detach().cpu().numpy()
+            if linear_index == 2:
+                weight = weight[:args.mlp_hidden_size, :]
+                bias = bias[:args.mlp_hidden_size]
+            elif linear_index == 3:
+                weight = weight[:, :args.mlp_hidden_size]
             write_matrix(args.output / f"fc_{fc_id}.bin",
                          np.rint(weight / WEIGHT_SCALE))
             write_bias(args.output / f"fc_{fc_id}_bias.bin",

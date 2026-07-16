@@ -140,16 +140,21 @@ Fr range_proof_lagrange(Fr *r,int l,int k)
 
 G1 range_proof_gen_gi(G1* g,int n)
 {
-    G1 base;
-    base.setStr("1 0x2523648240000001ba344d80000000086121000000000013a700000000000012 0x1");
-    
-    for(int i=0;i<n;i++)
-    {
-        Fr tmp;
-        tmp.setByCSPRNG();
-        g[i]=base*tmp;
+    if (g==nullptr || n<=0)
+        throw std::invalid_argument("invalid Range Hyrax generator request");
+    for(int i=0;i<n;i++) {
+        const std::string label="zkGPT/range/g/"+std::to_string(i);
+        hashAndMapToG1(g[i], label);
+        if (!g[i].isValid() || g[i].isZero())
+            throw std::runtime_error(
+                "invalid deterministic Range Hyrax generator");
     }
-    return base;
+    G1 u;
+    hashAndMapToG1(u, "zkGPT/range/u");
+    if (!u.isValid() || u.isZero())
+        throw std::runtime_error(
+            "invalid deterministic Range Hyrax U generator");
+    return u;
 }
 
 

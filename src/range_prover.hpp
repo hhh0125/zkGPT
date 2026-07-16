@@ -80,7 +80,8 @@ public:
     RangeProof proveStageB(const RangePublicStatement &statement);
     RangePublicStatement makePublicStatement(
         int val0_log_size, const G1 *val0_commitments,
-        std::size_t commitment_count) const;
+        std::size_t commitment_count, const G1 *val0_generators,
+        std::size_t generator_count, const G1 &val0_u) const;
     void build();
     void buildFromWitness(const vector<F> &val0,
                           const WitnessRegistry &registry);
@@ -101,7 +102,7 @@ private:
         vector<vector<vector<G1>>> *chunk_commitments);
     ReconstructionProof proveReconstruction(
         std::size_t query_index, const Constraint &constraint,
-        Transcript &transcript) const;
+        Transcript &transcript, vector<Fr> *point) const;
     void validateShape(const WitnessShape &shape);
 };
 __int128 convert(Fr x)	;
