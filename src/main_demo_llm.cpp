@@ -7,6 +7,9 @@
 #include <iostream>
 
 #include "range_prover.hpp"
+#include "gkr_serialization.hpp"
+#include "gkr_verifier.hpp"
+#include "zkgpt_serialization.hpp"
 #include "hyrax_rp.hpp"
 #include "stats.hpp"
 #include <stdexcept>
@@ -21,6 +24,25 @@ string stage_a_test_mode(int argc, char **argv) {
         if (arg.rfind(prefix, 0)==0) return arg.substr(prefix.size());
     }
     return "";
+}
+
+string artifact_prefix(int argc,char **argv) {
+    for (int i=1;i<argc;++i) {
+        const string argument=argv[i];
+        if (argument=="--artifact-prefix") {
+            if (i+1>=argc)
+                throw invalid_argument("--artifact-prefix requires a path");
+            return argv[i+1];
+        }
+    }
+    return "";
+}
+
+void write_artifact(const string &path,const vector<uint8_t> &bytes) {
+    ofstream output(path,ios::binary);
+    if (!output) throw runtime_error("cannot create artifact file: "+path);
+    output.write(reinterpret_cast<const char *>(bytes.data()),bytes.size());
+    if (!output) throw runtime_error("cannot write artifact file: "+path);
 }
 
 const RangeConstraint &find_constraint(const WitnessRegistry &registry,
@@ -43,6 +65,7 @@ int main(int argc, char **argv)
 {
     initPairing(mcl::BN254);
     const string test_mode=stage_a_test_mode(argc, argv);
+    const string artifact_path_prefix=artifact_prefix(argc,argv);
     if (test_mode=="range-kernel") {
         vector<F> val0(1024);
         for (size_t i=0;i<val0.size();++i)
@@ -72,13 +95,92 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    prover p;
     LLM nn(12, 12, 64, 768, 3072);
+    if (test_mode=="public-circuit") {
+        const auto circuit=nn.buildPublicCircuit();
+        size_t unary=0,binary=0;
+        for (const auto &layer : circuit.circuit) {
+            unary+=layer.uni_gates.size();
+            binary+=layer.bin_gates.size();
+        }
+        cout << "Public circuit built without private witness: layers="
+             << circuit.size
+             << ", unary_gates=" << unary
+             << ", binary_gates=" << binary << endl;
+        cout << "Circuit fingerprint: "
+             << circuitFingerprintHex(fingerprintCircuit(circuit)) << endl;
+        return 0;
+    }
+    prover p;
     nn.create(p, 0);
+
+    if (test_mode=="circuit-fingerprint") {
+        cout << "Circuit fingerprint: "
+             << circuitFingerprintHex(fingerprintCircuit(p.C)) << endl;
+        return 0;
+    }
 
     if (test_mode=="gkr-only") {
         verifier v(&p, p.C);
         v.prove(32);
+        const auto gkr_bytes=serializeGKRProof(v.gkrProof());
+        GKRProof decoded_gkr;
+        string gkr_error;
+        if (!deserializeGKRProof(gkr_bytes, decoded_gkr, &gkr_error) ||
+            serializeGKRProof(decoded_gkr)!=gkr_bytes)
+            throw runtime_error("GKR proof serialization failed: "+gkr_error);
+        const size_t commitment_count=static_cast<size_t>(1)<<(p.cc.l/2);
+        const size_t generator_count=static_cast<size_t>(1)
+            <<(p.cc.l-p.cc.l/2);
+        GKRPublicStatement gkr_statement;
+        gkr_statement.model_shape=nn.getWitnessRegistry().shape();
+        gkr_statement.val0_log_size=p.cc.l;
+        gkr_statement.val0_commitment.assign(
+            p.cc.comm,p.cc.comm+commitment_count);
+        gkr_statement.val0_generator_domain={
+            "zkGPT/main",static_cast<uint32_t>(generator_count)};
+        gkr_statement.circuit_fingerprint=fingerprintCircuit(p.C);
+        gkr_statement.output_evaluation=decoded_gkr.output_evaluation;
+        if (!verifyGKR(p.C,gkr_statement,decoded_gkr,&gkr_error))
+            throw runtime_error("Independent GKR verification failed: "+
+                                gkr_error);
+        cout << "Independent witness-free GKR verification passed" << endl;
+
+        GKRProof mutated_gkr=decoded_gkr;
+        bool mutated_round=false;
+        for (auto &layer : mutated_gkr.layers) {
+            if (!layer.phase1_rounds.empty()) {
+                layer.phase1_rounds[0].a+=Fr(1);
+                mutated_round=true;
+                break;
+            }
+            if (!layer.matrix_rounds.empty()) {
+                layer.matrix_rounds[0].a+=Fr(1);
+                mutated_round=true;
+                break;
+            }
+        }
+        if (!mutated_round)
+            throw runtime_error("GKR mutation test found no proof round");
+        const auto mutated_bytes=serializeGKRProof(mutated_gkr);
+        GKRProof decoded_mutation;
+        if (!deserializeGKRProof(mutated_bytes,decoded_mutation,&gkr_error))
+            throw runtime_error("mutated GKR proof did not round-trip: "+
+                                gkr_error);
+        if (verifyGKR(p.C,gkr_statement,decoded_mutation,&gkr_error))
+            throw runtime_error("modified and reserialized GKR proof was accepted");
+        cout << "Modified/reserialized GKR proof rejected: " << gkr_error
+             << endl;
+
+        auto wrong_statement=gkr_statement;
+        const auto &main_generators=
+            getGeneratorSet(gkr_statement.val0_generator_domain);
+        wrong_statement.val0_commitment[0]+=
+            main_generators.generators[0];
+        if (verifyGKR(p.C,wrong_statement,decoded_gkr,&gkr_error))
+            throw runtime_error("wrong GKR val0 commitment was accepted");
+        cout << "Wrong GKR val0 commitment rejected: " << gkr_error << endl;
+        cout << "Serialized GKR proof bytes: " << gkr_bytes.size() << endl;
         stats::print_stats();
         return 0;
     }
@@ -260,6 +362,38 @@ int main(int argc, char **argv)
     verifier v(&p, p.C);
     v.range_prove(range_prover_time);
     v.prove(32); // prove with 32 threads
+
+    ZkGPTPublicStatement statement;
+    statement.model_shape=nn.getWitnessRegistry().shape();
+    statement.circuit_fingerprint=fingerprintCircuit(p.C);
+    statement.output_claim.mle_evaluation=v.gkrProof().output_evaluation;
+    statement.range_statement=range_statement;
+    ZkGPTProof proof;
+    proof.gkr_proof=v.gkrProof();
+    proof.range_proof=range_proof;
+    bindZkGPTProof(statement,proof);
+    const auto statement_bytes=serializeZkGPTPublicStatement(statement);
+    const auto proof_bytes=serializeZkGPTProof(proof);
+    ZkGPTPublicStatement decoded_statement;
+    ZkGPTProof decoded_proof;
+    string artifact_error;
+    if (!deserializeZkGPTPublicStatement(
+            statement_bytes,decoded_statement,&artifact_error) ||
+        serializeZkGPTPublicStatement(decoded_statement)!=statement_bytes)
+        throw runtime_error("top-level statement round-trip failed: "+
+                            artifact_error);
+    if (!deserializeZkGPTProof(proof_bytes,decoded_proof,&artifact_error) ||
+        serializeZkGPTProof(decoded_proof)!=proof_bytes)
+        throw runtime_error("top-level proof round-trip failed: "+
+                            artifact_error);
+    cout << "Serialized zkGPT statement bytes: " << statement_bytes.size()
+         << endl;
+    cout << "Serialized zkGPT proof bytes: " << proof_bytes.size() << endl;
+    if (!artifact_path_prefix.empty()) {
+        write_artifact(artifact_path_prefix+".statement.bin",statement_bytes);
+        write_artifact(artifact_path_prefix+".proof.bin",proof_bytes);
+        cout << "Wrote zkGPT artifact prefix: " << artifact_path_prefix << endl;
+    }
     stats::print_stats();
 
 }

@@ -6,6 +6,8 @@
 #include <utils.hpp>
 #include <circuit.h>
 #include <iostream>
+#include "generator_cache.hpp"
+#include "hyrax_opening.hpp"
 
 using namespace std;
 using namespace mcl::bn;
@@ -15,7 +17,7 @@ static vector<F> beta_u, beta_gs;
 
 
 verifier::verifier(prover *pr, const layeredCircuit &cir):
-    p(pr), C(cir) 
+    p(pr), C(cir), transcript_("zkGPT-proof-v1")
 {
     comm=p->cc;
     final_claim_u0.resize(C.size + 2);
@@ -26,6 +28,36 @@ verifier::verifier(prover *pr, const layeredCircuit &cir):
     r_v.resize(C.size + 2);
     // make the prover ready
     p->init();
+
+    transcript_.appendU64("protocol.version", 1);
+    transcript_.appendString("curve.id", "BN254");
+    transcript_.appendU64("circuit.layer_count", C.size);
+    for (const auto &layer : C.circuit) {
+        transcript_.appendU64("circuit.layer.type",
+            static_cast<std::uint64_t>(layer.ty));
+        transcript_.appendU64("circuit.layer.size", layer.size);
+        transcript_.appendU64("circuit.layer.bit_length", layer.bit_length);
+        transcript_.appendU64("circuit.layer.max_bl_u", layer.max_bl_u);
+        transcript_.appendU64("circuit.layer.max_bl_v", layer.max_bl_v);
+        transcript_.appendBool("circuit.layer.need_phase2", layer.need_phase2);
+        transcript_.appendU64("circuit.layer.zero_start", layer.zero_start_id);
+    }
+    transcript_.appendU64("input.log_size", comm.l);
+    const std::size_t commitment_count=static_cast<std::size_t>(1)<<(comm.l/2);
+    transcript_.appendU64("input.commitment_count", commitment_count);
+    for (std::size_t i=0;i<commitment_count;++i)
+        transcript_.appendG1("input.commitment", comm.comm[i]);
+}
+
+F verifier::challenge(const std::string &label) {
+    return transcript_.challenge(label);
+}
+
+void verifier::appendQuadratic(const std::string &label,
+                               const quadratic_poly &poly) {
+    transcript_.appendFr(label+".a", poly.a);
+    transcript_.appendFr(label+".b", poly.b);
+    transcript_.appendFr(label+".c", poly.c);
 }
 
 F verifier::getFinalValue(const F &claim_u0, const F &claim_u1, const F &claim_v0, const F &claim_v1) {
@@ -195,6 +227,7 @@ void verifier::prove(int commit_thread)
         throw std::runtime_error("Lasso verification failed");
     if (!openCommit())
         throw std::runtime_error("commitment opening failed");
+    gkr_proof_.transcript_binding=challenge("gkr.proof.final");
     cout<<"=========================Our results:================================"<<endl;
     cout<<"Matrix multiplication Prover time: "<<matrix_time<<"s"<<endl;
     cout<<"Total Prover time(GKR+range):"<<prover_time + range_prover_time<<"="<<prover_time<<"+"<<range_prover_time<<"s"<<endl;
@@ -406,60 +439,54 @@ void sc_last_worker_first(Fr& A, Fr&B,Fr&C,Fr*& read_1,Fr*& read_2, int*& L,int*
 }
 
 
-// Sumcheck协议对于乘积函数的递归实现  ans = Σ_{x∈{0,1}^m} [f(x) * g(x)]
-// 该函数用于全连接层的验证
-pair<Fr,Fr> sum_check_product(Fr* f,Fr* g,int m,Fr* r,Fr ans)
+// Matrix-product sumcheck. Every polynomial is absorbed before its challenge;
+// random_points is both the proof evaluation point and the point used by the
+// following GKR layer.
+pair<Fr,Fr> sum_check_product(
+    Fr *f, Fr *g, int rounds, Fr initial_claim,
+    vector<Fr> &random_points, Transcript &transcript,
+    const std::string &label, vector<GKRQuadraticRound> *proof_rounds)
 {
-    Fr A=0,B=0,C=0;
-    Fr *zf=new Fr[1<<m], *zg=new Fr[1<<m];
-    for(int k=0;k<(1<<m);k++)
-    {
-        zf[k]=2*f[k*2+1]-f[k*2];
-        zg[k]=2*g[k*2+1]-g[k*2];
-        C+=zf[k]*zg[k];
-    }
-    for(int k=0;k<(1<<(m+1));k++)
-    {
-        if(k&1)
-            B+=f[k]*g[k];
-        else
-        {
-            A+=f[k]*g[k];
+    if (rounds<0 || rounds>30)
+        throw std::invalid_argument("matrix sumcheck round count is invalid");
+    const std::size_t value_count=static_cast<std::size_t>(1)<<rounds;
+    vector<Fr> folded_f(f, f+value_count);
+    vector<Fr> folded_g(g, g+value_count);
+    random_points.resize(rounds);
+    Fr claim=initial_claim;
+    std::size_t active=value_count;
+    for (int round=0;round<rounds;++round) {
+        Fr a=0,b=0,c=0;
+        for (std::size_t i=0;i<active;i+=2) {
+            const Fr delta_f=folded_f[i+1]-folded_f[i];
+            const Fr delta_g=folded_g[i+1]-folded_g[i];
+            a+=delta_f*delta_g;
+            b+=folded_f[i]*delta_g+folded_g[i]*delta_f;
+            c+=folded_f[i]*folded_g[i];
         }
+        const quadratic_poly polynomial(a,b,c);
+        if (polynomial.eval(Fr(0))+polynomial.eval(Fr(1))!=claim)
+            throw std::runtime_error("matrix sumcheck round claim failed");
+        transcript.appendFr(label+".a", a);
+        transcript.appendFr(label+".b", b);
+        transcript.appendFr(label+".c", c);
+        if (proof_rounds) proof_rounds->push_back({a,b,c});
+        const Fr random=transcript.challenge(label+".challenge");
+        random_points[round]=random;
+        claim=polynomial.eval(random);
+        for (std::size_t i=0;i<active/2;++i) {
+            folded_f[i]=folded_f[2*i]+random*
+                (folded_f[2*i+1]-folded_f[2*i]);
+            folded_g[i]=folded_g[2*i]+random*
+                (folded_g[2*i+1]-folded_g[2*i]);
+        }
+        active/=2;
     }
-    Fr a=(C+A)/2-B,b=2*B-C/2-3*A/2,c=A;
-    Fr g1=a+b+c,g0=c;
-    if(!(ans-(g1+g0)).isZero())
-    {
-        cout<<"ans!=g(0)+g(1) "<<m<<endl;
-        exit(0);
-    }
-    if(!(a+b+c-B).isZero())
-    {
-        cout<<"sum check fail! order 1 "<<m<<endl;
-        exit(0);
-    }
-    if(!(4*a+2*b+c-C).isZero())
-    {
-        cout<<"sum check fail! order 2 "<<m<<endl;
-        exit(0);
-    }
-    Fr send_r=r[0];
-    Fr * new_f=new Fr[1<<m], *new_g=new Fr[1<<m];
-    for(int k=0;k<(1<<m);k++)
-    {
-        new_f[k]=(1-send_r)*f[k*2]+(send_r)*f[k*2+1];
-        new_g[k]=(1-send_r)*g[k*2]+(send_r)*g[k*2+1];
-    }
-    Fr new_ans=send_r*send_r*a+send_r*b+c; //g(r)
-    if(m==0)
-    {
-        if (!(new_ans-new_f[0]*new_g[0]).isZero())
-            throw std::runtime_error("matrix sumcheck final claim failed");
-        return make_pair(new_f[0],new_g[0]);
-    }
-    else
-        return sum_check_product(new_f,new_g,m-1,r+1,new_ans);
+    if (active!=1 || folded_f[0]*folded_g[0]!=claim)
+        throw std::runtime_error("matrix sumcheck final claim failed");
+    transcript.appendFr(label+".final_f", folded_f[0]);
+    transcript.appendFr(label+".final_g", folded_g[0]);
+    return make_pair(folded_f[0], folded_g[0]);
 }
 
 
@@ -471,12 +498,16 @@ bool verifier::verifyGKR()
     const layer &output_layer = C.circuit.at(C.size - 1);
     r_u.at(C.size).resize(output_layer.bit_length);
     for (u32 i = 0; i < static_cast<u32>(output_layer.bit_length); ++i)
-        r_u.at(C.size).at(i).setByCSPRNG();
+        r_u.at(C.size).at(i)=challenge("gkr.output.point");
     vector<F>::const_iterator r_0 = r_u.at(C.size).begin();
     vector<F>::const_iterator r_1;
 
     auto previousSum = p->Vres(r_0, output_layer.size,
                                output_layer.bit_length, C.size - 1);
+    transcript_.appendFr("gkr.output.evaluation", previousSum);
+    gkr_proof_.output_evaluation=previousSum;
+    gkr_proof_.layers.clear();
+    gkr_proof_.layers.reserve(C.size-1);
     timer ptimer,vtimer;
     timer mat_timer; // 矩阵乘的时间
     ptimer.start();
@@ -499,6 +530,9 @@ bool verifier::verifyGKR()
         timer tmp;
         tmp.start();
         auto &cur = C.circuit.at(i);
+        GKRLayerProof layer_proof;
+        layer_proof.layer_index=i;
+        layer_proof.layer_type=static_cast<std::uint32_t>(cur.ty);
         final_claim_v0.at(i).clear();
 
         ptimer.start();
@@ -509,7 +543,7 @@ bool verifier::verifyGKR()
         // phase 1
         if (cur.zero_start_id < cur.size)
         {
-            relu_rou.setByCSPRNG();
+            relu_rou=challenge("gkr.relu.zero_scale");
         }
         else
             relu_rou = F_ONE;
@@ -528,12 +562,6 @@ bool verifier::verifyGKR()
                 r_u.at(i).at(j)=r_u.at(i+1).at(j-m+k);
             for (int j = m; j < m+k; ++j)
                 r_v.at(i).at(j)=r_u.at(i+1).at(j-m);
-            for(int j=0;j<m;j++)
-            {
-                r_u.at(i).at(j).setByCSPRNG();
-                r_v.at(i).at(j)=r_u.at(i).at(j);
-            }
-        
             prev_u1=final_claim_u1;
             previousRandom = F_ZERO;
             Fr sum=0;
@@ -541,7 +569,17 @@ bool verifier::verifyGKR()
             mat_timer.start();
             Fr* pa=init_book_keeping(m,n,p->val[0],p->fc_input_id[now_fc_id],r_u[i]);
             Fr* pb=init_book_keeping_fast(m,k,p->mat_val[now_fc_id],r_v[i]);
-            pair<Fr,Fr> oracle=sum_check_product(pa,pb,m-1,r_u[i].data(),prev_u1);
+            vector<Fr> matrix_point;
+            pair<Fr,Fr> oracle=sum_check_product(
+                pa, pb, m, prev_u1, matrix_point, transcript_,
+                "gkr.matrix."+std::to_string(i),
+                &layer_proof.matrix_rounds);
+            delete[] pa;
+            delete[] pb;
+            for(int j=0;j<m;++j) {
+                r_u.at(i).at(j)=matrix_point.at(j);
+                r_v.at(i).at(j)=matrix_point.at(j);
+            }
             mat_timer.stop();
             ptimer.stop();
             matrix_time+=mat_timer.elapse_sec();
@@ -562,9 +600,6 @@ bool verifier::verifyGKR()
             ptimer.stop();
             prover_time+=ptimer.elapse_sec();            
             r_u.at(i).resize(cur.max_bl_u);
-            for (int j = 0; j < cur.max_bl_u; ++j) 
-                r_u.at(i).at(j).setByCSPRNG();
-                
             sc.start();
             for (u32 j = 0; j < static_cast<u32>(cur.max_bl_u); ++j) 
             {
@@ -575,6 +610,9 @@ bool verifier::verifyGKR()
                 prover_time+=ptimer.elapse_sec();     
 
                 vtimer.start();
+                appendQuadratic("gkr.phase1", poly);
+                layer_proof.phase1_rounds.push_back({poly.a,poly.b,poly.c});
+                r_u.at(i).at(j)=challenge("gkr.phase1.challenge");
                 cur_claim = poly.eval(F_ZERO) + poly.eval(F_ONE);
                 nxt_claim = poly.eval(r_u.at(i).at(j));
 
@@ -604,9 +642,6 @@ bool verifier::verifyGKR()
                 timer normal_timer2;
                 normal_timer2.start();
                 r_v.at(i).resize(cur.max_bl_v);
-                for (int j = 0; j < cur.max_bl_v; ++j) 
-                    r_v.at(i).at(j).setByCSPRNG();
-              
                 ptimer.start();
                 p->sumcheckInitPhase2();
                 ptimer.stop();
@@ -620,7 +655,11 @@ bool verifier::verifyGKR()
                         ptimer.stop();
                         prover_time+=ptimer.elapse_sec();     
                         vtimer.start();
-                        if (poly.eval(F_ZERO) + poly.eval(F_ONE) != previousSum) 
+                        appendQuadratic("gkr.phase2", poly);
+                        layer_proof.phase2_rounds.push_back(
+                            {poly.a,poly.b,poly.c});
+                        r_v.at(i).at(j)=challenge("gkr.phase2.challenge");
+                        if (poly.eval(F_ZERO) + poly.eval(F_ONE) != previousSum)
                         {
                             fprintf(stderr, "Verification fail, phase2, circuit level %u, current bit %u, total is %d\n", i, j,
                                     cur.max_bl_v);
@@ -661,12 +700,21 @@ bool verifier::verifyGKR()
             }
         }
         
+        transcript_.appendFr("gkr.layer.final_u0", final_claim_u0[i]);
+        transcript_.appendFr("gkr.layer.final_u1", final_claim_u1);
+        transcript_.appendFr("gkr.layer.final_v0", final_claim_v0[i]);
+        transcript_.appendFr("gkr.layer.final_v1", final_claim_v1);
+        layer_proof.final_claim_u0=final_claim_u0[i];
+        layer_proof.final_claim_u1=final_claim_u1;
+        layer_proof.final_claim_v0=final_claim_v0[i];
+        layer_proof.final_claim_v1=final_claim_v1;
+        gkr_proof_.layers.push_back(std::move(layer_proof));
         if (~cur.bit_length_u[1])
-            alpha.setByCSPRNG();
+            alpha=challenge("gkr.layer.alpha");
         else 
             alpha.clear();
         if ((~cur.bit_length_v[1]) || cur.ty == layerType::FFT)
-            beta.setByCSPRNG();
+            beta=challenge("gkr.layer.beta");
         else 
             beta.clear();
         previousSum = alpha * final_claim_u1 + beta * final_claim_v1;
@@ -687,18 +735,17 @@ bool verifier::verifyGKR()
 // 协议最后一步
 bool verifier::verifyLasso() 
 {
+    gkr_proof_.lasso=GKRLassoProof{};
     timer ptimer,vtimer;
     auto &cur = C.circuit[0];
 
     vector<F> sig_u(C.size - 1);
     for (u32 i = 0; i < C.size - 1; ++i) 
-        sig_u.at(i).setByCSPRNG();
+        sig_u.at(i)=challenge("lasso.sigma_u");
     vector<F> sig_v(C.size - 1);
     for (u32 i = 0; i < C.size - 1; ++i) 
-        sig_v.at(i).setByCSPRNG();
+        sig_v.at(i)=challenge("lasso.sigma_v");
     r_u.at(0).resize(cur.bit_length);
-    for (int i = 0; i < cur.bit_length; ++i) 
-        r_u.at(0).at(i).setByCSPRNG();
     auto r_0 = r_u.at(0).begin();
     
     F previousSum = F_ZERO;
@@ -848,8 +895,14 @@ bool verifier::verifyLasso()
         Fr g1=aa+bb+cc,g0=cc;
         if(i!=n && previousSum!=g0+g1)
             throw std::runtime_error("Lasso sumcheck round claim failed");
-        if(i!=n)
-            previousSum=aa*r_u[0][i]*r_u[0][i]+bb*r_u[0][i]+cc; 
+        if(i!=n) {
+            transcript_.appendFr("lasso.sumcheck.a", aa);
+            transcript_.appendFr("lasso.sumcheck.b", bb);
+            transcript_.appendFr("lasso.sumcheck.c", cc);
+            gkr_proof_.lasso.rounds.push_back({aa,bb,cc});
+            r_u[0][i]=challenge("lasso.sumcheck.challenge");
+            previousSum=aa*r_u[0][i]*r_u[0][i]+bb*r_u[0][i]+cc;
+        }
         vtimer.stop();
         verifier_time+=vtimer.elapse_sec();
     }
@@ -861,6 +914,8 @@ bool verifier::verifyLasso()
     F gr = F_ZERO;
 
     eval_in=pa2[n][0];
+    transcript_.appendFr("lasso.input_evaluation", eval_in);
+    gkr_proof_.lasso.input_evaluation=eval_in;
     
     beta_g.resize(1ULL << cur.bit_length);
     ptimer.start();
@@ -897,6 +952,8 @@ bool verifier::verifyLasso()
     vtimer.start();
     if (eval_in*gr!=previousSum)
         throw std::runtime_error("Lasso final input evaluation check failed");
+    transcript_.appendFr("lasso.mapping_evaluation", gr);
+    gkr_proof_.lasso.mapping_evaluation=gr;
     vtimer.stop();
     verifier_time+=vtimer.elapse_sec();
 
@@ -936,17 +993,47 @@ __int128 convertx(Fr x)
     return V;	
 }
 
-bool verifier::openCommit() 
+bool verifier::openCommit()
 {
-    Fr*Lp=new Fr[1<<(comm.l/2)],*Rp=new Fr[1<<(comm.l-comm.l/2)];
-    timer verify_input;
-    verify_input.start();
-    brute_force_compute_LR(Lp,Rp,r_u[0].data(),comm.l);  // 计算拉格朗日插值
-    pair<double,double> tim=hyrax::open(comm.w,r_u[0].data(),eval_in,comm.G,comm.g,Lp,Rp,comm.comm,comm.l);
-    delete[] Lp;
-    delete[] Rp;
-    prover_time+=tim.first;
-    verifier_time+=tim.second;
-    printf("Open commit time: prover %f s, verifier %f s\n",tim.first,tim.second);
+    if (comm.l<0 || comm.l>30 || r_u.empty() ||
+        r_u[0].size()!=static_cast<std::size_t>(comm.l))
+        throw std::runtime_error("input commitment opening shape mismatch");
+    const std::size_t value_count=static_cast<std::size_t>(1)<<comm.l;
+    const std::size_t row_count=static_cast<std::size_t>(1)<<(comm.l/2);
+    const std::size_t generator_count=static_cast<std::size_t>(1)
+        <<(comm.l-comm.l/2);
+    const GeneratorDomain descriptor{
+        "zkGPT/main", static_cast<std::uint32_t>(generator_count)};
+    const auto &generator_set=getGeneratorSet(descriptor);
+    for (std::size_t i=0;i<generator_count;++i)
+        if (comm.g[i]!=generator_set.generators[i])
+            throw std::runtime_error("input commitment generator mismatch");
+    if (comm.G!=generator_set.u)
+        throw std::runtime_error("input commitment U generator mismatch");
+
+    vector<Fr> witness(comm.w, comm.w+value_count);
+    vector<G1> commitments(comm.comm, comm.comm+row_count);
+    Transcript verifier_transcript=transcript_;
+    timer prover_timer;
+    prover_timer.start();
+    const auto opening=hyraxMleOpenProveFrRowMajor(
+        witness, commitments, r_u[0], generator_set.generators,
+        generator_set.u, eval_in, transcript_, "gkr.input.opening");
+    gkr_proof_.lasso.input_opening=opening;
+    prover_timer.stop();
+    prover_time+=prover_timer.elapse_sec();
+
+    timer verifier_timer;
+    verifier_timer.start();
+    std::string error;
+    const bool valid=hyraxMleOpenVerifyRowMajor(
+        commitments, r_u[0], generator_set.generators, generator_set.u,
+        eval_in, opening, verifier_transcript, "gkr.input.opening", &error);
+    verifier_timer.stop();
+    verifier_time+=verifier_timer.elapse_sec();
+    if (!valid)
+        throw std::runtime_error("input commitment opening failed: "+error);
+    printf("Open commit time: prover %f s, verifier %f s\n",
+           prover_timer.elapse_sec(), verifier_timer.elapse_sec());
     return true;
 }

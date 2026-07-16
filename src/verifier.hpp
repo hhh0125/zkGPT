@@ -7,6 +7,8 @@
 
 #include "prover.hpp"
 #include "hyrax.hpp"
+#include "gkr_protocol.hpp"
+#include "range_protocol.hpp"
 using namespace hyrax;
 using std::unique_ptr;
 class verifier 
@@ -18,6 +20,7 @@ public:
     verifier(prover *pr, const layeredCircuit &cir);
 
     void prove(int commit_thread=4);
+    const GKRProof &gkrProof() const { return gkr_proof_; }
     void range_prove(double range_prover_time_) { range_prover_time = range_prover_time_; };
 
     timer total_timer, total_slow_timer;
@@ -47,6 +50,12 @@ private:
     F getFinalValue(const F &claim_u0, const F &claim_u1, const F &claim_v0, const F &claim_v1);
 
     F eval_in;
+    Transcript transcript_;
+    GKRProof gkr_proof_;
+
+    F challenge(const std::string &label);
+    void appendQuadratic(const std::string &label,
+                         const quadratic_poly &poly);
 };
 
 

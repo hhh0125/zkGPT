@@ -6,6 +6,10 @@
 #include <map>
 #include <stdexcept>
 #include <tuple>
+#include <iostream>
+#include <atomic>
+#include <mutex>
+#include <thread>
 
 namespace {
 
@@ -172,6 +176,33 @@ void appendPatternMetadata(Transcript &transcript, const PatternKey &key) {
     transcript.appendU64("sparse.length", key.length);
 }
 
+Transcript makePatternTranscript(const Fr &parent_seed,
+                                 std::size_t query_index,
+                                 std::size_t pattern_index,
+                                 const PatternKey &key) {
+    Transcript transcript("zkGPT-sparse-pattern-v2");
+    transcript.appendFr("sparse.parent_seed",parent_seed);
+    transcript.appendU64("sparse.query",query_index);
+    transcript.appendU64("sparse.pattern_index",pattern_index);
+    appendPatternMetadata(transcript,key);
+    return transcript;
+}
+
+void appendPatternProof(Transcript &transcript,const PatternKey &key,
+                        const SparsePatternOpeningProof &proof) {
+    appendPatternMetadata(transcript,key);
+    transcript.appendFr("sparse.pattern_evaluation",
+                        proof.claimed_inner_product);
+    transcript.appendU64("sparse.ipa_round_count",
+                         proof.opening.rounds.size());
+    for (const auto &round : proof.opening.rounds) {
+        transcript.appendG1("sparse.ipa_left",round.left);
+        transcript.appendG1("sparse.ipa_right",round.right);
+    }
+    transcript.appendFr("sparse.ipa_final_witness",
+                        proof.opening.final_witness);
+}
+
 }  // namespace
 
 SparseLinearOpeningProof proveSparseVal0Opening(
@@ -179,7 +210,8 @@ SparseLinearOpeningProof proveSparseVal0Opening(
     const std::vector<Fr> &point, const std::vector<F> &val0_witness,
     const Fr &encoded_evaluation, Transcript &transcript) {
     const auto layout=buildLayout(statement, query_index, point);
-    if (statement.val0_generators.size()!=layout.val0_column_count)
+    const auto &generator_set=getGeneratorSet(statement.val0_generator_domain);
+    if (generator_set.generators.size()!=layout.val0_column_count)
         throw std::invalid_argument("sparse opening generator count mismatch");
 
     SparseLinearOpeningProof proof;
@@ -189,41 +221,80 @@ SparseLinearOpeningProof proveSparseVal0Opening(
                                 proof.signed_bias_evaluation;
     appendSparseHeader(transcript, query_index, proof.signed_bias_evaluation,
                        proof.claimed_inner_product, layout.patterns.size());
+    const Fr pattern_seed=transcript.challenge("sparse.pattern.seed");
 
+    proof.patterns.resize(layout.patterns.size());
+    std::cout << "  sparse val0 opening query " << query_index
+              << ": patterns=" << layout.patterns.size() << std::endl;
+    std::atomic<std::size_t> next_pattern{0};
+    std::exception_ptr worker_error;
+    std::mutex error_mutex;
+    const std::size_t thread_count=std::min<std::size_t>(
+        8,std::max<std::size_t>(1,layout.patterns.size()));
+    std::vector<std::thread> workers;
+    workers.reserve(thread_count);
+    for (std::size_t thread_id=0;thread_id<thread_count;++thread_id) {
+        workers.emplace_back([&] {
+            try {
+                for (;;) {
+                    const std::size_t pattern_index=next_pattern.fetch_add(1);
+                    if (pattern_index>=layout.patterns.size()) break;
+                    const auto &pattern=layout.patterns[pattern_index];
+                    const auto coefficients=patternCoefficients(
+                        layout,pattern.key);
+                    std::vector<Fr> aggregate(
+                        layout.val0_column_count,Fr(0));
+                    for (const auto &occurrence : pattern.occurrences) {
+                        const std::size_t row_offset=occurrence.val0_row*
+                            layout.val0_column_count;
+                        for (std::size_t column=0;
+                             column<layout.val0_column_count;++column) {
+                            const std::size_t index=row_offset+column;
+                            if (index<val0_witness.size())
+                                aggregate[column]+=occurrence.scalar*
+                                                   val0_witness[index];
+                        }
+                    }
+                    Fr evaluation=0;
+                    for (std::size_t i=0;i<aggregate.size();++i)
+                        evaluation+=aggregate[i]*coefficients[i];
+                    SparsePatternOpeningProof pattern_proof;
+                    pattern_proof.val0_column_start=
+                        pattern.key.val0_column_start;
+                    pattern_proof.query_low_start=
+                        pattern.key.query_low_start;
+                    pattern_proof.length=pattern.key.length;
+                    pattern_proof.claimed_inner_product=evaluation;
+                    const G1 commitment=aggregateCommitment(statement,pattern);
+                    const std::string label="val0-sparse/"+
+                        std::to_string(query_index)+"/"+
+                        std::to_string(pattern_index);
+                    auto pattern_transcript=makePatternTranscript(
+                        pattern_seed,query_index,pattern_index,pattern.key);
+                    pattern_proof.opening=hyraxInnerProductProve(
+                        aggregate,coefficients,generator_set.generators,
+                        generator_set.u,commitment,evaluation,
+                        pattern_transcript,label,false);
+                    proof.patterns[pattern_index]=std::move(pattern_proof);
+                }
+            } catch (...) {
+                std::lock_guard<std::mutex> lock(error_mutex);
+                if (!worker_error) worker_error=std::current_exception();
+            }
+        });
+    }
+    for (auto &worker : workers) worker.join();
+    if (worker_error) std::rethrow_exception(worker_error);
     Fr total=0;
-    proof.patterns.reserve(layout.patterns.size());
     for (std::size_t pattern_index=0;pattern_index<layout.patterns.size();
          ++pattern_index) {
-        const auto &pattern=layout.patterns[pattern_index];
-        const auto coefficients=patternCoefficients(layout, pattern.key);
-        std::vector<Fr> aggregate(layout.val0_column_count, Fr(0));
-        for (const auto &occurrence : pattern.occurrences) {
-            const std::size_t row_offset=
-                occurrence.val0_row*layout.val0_column_count;
-            for (std::size_t column=0;column<layout.val0_column_count;++column) {
-                const std::size_t index=row_offset+column;
-                if (index<val0_witness.size())
-                    aggregate[column]+=occurrence.scalar*val0_witness[index];
-            }
-        }
-        Fr evaluation=0;
-        for (std::size_t i=0;i<aggregate.size();++i)
-            evaluation+=aggregate[i]*coefficients[i];
-        total+=evaluation;
-        SparsePatternOpeningProof pattern_proof;
-        pattern_proof.val0_column_start=pattern.key.val0_column_start;
-        pattern_proof.query_low_start=pattern.key.query_low_start;
-        pattern_proof.length=pattern.key.length;
-        pattern_proof.claimed_inner_product=evaluation;
-        appendPatternMetadata(transcript, pattern.key);
-        const G1 commitment=aggregateCommitment(statement, pattern);
-        const std::string label="val0-sparse/"+std::to_string(query_index)+
-                                "/"+std::to_string(pattern_index);
-        pattern_proof.opening=hyraxInnerProductProve(
-            aggregate, coefficients, statement.val0_generators,
-            statement.val0_u, commitment, evaluation, transcript, label);
-        proof.patterns.push_back(std::move(pattern_proof));
+        total+=proof.patterns[pattern_index].claimed_inner_product;
+        appendPatternProof(transcript,layout.patterns[pattern_index].key,
+                           proof.patterns[pattern_index]);
     }
+    std::cout << "    proved sparse patterns " << layout.patterns.size()
+              << "/" << layout.patterns.size() << " using " << thread_count
+              << " threads" << std::endl;
     if (total!=proof.claimed_inner_product)
         throw std::logic_error("sparse val[0] mapping evaluation mismatch");
     return proof;
@@ -236,6 +307,8 @@ bool verifySparseVal0Opening(
     std::string *error) {
     try {
         const auto layout=buildLayout(statement, query_index, point);
+        const auto &generator_set=getGeneratorSet(
+            statement.val0_generator_domain);
         if (proof.query_index!=query_index ||
             proof.patterns.size()!=layout.patterns.size())
             return failWith(error, "sparse opening metadata mismatch");
@@ -248,7 +321,7 @@ bool verifySparseVal0Opening(
                            proof.signed_bias_evaluation,
                            proof.claimed_inner_product,
                            layout.patterns.size());
-        Fr total=0;
+        const Fr pattern_seed=transcript.challenge("sparse.pattern.seed");
         for (std::size_t pattern_index=0;pattern_index<layout.patterns.size();
              ++pattern_index) {
             const auto &pattern=layout.patterns[pattern_index];
@@ -258,19 +331,56 @@ bool verifySparseVal0Opening(
                 pattern_proof.query_low_start!=pattern.key.query_low_start ||
                 pattern_proof.length!=pattern.key.length)
                 return failWith(error, "sparse pattern metadata mismatch");
-            appendPatternMetadata(transcript, pattern.key);
-            const auto coefficients=patternCoefficients(layout, pattern.key);
-            const G1 commitment=aggregateCommitment(statement, pattern);
-            const std::string label="val0-sparse/"+
-                std::to_string(query_index)+"/"+std::to_string(pattern_index);
-            std::string opening_error;
-            if (!hyraxInnerProductVerify(
-                    coefficients, statement.val0_generators, statement.val0_u,
-                    commitment, pattern_proof.claimed_inner_product,
-                    pattern_proof.opening, transcript, label, &opening_error))
-                return failWith(error, "sparse pattern opening failed: "+
-                                opening_error);
-            total+=pattern_proof.claimed_inner_product;
+        }
+        std::atomic<std::size_t> next_pattern{0};
+        std::vector<std::string> opening_errors(layout.patterns.size());
+        const std::size_t thread_count=std::min<std::size_t>(
+            8,std::max<std::size_t>(1,layout.patterns.size()));
+        std::vector<std::thread> workers;
+        workers.reserve(thread_count);
+        for (std::size_t thread_id=0;thread_id<thread_count;++thread_id) {
+            workers.emplace_back([&] {
+                for (;;) {
+                    const std::size_t pattern_index=next_pattern.fetch_add(1);
+                    if (pattern_index>=layout.patterns.size()) break;
+                    try {
+                        const auto &pattern=layout.patterns[pattern_index];
+                        const auto &pattern_proof=proof.patterns[pattern_index];
+                        const auto coefficients=patternCoefficients(
+                            layout,pattern.key);
+                        const G1 commitment=aggregateCommitment(
+                            statement,pattern);
+                        const std::string label="val0-sparse/"+
+                            std::to_string(query_index)+"/"+
+                            std::to_string(pattern_index);
+                        auto pattern_transcript=makePatternTranscript(
+                            pattern_seed,query_index,pattern_index,pattern.key);
+                        if (!hyraxInnerProductVerify(
+                                coefficients,generator_set.generators,
+                                generator_set.u,commitment,
+                                pattern_proof.claimed_inner_product,
+                                pattern_proof.opening,pattern_transcript,label,
+                                &opening_errors[pattern_index]) &&
+                            opening_errors[pattern_index].empty())
+                            opening_errors[pattern_index]=
+                                "unknown IPA verification failure";
+                    } catch (const std::exception &exception) {
+                        opening_errors[pattern_index]=exception.what();
+                    }
+                }
+            });
+        }
+        for (auto &worker : workers) worker.join();
+        Fr total=0;
+        for (std::size_t pattern_index=0;pattern_index<layout.patterns.size();
+             ++pattern_index) {
+            if (!opening_errors[pattern_index].empty())
+                return failWith(error,"sparse pattern opening failed at "+
+                    std::to_string(pattern_index)+": "+
+                    opening_errors[pattern_index]);
+            total+=proof.patterns[pattern_index].claimed_inner_product;
+            appendPatternProof(transcript,layout.patterns[pattern_index].key,
+                               proof.patterns[pattern_index]);
         }
         if (total!=proof.claimed_inner_product)
             return failWith(error, "sparse pattern evaluations do not sum");

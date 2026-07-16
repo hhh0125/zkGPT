@@ -2,6 +2,7 @@
 #include "hyrax_opening.hpp"
 #include "sparse_opening.hpp"
 #include "range_logup.hpp"
+#include "range_serialization.hpp"
 
 #include <algorithm>
 #include <array>
@@ -86,68 +87,10 @@ std::size_t logUpSize(const LogUpProof &proof) {
     return size+fieldSize();
 }
 
-bool verifyDeterministicGenerators(const RangePublicStatement &statement,
-                                   std::string *error) {
-    for (std::size_t i=0;i<statement.val0_generators.size();++i) {
-        G1 expected;
-        hashAndMapToG1(expected, "zkGPT/main/g/"+std::to_string(i));
-        if (statement.val0_generators[i]!=expected)
-            return failWith(error, "val[0] generator setup mismatch");
-    }
-    G1 expected_val0_u;
-    hashAndMapToG1(expected_val0_u, "zkGPT/main/u");
-    if (statement.val0_u!=expected_val0_u)
-        return failWith(error, "val[0] U generator setup mismatch");
-    for (std::size_t i=0;i<statement.range_generators.size();++i) {
-        G1 expected;
-        hashAndMapToG1(expected, "zkGPT/range/g/"+std::to_string(i));
-        if (statement.range_generators[i]!=expected)
-            return failWith(error, "Range generator setup mismatch");
-    }
-    G1 expected_range_u;
-    hashAndMapToG1(expected_range_u, "zkGPT/range/u");
-    if (statement.range_u!=expected_range_u)
-        return failWith(error, "Range U generator setup mismatch");
-    return true;
-}
-
 }  // namespace
 
 std::size_t estimateRangeProofSizeBytes(const RangeProof &proof) {
-    std::size_t size=kLengthSize;
-    for (const auto &query : proof.chunk_commitments) {
-        size+=kLengthSize;
-        for (const auto &chunk : query) size+=g1VectorSize(chunk);
-    }
-
-    size+=kLengthSize;
-    for (const auto &reconstruction : proof.reconstruction_proofs) {
-        size+=kIndexSize+fieldSize()+kLengthSize;
-        size+=reconstruction.rounds.size()*2*fieldSize();
-        size+=2*fieldSize()+kLengthSize;
-        size+=reconstruction.chunk_evaluations.size()*fieldSize();
-    }
-
-    size+=kLengthSize;
-    for (const auto &query : proof.chunk_openings) {
-        size+=kLengthSize;
-        for (const auto &opening : query)
-            size+=2*kIndexSize+fieldSize()+mleSize(opening.opening);
-    }
-
-    size+=kLengthSize;
-    for (const auto &opening : proof.val0_openings) {
-        size+=kIndexSize+2*fieldSize()+kLengthSize;
-        for (const auto &pattern : opening.patterns)
-            size+=3*kIndexSize+fieldSize()+ipaSize(pattern.opening);
-    }
-
-    size+=kLengthSize;
-    for (const auto &query : proof.membership_proofs) {
-        size+=kLengthSize;
-        for (const auto &membership : query) size+=logUpSize(membership);
-    }
-    return size+fieldSize();
+    return serializeRangeProof(proof).size();
 }
 
 Transcript::Transcript(const std::string &domain) {
@@ -218,16 +161,14 @@ void appendRangeStatement(Transcript &transcript,
                          statement.val0_commitment.size());
     for (const auto &commitment : statement.val0_commitment)
         transcript.appendG1("val0_commitment", commitment);
+    transcript.appendString("val0_generator_domain",
+                            statement.val0_generator_domain.domain);
     transcript.appendU64("val0_generator_count",
-                         statement.val0_generators.size());
-    for (const auto &generator : statement.val0_generators)
-        transcript.appendG1("val0_generator", generator);
-    transcript.appendG1("val0_u", statement.val0_u);
+                         statement.val0_generator_domain.count);
+    transcript.appendString("range_generator_domain",
+                            statement.range_generator_domain.domain);
     transcript.appendU64("range_generator_count",
-                         statement.range_generators.size());
-    for (const auto &generator : statement.range_generators)
-        transcript.appendG1("range_generator", generator);
-    transcript.appendG1("range_u", statement.range_u);
+                         statement.range_generator_domain.count);
 
     transcript.appendU64("shape.sequence_length", statement.shape.sequence_length);
     transcript.appendU64("shape.layer_count", statement.shape.layer_count);
@@ -260,14 +201,13 @@ void appendRangeStatement(Transcript &transcript,
 }
 
 std::vector<Fr> deriveReconstructionPoint(
-    Transcript &transcript, const ReconstructionProof &proof) {
+    Transcript &transcript, std::size_t query_index, unsigned dimensions) {
+    transcript.appendU64("reconstruction.query", query_index);
+    transcript.appendU64("reconstruction.dimensions", dimensions);
     std::vector<Fr> point;
-    point.reserve(proof.rounds.size());
-    for (const auto &round : proof.rounds) {
-        transcript.appendFr("reconstruction.sum0", round.sum0);
-        transcript.appendFr("reconstruction.sum1", round.sum1);
-        point.push_back(transcript.challenge("reconstruction-round"));
-    }
+    point.reserve(dimensions);
+    for (unsigned i=0;i<dimensions;++i)
+        point.push_back(transcript.challenge("reconstruction-point"));
     return point;
 }
 
@@ -296,11 +236,15 @@ bool range_verifier::verifyReconstruction(
             return failWith(error, "val[0] commitment row count mismatch");
         const std::size_t expected_val0_generators=static_cast<std::size_t>(1)
             << (statement.val0_log_size-statement.val0_log_size/2);
-        if (statement.val0_generators.size()!=expected_val0_generators)
+        if (statement.val0_generator_domain.domain!="zkGPT/main" ||
+            statement.val0_generator_domain.count!=expected_val0_generators)
             return failWith(error, "val[0] generator count mismatch");
-        if (statement.range_generators.empty())
-            return failWith(error, "Range generators are missing");
-        if (!verifyDeterministicGenerators(statement, error)) return false;
+        if (statement.range_generator_domain.domain!="zkGPT/range" ||
+            statement.range_generator_domain.count==0 ||
+            statement.range_generator_domain.count>kMaxGeneratorCount)
+            return failWith(error, "Range generator descriptor is invalid");
+        const auto &range_generators=getGeneratorSet(
+            statement.range_generator_domain);
         if (proof.chunk_commitments.size()!=statement.queries.size() ||
             proof.reconstruction_proofs.size()!=statement.queries.size() ||
             proof.chunk_openings.size()!=statement.queries.size() ||
@@ -397,24 +341,8 @@ bool range_verifier::verifyReconstruction(
                     return failWith(error,
                                     "chunk commitment row count mismatch");
             }
-            if (reconstruction.rounds.size()!=rounds)
-                return failWith(error, "reconstruction round count mismatch");
-            if (!reconstruction.initial_claim.isZero())
-                return failWith(error, "reconstruction initial claim is nonzero");
-
-            Fr claim=reconstruction.initial_claim;
-            const auto point=deriveReconstructionPoint(transcript, reconstruction);
-            for (std::size_t round_index=0;
-                 round_index<reconstruction.rounds.size();++round_index) {
-                const auto &round=reconstruction.rounds[round_index];
-                if (round.sum0+round.sum1!=claim)
-                    return failWith(error,
-                                    "reconstruction sumcheck round failed");
-                const Fr &challenge=point[round_index];
-                claim=round.sum0+challenge*(round.sum1-round.sum0);
-            }
-            if (claim!=reconstruction.final_claim)
-                return failWith(error, "reconstruction final claim mismatch");
+            const auto point=deriveReconstructionPoint(
+                transcript, query_index, rounds);
 
             Fr reconstructed=0;
             Fr weight=1;
@@ -423,12 +351,9 @@ bool range_verifier::verifyReconstruction(
                 for (unsigned bit=0;bit<query.chunk_bits[i];++bit)
                     weight+=weight;
             }
-            const Fr residual=reconstruction.encoded_evaluation-reconstructed;
-            if (residual!=reconstruction.final_claim)
+            if (reconstruction.encoded_evaluation!=reconstructed)
                 return failWith(error,
-                                "reconstruction opening evaluations disagree");
-            transcript.appendFr("reconstruction.final_claim",
-                                reconstruction.final_claim);
+                                "reconstruction random-point identity failed");
             transcript.appendFr("reconstruction.encoded_evaluation",
                                 reconstruction.encoded_evaluation);
             for (const auto &evaluation : reconstruction.chunk_evaluations)
@@ -447,7 +372,7 @@ bool range_verifier::verifyReconstruction(
                 std::string opening_error;
                 if (!hyraxMleOpenVerify(
                         proof.chunk_commitments[query_index][chunk_index], point,
-                        statement.range_generators, statement.range_u,
+                        range_generators.generators, range_generators.u,
                         opening.claimed_evaluation, opening.opening, transcript,
                         label, &opening_error))
                     return failWith(error, "chunk MLE opening failed: "+
@@ -476,6 +401,10 @@ bool range_verifier::verify(const RangePublicStatement &statement,
                             const RangeProof &proof,
                             std::string *error) const {
     try {
+        if (statement.range_generator_domain.domain!="zkGPT/range")
+            return failWith(error, "Range generator descriptor is invalid");
+        const auto &range_generators=getGeneratorSet(
+            statement.range_generator_domain);
         if (proof.membership_proofs.size()!=statement.queries.size())
             return failWith(error, "membership proof query count mismatch");
         for (std::size_t query_index=0;query_index<statement.queries.size();
@@ -491,7 +420,7 @@ bool range_verifier::verify(const RangePublicStatement &statement,
                         query, query_index, chunk_index,
                         proof.chunk_commitments.at(query_index).at(chunk_index),
                         proof.membership_proofs[query_index][chunk_index],
-                        statement.range_generators, statement.range_u,
+                        range_generators.generators, range_generators.u,
                         &membership_error))
                     return failWith(error, "LogUp verification failed at query "+
                         std::to_string(query_index)+", chunk "+

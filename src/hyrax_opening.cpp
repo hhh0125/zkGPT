@@ -121,6 +121,33 @@ MleReduction reduceMleProverFr(
     return {commitment, std::move(column_weights), std::move(collapsed)};
 }
 
+MleReduction reduceMleProverFrRowMajor(
+    const std::vector<Fr> &values,
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators) {
+    const std::size_t log_size=point.size();
+    const std::size_t row_bits=log_size/2;
+    const std::size_t column_bits=log_size-row_bits;
+    const std::size_t row_count=static_cast<std::size_t>(1)<<row_bits;
+    const std::size_t column_count=static_cast<std::size_t>(1)<<column_bits;
+    if (values.size()!=row_count*column_count ||
+        row_commitments.size()!=row_count || generators.size()<column_count)
+        throw std::invalid_argument("invalid row-major Hyrax MLE opening shape");
+
+    const auto column_weights=eqWeights(point, 0, column_bits);
+    const auto row_weights=eqWeights(point, column_bits, row_bits);
+    std::vector<Fr> collapsed(column_count, Fr(0));
+    for (std::size_t row=0;row<row_count;++row)
+        for (std::size_t column=0;column<column_count;++column)
+            collapsed[column]+=row_weights[row]*
+                values[row*column_count+column];
+    G1 commitment;
+    G1::mulVec(commitment, const_cast<G1 *>(row_commitments.data()),
+               row_weights.data(), row_count);
+    return {commitment, column_weights, std::move(collapsed)};
+}
+
 std::pair<G1, std::vector<Fr>> reduceMleVerifier(
     const std::vector<G1> &row_commitments,
     const std::vector<Fr> &point,
@@ -141,6 +168,26 @@ std::pair<G1, std::vector<Fr>> reduceMleVerifier(
     return {commitment, std::move(column_weights)};
 }
 
+std::pair<G1, std::vector<Fr>> reduceMleVerifierRowMajor(
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators) {
+    const std::size_t log_size=point.size();
+    const std::size_t row_bits=log_size/2;
+    const std::size_t column_bits=log_size-row_bits;
+    const std::size_t row_count=static_cast<std::size_t>(1)<<row_bits;
+    const std::size_t column_count=static_cast<std::size_t>(1)<<column_bits;
+    if (row_commitments.size()!=row_count || generators.size()<column_count)
+        throw std::invalid_argument(
+            "invalid public row-major Hyrax MLE opening shape");
+    const auto column_weights=eqWeights(point, 0, column_bits);
+    const auto row_weights=eqWeights(point, column_bits, row_bits);
+    G1 commitment;
+    G1::mulVec(commitment, const_cast<G1 *>(row_commitments.data()),
+               row_weights.data(), row_count);
+    return {commitment, column_weights};
+}
+
 }  // namespace
 
 HyraxIpaProof hyraxInnerProductProve(
@@ -148,14 +195,15 @@ HyraxIpaProof hyraxInnerProductProve(
     const std::vector<Fr> &coefficient_input,
     const std::vector<G1> &generator_input, const G1 &u,
     const G1 &commitment, const Fr &evaluation, Transcript &transcript,
-    const std::string &label) {
+    const std::string &label, bool check_witness_commitment) {
     if (!isPowerOfTwo(witness_input.size()) ||
         witness_input.size()!=coefficient_input.size() ||
         witness_input.size()!=generator_input.size())
         throw std::invalid_argument("invalid IPA statement shape");
     if (innerProduct(witness_input, coefficient_input)!=evaluation)
         throw std::logic_error("IPA witness does not match claimed evaluation");
-    if (commitVector(generator_input, witness_input)!=commitment)
+    if (check_witness_commitment &&
+        commitVector(generator_input, witness_input)!=commitment)
         throw std::logic_error("IPA witness does not match commitment");
 
     appendOpeningStatement(transcript, label, witness_input.size(), commitment,
@@ -301,6 +349,26 @@ MleOpeningProof hyraxMleOpenProveFr(
     return proof;
 }
 
+MleOpeningProof hyraxMleOpenProveFrRowMajor(
+    const std::vector<Fr> &values,
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators, const G1 &u,
+    const Fr &evaluation, Transcript &transcript,
+    const std::string &label) {
+    auto reduction=reduceMleProverFrRowMajor(
+        values, row_commitments, point, generators);
+    if (innerProduct(reduction.witness, reduction.coefficients)!=evaluation)
+        throw std::logic_error("row-major field MLE evaluation mismatch");
+    std::vector<G1> opening_generators(
+        generators.begin(), generators.begin()+reduction.witness.size());
+    MleOpeningProof proof;
+    proof.ipa=hyraxInnerProductProve(
+        reduction.witness, reduction.coefficients, opening_generators, u,
+        reduction.commitment, evaluation, transcript, label);
+    return proof;
+}
+
 bool hyraxMleOpenVerify(
     const std::vector<G1> &row_commitments,
     const std::vector<Fr> &point,
@@ -310,6 +378,26 @@ bool hyraxMleOpenVerify(
     std::string *error) {
     try {
         auto reduction=reduceMleVerifier(row_commitments, point, generators);
+        std::vector<G1> opening_generators(
+            generators.begin(), generators.begin()+reduction.second.size());
+        return hyraxInnerProductVerify(
+            reduction.second, opening_generators, u, reduction.first,
+            evaluation, proof.ipa, transcript, label, error);
+    } catch (const std::exception &exception) {
+        return failWith(error, exception.what());
+    }
+}
+
+bool hyraxMleOpenVerifyRowMajor(
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators, const G1 &u,
+    const Fr &evaluation, const MleOpeningProof &proof,
+    Transcript &transcript, const std::string &label,
+    std::string *error) {
+    try {
+        auto reduction=reduceMleVerifierRowMajor(
+            row_commitments, point, generators);
         std::vector<G1> opening_generators(
             generators.begin(), generators.begin()+reduction.second.size());
         return hyraxInnerProductVerify(

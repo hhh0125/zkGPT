@@ -1,6 +1,7 @@
 #pragma once
 
 #include "global_var.hpp"
+#include "generator_cache.hpp"
 #include "witness_registry.hpp"
 
 #include <cstddef>
@@ -48,10 +49,8 @@ struct PublicRangeQuery {
 struct RangePublicStatement {
     int val0_log_size = 0;
     std::vector<G1> val0_commitment;
-    std::vector<G1> val0_generators;
-    G1 val0_u;
-    std::vector<G1> range_generators;
-    G1 range_u;
+    GeneratorDomain val0_generator_domain;
+    GeneratorDomain range_generator_domain;
     WitnessShape shape;
     std::vector<PublicRangeRegion> regions;
     std::vector<PublicRangeQuery> queries;
@@ -91,11 +90,6 @@ struct SparseLinearOpeningProof {
     Fr signed_bias_evaluation;
     Fr claimed_inner_product;
     std::vector<SparsePatternOpeningProof> patterns;
-};
-
-struct ReconstructionRound {
-    Fr sum0;
-    Fr sum1;
 };
 
 struct Degree1SumcheckRound {
@@ -148,9 +142,6 @@ struct LogUpProof {
 
 struct ReconstructionProof {
     std::size_t query_index = 0;
-    Fr initial_claim;
-    std::vector<ReconstructionRound> rounds;
-    Fr final_claim;
     Fr encoded_evaluation;
     std::vector<Fr> chunk_evaluations;
 };
@@ -180,7 +171,7 @@ void appendRangeStatement(Transcript &transcript,
 void appendChunkCommitments(Transcript &transcript,
                             const RangeProof &proof);
 std::vector<Fr> deriveReconstructionPoint(
-    Transcript &transcript, const ReconstructionProof &proof);
+    Transcript &transcript, std::size_t query_index, unsigned dimensions);
 
 class range_verifier {
 public:

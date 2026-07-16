@@ -391,11 +391,22 @@ RangePublicStatement range_prover::makePublicStatement(
     statement.val0_log_size=val0_log_size;
     statement.val0_commitment.assign(val0_commitments,
                                      val0_commitments+commitment_count);
-    statement.val0_generators.assign(val0_generators,
-                                     val0_generators+generator_count);
-    statement.val0_u=val0_u;
-    statement.range_generators.assign(g, g+(1<<(MAXL-MAXL/2)));
-    statement.range_u=GG;
+    statement.val0_generator_domain={"zkGPT/main",
+        static_cast<std::uint32_t>(generator_count)};
+    statement.range_generator_domain={"zkGPT/range",
+        static_cast<std::uint32_t>(1<<(MAXL-MAXL/2))};
+    const auto &expected_val0=getGeneratorSet(statement.val0_generator_domain);
+    for (std::size_t i=0;i<generator_count;++i)
+        if (val0_generators[i]!=expected_val0.generators[i])
+            throw std::invalid_argument("val[0] generator descriptor mismatch");
+    if (val0_u!=expected_val0.u)
+        throw std::invalid_argument("val[0] U generator descriptor mismatch");
+    const auto &expected_range=getGeneratorSet(statement.range_generator_domain);
+    for (std::size_t i=0;i<expected_range.generators.size();++i)
+        if (g[i]!=expected_range.generators[i])
+            throw std::logic_error("Range generator descriptor mismatch");
+    if (GG!=expected_range.u)
+        throw std::logic_error("Range U generator descriptor mismatch");
     statement.shape=witness_shape;
     statement.regions.reserve(query_regions.size());
     for (const auto &region : query_regions)
@@ -439,20 +450,13 @@ ReconstructionProof range_prover::proveReconstruction(
     Transcript &transcript, vector<Fr> *point) const {
     ReconstructionProof proof;
     proof.query_index=query_index;
-    proof.initial_claim=0;
 
     const std::size_t query_size=static_cast<std::size_t>(constraint.query_size);
     unsigned rounds=0;
     for (std::size_t n=query_size;n>1;n>>=1) ++rounds;
-    for (unsigned round=0;round<rounds;++round) {
-        ReconstructionRound message;
-        message.sum0=0;
-        message.sum1=0;
-        proof.rounds.push_back(message);
-    }
-    vector<Fr> challenges=deriveReconstructionPoint(transcript, proof);
+    vector<Fr> challenges=deriveReconstructionPoint(
+        transcript, query_index, rounds);
     if (point) *point=challenges;
-    proof.final_claim=0;
 
     vector<Fr> encoded(query_size);
     for (std::size_t i=0;i<query_size;++i) {
@@ -484,10 +488,9 @@ ReconstructionProof range_prover::proveReconstruction(
         for (unsigned bit=0;bit<constraint.chunk_queries[i].chunk_bits;++bit)
             weight+=weight;
     }
-    if (proof.encoded_evaluation-reconstructed_evaluation!=proof.final_claim)
+    if (proof.encoded_evaluation!=reconstructed_evaluation)
         throw std::logic_error("batched reconstruction evaluation failed");
 
-    transcript.appendFr("reconstruction.final_claim", proof.final_claim);
     transcript.appendFr("reconstruction.encoded_evaluation",
                         proof.encoded_evaluation);
     for (const auto &evaluation : proof.chunk_evaluations)
@@ -503,6 +506,8 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
     timer membership_timer;
     membership_timer.start();
     const auto &constraints=ops.front().constraints;
+    const auto &range_generators=getGeneratorSet(
+        statement.range_generator_domain);
     proof.membership_proofs.resize(constraints.size());
     proof.chunk_commitments.resize(constraints.size());
     for (std::size_t query_index=0;query_index<constraints.size();++query_index) {
@@ -521,7 +526,7 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
                       << " (" << chunk.chunk_bits << " bits)" << std::endl;
             query_proofs.push_back(proveLogUp(
                 query_index, chunk_index, chunk.chunk_bits, chunk.chunks,
-                statement.range_generators, statement.range_u, thread_num));
+                range_generators.generators, range_generators.u, thread_num));
             query_commitments.push_back(
                 query_proofs.back().value_commitment);
         }
@@ -537,6 +542,10 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
     proof.chunk_openings.resize(constraints.size());
     proof.val0_openings.reserve(constraints.size());
     for (std::size_t i=0;i<constraints.size();++i) {
+        timer query_opening_timer;
+        query_opening_timer.start();
+        std::cout << "start Stage B reconstruction/opening query " << i
+                  << "/" << constraints.size() << std::endl;
         vector<Fr> point;
         proof.reconstruction_proofs.push_back(
             proveReconstruction(i, constraints[i], transcript, &point));
@@ -554,7 +563,7 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
             opening.opening=hyraxMleOpenProve(
                 constraints[i].chunk_queries[chunk_index].chunks,
                 proof.chunk_commitments[i][chunk_index], point,
-                statement.range_generators, statement.range_u,
+                range_generators.generators, range_generators.u,
                 opening.claimed_evaluation, transcript, label);
             openings.push_back(std::move(opening));
         }
@@ -564,6 +573,10 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
             statement, i, point, *witness_source,
             proof.reconstruction_proofs.back().encoded_evaluation,
             transcript));
+        query_opening_timer.stop();
+        std::cout << "finished reconstruction/opening query " << i
+                  << " in " << query_opening_timer.elapse_sec() << "s"
+                  << std::endl;
     }
     proof.transcript_binding=transcript.challenge("range-proof-final");
     reconstruction_timer.stop();

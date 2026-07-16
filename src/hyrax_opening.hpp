@@ -10,7 +10,7 @@ HyraxIpaProof hyraxInnerProductProve(
     const std::vector<Fr> &witness, const std::vector<Fr> &coefficients,
     const std::vector<G1> &generators, const G1 &u,
     const G1 &commitment, const Fr &evaluation, Transcript &transcript,
-    const std::string &label);
+    const std::string &label, bool check_witness_commitment = true);
 
 bool hyraxInnerProductVerify(
     const std::vector<Fr> &coefficients,
@@ -35,7 +35,23 @@ MleOpeningProof hyraxMleOpenProveFr(
     const Fr &evaluation, Transcript &transcript,
     const std::string &label);
 
+MleOpeningProof hyraxMleOpenProveFrRowMajor(
+    const std::vector<Fr> &values,
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators, const G1 &u,
+    const Fr &evaluation, Transcript &transcript,
+    const std::string &label);
+
 bool hyraxMleOpenVerify(
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators, const G1 &u,
+    const Fr &evaluation, const MleOpeningProof &proof,
+    Transcript &transcript, const std::string &label,
+    std::string *error = nullptr);
+
+bool hyraxMleOpenVerifyRowMajor(
     const std::vector<G1> &row_commitments,
     const std::vector<Fr> &point,
     const std::vector<G1> &generators, const G1 &u,

@@ -1,8 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
 project(zkCNN)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "-mcmodel=large -O3 -pthread")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -pthread")
+
+option(ENABLE_ASAN "Build with AddressSanitizer" OFF)
+option(ENABLE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
+if (ENABLE_ASAN AND ENABLE_UBSAN)
+    message(FATAL_ERROR "ENABLE_ASAN and ENABLE_UBSAN must use separate build trees")
+endif()
+if (ENABLE_ASAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif()
+if (ENABLE_UBSAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
 
 # ========== cnpy ==========
 set(CNPY_ROOT $ENV{HOME}/local/cnpy)

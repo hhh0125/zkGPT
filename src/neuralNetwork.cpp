@@ -667,14 +667,21 @@ void neuralNetwork::create(prover &pr, bool merge)
     initLayer(pr.C.circuit[0], total_in_size, layerType::INPUT);
     if (static_cast<size_t>(total_in_size) != pr.val[0].size())
         throw std::logic_error("input witness size accounting mismatch");
-    validateWitnessRegistry(pr.val[0]);
+    if (!structure_only)
+        validateWitnessRegistry(pr.val[0]);
     printf("Total input size: 2^%d\n", pr.C.circuit[0].bit_length);
     printf("layer_id: %lld\n",layer_id);
     // writeInput0SegmentMap();
     // writeScalarDumpFiles();
     
     pr.C.initSubset();
-    validateMappedCircuitWitness(pr);
+    if (!structure_only)
+        validateMappedCircuitWitness(pr);
+
+    if (structure_only) {
+        pr.mat_val=nullptr;
+        return;
+    }
 
     timer T;
     int logn = pr.C.circuit[0].bit_length;
@@ -707,7 +714,23 @@ void neuralNetwork::create(prover &pr, bool merge)
 
 }
 
-void neuralNetwork::inputLayer(layer &circuit) 
+layeredCircuit neuralNetwork::buildPublicCircuit()
+{
+    if (structure_only)
+        throw std::logic_error("public circuit construction is already active");
+    prover public_builder;
+    structure_only=true;
+    try {
+        create(public_builder, false);
+        structure_only=false;
+        return std::move(public_builder.C);
+    } catch (...) {
+        structure_only=false;
+        throw;
+    }
+}
+
+void neuralNetwork::inputLayer(layer &circuit)
 {
     initLayer(circuit, total_in_size, layerType::INPUT);
     printf("input size: 2^%d\n", circuit.bit_length);
@@ -746,20 +769,25 @@ void neuralNetwork::read_layer_norm(int ln_id)
     int orgsize=val[0].size() ;
     val[0].resize(orgsize+2*padded_width);
     total_in_size +=2*padded_width;
-    const std::string path = indexed_parameter_path("ln_", ln_id);
-    std::ifstream param(path, std::ios::binary);
-    if (!param) throw std::runtime_error("Cannot open LayerNorm parameter file " + path);
-    int32_t width, wc, we, bc, be;
-    checked_read(param, &width, sizeof(width), path);
-    checked_read(param, &wc, sizeof(wc), path);
-    checked_read(param, &we, sizeof(we), path);
-    checked_read(param, &bc, sizeof(bc), path);
-    checked_read(param, &be, sizeof(be), path);
-    if (width != real_width)
-        throw std::runtime_error("LayerNorm width mismatch in " + path);
+    int32_t width=real_width, wc=1, we=-10, bc=1, be=-10;
     std::vector<int32_t> weights(width), biases(width);
-    checked_read(param, weights.data(), width * sizeof(int32_t), path);
-    checked_read(param, biases.data(), width * sizeof(int32_t), path);
+    if (!structure_only) {
+        const std::string path = indexed_parameter_path("ln_", ln_id);
+        std::ifstream param(path, std::ios::binary);
+        if (!param)
+            throw std::runtime_error("Cannot open LayerNorm parameter file " + path);
+        checked_read(param, &width, sizeof(width), path);
+        checked_read(param, &wc, sizeof(wc), path);
+        checked_read(param, &we, sizeof(we), path);
+        checked_read(param, &bc, sizeof(bc), path);
+        checked_read(param, &be, sizeof(be), path);
+        if (width != real_width)
+            throw std::runtime_error("LayerNorm width mismatch in " + path);
+        weights.resize(width);
+        biases.resize(width);
+        checked_read(param, weights.data(), width * sizeof(int32_t), path);
+        checked_read(param, biases.data(), width * sizeof(int32_t), path);
+    }
     layer_norm_w_c[ln_id]=wc;
     layer_norm_w_e[ln_id]=we;
     layer_norm_b_c[ln_id]=bc;
@@ -2135,6 +2163,11 @@ void neuralNetwork::fullyConnLayer(layer &circuit, i64 &layer_id, i64 first_fc_i
     initLayer(circuit, size, layerType::FCONN);
     circuit.need_phase2 = true;
     val[layer_id].resize(circuit.size);
+    if (structure_only) {
+        for (auto &value : val[layer_id]) value.clear();
+        layer_id++;
+        return;
+    }
     for (i64 i = 0; i < len; i++)
     {
         for (i64 co = 0; co < channel_out; ++co) 
@@ -2179,6 +2212,14 @@ void neuralNetwork::calcInputLayer(layer &circuit)
     if (val[0].size()!=static_cast<size_t>(total_in_size))
         throw std::logic_error("input layer witness size mismatch");
     auto val_0 = val[0].begin();
+
+    if (structure_only) {
+        for (auto &value : val[0]) value.clear();
+        const auto scale=search(0.01);
+        input_e=scale.first;
+        input_c=scale.second;
+        return;
+    }
 
     double num, mx = -10000, mn = 10000;
     vector<double> input_dat;
@@ -2256,6 +2297,11 @@ void neuralNetwork::readBias(i64 first_bias_id) {
 
 void neuralNetwork::readFconBias(i64 first_bias_id, int real_count, int id)
 {
+    if (structure_only) {
+        for (int i=0;i<channel_out;++i)
+            val[0][first_bias_id+i].clear();
+        return;
+    }
     const std::string path = indexed_parameter_path("fc_", id, "_bias.bin");
     std::ifstream param(path, std::ios::binary);
     if (!param) throw std::runtime_error("Cannot open GPT-2 FC bias file " + path);
@@ -2287,9 +2333,15 @@ bool allow_random_fc_weights() {
 
 // 读取量化后的 GPT-2 全连接权重。文件格式：
 // int32 rows(out_dim), int32 cols(in_dim), int32 data[rows * cols]，row-major。
-void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id) 
+void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
 {
     auto val_0 = val[0].begin() + first_fc_id;
+    if (structure_only) {
+        for (i64 i=0;i<static_cast<i64>(channel_out)*channel_in;++i)
+            val_0[i].clear();
+        mat_values[id]=nullptr;
+        return;
+    }
     mat_values[id]=new int[channel_out*channel_in];
     std::fill(mat_values[id], mat_values[id] + channel_out * channel_in, 0);
 
@@ -2383,6 +2435,7 @@ void neuralNetwork::calcNormalLayer(const layer &circuit, i64 layer_id,bool outp
     current_values.resize(circuit.size);
     for (auto &x: current_values) 
         x.clear();
+    if (structure_only) return;
     for (auto &gate: circuit.uni_gates) 
     {
         if (gate.lu >= static_cast<u32>(SIZE))

@@ -41,3 +41,9 @@ target_link_libraries(range_tests PRIVATE gpt_lib)
 
 add_executable(range_protocol_tests main_range_tests.cpp)
 target_link_libraries(range_protocol_tests PRIVATE gpt_lib)
+
+add_executable(range_artifact_verify main_range_artifact_verify.cpp)
+target_link_libraries(range_artifact_verify PRIVATE gpt_lib)
+
+add_executable(zkgpt_artifact_verify main_zkgpt_artifact_verify.cpp)
+target_link_libraries(zkgpt_artifact_verify PRIVATE gpt_lib)

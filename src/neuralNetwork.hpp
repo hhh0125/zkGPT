@@ -68,6 +68,7 @@ public:
                   i64 start_channel, poolType pool_ty);
 
     void create(prover &pr, bool merge);
+    layeredCircuit buildPublicCircuit();
     void validateCurrentWitness(const prover &pr) const;
     const WitnessRegistry &getWitnessRegistry() const { return witness_registry; }
     int getSequenceLength() const { return len; }
@@ -146,6 +147,7 @@ protected:
     vector<vector<F>>::iterator val;
 
     bool is_llm;
+    bool structure_only = false;
 
     int input_e,input_c;
     int q_offset;
