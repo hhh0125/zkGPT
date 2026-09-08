@@ -1,7 +1,7 @@
 
 #include "circuit.h"
 #include "neuralNetwork.hpp"
-#include "verifier.hpp"
+#include "gkr_proof_builder.hpp"
 #include "models.hpp"
 #include "global_var.hpp"
 #include <iostream>
@@ -121,9 +121,9 @@ int main(int argc, char **argv)
     }
 
     if (test_mode=="gkr-only") {
-        verifier v(&p, p.C);
-        v.prove(32);
-        const auto gkr_bytes=serializeGKRProof(v.gkrProof());
+        GKRProofBuilder gkr_builder(&p, p.C);
+        gkr_builder.build();
+        const auto gkr_bytes=serializeGKRProof(gkr_builder.proof());
         GKRProof decoded_gkr;
         string gkr_error;
         if (!deserializeGKRProof(gkr_bytes, decoded_gkr, &gkr_error) ||
@@ -359,17 +359,18 @@ int main(int argc, char **argv)
          << range_proof.reconstruction_prover_time << "s" << endl;
 
     cout << "Range/GKR commitment binding verified." << endl;
-    verifier v(&p, p.C);
-    v.range_prove(range_prover_time);
-    v.prove(32); // prove with 32 threads
+    GKRProofBuilder gkr_builder(&p, p.C);
+    gkr_builder.setRangeProverTime(range_prover_time);
+    gkr_builder.build();
 
     ZkGPTPublicStatement statement;
     statement.model_shape=nn.getWitnessRegistry().shape();
     statement.circuit_fingerprint=fingerprintCircuit(p.C);
-    statement.output_claim.mle_evaluation=v.gkrProof().output_evaluation;
+    statement.output_claim.mle_evaluation=
+        gkr_builder.proof().output_evaluation;
     statement.range_statement=range_statement;
     ZkGPTProof proof;
-    proof.gkr_proof=v.gkrProof();
+    proof.gkr_proof=gkr_builder.proof();
     proof.range_proof=range_proof;
     bindZkGPTProof(statement,proof);
     const auto statement_bytes=serializeZkGPTPublicStatement(statement);
@@ -386,6 +387,10 @@ int main(int argc, char **argv)
         serializeZkGPTProof(decoded_proof)!=proof_bytes)
         throw runtime_error("top-level proof round-trip failed: "+
                             artifact_error);
+    if (!verifyZkGPT(decoded_statement,decoded_proof,&artifact_error))
+        throw runtime_error("independent zkGPT verification failed: "+
+                            artifact_error);
+    cout << "Independent zkGPT verification passed" << endl;
     cout << "Serialized zkGPT statement bytes: " << statement_bytes.size()
          << endl;
     cout << "Serialized zkGPT proof bytes: " << proof_bytes.size() << endl;
