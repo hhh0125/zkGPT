@@ -27,7 +27,7 @@ public:
     void setRangeProverTime(double value) { range_prover_time = value; }
 
     timer total_timer, total_slow_timer;
-    double verifier_time;
+    double builder_check_time;
     double prover_time;
     double range_prover_time = 0;
     double matrix_time;

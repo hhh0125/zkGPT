@@ -22,7 +22,7 @@ GKRProofBuilder::GKRProofBuilder(prover *pr, const layeredCircuit &cir):
     comm=p->cc;
     final_claim_u0.resize(C.size + 2);
     final_claim_v0.resize(C.size + 2);
-    prover_time=verifier_time=0;
+    prover_time=builder_check_time=0;
     matrix_time=0;
     r_u.resize(C.size + 2);
     r_v.resize(C.size + 2);
@@ -231,7 +231,8 @@ void GKRProofBuilder::build()
     cout<<"=========================Our results:================================"<<endl;
     cout<<"Matrix multiplication Prover time: "<<matrix_time<<"s"<<endl;
     cout<<"Total Prover time(GKR+range):"<<prover_time + range_prover_time<<"="<<prover_time<<"+"<<range_prover_time<<"s"<<endl;
-    cout<<"Verifier time: "<<verifier_time<<"s"<<endl;
+    cout<<"GKR proof-builder local consistency-check time: "
+        <<builder_check_time<<"s"<<endl;
     cout<<"Proof size: "<<(double)(p->proof_size)/1024.0<<"KB"<<endl;
 }
 
@@ -623,7 +624,7 @@ bool GKRProofBuilder::buildLayerProofs()
                     return false;
                 }
                 vtimer.stop();
-                verifier_time+=vtimer.elapse_sec();
+                builder_check_time+=vtimer.elapse_sec();
                 previousRandom = r_u.at(i).at(j);
                 previousSum = nxt_claim;
             }
@@ -666,7 +667,7 @@ bool GKRProofBuilder::buildLayerProofs()
                             return false;
                         }
                         vtimer.stop();
-                        verifier_time+=vtimer.elapse_sec();
+                        builder_check_time+=vtimer.elapse_sec();
                         previousRandom = r_v.at(i).at(j);
                         previousSum = poly.eval(previousRandom);
                 }
@@ -719,7 +720,7 @@ bool GKRProofBuilder::buildLayerProofs()
             beta.clear();
         previousSum = alpha * final_claim_u1 + beta * final_claim_v1;
         vtimer.stop();
-        verifier_time+=vtimer.elapse_sec();
+        builder_check_time+=vtimer.elapse_sec();
 
         r_0 = r_u[i].begin();
         r_1 = r_v[i].begin();
@@ -904,7 +905,7 @@ bool GKRProofBuilder::buildLassoProof()
             previousSum=aa*r_u[0][i]*r_u[0][i]+bb*r_u[0][i]+cc;
         }
         vtimer.stop();
-        verifier_time+=vtimer.elapse_sec();
+        builder_check_time+=vtimer.elapse_sec();
     }
     
     ptimer.stop();
@@ -943,7 +944,8 @@ bool GKRProofBuilder::buildLassoProof()
         }
     }
     ptimer.stop();
-    printf("gr compute time: %f\n", ptimer.elapse_sec());
+    printf("GKR Lasso public input-mapping evaluation time: %f s\n",
+           ptimer.elapse_sec());
     prover_time+=ptimer.elapse_sec();
     
     beta_u.clear();
@@ -955,9 +957,9 @@ bool GKRProofBuilder::buildLassoProof()
     transcript_.appendFr("lasso.mapping_evaluation", gr);
     gkr_proof_.lasso.mapping_evaluation=gr;
     vtimer.stop();
-    verifier_time+=vtimer.elapse_sec();
+    builder_check_time+=vtimer.elapse_sec();
 
-    fprintf(stderr, "All verification passed!!\n");
+    fprintf(stderr, "GKR proof-builder consistency checks passed\n");
 
     beta_g.clear();
     beta_gs.clear();
@@ -1030,10 +1032,11 @@ bool GKRProofBuilder::buildInputOpeningProof()
         commitments, r_u[0], generator_set.generators, generator_set.u,
         eval_in, opening, verifier_transcript, "gkr.input.opening", &error);
     verifier_timer.stop();
-    verifier_time+=verifier_timer.elapse_sec();
+    builder_check_time+=verifier_timer.elapse_sec();
     if (!valid)
         throw std::runtime_error("input commitment opening failed: "+error);
-    printf("Open commit time: prover %f s, verifier %f s\n",
+    printf("GKR input-commitment MLE opening time: proof generation %f s, "
+           "proof-builder local opening check %f s\n",
            prover_timer.elapse_sec(), verifier_timer.elapse_sec());
     return true;
 }

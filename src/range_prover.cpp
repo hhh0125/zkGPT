@@ -238,8 +238,6 @@ vector<vector<G1>> range_prover::range_prove(
         commitments.push_back(logup(chunk_values.data(),table.data(),m,
                                     table_size,thread_num));
     }
-    printf("range proof time: commit time %.6f s, open time %.6f s,sumcheck_time %.6f s\n",range_proof_commit_time,range_proof_open_time,range_proof_sumcheck_time);
-    printf("temp time: %.6f s\n",temp_time);
     return commitments;
 }
 // 证明分片f[m]的所有元素都属于集合t[n]

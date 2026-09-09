@@ -12,6 +12,7 @@
 #include "zkgpt_serialization.hpp"
 #include "hyrax_rp.hpp"
 #include "stats.hpp"
+#include "utils.hpp"
 #include <stdexcept>
 using namespace mcl::bn;
 using namespace std;
@@ -355,8 +356,10 @@ int main(int argc, char **argv)
         throw runtime_error("Range verification failed: "+
                             range_error);
     const double range_prover_time=range_proof.totalProverTime();
-    cout << "Range chunk reconstruction proof verified; prover time="
-         << range_proof.reconstruction_prover_time << "s" << endl;
+    cout << "Range proof generation time: reconstruction/opening="
+         << range_proof.reconstruction_prover_time
+         << "s + LogUp membership=" << range_proof.membership_prover_time
+         << "s = total=" << range_prover_time << "s" << endl;
 
     cout << "Range/GKR commitment binding verified." << endl;
     GKRProofBuilder gkr_builder(&p, p.C);
@@ -387,13 +390,20 @@ int main(int argc, char **argv)
         serializeZkGPTProof(decoded_proof)!=proof_bytes)
         throw runtime_error("top-level proof round-trip failed: "+
                             artifact_error);
-    if (!verifyZkGPT(decoded_statement,decoded_proof,&artifact_error))
+    timer independent_verifier_timer;
+    independent_verifier_timer.start();
+    const bool artifact_valid=verifyZkGPT(
+        decoded_statement,decoded_proof,&artifact_error);
+    independent_verifier_timer.stop();
+    if (!artifact_valid)
         throw runtime_error("independent zkGPT verification failed: "+
                             artifact_error);
-    cout << "Independent zkGPT verification passed" << endl;
-    cout << "Serialized zkGPT statement bytes: " << statement_bytes.size()
-         << endl;
-    cout << "Serialized zkGPT proof bytes: " << proof_bytes.size() << endl;
+    cout << "Independent zkGPT verification passed; verifier time="
+         << independent_verifier_timer.elapse_sec() << "s" << endl;
+    cout << "Serialized zkGPT statement size: "
+         << byte2KB(statement_bytes.size()) << " KB" << endl;
+    cout << "Serialized zkGPT proof size: "
+         << byte2KB(proof_bytes.size()) << " KB" << endl;
     if (!artifact_path_prefix.empty()) {
         write_artifact(artifact_path_prefix+".statement.bin",statement_bytes);
         write_artifact(artifact_path_prefix+".proof.bin",proof_bytes);

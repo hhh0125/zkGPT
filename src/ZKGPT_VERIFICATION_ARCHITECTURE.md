@@ -158,9 +158,9 @@ buildLayerProofs()       // 逐层生成/检查 sumcheck
 
 | 文件 | 职责 |
 |---|---|
-| `hyrax_opening.hpp/.cpp` | 新的可序列化 IPA/MLE opening prover/verifier |
-| `hyrax.hpp/.cpp` | 旧 Hyrax commitment 实现，供 `prover` 的主 commitment 使用 |
-| `hyrax_rp.hpp/.cpp` | 原 Range Proof 承诺/分块实现 |
+| `hyrax_opening.hpp/.cpp` | 生成/验证IPA、MLE opening proof |
+| `hyrax.hpp/.cpp` | 面向主输入层val[0] |
+| `hyrax_rp.hpp/.cpp` | Range Proof 承诺（val[0] 指定值拆分后的 chunks |
 | `hyrax_util.hpp` | 椭圆曲线和并行公共工具 |
 | `generator_cache.hpp/.cpp` | 由 `GeneratorDomain` 确定性取得 `zkGPT/main` / `zkGPT/range` 生成元 |
 | `global_var.hpp`、`typedef.hpp` | BN254 字段/群别名与全局常量 |
