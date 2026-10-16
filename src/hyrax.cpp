@@ -8,6 +8,8 @@
 #include <chrono>
 #include <atomic>
 #include <exception>
+#include <memory>
+#include "thread_joiner.hpp"
 using namespace std;
 using namespace mcl::bn;
 
@@ -497,42 +499,38 @@ G1* prover_commit(Fr* w, G1* g, int l, int thread_n)
         throw std::invalid_argument("invalid field Hyrax commitment request");
     const int rownum=1<<(l/2);
     const int colnum=1<<(l-l/2);
-    G1 *commitments=new G1[rownum];
+    std::unique_ptr<G1[]> owner(new G1[rownum]);
+    G1 *commitments=owner.get();
     const int worker_count=std::min(thread_n, rownum);
     std::atomic<int> next_row{0};
     std::atomic<bool> failed{false};
     std::exception_ptr worker_error;
     std::mutex error_mutex;
     std::vector<std::thread> workers;
+    zkgpt::ThreadJoiner joiner(workers);
     workers.reserve(worker_count);
     for(int worker=0;worker<worker_count;++worker) {
         workers.emplace_back([&] {
-            G1 *buckets=new G1[COMM_OPT_MAX*block_num];
-            memset(buckets, 0, sizeof(G1)*COMM_OPT_MAX*block_num);
-            while(!failed.load(std::memory_order_relaxed)) {
-                const int row=next_row.fetch_add(1);
-                if (row>=rownum) break;
-                try {
+            try {
+                std::unique_ptr<G1[]> buckets(new G1[COMM_OPT_MAX*block_num]);
+                memset(buckets.get(),0,sizeof(G1)*COMM_OPT_MAX*block_num);
+                while(!failed.load(std::memory_order_relaxed)) {
+                    const int row=next_row.fetch_add(1);
+                    if (row>=rownum) break;
                     commitments[row]=perdersen_commit(
-                        g, w+row*colnum, colnum, buckets);
-                } catch (...) {
-                    failed.store(true, std::memory_order_relaxed);
-                    std::lock_guard<std::mutex> lock(error_mutex);
-                    if (!worker_error) worker_error=std::current_exception();
+                        g,w+row*colnum,colnum,buckets.get());
                 }
+            } catch (...) {
+                failed.store(true,std::memory_order_relaxed);
+                std::lock_guard<std::mutex> lock(error_mutex);
+                if (!worker_error) worker_error=std::current_exception();
             }
-            delete[] buckets;
         });
     }
-    for(auto &worker : workers) worker.join();
-    if (worker_error) {
-        delete[] commitments;
-        std::rethrow_exception(worker_error);
-    }
-    return commitments;
+    joiner.join();
+    if (worker_error) std::rethrow_exception(worker_error);
+    return owner.release();
 }
-
-
 
 Fr prover_evaluate(Fr*w ,Fr*r,G1& G,G1* g, Fr*L,Fr*R,int l)  // nlogn brute force 
 {

@@ -6,6 +6,8 @@
 #define ZKCNN_NEURALNETWORK_HPP
 
 #include <cstddef>
+#include <array>
+#include <memory>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -59,6 +61,8 @@ struct poolKernel {
 class neuralNetwork 
 {
 public:
+    struct ParameterRegion { std::string name; std::size_t offset, count, rows, cols; };
+    const std::vector<ParameterRegion>& parameterRegions() const { return parameter_regions_; }
     int headnum, headdim, attn_dim, linear_dim;
     explicit neuralNetwork(i64 psize_x, i64 psize_y, i64 pchannel, i64 pparallel, const string &i_filename,
                            const string &c_filename, const string &o_filename, bool i_llm=false,
@@ -68,6 +72,7 @@ public:
                   i64 start_channel, poolType pool_ty);
 
     void create(prover &pr, bool merge);
+    void logPrivateMemory(const std::string &stage) const;
     layeredCircuit buildPublicCircuit();
     void validateCurrentWitness(const prover &pr) const;
     const WitnessRegistry &getWitnessRegistry() const { return witness_registry; }
@@ -82,8 +87,9 @@ public:
     int layer_norm_c1[30], layer_norm_e1[30], layer_norm_c2[30], layer_norm_e2[30];
     int channel_in, channel_out;
     int layer_num;
-    int* mat_values[300];
+    int* mat_values[300]{}; // Borrowed views; never delete these entries.
 protected:
+    std::vector<ParameterRegion> parameter_regions_;
     struct Input0Segment {
         string name;
         size_t original_scalar_count;
@@ -224,6 +230,9 @@ protected:
     vector<Input0Segment> input0_segments;
     vector<uint64_t> gelu_delta3_limbs;
     vector<uint64_t> round_delta_limbs;
+    // Ownership stays in the network, including partially loaded parameters.
+    std::array<std::unique_ptr<int[]>,300> matrix_storage_;
+    std::array<std::size_t,300> matrix_sizes_{};
     WitnessRegistry witness_registry;
     size_t rounding_witness_instance = 0;
     size_t layer_norm_witness_instance = 0;

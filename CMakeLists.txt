@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(zkCNN)
 
+enable_testing()
+
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+# Benchmarks are meaningless at -O0; default to an optimized build.
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+option(ZKGPT_NATIVE "Tune for the build machine (-march=native)" OFF)
+if (ZKGPT_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
 
 option(ENABLE_ASAN "Build with AddressSanitizer" OFF)
 option(ENABLE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)

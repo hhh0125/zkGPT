@@ -10,7 +10,6 @@
 
 namespace {
 
-constexpr std::uint32_t kVersion=1;
 constexpr std::size_t kMaxArtifactBytes=1ULL<<30;
 constexpr std::size_t kMaxCircuitIdBytes=128;
 
@@ -33,7 +32,6 @@ public:
             throw std::length_error("zkGPT artifact exceeds size limit");
         const auto *begin=static_cast<const std::uint8_t *>(data);
         if (!begin) throw std::invalid_argument("null artifact byte source");
-        bytes_.reserve(bytes_.size()+size);
         bytes_.insert(bytes_.end(),begin,begin+size);
     }
     void u32(std::uint32_t value) {
@@ -97,6 +95,11 @@ public:
         const auto value=u32();
         if (value>maximum)
             throw std::length_error(std::string(label)+" exceeds limit");
+        // Every counted element encodes to at least one byte, so a count
+        // beyond the remaining input is malformed. This also bounds any
+        // reserve() done by the caller before the elements are parsed.
+        if (value>bytes_.size()-position_)
+            throw std::length_error(std::string(label)+" exceeds remaining input");
         return value;
     }
     std::string string() {
@@ -150,9 +153,11 @@ private:
 
 std::vector<std::uint8_t> serializeZkGPTPublicStatement(
     const ZkGPTPublicStatement &statement) {
+    if (statement.protocol_version!=kZkGPTProtocolVersion)
+        throw std::invalid_argument("unsupported zkGPT protocol version");
     Writer writer;
     writer.raw("ZKGS",4);
-    writer.u32(kVersion);
+    writer.u32(kZkGPTArtifactEncodingVersion);
     writer.u32(statement.protocol_version);
     writer.string(statement.circuit_id);
     writer.shape(statement.model_shape);
@@ -169,10 +174,12 @@ bool deserializeZkGPTPublicStatement(
     try {
         Reader reader(bytes);
         reader.magic("ZKGS");
-        if (reader.u32()!=kVersion)
+        if (reader.u32()!=kZkGPTArtifactEncodingVersion)
             throw std::runtime_error("unsupported zkGPT statement version");
         ZkGPTPublicStatement decoded;
         decoded.protocol_version=reader.u32();
+        if (decoded.protocol_version!=kZkGPTProtocolVersion)
+            throw std::runtime_error("unsupported zkGPT protocol version");
         decoded.circuit_id=reader.string();
         decoded.model_shape=reader.shape();
         const auto *fingerprint=reader.take(decoded.circuit_fingerprint.size());
@@ -198,7 +205,7 @@ bool deserializeZkGPTPublicStatement(
 std::vector<std::uint8_t> serializeZkGPTProof(const ZkGPTProof &proof) {
     Writer writer;
     writer.raw("ZKPF",4);
-    writer.u32(kVersion);
+    writer.u32(kZkGPTArtifactEncodingVersion);
     writer.blob(serializeGKRProof(proof.gkr_proof));
     writer.blob(serializeRangeProof(proof.range_proof));
     writer.fr(proof.transcript_binding);
@@ -210,7 +217,7 @@ bool deserializeZkGPTProof(const std::vector<std::uint8_t> &bytes,
     try {
         Reader reader(bytes);
         reader.magic("ZKPF");
-        if (reader.u32()!=kVersion)
+        if (reader.u32()!=kZkGPTArtifactEncodingVersion)
             throw std::runtime_error("unsupported zkGPT proof version");
         ZkGPTProof decoded;
         const auto gkr_bytes=reader.blob();

@@ -74,6 +74,14 @@ public:
 	i8 bit_length_u[2]{}, bit_length_v[2]{}, bit_length{};
     i8 max_bl_u{}, max_bl_v{};
 
+    // Only reclaim storage whose elements have already ended their lifetime.
+    // Refuse nonempty vectors; no allocation/copy or gate reordering occurs.
+    bool releaseEmptyUnaryStorage() noexcept {
+        if (!uni_gates.empty()) return false;
+        std::vector<uniGate>().swap(uni_gates);
+        return true;
+    }
+
     bool need_phase2;
 
     // bit decomp related

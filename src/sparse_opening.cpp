@@ -1,4 +1,5 @@
 #include "sparse_opening.hpp"
+#include "thread_joiner.hpp"
 
 #include "hyrax_opening.hpp"
 
@@ -16,6 +17,11 @@ namespace {
 bool failWith(std::string *error, const std::string &message) {
     if (error) *error=message;
     return false;
+}
+
+std::size_t sparseWorkerCount(std::size_t task_count) {
+    return std::min<std::size_t>(
+        std::max<std::size_t>(1,task_count),zkgpt::workerThreadCount());
 }
 
 std::size_t exactLog2(std::size_t value) {
@@ -229,10 +235,10 @@ SparseLinearOpeningProof proveSparseVal0Opening(
     std::atomic<std::size_t> next_pattern{0};
     std::exception_ptr worker_error;
     std::mutex error_mutex;
-    const std::size_t thread_count=std::min<std::size_t>(
-        8,std::max<std::size_t>(1,layout.patterns.size()));
+    const std::size_t thread_count=sparseWorkerCount(layout.patterns.size());
     std::vector<std::thread> workers;
     workers.reserve(thread_count);
+    zkgpt::ThreadJoiner joiner(workers);
     for (std::size_t thread_id=0;thread_id<thread_count;++thread_id) {
         workers.emplace_back([&] {
             try {
@@ -283,7 +289,7 @@ SparseLinearOpeningProof proveSparseVal0Opening(
             }
         });
     }
-    for (auto &worker : workers) worker.join();
+    joiner.join();
     if (worker_error) std::rethrow_exception(worker_error);
     Fr total=0;
     for (std::size_t pattern_index=0;pattern_index<layout.patterns.size();
@@ -334,10 +340,10 @@ bool verifySparseVal0Opening(
         }
         std::atomic<std::size_t> next_pattern{0};
         std::vector<std::string> opening_errors(layout.patterns.size());
-        const std::size_t thread_count=std::min<std::size_t>(
-            8,std::max<std::size_t>(1,layout.patterns.size()));
+        const std::size_t thread_count=sparseWorkerCount(layout.patterns.size());
         std::vector<std::thread> workers;
         workers.reserve(thread_count);
+        zkgpt::ThreadJoiner joiner(workers);
         for (std::size_t thread_id=0;thread_id<thread_count;++thread_id) {
             workers.emplace_back([&] {
                 for (;;) {
@@ -370,7 +376,7 @@ bool verifySparseVal0Opening(
                 }
             });
         }
-        for (auto &worker : workers) worker.join();
+        joiner.join();
         Fr total=0;
         for (std::size_t pattern_index=0;pattern_index<layout.patterns.size();
              ++pattern_index) {

@@ -5,9 +5,12 @@
 #include "circuit.h"
 #include "polynomial.h"
 #include "hyrax.hpp"
+#include <memory>
 using std::unique_ptr;
 
 class neuralNetwork;
+// Non-owning view: w/comm are owned by prover; g borrows generators.
+// Copying this view never transfers ownership. Do not delete its pointers.
 struct Commit_return
 {
     int l;  // input的长度
@@ -26,8 +29,12 @@ public:
     vector<linear_poly> V_mult[2];
     vector<linear_poly> tmp_mult_array[2];
     vector<linear_poly> tmp_V_mult[2];
-    int** mat_val;
+    int** mat_val=nullptr; // Borrows network or test-fixture matrix storage.
     void init();
+    void logWorkspaceMemory(const std::string &stage) const;
+    void logPrivateMemory(const std::string &stage) const;
+    void releaseSumcheckWorkspace();
+    void releaseLassoWorkspace();
 
     void sumcheckInitAll(const vector<F>::const_iterator &r_0_from_v);
     void sumcheckInit(const F &alpha_0, const F &beta_0);
@@ -58,14 +65,17 @@ public:
     double polyProverTime() const { return 0;}//poly_p -> getPT(); }
     double polyProofSize() const { return 0;}//{ return poly_p -> getPS(); }
     
-    layeredCircuit C;
+    layeredCircuit C{};
     vector<vector<F>> val;        // the output of each gate
     F getCirValue(u32 layer_id, const vector<u32> &ori, u32 u);
     u64 proof_size;
     vector<G> gens;
-    Commit_return cc;
+    Commit_return cc{};
     
 private:
+    std::unique_ptr<Fr[]> committed_witness_;
+    std::unique_ptr<G1[]> committed_rows_;
+    void prepareSumcheckWorkspace();
     quadratic_poly sumcheckUpdateEach(const F &previous_random, bool idx);
     quadratic_poly sumcheckUpdate(const F &previous_random, vector<F> &r_arr);
     

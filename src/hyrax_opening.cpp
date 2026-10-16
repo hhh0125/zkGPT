@@ -1,7 +1,12 @@
 #include "hyrax_opening.hpp"
+#include "thread_joiner.hpp"
+#include "memory_diagnostics.hpp"
+#include <limits>
 
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
+#include <thread>
 
 namespace {
 
@@ -59,6 +64,25 @@ void appendOpeningStatement(Transcript &transcript, const std::string &label,
     transcript.appendFr("ipa.evaluation", evaluation);
 }
 
+// Runs body(begin, end) over [0, count) on joined worker threads. Used
+// for the O(rows * columns) collapse loops, which dominate opening time
+// for 2^22-sized witnesses.
+template <typename Body>
+void parallelRange(std::size_t count, Body body) {
+    const std::size_t threads=std::min<std::size_t>(
+        count<64 ? 1 : zkgpt::workerThreadCount(), count ? count : 1);
+    if (threads<=1) {
+        body(std::size_t{0}, count);
+        return;
+    }
+    std::vector<std::thread> workers;
+    workers.reserve(threads);
+    zkgpt::ThreadJoiner joiner(workers);
+    for (std::size_t t=0;t<threads;++t)
+        workers.emplace_back(body, count*t/threads, count*(t+1)/threads);
+    joiner.join();
+}
+
 struct MleReduction {
     G1 commitment;
     std::vector<Fr> coefficients;
@@ -82,10 +106,12 @@ MleReduction reduceMleProver(
     const auto row_weights=eqWeights(point, 0, row_bits);
     auto column_weights=eqWeights(point, row_bits, column_bits);
     std::vector<Fr> collapsed(column_count, Fr(0));
-    for (std::size_t column=0;column<column_count;++column)
-        for (std::size_t row=0;row<row_count;++row)
-            collapsed[column]+=row_weights[row]*
-                Fr(values[row+column*row_count]);
+    parallelRange(column_count, [&](std::size_t begin, std::size_t end) {
+        for (std::size_t column=begin;column<end;++column)
+            for (std::size_t row=0;row<row_count;++row)
+                collapsed[column]+=row_weights[row]*
+                    Fr(values[row+column*row_count]);
+    });
 
     G1 commitment;
     G1::mulVec(commitment, const_cast<G1 *>(row_commitments.data()),
@@ -111,10 +137,12 @@ MleReduction reduceMleProverFr(
     const auto row_weights=eqWeights(point, 0, row_bits);
     auto column_weights=eqWeights(point, row_bits, column_bits);
     std::vector<Fr> collapsed(column_count, Fr(0));
-    for (std::size_t column=0;column<column_count;++column)
-        for (std::size_t row=0;row<row_count;++row)
-            collapsed[column]+=row_weights[row]*
-                values[row+column*row_count];
+    parallelRange(column_count, [&](std::size_t begin, std::size_t end) {
+        for (std::size_t column=begin;column<end;++column)
+            for (std::size_t row=0;row<row_count;++row)
+                collapsed[column]+=row_weights[row]*
+                    values[row+column*row_count];
+    });
     G1 commitment;
     G1::mulVec(commitment, const_cast<G1 *>(row_commitments.data()),
                row_weights.data(), row_count);
@@ -122,26 +150,36 @@ MleReduction reduceMleProverFr(
 }
 
 MleReduction reduceMleProverFrRowMajor(
-    const std::vector<Fr> &values,
+    HyraxFrWitnessView values,
     const std::vector<G1> &row_commitments,
     const std::vector<Fr> &point,
     const std::vector<G1> &generators) {
     const std::size_t log_size=point.size();
+    if (log_size>30 || log_size>=std::numeric_limits<std::size_t>::digits)
+        throw std::invalid_argument("unsupported row-major Hyrax log size");
+    const std::size_t value_count=std::size_t{1}<<log_size;
+    if (value_count>std::numeric_limits<std::size_t>::max()/sizeof(Fr))
+        throw std::invalid_argument("row-major Hyrax witness byte size overflow");
     const std::size_t row_bits=log_size/2;
     const std::size_t column_bits=log_size-row_bits;
     const std::size_t row_count=static_cast<std::size_t>(1)<<row_bits;
     const std::size_t column_count=static_cast<std::size_t>(1)<<column_bits;
-    if (values.size()!=row_count*column_count ||
+    if (row_count>std::numeric_limits<std::size_t>::max()/column_count ||
+        row_count*column_count!=value_count || values.size()!=value_count ||
         row_commitments.size()!=row_count || generators.size()<column_count)
         throw std::invalid_argument("invalid row-major Hyrax MLE opening shape");
 
     const auto column_weights=eqWeights(point, 0, column_bits);
     const auto row_weights=eqWeights(point, column_bits, row_bits);
     std::vector<Fr> collapsed(column_count, Fr(0));
-    for (std::size_t row=0;row<row_count;++row)
-        for (std::size_t column=0;column<column_count;++column)
-            collapsed[column]+=row_weights[row]*
-                values[row*column_count+column];
+    zkgpt::memory_diagnostics::logVector("input_opening_reduction_allocated","collapsed",collapsed);
+    zkgpt::memory_diagnostics::logProcess("input_opening_reduction_allocated");
+    parallelRange(column_count, [&](std::size_t begin, std::size_t end) {
+        for (std::size_t row=0;row<row_count;++row)
+            for (std::size_t column=begin;column<end;++column)
+                collapsed[column]+=row_weights[row]*
+                    values[row*column_count+column];
+    });
     G1 commitment;
     G1::mulVec(commitment, const_cast<G1 *>(row_commitments.data()),
                row_weights.data(), row_count);
@@ -271,30 +309,56 @@ bool hyraxInnerProductVerify(
 
         appendOpeningStatement(transcript, label, coefficient_input.size(),
                                commitment, evaluation);
-        std::vector<Fr> coefficients=coefficient_input;
-        std::vector<G1> generators=generator_input;
-        G1 folded_commitment=commitment+u*evaluation;
-        for (const auto &round : proof.rounds) {
+        // Instead of folding the generators round by round (about 2n scalar
+        // multiplications), collect the challenges and check the final
+        // equation with multi-scalar multiplications:
+        //   C + u*v + sum(c_j^2 L_j + c_j^-2 R_j) == <s, g>*w + u*(w*<s, a>)
+        // where s_i = prod_j (bit of i split in round j ? c_j : c_j^-1).
+        const std::size_t rounds=proof.rounds.size();
+        std::vector<Fr> challenges(rounds), inverses(rounds);
+        std::vector<G1> cross_points;
+        std::vector<Fr> cross_scalars;
+        cross_points.reserve(2*rounds);
+        cross_scalars.reserve(2*rounds);
+        for (std::size_t j=0;j<rounds;++j) {
+            const auto &round=proof.rounds[j];
             transcript.appendG1("ipa.left", round.left);
             transcript.appendG1("ipa.right", round.right);
-            const Fr challenge=transcript.challenge("ipa-round");
-            Fr inverse;
-            Fr::inv(inverse, challenge);
-            folded_commitment+=round.left*(challenge*challenge)+
-                round.right*(inverse*inverse);
-            const std::size_t half=coefficients.size()/2;
-            for (std::size_t i=0;i<half;++i) {
-                coefficients[i]=inverse*coefficients[i]+
-                    challenge*coefficients[i+half];
-                generators[i]=generators[i]*inverse+
-                    generators[i+half]*challenge;
-            }
-            coefficients.resize(half);
-            generators.resize(half);
+            challenges[j]=transcript.challenge("ipa-round");
+            Fr::inv(inverses[j], challenges[j]);
+            cross_points.push_back(round.left);
+            cross_scalars.push_back(challenges[j]*challenges[j]);
+            cross_points.push_back(round.right);
+            cross_scalars.push_back(inverses[j]*inverses[j]);
         }
         transcript.appendFr("ipa.final_witness", proof.final_witness);
-        const G1 expected=generators[0]*proof.final_witness+
-            u*(proof.final_witness*coefficients[0]);
+
+        // Round j splits on bit (rounds-1-j) of the original index.
+        std::vector<Fr> scalars(coefficient_input.size());
+        scalars[0]=1;
+        for (std::size_t bit=0, active=1;bit<rounds;++bit, active*=2) {
+            const std::size_t j=rounds-1-bit;
+            for (std::size_t i=0;i<active;++i) {
+                scalars[i+active]=scalars[i]*challenges[j];
+                scalars[i]*=inverses[j];
+            }
+        }
+        Fr folded_coefficient=0;
+        for (std::size_t i=0;i<scalars.size();++i)
+            folded_coefficient+=scalars[i]*coefficient_input[i];
+        for (auto &scalar : scalars) scalar*=proof.final_witness;
+
+        G1 folded_commitment=commitment+u*evaluation;
+        if (!cross_points.empty()) {
+            G1 cross;
+            G1::mulVec(cross, cross_points.data(), cross_scalars.data(),
+                       cross_points.size());
+            folded_commitment+=cross;
+        }
+        G1 expected;
+        G1::mulVec(expected, const_cast<G1 *>(generator_input.data()),
+                   scalars.data(), scalars.size());
+        expected+=u*(proof.final_witness*folded_coefficient);
         if (folded_commitment!=expected)
             return failWith(error, "IPA final commitment equation failed");
         return true;
@@ -350,7 +414,7 @@ MleOpeningProof hyraxMleOpenProveFr(
 }
 
 MleOpeningProof hyraxMleOpenProveFrRowMajor(
-    const std::vector<Fr> &values,
+    HyraxFrWitnessView values,
     const std::vector<G1> &row_commitments,
     const std::vector<Fr> &point,
     const std::vector<G1> &generators, const G1 &u,
@@ -366,7 +430,20 @@ MleOpeningProof hyraxMleOpenProveFrRowMajor(
     proof.ipa=hyraxInnerProductProve(
         reduction.witness, reduction.coefficients, opening_generators, u,
         reduction.commitment, evaluation, transcript, label);
+    zkgpt::memory_diagnostics::logProcess("input_opening_after_ipa");
     return proof;
+}
+
+MleOpeningProof hyraxMleOpenProveFrRowMajor(
+    const std::vector<Fr> &values,
+    const std::vector<G1> &row_commitments,
+    const std::vector<Fr> &point,
+    const std::vector<G1> &generators, const G1 &u,
+    const Fr &evaluation, Transcript &transcript,
+    const std::string &label) {
+    return hyraxMleOpenProveFrRowMajor(
+        HyraxFrWitnessView(values.data(),values.size()),row_commitments,point,
+        generators,u,evaluation,transcript,label);
 }
 
 bool hyraxMleOpenVerify(

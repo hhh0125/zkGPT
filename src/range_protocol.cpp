@@ -3,11 +3,19 @@
 #include "sparse_opening.hpp"
 #include "range_logup.hpp"
 #include "range_serialization.hpp"
+#include "thread_joiner.hpp"
+
+#include <cybozu/sha2.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <array>
+#include <exception>
 #include <limits>
+#include <map>
 #include <stdexcept>
+#include <thread>
+#include <type_traits>
 
 namespace {
 
@@ -93,8 +101,65 @@ std::size_t estimateRangeProofSizeBytes(const RangeProof &proof) {
     return serializeRangeProof(proof).size();
 }
 
-Transcript::Transcript(const std::string &domain) {
+namespace {
+
+std::array<std::uint8_t,32> transcriptStateDigest(
+    const std::vector<std::uint8_t> &state) {
+    static const char tag[]="zkGPT-transcript-observer-state-v1";
+    cybozu::Sha256 hash;
+    hash.update(tag,sizeof(tag)-1);
+    std::array<std::uint8_t,32> digest{};
+    if (hash.digest(digest.data(),digest.size(),state.data(),state.size())!=
+        digest.size())
+        throw std::runtime_error("failed to digest transcript observer state");
+    return digest;
+}
+
+std::vector<std::uint8_t> canonicalChallengeEncoding(const Fr &value) {
+    std::array<std::uint8_t,64> buffer{};
+    const std::size_t written=value.serialize(buffer.data(),buffer.size());
+    if (written==0)
+        throw std::runtime_error("failed to serialize observed challenge");
+    return {buffer.begin(),buffer.begin()+written};
+}
+
+}  // namespace
+
+Transcript::Transcript(const std::string &domain, ChallengeObserver *observer,
+                       const std::string &instance):
+    domain_(domain), instance_(instance.empty() ? domain : instance),
+    observer_(observer) {
     appendString("domain", domain);
+}
+
+std::array<std::uint8_t,32> Transcript::stateDigest() const {
+    return transcriptStateDigest(state_);
+}
+
+bool compareChallengeTraces(
+    const std::vector<ChallengeTraceEntry> &left,
+    const std::vector<ChallengeTraceEntry> &right, std::string *error) {
+    if (left.size()!=right.size()) {
+        if (error) *error="challenge trace length mismatch: "+
+            std::to_string(left.size())+" != "+std::to_string(right.size());
+        return false;
+    }
+    for (std::size_t i=0;i<left.size();++i) {
+        const auto &a=left[i];
+        const auto &b=right[i];
+        if (a.transcript_domain!=b.transcript_domain ||
+            a.transcript_instance!=b.transcript_instance ||
+            a.label!=b.label || a.counter!=b.counter ||
+            a.pre_state_digest!=b.pre_state_digest ||
+            a.challenge_encoding!=b.challenge_encoding ||
+            a.post_state_digest!=b.post_state_digest) {
+            if (error) *error="challenge trace mismatch at entry "+
+                std::to_string(i)+" ("+a.transcript_instance+":"+a.label+
+                " vs "+b.transcript_instance+":"+b.label+")";
+            return false;
+        }
+    }
+    return true;
 }
 
 void Transcript::appendBytes(const std::string &label,
@@ -140,18 +205,51 @@ void Transcript::appendG1(const std::string &label, const G1 &value) {
 }
 
 Fr Transcript::challenge(const std::string &label) {
-    for (;;) {
-        std::vector<std::uint8_t> material=state_;
-        appendRawU64(material, label.size());
-        material.insert(material.end(), label.begin(), label.end());
-        appendRawU64(material, challenge_counter_++);
-        Fr result;
-        result.setHashOf(material.data(), material.size());
-        if (!result.isZero()) {
-            appendFr("challenge:"+label, result);
-            return result;
+    const auto challenge_impl=[&](auto observe_tag) -> Fr {
+        constexpr bool observe=decltype(observe_tag)::value;
+        for (;;) {
+            std::array<std::uint8_t,32> pre_digest{};
+            if constexpr (observe) pre_digest=transcriptStateDigest(state_);
+            const std::uint64_t counter=challenge_counter_;
+            std::vector<std::uint8_t> material=std::move(state_);
+            appendRawU64(material, label.size());
+            material.insert(material.end(), label.begin(), label.end());
+            appendRawU64(material, challenge_counter_++);
+            Fr result;
+            result.setHashOf(material.data(), material.size());
+            // Compress the absorbed state into a 32-byte chaining value so each
+            // challenge hashes only the bytes appended since the previous one,
+            // instead of the entire transcript history.
+            std::array<std::uint8_t, 32> chained{};
+            cybozu::Sha256 hash;
+            static const char kChainTag[]="zkGPT-transcript-chain";
+            hash.update(kChainTag, sizeof(kChainTag)-1);
+            if (hash.digest(chained.data(), chained.size(), material.data(),
+                            material.size())!=chained.size())
+                throw std::runtime_error("failed to chain transcript state");
+            state_.assign(chained.begin(), chained.end());
+            if (!result.isZero()) {
+                appendFr("challenge:"+label, result);
+                if constexpr (observe) {
+                    ChallengeTraceEntry entry;
+                    entry.transcript_domain=domain_;
+                    entry.transcript_instance=instance_;
+                    entry.label=label;
+                    entry.counter=counter;
+                    entry.pre_state_digest=pre_digest;
+                    entry.challenge_encoding=canonicalChallengeEncoding(result);
+                    entry.post_state_digest=transcriptStateDigest(state_);
+                    observer_->onChallenge(entry);
+                }
+                return result;
+            }
         }
-    }
+    };
+    // This is the sole observer check on the production challenge path.  The
+    // false template specialization contains no digesting, allocation or log.
+    if (observer_)
+        return challenge_impl(std::true_type{});
+    return challenge_impl(std::false_type{});
 }
 
 void appendRangeStatement(Transcript &transcript,
@@ -200,6 +298,74 @@ void appendRangeStatement(Transcript &transcript,
     }
 }
 
+RangeLayoutPlan planRangeLayout(const WitnessRegistry &registry) {
+    RangeLayoutPlan plan;
+    std::map<unsigned, std::size_t> current_group;
+    for (const auto &constraint : registry.constraints()) {
+        if (constraint.count>kMaxRangeQuerySize)
+            throw std::length_error(
+                "single range constraint exceeds Range Proof capacity: "+
+                constraint.name);
+        auto group_it=current_group.find(constraint.bits);
+        if (group_it==current_group.end() ||
+            plan.queries[group_it->second].actual_query_size+
+                constraint.count>kMaxRangeQuerySize) {
+            PublicRangeQuery query;
+            query.bits=constraint.bits;
+            plan.queries.push_back(std::move(query));
+            group_it=current_group.insert_or_assign(
+                constraint.bits,plan.queries.size()-1).first;
+        }
+        PublicRangeQuery &query=plan.queries[group_it->second];
+        plan.regions.push_back({constraint.kind, constraint.name,
+                                constraint.val0_offset, constraint.count,
+                                constraint.bits, constraint.is_signed,
+                                group_it->second, query.actual_query_size});
+        query.actual_query_size+=constraint.count;
+    }
+    for (auto &query : plan.queries) {
+        std::size_t padded=1;
+        while (padded<query.actual_query_size) padded<<=1;
+        if (padded>kMaxRangeQuerySize)
+            throw std::length_error("Range Proof query exceeds 2^MAXL");
+        query.padded_query_size=padded;
+    }
+    return plan;
+}
+
+void requireRangeLayoutMatchesRegistry(const RangePublicStatement &statement,
+                                       const WitnessRegistry &registry) {
+    const WitnessShape &a=statement.shape, &b=registry.shape();
+    if (a.sequence_length!=b.sequence_length ||
+        a.layer_count!=b.layer_count || a.head_count!=b.head_count ||
+        a.head_dimension!=b.head_dimension ||
+        a.hidden_dimension!=b.hidden_dimension ||
+        a.mlp_dimension!=b.mlp_dimension)
+        throw std::runtime_error("Range statement shape differs from public registry");
+    const RangeLayoutPlan plan=planRangeLayout(registry);
+    if (plan.regions.size()!=statement.regions.size())
+        throw std::runtime_error("Range statement region count differs from public registry");
+    for (std::size_t i=0;i<plan.regions.size();++i) {
+        const auto &x=plan.regions[i], &y=statement.regions[i];
+        if (x.kind!=y.kind || x.name!=y.name ||
+            x.val0_offset!=y.val0_offset || x.count!=y.count ||
+            x.bits!=y.bits || x.is_signed!=y.is_signed ||
+            x.proof_constraint_index!=y.proof_constraint_index ||
+            x.proof_start!=y.proof_start)
+            throw std::runtime_error("Range statement region "+
+                std::to_string(i)+" differs from public registry");
+    }
+    if (plan.queries.size()!=statement.queries.size())
+        throw std::runtime_error("Range statement query count differs from public registry");
+    for (std::size_t i=0;i<plan.queries.size();++i) {
+        const auto &x=plan.queries[i], &y=statement.queries[i];
+        if (x.bits!=y.bits || x.actual_query_size!=y.actual_query_size ||
+            x.padded_query_size!=y.padded_query_size)
+            throw std::runtime_error("Range statement query "+
+                std::to_string(i)+" differs from public registry");
+    }
+}
+
 std::vector<Fr> deriveReconstructionPoint(
     Transcript &transcript, std::size_t query_index, unsigned dimensions) {
     transcript.appendU64("reconstruction.query", query_index);
@@ -224,6 +390,54 @@ void appendChunkCommitments(Transcript &transcript, const RangeProof &proof) {
     }
 }
 
+std::vector<G1> aggregateRangeChunkCommitments(
+    const std::vector<std::vector<G1>> &chunk_commitments,
+    const std::vector<unsigned> &chunk_bits) {
+    if (chunk_commitments.empty() || chunk_bits.empty())
+        throw std::invalid_argument(
+            "cannot aggregate an empty Range chunk commitment set");
+    if (chunk_commitments.size()!=chunk_bits.size())
+        throw std::invalid_argument(
+            "Range chunk commitment/width count mismatch");
+
+    const std::size_t row_count=chunk_commitments.front().size();
+    if (row_count==0)
+        throw std::invalid_argument("Range chunk commitment has no rows");
+    if ((row_count&(row_count-1))!=0)
+        throw std::invalid_argument(
+            "Range chunk commitment row count is not a power of two");
+
+    std::vector<Fr> radix_weights(chunk_bits.size());
+    Fr weight=1;
+    unsigned total_bits=0;
+    for (std::size_t chunk_index=0;chunk_index<chunk_bits.size();
+         ++chunk_index) {
+        const unsigned width=chunk_bits[chunk_index];
+        if (width==0 || width>9)
+            throw std::invalid_argument("invalid public range chunk width");
+        if (total_bits>126-width)
+            throw std::invalid_argument(
+                "Range chunk widths exceed supported integer width");
+        if (chunk_commitments[chunk_index].size()!=row_count)
+            throw std::invalid_argument(
+                "Range chunk commitment row count mismatch");
+        radix_weights[chunk_index]=weight;
+        total_bits+=width;
+        for (unsigned bit=0;bit<width;++bit) weight+=weight;
+    }
+
+    std::vector<G1> aggregate(row_count);
+    for (auto &commitment : aggregate) commitment.clear();
+    for (std::size_t chunk_index=0;chunk_index<chunk_commitments.size();
+         ++chunk_index) {
+        const Fr &radix_weight=radix_weights[chunk_index];
+        for (std::size_t row=0;row<row_count;++row)
+            aggregate[row]+=
+                chunk_commitments[chunk_index][row]*radix_weight;
+    }
+    return aggregate;
+}
+
 bool range_verifier::verifyReconstruction(
     const RangePublicStatement &statement, const RangeProof &proof,
     std::string *error) const {
@@ -240,14 +454,12 @@ bool range_verifier::verifyReconstruction(
             statement.val0_generator_domain.count!=expected_val0_generators)
             return failWith(error, "val[0] generator count mismatch");
         if (statement.range_generator_domain.domain!="zkGPT/range" ||
-            statement.range_generator_domain.count==0 ||
-            statement.range_generator_domain.count>kMaxGeneratorCount)
+            statement.range_generator_domain.count!=kRangeGeneratorCountV2)
             return failWith(error, "Range generator descriptor is invalid");
         const auto &range_generators=getGeneratorSet(
             statement.range_generator_domain);
         if (proof.chunk_commitments.size()!=statement.queries.size() ||
             proof.reconstruction_proofs.size()!=statement.queries.size() ||
-            proof.chunk_openings.size()!=statement.queries.size() ||
             proof.val0_openings.size()!=statement.queries.size())
             return failWith(error, "Range Proof query count mismatch");
 
@@ -307,7 +519,7 @@ bool range_verifier::verifyReconstruction(
                                 "public query regions do not cover the query");
         }
 
-        Transcript transcript("zkGPT-range-stage-b-v1");
+        Transcript transcript("zkGPT-range-stage-b-v2");
         appendRangeStatement(transcript, statement);
         appendChunkCommitments(transcript, proof);
 
@@ -328,56 +540,31 @@ bool range_verifier::verifyReconstruction(
                 return failWith(error, "range chunk widths do not cover the query");
             if (reconstruction.query_index!=query_index)
                 return failWith(error, "reconstruction query order mismatch");
-            if (proof.chunk_commitments[query_index].size()!=
-                    query.chunk_bits.size() ||
-                reconstruction.chunk_evaluations.size()!=query.chunk_bits.size() ||
-                proof.chunk_openings[query_index].size()!=query.chunk_bits.size())
-                return failWith(error, "reconstruction chunk count mismatch");
             const unsigned rounds=exactLog2(query.padded_query_size);
             const std::size_t expected_chunk_commitments=
                 static_cast<std::size_t>(1)<<(rounds/2);
-            for (const auto &chunk : proof.chunk_commitments[query_index]) {
-                if (chunk.size()!=expected_chunk_commitments)
-                    return failWith(error,
-                                    "chunk commitment row count mismatch");
-            }
+            const auto encoded_chunk_commitment=
+                aggregateRangeChunkCommitments(
+                    proof.chunk_commitments[query_index],query.chunk_bits);
+            if (encoded_chunk_commitment.size()!=expected_chunk_commitments)
+                return failWith(error,
+                                "chunk commitment row count mismatch");
             const auto point=deriveReconstructionPoint(
                 transcript, query_index, rounds);
 
-            Fr reconstructed=0;
-            Fr weight=1;
-            for (std::size_t i=0;i<query.chunk_bits.size();++i) {
-                reconstructed+=reconstruction.chunk_evaluations[i]*weight;
-                for (unsigned bit=0;bit<query.chunk_bits[i];++bit)
-                    weight+=weight;
-            }
-            if (reconstruction.encoded_evaluation!=reconstructed)
-                return failWith(error,
-                                "reconstruction random-point identity failed");
             transcript.appendFr("reconstruction.encoded_evaluation",
                                 reconstruction.encoded_evaluation);
-            for (const auto &evaluation : reconstruction.chunk_evaluations)
-                transcript.appendFr("reconstruction.chunk_evaluation", evaluation);
-
-            for (std::size_t chunk_index=0;chunk_index<query.chunk_bits.size();
-                 ++chunk_index) {
-                const auto &opening=proof.chunk_openings[query_index][chunk_index];
-                if (opening.query_index!=query_index ||
-                    opening.chunk_index!=chunk_index ||
-                    opening.claimed_evaluation!=
-                        reconstruction.chunk_evaluations[chunk_index])
-                    return failWith(error, "chunk opening metadata mismatch");
-                const std::string label="chunk-mle/"+
-                    std::to_string(query_index)+"/"+std::to_string(chunk_index);
-                std::string opening_error;
-                if (!hyraxMleOpenVerify(
-                        proof.chunk_commitments[query_index][chunk_index], point,
-                        range_generators.generators, range_generators.u,
-                        opening.claimed_evaluation, opening.opening, transcript,
-                        label, &opening_error))
-                    return failWith(error, "chunk MLE opening failed: "+
-                                    opening_error);
-            }
+            const std::string label="encoded-chunk-mle/"+
+                std::to_string(query_index);
+            std::string opening_error;
+            if (!hyraxMleOpenVerify(
+                    encoded_chunk_commitment,point,
+                    range_generators.generators,range_generators.u,
+                    reconstruction.encoded_evaluation,
+                    reconstruction.encoded_chunk_opening,transcript,label,
+                    &opening_error))
+                return failWith(error,"encoded chunk MLE opening failed: "+
+                                opening_error);
             std::string sparse_error;
             if (!verifySparseVal0Opening(
                     statement, query_index, point,
@@ -401,31 +588,113 @@ bool range_verifier::verify(const RangePublicStatement &statement,
                             const RangeProof &proof,
                             std::string *error) const {
     try {
-        if (statement.range_generator_domain.domain!="zkGPT/range")
+        if (statement.range_generator_domain.domain!="zkGPT/range" ||
+            statement.range_generator_domain.count!=kRangeGeneratorCountV2)
             return failWith(error, "Range generator descriptor is invalid");
-        const auto &range_generators=getGeneratorSet(
-            statement.range_generator_domain);
-        if (proof.membership_proofs.size()!=statement.queries.size())
+        if (statement.queries.empty())
+            return failWith(error, "Range statement has no queries");
+        if (proof.membership_proofs.size()!=statement.queries.size() ||
+            proof.chunk_commitments.size()!=statement.queries.size())
             return failWith(error, "membership proof query count mismatch");
+        struct VerifyTask {
+            std::size_t query_index;
+            std::size_t chunk_index;
+        };
+        std::vector<VerifyTask> tasks;
         for (std::size_t query_index=0;query_index<statement.queries.size();
              ++query_index) {
             const auto &query=statement.queries[query_index];
+            if (query.bits==0 || query.bits>126 ||
+                query.actual_query_size==0 ||
+                query.actual_query_size>query.padded_query_size ||
+                query.padded_query_size==0 ||
+                query.padded_query_size>kMaxRangeQuerySize ||
+                (query.padded_query_size&(query.padded_query_size-1))!=0)
+                return failWith(error, "invalid public range query shape");
+            unsigned total_chunk_bits=0;
+            for (const unsigned chunk_bits : query.chunk_bits) {
+                if (chunk_bits==0 || chunk_bits>9)
+                    return failWith(error, "invalid public range chunk width");
+                total_chunk_bits+=chunk_bits;
+            }
+            if (query.chunk_bits.empty() || total_chunk_bits!=query.bits)
+                return failWith(error,
+                                "range chunk widths do not cover the query");
             if (proof.membership_proofs[query_index].size()!=
+                    query.chunk_bits.size() ||
+                proof.chunk_commitments[query_index].size()!=
                     query.chunk_bits.size())
                 return failWith(error, "membership proof chunk count mismatch");
             for (std::size_t chunk_index=0;chunk_index<query.chunk_bits.size();
-                 ++chunk_index) {
-                std::string membership_error;
-                if (!verifyLogUp(
-                        query, query_index, chunk_index,
-                        proof.chunk_commitments.at(query_index).at(chunk_index),
-                        proof.membership_proofs[query_index][chunk_index],
-                        range_generators.generators, range_generators.u,
-                        &membership_error))
-                    return failWith(error, "LogUp verification failed at query "+
-                        std::to_string(query_index)+", chunk "+
-                        std::to_string(chunk_index)+": "+membership_error);
+                 ++chunk_index)
+                tasks.push_back({query_index,chunk_index});
+        }
+        if (tasks.empty())
+            return failWith(error, "Range statement has no LogUp tasks");
+
+        // All cheap shape checks precede deterministic generator derivation.
+        const auto &range_generators=getGeneratorSet(
+            statement.range_generator_domain);
+
+        const std::size_t worker_count=std::min<std::size_t>(
+            tasks.size(),zkgpt::workerThreadCount());
+        std::atomic<std::size_t> next_task{0};
+        struct VerifyTaskResult {
+            bool ok = false;
+            std::string error;
+            std::exception_ptr exception;
+        };
+        std::vector<VerifyTaskResult> task_results(tasks.size());
+        std::vector<std::thread> workers;
+        workers.reserve(worker_count);
+        zkgpt::ThreadJoiner joiner(workers);
+        for (std::size_t worker=0;worker<worker_count;++worker) {
+            workers.emplace_back([&] {
+                for (;;) {
+                    const std::size_t task_index=next_task.fetch_add(1);
+                    if (task_index>=tasks.size()) break;
+                    try {
+                        const auto task=tasks[task_index];
+                        const auto &query=statement.queries[task.query_index];
+                        auto &result=task_results[task_index];
+                        result.ok=verifyLogUp(
+                            query,task.query_index,task.chunk_index,
+                            proof.chunk_commitments[task.query_index]
+                                                   [task.chunk_index],
+                            proof.membership_proofs[task.query_index]
+                                                    [task.chunk_index],
+                            range_generators.generators,range_generators.u,
+                            &result.error);
+                        if (!result.ok && result.error.empty())
+                            result.error="unknown LogUp verification failure";
+                    } catch (...) {
+                        task_results[task_index].exception=
+                            std::current_exception();
+                    }
+                }
+            });
+        }
+        joiner.join();
+        for (std::size_t task_index=0;task_index<tasks.size();++task_index) {
+            const auto task=tasks[task_index];
+            const auto &result=task_results[task_index];
+            if (result.exception) {
+                try {
+                    std::rethrow_exception(result.exception);
+                } catch (const std::exception &exception) {
+                    return failWith(error,"LogUp verification threw at query "+
+                        std::to_string(task.query_index)+", chunk "+
+                        std::to_string(task.chunk_index)+": "+exception.what());
+                } catch (...) {
+                    return failWith(error,"LogUp verification threw at query "+
+                        std::to_string(task.query_index)+", chunk "+
+                        std::to_string(task.chunk_index));
+                }
             }
+            if (result.ok) continue;
+            return failWith(error,"LogUp verification failed at query "+
+                std::to_string(task.query_index)+", chunk "+
+                std::to_string(task.chunk_index)+": "+result.error);
         }
         return verifyReconstruction(statement, proof, error);
     } catch (const std::exception &exception) {

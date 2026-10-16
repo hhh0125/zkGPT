@@ -1,4 +1,5 @@
 #include "gkr_serialization.hpp"
+#include "circuit.h"
 
 #include <algorithm>
 #include <array>
@@ -7,7 +8,6 @@
 
 namespace {
 
-constexpr std::uint32_t kVersion=1;
 constexpr std::uint32_t kMaxLayers=4096;
 constexpr std::uint32_t kMaxRounds=64;
 constexpr std::size_t kMaxBytes=1ULL<<30;
@@ -84,6 +84,11 @@ public:
         const auto value=u32();
         if (value>maximum)
             throw std::length_error(std::string(label)+" length exceeds limit");
+        // Every counted element encodes to at least one byte, so a count
+        // beyond the remaining input is malformed. This also bounds any
+        // reserve() done by the caller before the elements are parsed.
+        if (value>bytes_.size()-position_)
+            throw std::length_error(std::string(label)+" exceeds remaining input");
         return value;
     }
     Fr fr() {
@@ -102,9 +107,11 @@ public:
         const auto size=G1::getSerializedByteSize();
         const auto *encoded=take(size);
         G1 value;
-        if (value.deserialize(encoded,size)!=size || !value.isValid() ||
-            !value.isValidOrder())
+        if (value.deserialize(encoded,size)!=size || !value.isValid())
             throw std::runtime_error("invalid GKR G1 encoding");
+        // BN254 G1 has cofactor 1 (#E(Fp) = r), so every on-curve point is
+        // already in the prime-order subgroup; isValidOrder() would add a
+        // full scalar multiplication per decoded point.
         std::vector<std::uint8_t> canonical(size);
         if (value.serialize(canonical.data(),canonical.size())!=size ||
             !std::equal(encoded,encoded+size,canonical.begin()))
@@ -169,7 +176,7 @@ MleOpeningProof readIpa(Reader &reader) {
 std::vector<std::uint8_t> serializeGKRProof(const GKRProof &proof) {
     Writer writer;
     writer.raw("ZKGP",4);
-    writer.u32(kVersion);
+    writer.u32(kGKRProofEncodingVersion);
     writer.fr(proof.output_evaluation);
     writer.length(proof.layers.size());
     for (const auto &layer : proof.layers) {
@@ -178,10 +185,22 @@ std::vector<std::uint8_t> serializeGKRProof(const GKRProof &proof) {
         writeRounds(writer,layer.phase1_rounds);
         writeRounds(writer,layer.phase2_rounds);
         writeRounds(writer,layer.matrix_rounds);
+        const bool is_fconn=layer.layer_type==
+            static_cast<std::uint32_t>(layerType::FCONN);
+        if (is_fconn) writeRounds(writer,layer.matrix_v_rounds);
+        else if (!layer.matrix_v_rounds.empty() ||
+                 !layer.matrix_v_final_claim_u0.isZero() ||
+                 !layer.matrix_v_final_claim_v0.isZero())
+            throw std::invalid_argument(
+                "normal GKR layer contains FCONN second-point data");
         writer.fr(layer.final_claim_u0);
         writer.fr(layer.final_claim_u1);
         writer.fr(layer.final_claim_v0);
         writer.fr(layer.final_claim_v1);
+        if (is_fconn) {
+            writer.fr(layer.matrix_v_final_claim_u0);
+            writer.fr(layer.matrix_v_final_claim_v0);
+        }
     }
     writeRounds(writer,proof.lasso.rounds);
     writer.fr(proof.lasso.input_evaluation);
@@ -196,7 +215,7 @@ bool deserializeGKRProof(const std::vector<std::uint8_t> &bytes,
     try {
         Reader reader(bytes);
         reader.magic();
-        if (reader.u32()!=kVersion)
+        if (reader.u32()!=kGKRProofEncodingVersion)
             throw std::runtime_error("unsupported GKR proof version");
         GKRProof decoded;
         decoded.output_evaluation=reader.fr();
@@ -209,10 +228,17 @@ bool deserializeGKRProof(const std::vector<std::uint8_t> &bytes,
             layer.phase1_rounds=readRounds(reader);
             layer.phase2_rounds=readRounds(reader);
             layer.matrix_rounds=readRounds(reader);
+            const bool is_fconn=layer.layer_type==
+                static_cast<std::uint32_t>(layerType::FCONN);
+            if (is_fconn) layer.matrix_v_rounds=readRounds(reader);
             layer.final_claim_u0=reader.fr();
             layer.final_claim_u1=reader.fr();
             layer.final_claim_v0=reader.fr();
             layer.final_claim_v1=reader.fr();
+            if (is_fconn) {
+                layer.matrix_v_final_claim_u0=reader.fr();
+                layer.matrix_v_final_claim_v0=reader.fr();
+            }
             decoded.layers.push_back(std::move(layer));
         }
         decoded.lasso.rounds=readRounds(reader);
@@ -228,4 +254,3 @@ bool deserializeGKRProof(const std::vector<std::uint8_t> &bytes,
         return false;
     }
 }
-

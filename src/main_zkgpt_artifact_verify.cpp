@@ -1,22 +1,11 @@
 #include "zkgpt_serialization.hpp"
+#include "zkgpt_artifact_io.hpp"
 
 #include "global_var.hpp"
+#include "timer.hpp"
 
-#include <fstream>
 #include <iostream>
-#include <iterator>
 #include <stdexcept>
-
-namespace {
-
-std::vector<std::uint8_t> readFile(const char *path) {
-    std::ifstream input(path,std::ios::binary);
-    if (!input) throw std::runtime_error(std::string("cannot open ")+path);
-    return {std::istreambuf_iterator<char>(input),
-            std::istreambuf_iterator<char>()};
-}
-
-} // namespace
 
 int main(int argc,char **argv) {
     if (argc!=3) {
@@ -25,16 +14,24 @@ int main(int argc,char **argv) {
     }
     try {
         initPairing(mcl::BN254);
-        const auto statement_bytes=readFile(argv[1]);
-        const auto proof_bytes=readFile(argv[2]);
+        timer decode_timer;
+        decode_timer.start();
+        const auto statement_bytes=readZkGPTArtifactFile(
+            argv[1],kMaxZkGPTStatementFileBytes,"statement");
+        const auto proof_bytes=readZkGPTArtifactFile(
+            argv[2],kMaxZkGPTProofFileBytes,"proof");
         ZkGPTPublicStatement statement;
         ZkGPTProof proof;
         std::string error;
         if (!deserializeZkGPTPublicStatement(
                 statement_bytes,statement,&error))
             throw std::runtime_error("statement decode failed: "+error);
+        validateZkGPTDeploymentBudget(statement);
         if (!deserializeZkGPTProof(proof_bytes,proof,&error))
             throw std::runtime_error("proof decode failed: "+error);
+        decode_timer.stop();
+        std::cout << "Artifact read+decode time: "
+                  << decode_timer.elapse_sec() << "s\n";
         if (!verifyZkGPT(statement,proof,&error))
             throw std::runtime_error(error);
         std::cout << "zkGPT artifact verified: statement_bytes="
@@ -46,4 +43,3 @@ int main(int argc,char **argv) {
         return 1;
     }
 }
-

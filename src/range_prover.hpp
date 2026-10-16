@@ -86,6 +86,7 @@ public:
     void buildFromWitness(const vector<F> &val0,
                           const WitnessRegistry &registry);
     void verifyWitnessConsistency() const;
+    void logPrivateMemory(const std::string &stage) const;
     const vector<RangeQueryRegion> &queryRegions() const { return query_regions; }
     void tamperBuiltValueForTest(std::size_t region_index = 0);
 private:
@@ -102,7 +103,8 @@ private:
         vector<vector<vector<G1>>> *chunk_commitments);
     ReconstructionProof proveReconstruction(
         std::size_t query_index, const Constraint &constraint,
-        Transcript &transcript, vector<Fr> *point) const;
+        Transcript &transcript, vector<Fr> *point,
+        vector<Fr> *encoded_witness) const;
     void validateShape(const WitnessShape &shape);
 };
 __int128 convert(Fr x)	;

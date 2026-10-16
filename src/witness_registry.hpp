@@ -72,8 +72,16 @@ inline std::string int128ToString(__int128 value) {
     return result;
 }
 
+struct RegisteredExpQuery { std::size_t operator_id, query_id, t_witness_index, E_witness_index; };
+
 class WitnessRegistry {
 public:
+    void addExpQueries(std::size_t op,std::size_t to,std::size_t eo,std::size_t count) {
+        if (!exp_queries_.empty() && exp_queries_.back().operator_id>=op)
+            throw std::logic_error("duplicate or unordered exp operator");
+        for(std::size_t i=0;i<count;i++) exp_queries_.push_back({op,i,to+i,eo+i});
+    }
+    const std::vector<RegisteredExpQuery> &expQueries() const {return exp_queries_;}
     void setShape(const WitnessShape &shape) {
         if (shape.sequence_length == 0 || shape.layer_count == 0 ||
             shape.head_count == 0 || shape.head_dimension == 0 ||
@@ -145,10 +153,12 @@ public:
 
     void clear() {
         constraints_.clear();
+        exp_queries_.clear();
         shape_ = WitnessShape{};
     }
 
 private:
     WitnessShape shape_;
     std::vector<RangeConstraint> constraints_;
+    std::vector<RegisteredExpQuery> exp_queries_;
 };

@@ -1,8 +1,17 @@
 #include "hyrax_rp.hpp"
-#include <cmath>
-#include <iostream>
+#include "thread_joiner.hpp"
 
+#include <algorithm>
+#include <atomic>
+#include <cmath>
+#include <exception>
+#include <iostream>
 #include <chrono>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <thread>
+#include <vector>
 
 #include <omp.h>
 using namespace std;
@@ -223,152 +232,146 @@ bool range_proof_prove_dot_product(G1 comm_x, G1 comm_y, Fr* a, Fr* x,Fr y,G1*g 
     return true;
     
 }
-static ThreadSafeQueue<int> workerq,endq;
-
-
-void ll_commit_worker(G1*& Tk,G1*& g, ll*& w,int rownum,int colnum,G1*& W)
-{
-    int idx;
-    while (true)
-    {
-            bool ret=workerq.TryPop(idx);
-            if(ret==false)
-                return;
-            
-            Tk[idx].clear();
-            ll* f1=new ll[colnum];
-            for(int i=0;i<colnum;i++)
-                f1[i]=w[idx+i*rownum];
-            Tk[idx]=range_proof_perdersen_commit(g,f1,colnum,W);
-            delete[] f1;
-            endq.Push(idx);
-    }
-}
 G1* range_proof_prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, int version with pippenger
 {
-    //cerr<<"hyrax commit thread num: "<<thread_n<<endl;
-    //w has 2^l length
+    if (w==nullptr || g==nullptr || l<0 || l>30 || thread_n<=0)
+        throw std::invalid_argument("invalid integer Range commitment request");
     int halfl=l/2;
     int rownum=(1<<halfl),colnum=(1<<(l-halfl));
-    G1 *Tk=new G1[rownum];
-    //timer t;
-    //t.start();
-    G1** W=new G1*[thread_n];
-
-    for(int i=0;i<thread_n;i++)
-        W[i]=new G1[COMM_OPT_MAX*block_num];
-
-    for(int i=0;i<thread_n;i++)
-        memset(W[i],0,sizeof(G1)*COMM_OPT_MAX*block_num);
-    for (u64 i = 0; i < rownum; ++i)  //work for rownum 
-        workerq.Push(i);
-
+    std::unique_ptr<G1[]> Tk(new G1[rownum]);
+    const int worker_count=std::min(thread_n,rownum);
+    std::atomic<int> next_row{0};
+    std::atomic<int> completed{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr worker_error;
+    std::mutex error_mutex;
     vector<thread> workers;
-    workers.reserve(thread_n);
-    for(int i=0;i<thread_n;i++)
-        workers.emplace_back(ll_commit_worker,std::ref(Tk),std::ref(g),
-                             std::ref(w),rownum,colnum,std::ref(W[i]));
-    for (auto &worker : workers) worker.join();
-    if (endq.Size()!=static_cast<std::size_t>(rownum))
-        throw std::runtime_error("range proof commit worker count mismatch");
-    endq.Clear();
-    if (!workerq.Empty() || endq.Size()!=0)
-        throw std::runtime_error("range proof commit worker queue did not drain");
-   // t.stop("commit time(PPG) ");
-    for(int i=0;i<thread_n;i++)
-        delete [] W[i];
-    delete []W;
-    return Tk;
-}
-
-void fr_commit_worker(G1*& Tk,G1*& g, ll*& w,Fr* f,int m,int rownum,int colnum)
-{
-    int idx;
-    while (true)
-    {
-            bool ret=workerq.TryPop(idx);
-            if(ret==false)
-                return;
-            
-            Tk[idx].clear();
-            ll* f1=new ll[colnum];
-            for(int i=0;i<colnum;i++)
-                f1[i]=w[idx+i*rownum];
-            Tk[idx]=range_proof_perdersen_commit_redundant(g,f,f1,colnum,m);  // f1[clonum], f[m]
-            delete[] f1;
-            endq.Push(idx);
+    workers.reserve(worker_count);
+    zkgpt::ThreadJoiner joiner(workers);
+    for(int worker=0;worker<worker_count;++worker) {
+        workers.emplace_back([&] {
+            try {
+                std::unique_ptr<G1[]> buckets(
+                    new G1[COMM_OPT_MAX*block_num]);
+                memset(buckets.get(),0,
+                       sizeof(G1)*COMM_OPT_MAX*block_num);
+                std::vector<ll> row_values(colnum);
+                while(!failed.load(std::memory_order_relaxed)) {
+                    const int row=next_row.fetch_add(1);
+                    if (row>=rownum) break;
+                    for(int column=0;column<colnum;++column)
+                        row_values[column]=w[row+column*rownum];
+                    Tk[row]=range_proof_perdersen_commit(
+                        g,row_values.data(),colnum,buckets.get());
+                    completed.fetch_add(1,std::memory_order_relaxed);
+                }
+            } catch (...) {
+                failed.store(true,std::memory_order_relaxed);
+                std::lock_guard<std::mutex> lock(error_mutex);
+                if (!worker_error) worker_error=std::current_exception();
+            }
+        });
     }
+    joiner.join();
+    if (worker_error) {
+        std::rethrow_exception(worker_error);
+    }
+    if (completed.load(std::memory_order_relaxed)!=rownum) {
+        throw std::runtime_error("range proof commit worker count mismatch");
+    }
+    return Tk.release();
 }
 // g_comm=range_proof_prover_commit_fr(f,diff,n,g,lg2(m),thread);
-G1* range_proof_prover_commit_fr(ll* w, Fr* f,int m,G1* g, int l,int thread_n) 
+G1* range_proof_prover_commit_fr(ll* w, Fr* f,int m,G1* g, int l,int thread_n)
 {
-    //cerr<<"hyrax commit thread num: "<<thread_n<<endl;
-    //w has 2^l length
+    if (w==nullptr || f==nullptr || g==nullptr || m<=0 ||
+        l<0 || l>30 || thread_n<=0)
+        throw std::invalid_argument("invalid redundant Range commitment request");
     int halfl=l/2;
     int rownum=(1<<halfl),colnum=(1<<(l-halfl));
-    G1 *Tk=new G1[rownum];
-  //  timer t;
-  //  t.start();
-    for (u64 i = 0; i < rownum; ++i)  //work for rownum 
-        workerq.Push(i);
-
+    std::unique_ptr<G1[]> Tk(new G1[rownum]);
+    const int worker_count=std::min(thread_n,rownum);
+    std::atomic<int> next_row{0};
+    std::atomic<int> completed{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr worker_error;
+    std::mutex error_mutex;
     vector<thread> workers;
-    workers.reserve(thread_n);
-    for(int i=0;i<thread_n;i++)
-        workers.emplace_back(fr_commit_worker,std::ref(Tk),std::ref(g),
-                             std::ref(w),std::ref(f),m,rownum,colnum);
-    for (auto &worker : workers) worker.join();
-    if (endq.Size()!=static_cast<std::size_t>(rownum))
-        throw std::runtime_error("range proof redundant worker count mismatch");
-    endq.Clear();
-    if (!workerq.Empty() || endq.Size()!=0)
-        throw std::runtime_error("range proof redundant commit queue did not drain");
-   // t.stop("commit time Fr ");
-    return Tk;
-}
-void fr_commit_worker_general(G1*& Tk,G1*& g, Fr*& w,int rownum,int colnum)
-{
-    int idx;
-    while (true)
-    {
-            bool ret=workerq.TryPop(idx);
-            if(ret==false)
-                return;
-            
-            Tk[idx].clear();
-            Fr* f1=new Fr[colnum];
-            for(int i=0;i<colnum;i++)
-                f1[i]=w[idx+i*rownum];
-            Tk[idx]=range_proof_perdersen_commit_classic(g,f1,colnum);
-            delete[] f1;
-            endq.Push(idx);
+    workers.reserve(worker_count);
+    zkgpt::ThreadJoiner joiner(workers);
+    for(int worker=0;worker<worker_count;++worker) {
+        workers.emplace_back([&] {
+            try {
+                std::vector<ll> row_values(colnum);
+                while(!failed.load(std::memory_order_relaxed)) {
+                    const int row=next_row.fetch_add(1);
+                    if (row>=rownum) break;
+                    for(int column=0;column<colnum;++column)
+                        row_values[column]=w[row+column*rownum];
+                    Tk[row]=range_proof_perdersen_commit_redundant(
+                        g,f,row_values.data(),colnum,m);
+                    completed.fetch_add(1,std::memory_order_relaxed);
+                }
+            } catch (...) {
+                failed.store(true,std::memory_order_relaxed);
+                std::lock_guard<std::mutex> lock(error_mutex);
+                if (!worker_error) worker_error=std::current_exception();
+            }
+        });
     }
+    joiner.join();
+    if (worker_error) {
+        std::rethrow_exception(worker_error);
+    }
+    if (completed.load(std::memory_order_relaxed)!=rownum) {
+        throw std::runtime_error("range proof redundant worker count mismatch");
+    }
+    return Tk.release();
 }
-G1* range_proof_prover_commit_fr_general(Fr* w, G1* g, int l,int thread_n) 
+G1* range_proof_prover_commit_fr_general(Fr* w, G1* g, int l,int thread_n)
 {
-    //cerr<<"hyrax commit thread num: "<<thread_n<<endl;
-    //w has 2^l length
+    if (w==nullptr || g==nullptr || l<0 || l>30 || thread_n<=0)
+        throw std::invalid_argument("invalid field Range commitment request");
     int halfl=l/2;
     int rownum=(1<<halfl),colnum=(1<<(l-halfl));
-    G1 *Tk=new G1[rownum];
-  //  timer t;
-  //  t.start();
-    for (u64 i = 0; i < rownum; ++i)  //work for rownum 
-        workerq.Push(i);
-
+    std::unique_ptr<G1[]> Tk(new G1[rownum]);
+    const int worker_count=std::min(thread_n,rownum);
+    std::atomic<int> next_row{0};
+    std::atomic<int> completed{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr worker_error;
+    std::mutex error_mutex;
     vector<thread> workers;
-    workers.reserve(thread_n);
-    for(int i=0;i<thread_n;i++)
-        workers.emplace_back(fr_commit_worker_general,std::ref(Tk),std::ref(g),
-                             std::ref(w),rownum,colnum);
-    for (auto &worker : workers) worker.join();
-    if (endq.Size()!=static_cast<std::size_t>(rownum))
+    workers.reserve(worker_count);
+    zkgpt::ThreadJoiner joiner(workers);
+    for(int worker=0;worker<worker_count;++worker) {
+        workers.emplace_back([&] {
+            try {
+                std::vector<Fr> row_values(colnum);
+                while(!failed.load(std::memory_order_relaxed)) {
+                    const int row=next_row.fetch_add(1);
+                    if (row>=rownum) break;
+                    for(int column=0;column<colnum;++column)
+                        row_values[column]=w[row+column*rownum];
+                    Tk[row]=range_proof_perdersen_commit_classic(
+                        g,row_values.data(),colnum);
+                    completed.fetch_add(1,std::memory_order_relaxed);
+                }
+            } catch (...) {
+                failed.store(true,std::memory_order_relaxed);
+                std::lock_guard<std::mutex> lock(error_mutex);
+                if (!worker_error) worker_error=std::current_exception();
+            }
+        });
+    }
+    joiner.join();
+    if (worker_error) {
+        std::rethrow_exception(worker_error);
+    }
+    if (completed.load(std::memory_order_relaxed)!=rownum) {
         throw std::runtime_error("range proof field worker count mismatch");
-    endq.Clear();
-    if (!workerq.Empty() || endq.Size()!=0)
-        throw std::runtime_error("range proof field commit queue did not drain");
- //   t.stop("commit time Fr ");
-    return Tk;
+    }
+    return Tk.release();
 }
 
 Fr* range_proof_get_eq(Fr*r, int l)

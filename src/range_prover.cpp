@@ -1,13 +1,18 @@
+#include "memory_diagnostics.hpp"
 #include "range_prover.hpp"
 #include "hyrax_opening.hpp"
 #include "sparse_opening.hpp"
 #include "range_logup.hpp"
+#include "thread_joiner.hpp"
+#include <atomic>
 #include <array>
+#include <exception>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #include <utils.hpp>
 
 static vector<F> beta_gs, beta_u;
@@ -238,8 +243,6 @@ vector<vector<G1>> range_prover::range_prove(
         commitments.push_back(logup(chunk_values.data(),table.data(),m,
                                     table_size,thread_num));
     }
-    printf("range proof time: commit time %.6f s, open time %.6f s,sumcheck_time %.6f s\n",range_proof_commit_time,range_proof_open_time,range_proof_sumcheck_time);
-    printf("temp time: %.6f s\n",temp_time);
     return commitments;
 }
 // 证明分片f[m]的所有元素都属于集合t[n]
@@ -447,7 +450,8 @@ Fr evaluateMultilinear(vector<Fr> values, const vector<Fr> &challenges) {
 
 ReconstructionProof range_prover::proveReconstruction(
     std::size_t query_index, const Constraint &constraint,
-    Transcript &transcript, vector<Fr> *point) const {
+    Transcript &transcript, vector<Fr> *point,
+    vector<Fr> *encoded_witness) const {
     ReconstructionProof proof;
     proof.query_index=query_index;
 
@@ -468,33 +472,21 @@ ReconstructionProof range_prover::proveReconstruction(
             chunks, constraint.range_size);
         if (reconstructed!=constraint.inputs[i].encoded)
             throw std::logic_error("cannot prove an invalid chunk reconstruction");
-        encoded[i].setStr(range_wide::unsignedWideToString(
-            constraint.inputs[i].encoded));
+        // Load the <=126-bit value from two 64-bit limbs instead of going
+        // through a decimal string.
+        const auto value=constraint.inputs[i].encoded;
+        const std::uint64_t limbs[2]={static_cast<std::uint64_t>(value),
+                                      static_cast<std::uint64_t>(value>>64)};
+        bool loaded=false;
+        encoded[i].setArray(&loaded, limbs, 2);
+        if (!loaded)
+            throw std::logic_error("encoded Range value exceeds the field");
     }
-    proof.encoded_evaluation=evaluateMultilinear(std::move(encoded), challenges);
-
-    proof.chunk_evaluations.reserve(constraint.chunk_queries.size());
-    for (const auto &chunk : constraint.chunk_queries) {
-        vector<Fr> values(query_size);
-        for (std::size_t i=0;i<query_size;++i) values[i]=Fr(chunk.chunks[i]);
-        proof.chunk_evaluations.push_back(
-            evaluateMultilinear(std::move(values), challenges));
-    }
-
-    Fr reconstructed_evaluation=0;
-    Fr weight=1;
-    for (std::size_t i=0;i<proof.chunk_evaluations.size();++i) {
-        reconstructed_evaluation+=proof.chunk_evaluations[i]*weight;
-        for (unsigned bit=0;bit<constraint.chunk_queries[i].chunk_bits;++bit)
-            weight+=weight;
-    }
-    if (proof.encoded_evaluation!=reconstructed_evaluation)
-        throw std::logic_error("batched reconstruction evaluation failed");
+    proof.encoded_evaluation=evaluateMultilinear(encoded, challenges);
+    if (encoded_witness) *encoded_witness=std::move(encoded);
 
     transcript.appendFr("reconstruction.encoded_evaluation",
                         proof.encoded_evaluation);
-    for (const auto &evaluation : proof.chunk_evaluations)
-        transcript.appendFr("reconstruction.chunk_evaluation", evaluation);
     return proof;
 }
 
@@ -510,36 +502,72 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
         statement.range_generator_domain);
     proof.membership_proofs.resize(constraints.size());
     proof.chunk_commitments.resize(constraints.size());
+    struct LogUpTask {
+        std::size_t query_index;
+        std::size_t chunk_index;
+    };
+    std::vector<LogUpTask> tasks;
     for (std::size_t query_index=0;query_index<constraints.size();++query_index) {
-        const auto &constraint=constraints[query_index];
-        auto &query_proofs=proof.membership_proofs[query_index];
-        auto &query_commitments=proof.chunk_commitments[query_index];
-        query_proofs.reserve(constraint.chunk_queries.size());
-        query_commitments.reserve(constraint.chunk_queries.size());
-        std::cout << "start Stage B membership query_size "
-                  << constraint.query_size << "\t range_size "
-                  << constraint.range_size << std::endl;
-        for (std::size_t chunk_index=0;
-             chunk_index<constraint.chunk_queries.size();++chunk_index) {
-            const auto &chunk=constraint.chunk_queries[chunk_index];
-            std::cout << "  proving independent LogUp chunk " << chunk_index
-                      << " (" << chunk.chunk_bits << " bits)" << std::endl;
-            query_proofs.push_back(proveLogUp(
-                query_index, chunk_index, chunk.chunk_bits, chunk.chunks,
-                range_generators.generators, range_generators.u, thread_num));
-            query_commitments.push_back(
-                query_proofs.back().value_commitment);
-        }
+        const auto chunk_count=constraints[query_index].chunk_queries.size();
+        proof.membership_proofs[query_index].resize(chunk_count);
+        proof.chunk_commitments[query_index].resize(chunk_count);
+        for (std::size_t chunk_index=0;chunk_index<chunk_count;++chunk_index)
+            tasks.push_back({query_index,chunk_index});
     }
+    if (tasks.empty())
+        throw std::logic_error("Range proof contains no LogUp tasks");
+
+    // Each LogUp proof has its own domain-separated transcript and writes a
+    // fixed (query, chunk) slot, so scheduling does not affect proof bytes.
+    // Keep a bounded outer pool and divide the caller's total thread budget
+    // between independent LogUps and each LogUp's commitment/inversion work.
+    const std::size_t task_workers=std::min<std::size_t>(
+        tasks.size(),std::max(1,std::min(thread_num,16)));
+    const int inner_threads=std::max(
+        1,thread_num/static_cast<int>(task_workers));
+    std::cout << "start Stage B membership: queries=" << constraints.size()
+              << ", chunks=" << tasks.size()
+              << ", task_workers=" << task_workers
+              << ", inner_threads=" << inner_threads << std::endl;
+    std::atomic<std::size_t> next_task{0};
+    std::vector<std::exception_ptr> task_errors(tasks.size());
+    std::vector<std::thread> membership_workers;
+    membership_workers.reserve(task_workers);
+    zkgpt::ThreadJoiner joiner(membership_workers);
+    for (std::size_t worker=0;worker<task_workers;++worker) {
+        membership_workers.emplace_back([&] {
+            for (;;) {
+                const std::size_t task_index=next_task.fetch_add(1);
+                if (task_index>=tasks.size()) break;
+                const auto task=tasks[task_index];
+                try {
+                    const auto &chunk=constraints[task.query_index]
+                        .chunk_queries[task.chunk_index];
+                    auto result=proveLogUp(
+                        task.query_index,task.chunk_index,chunk.chunk_bits,
+                        chunk.chunks,range_generators.generators,
+                        range_generators.u,inner_threads);
+                    proof.chunk_commitments[task.query_index][task.chunk_index]=
+                        result.value_commitment;
+                    proof.membership_proofs[task.query_index][task.chunk_index]=
+                        std::move(result);
+                } catch (...) {
+                    task_errors[task_index]=std::current_exception();
+                }
+            }
+        });
+    }
+    joiner.join();
+    for (const auto &error : task_errors)
+        if (error) std::rethrow_exception(error);
     membership_timer.stop();
     proof.membership_prover_time=membership_timer.elapse_sec();
     timer reconstruction_timer;
     reconstruction_timer.start();
-    Transcript transcript("zkGPT-range-stage-b-v1");
+    Transcript transcript("zkGPT-range-stage-b-v2");
     appendRangeStatement(transcript, statement);
     appendChunkCommitments(transcript, proof);
     proof.reconstruction_proofs.reserve(constraints.size());
-    proof.chunk_openings.resize(constraints.size());
     proof.val0_openings.reserve(constraints.size());
     for (std::size_t i=0;i<constraints.size();++i) {
         timer query_opening_timer;
@@ -547,26 +575,21 @@ RangeProof range_prover::proveStageB(const RangePublicStatement &statement) {
         std::cout << "start Stage B reconstruction/opening query " << i
                   << "/" << constraints.size() << std::endl;
         vector<Fr> point;
-        proof.reconstruction_proofs.push_back(
-            proveReconstruction(i, constraints[i], transcript, &point));
-        auto &openings=proof.chunk_openings[i];
-        openings.reserve(constraints[i].chunk_queries.size());
-        for (std::size_t chunk_index=0;
-             chunk_index<constraints[i].chunk_queries.size();++chunk_index) {
-            ChunkOpeningProof opening;
-            opening.query_index=i;
-            opening.chunk_index=chunk_index;
-            opening.claimed_evaluation=
-                proof.reconstruction_proofs.back().chunk_evaluations[chunk_index];
-            const std::string label="chunk-mle/"+std::to_string(i)+"/"+
-                                    std::to_string(chunk_index);
-            opening.opening=hyraxMleOpenProve(
-                constraints[i].chunk_queries[chunk_index].chunks,
-                proof.chunk_commitments[i][chunk_index], point,
-                range_generators.generators, range_generators.u,
-                opening.claimed_evaluation, transcript, label);
-            openings.push_back(std::move(opening));
-        }
+        vector<Fr> encoded_witness;
+        ReconstructionProof reconstruction=proveReconstruction(
+            i, constraints[i], transcript, &point, &encoded_witness);
+        vector<unsigned> chunk_bits;
+        chunk_bits.reserve(constraints[i].chunk_queries.size());
+        for (const auto &chunk : constraints[i].chunk_queries)
+            chunk_bits.push_back(chunk.chunk_bits);
+        const auto encoded_commitment=aggregateRangeChunkCommitments(
+            proof.chunk_commitments[i], chunk_bits);
+        const std::string label="encoded-chunk-mle/"+std::to_string(i);
+        reconstruction.encoded_chunk_opening=hyraxMleOpenProveFr(
+            encoded_witness, encoded_commitment, point,
+            range_generators.generators, range_generators.u,
+            reconstruction.encoded_evaluation, transcript, label);
+        proof.reconstruction_proofs.push_back(std::move(reconstruction));
         if (witness_source==nullptr)
             throw std::logic_error("val[0] witness is unavailable for opening");
         proof.val0_openings.push_back(proveSparseVal0Opening(
@@ -696,47 +719,37 @@ void range_prover::buildFromWitness(const vector<F> &val0,
 
     OP op;
     op.op_type=NonlinearOpType::NonLinear;
-    // The legacy sumcheck materializes several Fr work arrays per query.
-    // Capping at 2^22 keeps peak memory bounded while MAXL remains the
-    // protocol-wide hard limit.
-    constexpr std::size_t max_query_size=static_cast<std::size_t>(1)<<22;
-    std::map<unsigned, std::size_t> current_group;
-
-    for (const auto &constraint : registry.constraints()) {
-        if (constraint.count > max_query_size)
-            throw std::length_error("single range constraint exceeds Range Proof capacity: " +
-                                    constraint.name);
-        auto group_it=current_group.find(constraint.bits);
-        if (group_it==current_group.end() ||
-            op.constraints[group_it->second].inputs.size()+constraint.count >
-                max_query_size) {
-            Constraint group;
-            group.range_size=constraint.bits;
-            op.constraints.push_back(std::move(group));
-            current_group[constraint.bits]=op.constraints.size()-1;
-            group_it=current_group.find(constraint.bits);
-        }
-
-        Constraint &group=op.constraints[group_it->second];
-        const std::size_t proof_start=group.inputs.size();
-        group.inputs.reserve(proof_start+constraint.count);
-        for (std::size_t i=0;i<constraint.count;++i) {
+    // The query layout is shared with the verifier (planRangeLayout), which
+    // rebuilds it from the public circuit's registry.
+    const RangeLayoutPlan plan=planRangeLayout(registry);
+    op.constraints.resize(plan.queries.size());
+    for (std::size_t q=0;q<plan.queries.size();++q) {
+        op.constraints[q].range_size=plan.queries[q].bits;
+        op.constraints[q].inputs.reserve(plan.queries[q].padded_query_size);
+    }
+    for (const auto &region : plan.regions) {
+        const RangeConstraint constraint{region.kind, region.name,
+                                         region.val0_offset, region.count,
+                                         region.bits, region.is_signed};
+        Constraint &group=op.constraints[region.proof_constraint_index];
+        if (group.inputs.size()!=region.proof_start)
+            throw std::logic_error("Range layout plan is not contiguous");
+        for (std::size_t i=0;i<region.count;++i) {
             group.inputs.push_back(encodeWitnessValue(
-                val0[constraint.val0_offset+i], constraint,
-                constraint.val0_offset+i));
+                val0[region.val0_offset+i], constraint,
+                region.val0_offset+i));
         }
-        query_regions.push_back({constraint.kind, constraint.name,
-                                 constraint.val0_offset, constraint.count,
-                                 constraint.bits, constraint.is_signed,
-                                 group_it->second, proof_start});
+        query_regions.push_back({region.kind, region.name,
+                                 region.val0_offset, region.count,
+                                 region.bits, region.is_signed,
+                                 region.proof_constraint_index,
+                                 region.proof_start});
     }
 
-    for (auto &constraint : op.constraints) {
+    for (std::size_t q=0;q<op.constraints.size();++q) {
+        auto &constraint=op.constraints[q];
         constraint.actual_query_size=constraint.inputs.size();
-        std::size_t padded=1;
-        while (padded<constraint.actual_query_size) padded<<=1;
-        if (padded>max_query_size)
-            throw std::length_error("Range Proof query exceeds 2^MAXL");
+        const std::size_t padded=plan.queries[q].padded_query_size;
         constraint.inputs.resize(padded, range_wide::EncodedWitnessValue{});
         constraint.query_size=static_cast<int>(padded);
         buildChunkQueries(constraint);
@@ -796,4 +809,21 @@ void range_prover::tamperBuiltValueForTest(std::size_t region_index) {
     const auto &region=query_regions.at(region_index);
     Constraint &constraint=ops.front().constraints.at(region.proof_constraint_index);
     constraint.inputs.at(region.proof_start).encoded+=1;
+}
+
+void range_prover::logPrivateMemory(const std::string &stage) const {
+    using namespace zkgpt::memory_diagnostics;
+    if (!enabled()) return;
+    logScalar(stage,"range_witness_borrow_alive",witness_source!=nullptr);
+    logVector(stage,"range_ops",ops);
+    logVector(stage,"range_query_regions",query_regions);
+    std::size_t inputs=0,input_capacity=0,queries=0,query_capacity=0,chunks=0,chunk_capacity=0;
+    for (const auto &op:ops) for (const auto &c:op.constraints) {
+        inputs+=c.inputs.size(); input_capacity+=c.inputs.capacity();
+        queries+=c.chunk_queries.size(); query_capacity+=c.chunk_queries.capacity();
+        for (const auto &q:c.chunk_queries) { chunks+=q.chunks.size(); chunk_capacity+=q.chunks.capacity(); }
+    }
+    logVectorMetadata(stage,"range_encoded_inputs",inputs,input_capacity,sizeof(range_wide::EncodedWitnessValue));
+    logVectorMetadata(stage,"range_chunk_queries",queries,query_capacity,sizeof(range_wide::RangeChunkQuery));
+    logVectorMetadata(stage,"range_nested_chunks",chunks,chunk_capacity,sizeof(uint16_t));
 }

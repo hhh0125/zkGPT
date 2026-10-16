@@ -4,12 +4,15 @@
 #include "hyrax_opening.hpp"
 #include "polynomial.h"
 #include "utils.hpp"
+#include "thread_joiner.hpp"
 #include <cybozu/sha2.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <array>
 #include <limits>
 #include <stdexcept>
+#include <exception>
 #include <thread>
 #include <sstream>
 
@@ -23,9 +26,14 @@ class FingerprintWriter {
 public:
     ~FingerprintWriter() { flush(); }
     void u64(std::uint64_t value) {
+        std::uint8_t bytes[8];
         for (unsigned i=0;i<8;++i)
-            buffer_.push_back(static_cast<std::uint8_t>(value>>(8*i)));
+            bytes[i]=static_cast<std::uint8_t>(value>>(8*i));
+        buffer_.insert(buffer_.end(),bytes,bytes+8);
         if (buffer_.size()>=kFlushSize) flush();
+    }
+    void digest(const std::array<std::uint8_t,32> &value) {
+        buffer_.insert(buffer_.end(),value.begin(),value.end());
     }
     void text(const char *value) {
         const string text_value(value);
@@ -68,33 +76,14 @@ Fr evaluate(const GKRQuadraticRound &round, const Fr &point) {
     return round.a * point * point + round.b * point + round.c;
 }
 
-Transcript initializeTranscript(const layeredCircuit &circuit,
-                               const GKRPublicStatement &statement) {
-    Transcript transcript("zkGPT-proof-v1");
-    transcript.appendU64("protocol.version", statement.protocol_version);
-    transcript.appendString("curve.id", "BN254");
-    transcript.appendU64("circuit.layer_count", circuit.size);
-    for (const auto &layer : circuit.circuit) {
-        transcript.appendU64("circuit.layer.type",
-            static_cast<std::uint64_t>(layer.ty));
-        transcript.appendU64("circuit.layer.size", layer.size);
-        transcript.appendU64("circuit.layer.bit_length", layer.bit_length);
-        transcript.appendU64("circuit.layer.max_bl_u", layer.max_bl_u);
-        transcript.appendU64("circuit.layer.max_bl_v", layer.max_bl_v);
-        transcript.appendBool("circuit.layer.need_phase2", layer.need_phase2);
-        transcript.appendU64("circuit.layer.zero_start", layer.zero_start_id);
-    }
-    transcript.appendU64("input.log_size", statement.val0_log_size);
-    transcript.appendU64("input.commitment_count",
-                         statement.val0_commitment.size());
-    for (const auto &commitment : statement.val0_commitment)
-        transcript.appendG1("input.commitment", commitment);
-    return transcript;
+bool isZeroFingerprint(const std::array<std::uint8_t, 32> &fingerprint) {
+    return std::all_of(fingerprint.begin(),fingerprint.end(),
+                       [](std::uint8_t byte) { return byte==0; });
 }
 
-void validateStatement(const layeredCircuit &circuit,
-                       const GKRPublicStatement &statement) {
-    if (statement.protocol_version != 1)
+void validateStatementMetadata(const layeredCircuit &circuit,
+                               const GKRPublicStatement &statement) {
+    if (statement.protocol_version != kZkGPTProtocolVersion)
         fail("GKR statement has unsupported protocol version");
     if (circuit.size < 2 || circuit.circuit.size() != circuit.size)
         fail("GKR public circuit has invalid layer count");
@@ -109,8 +98,6 @@ void validateStatement(const layeredCircuit &circuit,
     if (statement.val0_generator_domain.domain != "zkGPT/main" ||
         statement.val0_generator_domain.count != expected_generators)
         fail("GKR statement has invalid val0 generator descriptor");
-    if (fingerprintCircuit(circuit)!=statement.circuit_fingerprint)
-        fail("GKR public circuit fingerprint mismatch");
     const auto &shape = statement.model_shape;
     if (shape.sequence_length == 0 || shape.layer_count == 0 ||
         shape.head_count == 0 || shape.head_dimension == 0 ||
@@ -119,6 +106,16 @@ void validateStatement(const layeredCircuit &circuit,
                            shape.head_dimension ||
         shape.head_count * shape.head_dimension != shape.hidden_dimension)
         fail("GKR statement has invalid model shape");
+}
+
+void validateStatementFingerprint(
+    const GKRPublicStatement &statement,
+    const std::array<std::uint8_t, 32> &trusted_fingerprint) {
+    if (isZeroFingerprint(trusted_fingerprint) ||
+        isZeroFingerprint(statement.circuit_fingerprint))
+        fail("GKR circuit fingerprint must not be all zero");
+    if (trusted_fingerprint!=statement.circuit_fingerprint)
+        fail("GKR public circuit fingerprint mismatch");
 }
 
 void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
@@ -143,9 +140,10 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
     bin[1].clear();
     bin[2].clear();
     const size_t unary_threads = current.uni_gates.size() < 16384 ? 1 :
-        std::min<size_t>(32, std::thread::hardware_concurrency() == 0
-                                ? 32 : std::thread::hardware_concurrency());
+        zkgpt::workerThreadCount();
     vector<std::array<Fr, 2>> unary_partial(unary_threads);
+    // Gate bounds are validated inside the workers (single pass).
+    std::atomic<bool> out_of_range{false};
     vector<std::thread> workers;
     workers.reserve(unary_threads);
     for (size_t thread_id = 0; thread_id < unary_threads; ++thread_id) {
@@ -156,8 +154,10 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
                                unary_threads;
             for (size_t i = begin; i < end; ++i) {
                 const auto &gate = current.uni_gates[i];
-                if (gate.g >= beta_g.size() || gate.u >= beta_u.size())
-                    continue;
+                if (gate.g >= beta_g.size() || gate.u >= beta_u.size()) {
+                    out_of_range = true;
+                    return;
+                }
                 const unsigned source_class = gate.lu == 0 ? 0U : 1U;
                 unary_partial[thread_id][source_class] +=
                     beta_g[gate.g] * beta_u[gate.u] * gate.sc;
@@ -169,9 +169,8 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
         uni[0] += partial[0];
         uni[1] += partial[1];
     }
-    for (const auto &gate : current.uni_gates)
-        if (gate.g >= beta_g.size() || gate.u >= beta_u.size())
-            fail("GKR public circuit contains an out-of-range unary gate");
+    if (out_of_range)
+        fail("GKR public circuit contains an out-of-range unary gate");
 
     if (!r_v) return;
     vector<Fr> beta_v(size_t{1} << current.max_bl_v);
@@ -179,8 +178,7 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
     uni[0] *= beta_v[0];
     uni[1] *= beta_v[0];
     const size_t binary_threads = current.bin_gates.size() < 16384 ? 1 :
-        std::min<size_t>(32, std::thread::hardware_concurrency() == 0
-                                ? 32 : std::thread::hardware_concurrency());
+        zkgpt::workerThreadCount();
     vector<std::array<Fr, 3>> binary_partial(binary_threads);
     workers.clear();
     workers.reserve(binary_threads);
@@ -193,8 +191,10 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
             for (size_t i = begin; i < end; ++i) {
                 const auto &gate = current.bin_gates[i];
                 if (gate.g >= beta_g.size() || gate.u >= beta_u.size() ||
-                    gate.v >= beta_v.size() || gate.l > 2)
-                    continue;
+                    gate.v >= beta_v.size() || gate.l > 2) {
+                    out_of_range = true;
+                    return;
+                }
                 binary_partial[thread_id][gate.l] +=
                     beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * gate.sc;
             }
@@ -203,10 +203,8 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
     for (auto &worker : workers) worker.join();
     for (const auto &partial : binary_partial)
         for (unsigned i = 0; i < 3; ++i) bin[i] += partial[i];
-    for (const auto &gate : current.bin_gates)
-        if (gate.g >= beta_g.size() || gate.u >= beta_u.size() ||
-            gate.v >= beta_v.size() || gate.l > 2)
-            fail("GKR public circuit contains an out-of-range binary gate");
+    if (out_of_range)
+        fail("GKR public circuit contains an out-of-range binary gate");
 }
 
 Fr finalPredicateValue(const Fr uni[2], const Fr bin[3],
@@ -220,59 +218,96 @@ Fr finalPredicateValue(const Fr uni[2], const Fr bin[3],
 
 } // namespace
 
+namespace {
+
+// Hash of one layer's metadata and wiring (same field order as v1).
+std::array<std::uint8_t, 32> fingerprintLayer(const layer &layer) {
+    FingerprintWriter writer;
+    writer.u64(static_cast<std::uint64_t>(layer.ty));
+    writer.u64(layer.size);
+    writer.u64(layer.size_u[0]);
+    writer.u64(layer.size_u[1]);
+    writer.u64(layer.size_v[0]);
+    writer.u64(layer.size_v[1]);
+    writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[0]));
+    writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[1]));
+    writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[0]));
+    writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[1]));
+    writer.u64(static_cast<std::uint8_t>(layer.bit_length));
+    writer.u64(static_cast<std::uint8_t>(layer.max_bl_u));
+    writer.u64(static_cast<std::uint8_t>(layer.max_bl_v));
+    writer.u64(layer.need_phase2 ? 1 : 0);
+    writer.u64(layer.zero_start_id);
+    writer.u64(static_cast<std::uint8_t>(layer.fft_bit_length));
+    writer.u64(layer.uni_interval.size());
+    for (const auto &interval : layer.uni_interval) {
+        writer.u64(static_cast<std::uint64_t>(interval.first));
+        writer.u64(static_cast<std::uint64_t>(interval.second));
+    }
+    writer.u64(layer.bin_interval.size());
+    for (const auto &interval : layer.bin_interval) {
+        writer.u64(static_cast<std::uint64_t>(interval.first));
+        writer.u64(static_cast<std::uint64_t>(interval.second));
+    }
+    writer.u64(layer.uni_gates.size());
+    for (const auto &gate : layer.uni_gates) {
+        writer.u64(gate.g);
+        writer.u64(gate.u);
+        writer.u64(gate.lu);
+        writer.u64(static_cast<std::uint64_t>(gate.sc));
+    }
+    writer.u64(layer.bin_gates.size());
+    for (const auto &gate : layer.bin_gates) {
+        writer.u64(gate.g);
+        writer.u64(gate.u);
+        writer.u64(gate.v);
+        writer.u64(gate.l);
+        writer.u64(static_cast<std::uint64_t>(gate.sc));
+    }
+    writer.u64(layer.ori_id_u.size());
+    for (const auto value : layer.ori_id_u) writer.u64(value);
+    writer.u64(layer.ori_id_v.size());
+    for (const auto value : layer.ori_id_v) writer.u64(value);
+    return writer.finish();
+}
+
+} // namespace
+
 std::array<std::uint8_t, 32> fingerprintCircuit(
     const layeredCircuit &circuit) {
+    // v2: layers are hashed independently (in parallel) and the top-level
+    // hash binds the ordered list of layer digests. Hashing the whole
+    // multi-GB wiring stream serially dominated verifier time.
+    vector<std::array<std::uint8_t, 32>> layer_digests(circuit.circuit.size());
+    std::atomic<size_t> next_layer{0};
+    std::vector<std::exception_ptr> errors(
+        std::min<size_t>(zkgpt::workerThreadCount(),
+                         std::max<size_t>(1, circuit.circuit.size())));
+    {
+        vector<std::thread> workers;
+        workers.reserve(errors.size());
+        zkgpt::ThreadJoiner joiner(workers);
+        for (size_t t = 0; t < errors.size(); ++t)
+            workers.emplace_back([&, t] {
+                try {
+                    for (;;) {
+                        const size_t i = next_layer.fetch_add(1);
+                        if (i >= circuit.circuit.size()) break;
+                        layer_digests[i] = fingerprintLayer(circuit.circuit[i]);
+                    }
+                } catch (...) {
+                    errors[t] = std::current_exception();
+                }
+            });
+        joiner.join();
+    }
+    for (const auto &error : errors)
+        if (error) std::rethrow_exception(error);
     FingerprintWriter writer;
-    writer.text("zkGPT-circuit-v1");
+    writer.text("zkGPT-circuit-v2");
     writer.u64(circuit.size);
     writer.u64(circuit.circuit.size());
-    for (const auto &layer : circuit.circuit) {
-        writer.u64(static_cast<std::uint64_t>(layer.ty));
-        writer.u64(layer.size);
-        writer.u64(layer.size_u[0]);
-        writer.u64(layer.size_u[1]);
-        writer.u64(layer.size_v[0]);
-        writer.u64(layer.size_v[1]);
-        writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[0]));
-        writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[1]));
-        writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[0]));
-        writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[1]));
-        writer.u64(static_cast<std::uint8_t>(layer.bit_length));
-        writer.u64(static_cast<std::uint8_t>(layer.max_bl_u));
-        writer.u64(static_cast<std::uint8_t>(layer.max_bl_v));
-        writer.u64(layer.need_phase2 ? 1 : 0);
-        writer.u64(layer.zero_start_id);
-        writer.u64(static_cast<std::uint8_t>(layer.fft_bit_length));
-        writer.u64(layer.uni_interval.size());
-        for (const auto &interval : layer.uni_interval) {
-            writer.u64(static_cast<std::uint64_t>(interval.first));
-            writer.u64(static_cast<std::uint64_t>(interval.second));
-        }
-        writer.u64(layer.bin_interval.size());
-        for (const auto &interval : layer.bin_interval) {
-            writer.u64(static_cast<std::uint64_t>(interval.first));
-            writer.u64(static_cast<std::uint64_t>(interval.second));
-        }
-        writer.u64(layer.uni_gates.size());
-        for (const auto &gate : layer.uni_gates) {
-            writer.u64(gate.g);
-            writer.u64(gate.u);
-            writer.u64(gate.lu);
-            writer.u64(static_cast<std::uint64_t>(gate.sc));
-        }
-        writer.u64(layer.bin_gates.size());
-        for (const auto &gate : layer.bin_gates) {
-            writer.u64(gate.g);
-            writer.u64(gate.u);
-            writer.u64(gate.v);
-            writer.u64(gate.l);
-            writer.u64(static_cast<std::uint64_t>(gate.sc));
-        }
-        writer.u64(layer.ori_id_u.size());
-        for (const auto value : layer.ori_id_u) writer.u64(value);
-        writer.u64(layer.ori_id_v.size());
-        for (const auto value : layer.ori_id_v) writer.u64(value);
-    }
+    for (const auto &digest : layer_digests) writer.digest(digest);
     return writer.finish();
 }
 
@@ -288,12 +323,59 @@ std::string circuitFingerprintHex(
     return result;
 }
 
+void validateGKRPublicStatement(
+    const layeredCircuit &circuit, const GKRPublicStatement &statement,
+    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint) {
+    validateStatementMetadata(circuit,statement);
+    validateStatementFingerprint(statement,trusted_circuit_fingerprint);
+}
+
+Transcript initializeGKRTranscript(
+    const GKRPublicStatement &statement,
+    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint,
+    ChallengeObserver *observer, const std::string &instance) {
+    if (isZeroFingerprint(trusted_circuit_fingerprint) ||
+        trusted_circuit_fingerprint!=statement.circuit_fingerprint)
+        throw std::invalid_argument("untrusted GKR circuit fingerprint");
+    Transcript transcript(kGKRTranscriptDomain,observer,instance);
+    transcript.appendU64("protocol.version", statement.protocol_version);
+    transcript.appendString("curve.id", "BN254");
+    transcript.appendBytes("circuit.fingerprint",
+        trusted_circuit_fingerprint.data(),trusted_circuit_fingerprint.size());
+    transcript.appendU64("model.sequence_length",
+                         statement.model_shape.sequence_length);
+    transcript.appendU64("model.layer_count",
+                         statement.model_shape.layer_count);
+    transcript.appendU64("model.head_count",
+                         statement.model_shape.head_count);
+    transcript.appendU64("model.head_dimension",
+                         statement.model_shape.head_dimension);
+    transcript.appendU64("model.hidden_dimension",
+                         statement.model_shape.hidden_dimension);
+    transcript.appendU64("model.mlp_dimension",
+                         statement.model_shape.mlp_dimension);
+    transcript.appendU64("input.log_size",statement.val0_log_size);
+    transcript.appendString("input.generator.domain",
+                            statement.val0_generator_domain.domain);
+    transcript.appendU64("input.generator.count",
+                         statement.val0_generator_domain.count);
+    transcript.appendU64("input.commitment_count",
+                         statement.val0_commitment.size());
+    for (const auto &commitment : statement.val0_commitment)
+        transcript.appendG1("input.commitment",commitment);
+    return transcript;
+}
+
 bool verifyGKR(const layeredCircuit &circuit,
                const GKRPublicStatement &statement,
-               const GKRProof &proof, std::string *error) {
+               const GKRProof &proof, std::string *error,
+               ChallengeObserver *observer) {
     try {
-        validateStatement(circuit, statement);
-        Transcript transcript = initializeTranscript(circuit, statement);
+        validateStatementMetadata(circuit,statement);
+        const auto trusted_fingerprint=fingerprintCircuit(circuit);
+        validateStatementFingerprint(statement,trusted_fingerprint);
+        Transcript transcript=initializeGKRTranscript(
+            statement,trusted_fingerprint,observer,"gkr-main");
         const auto &output_layer = circuit.circuit.back();
         vector<vector<Fr>> r_u(circuit.size + 2), r_v(circuit.size + 2);
         r_u[circuit.size].resize(output_layer.bit_length);
@@ -308,6 +390,10 @@ bool verifyGKR(const layeredCircuit &circuit,
             fail("GKR proof layer count does not match public circuit");
 
         vector<Fr> final_u0(circuit.size + 2), final_v0(circuit.size + 2);
+        vector<vector<Fr>> fconn_v_r_u(circuit.size + 2);
+        vector<vector<Fr>> fconn_v_r_v(circuit.size + 2);
+        vector<Fr> fconn_v_final_u0(circuit.size + 2);
+        vector<Fr> fconn_v_final_v0(circuit.size + 2);
         Fr final_u1 = 0;
         Fr final_v1 = 0;
         Fr alpha = F_ONE;
@@ -316,6 +402,28 @@ bool verifyGKR(const layeredCircuit &circuit,
         vector<Fr> r_g1;
         const unsigned sequence_bits =
             ceilPow2BitLength(statement.model_shape.sequence_length);
+        // The matrix sumcheck length is the padded FC input width, which is
+        // fixed by the public model shape (see LLM::LLM): per block the four
+        // projections read hidden, hidden, hidden and mlp columns. FCONN
+        // layers appear in circuit order and are visited here in reverse.
+        if (statement.model_shape.layer_count > circuit.size)
+            fail("GKR model shape has more blocks than circuit layers");
+        vector<unsigned> expected_matrix_rounds;
+        for (std::uint64_t block = 0;
+             block < statement.model_shape.layer_count; ++block) {
+            const unsigned hidden_bits =
+                ceilPow2BitLength(statement.model_shape.hidden_dimension);
+            expected_matrix_rounds.push_back(hidden_bits);
+            expected_matrix_rounds.push_back(hidden_bits);
+            expected_matrix_rounds.push_back(hidden_bits);
+            expected_matrix_rounds.push_back(
+                ceilPow2BitLength(statement.model_shape.mlp_dimension));
+        }
+        size_t fc_layers_left = 0;
+        for (const auto &layer : circuit.circuit)
+            if (layer.ty == layerType::FCONN) ++fc_layers_left;
+        if (fc_layers_left != expected_matrix_rounds.size())
+            fail("GKR circuit FCONN layer count does not match model shape");
 
         for (size_t proof_index = 0; proof_index < proof.layers.size();
              ++proof_index) {
@@ -336,48 +444,78 @@ bool verifyGKR(const layeredCircuit &circuit,
                     !layer.phase2_rounds.empty())
                     fail("GKR matrix layer contains normal sumcheck rounds");
                 const size_t m = layer.matrix_rounds.size();
-                if (m > 30 || current.bit_length < sequence_bits)
-                    fail("GKR matrix layer has invalid dimensions");
+                if (fc_layers_left == 0 ||
+                    m != expected_matrix_rounds[--fc_layers_left] ||
+                    layer.matrix_v_rounds.size()!=m ||
+                    current.bit_length < sequence_bits)
+                    fail("GKR matrix layer has invalid dimensions at layer " +
+                         std::to_string(layer_id));
+                // The matrix sumcheck has no zero-check term.
+                if (current.zero_start_id < current.size)
+                    fail("GKR matrix layer has an unsupported zero region at "
+                         "layer " + std::to_string(layer_id));
                 const size_t k = current.bit_length - sequence_bits;
-                if (r_g0.size() < sequence_bits + k)
-                    fail("GKR matrix layer output point is too short at layer " +
+                if (r_g0.size() < sequence_bits + k ||
+                    r_g1.size() < sequence_bits + k)
+                    fail("GKR matrix layer requires two output points at layer " +
                          std::to_string(layer_id));
-                r_u[layer_id].resize(m + sequence_bits);
-                r_v[layer_id].resize(m + k);
-                for (size_t j = 0; j < sequence_bits; ++j)
-                    r_u[layer_id][m + j] = r_g0[k + j];
-                for (size_t j = 0; j < k; ++j)
-                    r_v[layer_id][m + j] = r_g0[j];
-
-                Fr matrix_claim = final_u1;
-                const string label = "gkr.matrix." +
-                                     std::to_string(layer_id);
-                for (size_t round_index = 0; round_index < m;
-                     ++round_index) {
-                    const auto &round = layer.matrix_rounds[round_index];
-                    if (evaluate(round, F_ZERO) + evaluate(round, F_ONE) !=
-                        matrix_claim)
-                        fail("GKR matrix sumcheck claim mismatch at layer " +
+                const auto verify_matrix=[&](
+                    const vector<GKRQuadraticRound> &rounds,
+                    const Fr &initial_claim, const vector<Fr> &output_point,
+                    const Fr &final_x, const Fr &final_w,
+                    vector<Fr> &x_point, vector<Fr> &w_point,
+                    const string &point_name) {
+                    x_point.resize(m+sequence_bits);
+                    w_point.resize(m+k);
+                    for (size_t j=0;j<sequence_bits;++j)
+                        x_point[m+j]=output_point[k+j];
+                    for (size_t j=0;j<k;++j)
+                        w_point[m+j]=output_point[j];
+                    Fr matrix_claim=initial_claim;
+                    const string label="gkr.matrix."+point_name+"."+
+                        std::to_string(layer_id);
+                    for (size_t round_index=0;round_index<m;++round_index) {
+                        const auto &round=rounds[round_index];
+                        if (evaluate(round,F_ZERO)+evaluate(round,F_ONE)!=
+                            matrix_claim)
+                            fail("GKR matrix "+point_name+
+                                 " sumcheck claim mismatch at layer "+
+                                 std::to_string(layer_id));
+                        appendQuadratic(transcript,label,round);
+                        const Fr challenge=transcript.challenge(
+                            label+".challenge");
+                        x_point[round_index]=challenge;
+                        w_point[round_index]=challenge;
+                        matrix_claim=evaluate(round,challenge);
+                    }
+                    if (final_x*final_w!=matrix_claim)
+                        fail("GKR matrix "+point_name+
+                             " final product mismatch at layer "+
                              std::to_string(layer_id));
-                    appendQuadratic(transcript, label, round);
-                    const Fr challenge = transcript.challenge(label +
-                                                               ".challenge");
-                    r_u[layer_id][round_index] = challenge;
-                    r_v[layer_id][round_index] = challenge;
-                    matrix_claim = evaluate(round, challenge);
-                }
-                if (layer.final_claim_u0 * layer.final_claim_v0 != matrix_claim)
-                    fail("GKR matrix final product mismatch at layer " +
-                         std::to_string(layer_id));
+                    transcript.appendFr(label+".final_f",final_x);
+                    transcript.appendFr(label+".final_g",final_w);
+                };
+                verify_matrix(
+                    layer.matrix_rounds,final_u1,r_g0,
+                    layer.final_claim_u0,layer.final_claim_v0,
+                    r_u[layer_id],r_v[layer_id],"u");
+                verify_matrix(
+                    layer.matrix_v_rounds,final_v1,r_g1,
+                    layer.matrix_v_final_claim_u0,
+                    layer.matrix_v_final_claim_v0,
+                    fconn_v_r_u[layer_id],fconn_v_r_v[layer_id],"v");
                 if (!layer.final_claim_u1.isZero() ||
                     !layer.final_claim_v1.isZero())
                     fail("GKR matrix layer has nonzero secondary claim");
-                transcript.appendFr(label + ".final_f",
-                                    layer.final_claim_u0);
-                transcript.appendFr(label + ".final_g",
-                                    layer.final_claim_v0);
+                fconn_v_final_u0[layer_id]=
+                    layer.matrix_v_final_claim_u0;
+                fconn_v_final_v0[layer_id]=
+                    layer.matrix_v_final_claim_v0;
             } else {
-                if (!layer.matrix_rounds.empty())
+                if (!layer.matrix_rounds.empty() ||
+                    !layer.matrix_v_rounds.empty() ||
+                    !layer.matrix_v_final_claim_u0.isZero() ||
+                    !layer.matrix_v_final_claim_v0.isZero())
                     fail("GKR normal layer contains matrix sumcheck rounds");
                 if (layer.phase1_rounds.size() !=
                     static_cast<size_t>(current.max_bl_u))
@@ -459,6 +597,15 @@ bool verifyGKR(const layeredCircuit &circuit,
             value = transcript.challenge("lasso.sigma_u");
         for (auto &value : sigma_v)
             value = transcript.challenge("lasso.sigma_v");
+        vector<Fr> sigma_fconn_v_u(circuit.size-1,F_ZERO);
+        vector<Fr> sigma_fconn_v_v(circuit.size-1,F_ZERO);
+        for (std::uint32_t layer_id=1;layer_id<circuit.size;++layer_id) {
+            if (circuit.circuit[layer_id].ty!=layerType::FCONN) continue;
+            sigma_fconn_v_u[layer_id-1]=
+                transcript.challenge("lasso.fconn_v.sigma_u");
+            sigma_fconn_v_v[layer_id-1]=
+                transcript.challenge("lasso.fconn_v.sigma_v");
+        }
         previous_sum.clear();
         for (std::uint32_t layer_id = 1; layer_id < circuit.size;
              ++layer_id) {
@@ -467,6 +614,12 @@ bool verifyGKR(const layeredCircuit &circuit,
                 previous_sum += sigma_u[layer_id - 1] * final_u0[layer_id];
             if (layer.bit_length_v[0] >= 0)
                 previous_sum += sigma_v[layer_id - 1] * final_v0[layer_id];
+            if (layer.ty==layerType::FCONN) {
+                previous_sum+=sigma_fconn_v_u[layer_id-1]*
+                    fconn_v_final_u0[layer_id];
+                previous_sum+=sigma_fconn_v_v[layer_id-1]*
+                    fconn_v_final_v0[layer_id];
+            }
         }
 
         const auto input_bits = circuit.circuit[0].bit_length;
@@ -492,30 +645,84 @@ bool verifyGKR(const layeredCircuit &circuit,
         vector<Fr> beta_g(size_t{1} << input_bits);
         initBetaTable(beta_g, input_bits, r_u[0].begin(), F_ONE);
         Fr mapping_evaluation = F_ZERO;
+        // Each term gathers beta_g at a scattered val[0] index; the input
+        // table is 2^input_bits entries, so split every layer's gather
+        // across threads.
+        const auto mappingTerm = [&](const vector<u32> &ori_id,
+                                     size_t count, const vector<Fr> &weights,
+                                     const char *what) {
+            if (count > ori_id.size() || count > weights.size())
+                fail(string("GKR public circuit has invalid Lasso ") + what +
+                     " mapping");
+            const size_t threads = count < 65536 ? 1 :
+                std::min<size_t>(zkgpt::workerThreadCount(), count / 4096);
+            vector<Fr> partial(threads, F_ZERO);
+            std::atomic<bool> invalid{false};
+            const auto gather = [&](size_t t) {
+                Fr sum = F_ZERO;
+                for (size_t j = count * t / threads;
+                     j < count * (t + 1) / threads; ++j) {
+                    const size_t index = ori_id[j];
+                    if (index >= beta_g.size()) {
+                        invalid = true;
+                        return;
+                    }
+                    sum += beta_g[index] * weights[j];
+                }
+                partial[t] = sum;
+            };
+            if (threads == 1) {
+                gather(0);
+            } else {
+                vector<std::thread> workers;
+                workers.reserve(threads);
+                zkgpt::ThreadJoiner joiner(workers);
+                for (size_t t = 0; t < threads; ++t)
+                    workers.emplace_back(gather, t);
+                joiner.join();
+            }
+            if (invalid)
+                fail(string("GKR public circuit has invalid Lasso ") + what +
+                     " mapping");
+            for (const auto &value : partial) mapping_evaluation += value;
+        };
         for (std::uint32_t layer_id = 1; layer_id < circuit.size;
              ++layer_id) {
             const auto &layer = circuit.circuit[layer_id];
             if (layer.bit_length_u[0] >= 0) {
+                if (r_u[layer_id].size() <
+                    static_cast<size_t>(layer.bit_length_u[0]))
+                    fail("GKR Lasso u point is shorter than its layer");
                 vector<Fr> weights(size_t{1} << layer.bit_length_u[0]);
                 initBetaTable(weights, layer.bit_length_u[0],
                               r_u[layer_id].begin(), sigma_u[layer_id - 1]);
-                for (size_t j = 0; j < layer.size_u[0]; ++j) {
-                    if (j >= layer.ori_id_u.size() ||
-                        layer.ori_id_u[j] >= beta_g.size())
-                        fail("GKR public circuit has invalid Lasso u mapping");
-                    mapping_evaluation += beta_g[layer.ori_id_u[j]] * weights[j];
-                }
+                mappingTerm(layer.ori_id_u, layer.size_u[0], weights, "u");
             }
             if (layer.bit_length_v[0] >= 0) {
+                if (r_v[layer_id].size() <
+                    static_cast<size_t>(layer.bit_length_v[0]))
+                    fail("GKR Lasso v point is shorter than its layer");
                 vector<Fr> weights(size_t{1} << layer.bit_length_v[0]);
                 initBetaTable(weights, layer.bit_length_v[0],
                               r_v[layer_id].begin(), sigma_v[layer_id - 1]);
-                for (size_t j = 0; j < layer.size_v[0]; ++j) {
-                    if (j >= layer.ori_id_v.size() ||
-                        layer.ori_id_v[j] >= beta_g.size())
-                        fail("GKR public circuit has invalid Lasso v mapping");
-                    mapping_evaluation += beta_g[layer.ori_id_v[j]] * weights[j];
-                }
+                mappingTerm(layer.ori_id_v, layer.size_v[0], weights, "v");
+            }
+            if (layer.ty==layerType::FCONN) {
+                if (layer.bit_length_u[0]<0 || layer.bit_length_v[0]<0)
+                    fail("GKR FCONN has invalid committed-input metadata");
+                vector<Fr> weights(
+                    size_t{1}<<layer.bit_length_u[0]);
+                initBetaTable(weights,layer.bit_length_u[0],
+                              fconn_v_r_u[layer_id].begin(),
+                              sigma_fconn_v_u[layer_id-1]);
+                mappingTerm(layer.ori_id_u,layer.size_u[0],weights,
+                            "FCONN second-point u");
+                weights.resize(size_t{1}<<layer.bit_length_v[0]);
+                initBetaTable(weights,layer.bit_length_v[0],
+                              fconn_v_r_v[layer_id].begin(),
+                              sigma_fconn_v_v[layer_id-1]);
+                mappingTerm(layer.ori_id_v,layer.size_v[0],weights,
+                            "FCONN second-point v");
             }
         }
         if (proof.lasso.mapping_evaluation != mapping_evaluation)

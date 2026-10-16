@@ -1,10 +1,13 @@
 #include "prover.hpp"
+#include "memory_diagnostics.hpp"
+#include "thread_joiner.hpp"
 #include <iostream>
 #include <utils.hpp>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <cstdint>
+#include <limits>
 //#include <Python.h>
 #include "cnpy.h"
 #include <mcl/bn.hpp>
@@ -24,21 +27,67 @@ F prover::getCirValue(u32 layer_id, const vector<u32> &ori, u32 u) {
 
 void prover::init() 
 {
+    logWorkspaceMemory("prover_init_before");
     proof_size = 0;
     r_u.resize(C.size + 1);
     r_v.resize(C.size + 1);
-    const int SIZE=28;
-    V_mult[0].resize(1<<SIZE);
-    V_mult[1].resize(1<<SIZE);
-    mult_array[0].resize(1<<SIZE);
-    mult_array[1].resize(1<<SIZE);
-    tmp_V_mult[0].resize(1<<SIZE);
-    tmp_V_mult[1].resize(1<<SIZE);
-    tmp_mult_array[0].resize(1<<SIZE);
-    tmp_mult_array[1].resize(1<<SIZE);
-    lasso_mult_v.resize(1<<SIZE);
-    for(int i=0;i<(1<<SIZE);i++)
-        lasso_mult_v[i]=0;
+    // Each sumcheck phase prepares only its actual source domains. The input
+    // layer's 2^28 commitment domain no longer forces all eight linear-poly
+    // tables to that size.
+    releaseSumcheckWorkspace();
+    releaseLassoWorkspace();
+    logWorkspaceMemory("prover_init_after");
+}
+
+namespace {
+
+std::size_t checkedDomainSize(i8 bit_length, const char *context) {
+    if (bit_length < 0) return 0;
+    // Existing GKR and commitment code represents round counts and domains
+    // with int/u32 values and supports at most 30 rounds.
+    if (bit_length > 30)
+        throw std::length_error(std::string(context)+": bit length exceeds 30");
+    return std::size_t{1} << static_cast<unsigned>(bit_length);
+}
+
+}  // namespace
+
+void prover::prepareSumcheckWorkspace() {
+    for (int branch=0; branch<2; ++branch) {
+        const std::size_t required=total[branch];
+        V_mult[branch].resize(required);
+        mult_array[branch].resize(required);
+        // tmp_* remain empty for the in-place folding path. The >=2^29 path
+        // sizes them immediately before it starts worker threads.
+    }
+}
+
+void prover::releaseSumcheckWorkspace() {
+    for (int branch=0; branch<2; ++branch) {
+        std::vector<linear_poly>().swap(V_mult[branch]);
+        std::vector<linear_poly>().swap(mult_array[branch]);
+        std::vector<linear_poly>().swap(tmp_V_mult[branch]);
+        std::vector<linear_poly>().swap(tmp_mult_array[branch]);
+    }
+}
+
+void prover::releaseLassoWorkspace() {
+    std::vector<F>().swap(lasso_mult_v);
+}
+
+void prover::logWorkspaceMemory(const std::string &stage) const {
+    using zkgpt::memory_diagnostics::logProcess;
+    using zkgpt::memory_diagnostics::logVector;
+    if (!zkgpt::memory_diagnostics::enabled()) return;
+    logProcess(stage);
+    for (int branch=0; branch<2; ++branch) {
+        const std::string suffix="["+std::to_string(branch)+"]";
+        logVector(stage,"V_mult"+suffix,V_mult[branch]);
+        logVector(stage,"mult_array"+suffix,mult_array[branch]);
+        logVector(stage,"tmp_V_mult"+suffix,tmp_V_mult[branch]);
+        logVector(stage,"tmp_mult_array"+suffix,tmp_mult_array[branch]);
+    }
+    logVector(stage,"lasso_mult_v",lasso_mult_v);
 }
 
 /**
@@ -123,10 +172,22 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
 {
     //fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_id);
     auto &cur = C.circuit[sumcheck_id];
-    total[0] = ~cur.bit_length_u[0] ? 1ULL << cur.bit_length_u[0] : 0;
+    total[0] = static_cast<u32>(checkedDomainSize(
+        cur.bit_length_u[0],"sumcheck phase 1 branch 0"));
     total_size[0] = cur.size_u[0];
-    total[1] = ~cur.bit_length_u[1] ? 1ULL << cur.bit_length_u[1] : 0;
+    total[1] = static_cast<u32>(checkedDomainSize(
+        cur.bit_length_u[1],"sumcheck phase 1 branch 1"));
     total_size[1] = cur.size_u[1];
+
+    for (int branch=0; branch<2; ++branch)
+        if (total_size[branch] > total[branch])
+            throw std::length_error(
+                "sumcheck phase 1 source size exceeds padded domain");
+    // No references or worker threads exist yet, so any resize/reallocation
+    // is complete before the phase exposes the workspace.
+    prepareSumcheckWorkspace();
+    if (zkgpt::memory_diagnostics::enabled())
+        logWorkspaceMemory("gkr_layer_"+std::to_string(sumcheck_id)+"_phase1");
 
     r_u[sumcheck_id].resize(cur.max_bl_u);
     timer useless_t;
@@ -167,7 +228,9 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
     if(cur.uni_interval.size()>=2)
     {
         const int thd=32;
-        int *L=new int [cur.uni_interval.size()],*R=new int [cur.uni_interval.size()];
+        std::unique_ptr<int[]> left_owner(new int[cur.uni_interval.size()]);
+        std::unique_ptr<int[]> right_owner(new int[cur.uni_interval.size()]);
+        int *L=left_owner.get(),*R=right_owner.get();
         for (u64 j = 0; j <cur.uni_interval.size(); ++j) 
         {
                 workerq.Push(j);
@@ -175,6 +238,7 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
                 R[j]=cur.uni_interval[j].second;
         }
         vector<thread> workers;
+        zkgpt::ThreadJoiner joiner(workers);
         for(int i=0;i<thd;i++)
             workers.emplace_back(sc_phase1_uni_worker, std::ref(cur.uni_gates),
                 std::ref(mult_array), std::ref(beta_g), std::ref(beta_u),
@@ -185,8 +249,6 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
             this_thread::sleep_for (std::chrono::microseconds(1));
         for (auto &worker : workers) worker.join();
         endq.Clear();
-        delete[] L;
-        delete[] R;
     }
     else for (auto &gate: cur.uni_gates) 
         {
@@ -196,7 +258,9 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
     if(cur.bin_interval.size()>=2)
     {
         const int thd=32;
-        int *L=new int [cur.bin_interval.size()],*R=new int [cur.bin_interval.size()];
+        std::unique_ptr<int[]> left_owner(new int[cur.bin_interval.size()]);
+        std::unique_ptr<int[]> right_owner(new int[cur.bin_interval.size()]);
+        int *L=left_owner.get(),*R=right_owner.get();
         for (u64 j = 0; j <cur.bin_interval.size(); ++j) 
         {
                 workerq.Push(j);
@@ -204,6 +268,7 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
                 R[j]=cur.bin_interval[j].second;
         }
         vector<thread> workers;
+        zkgpt::ThreadJoiner joiner(workers);
         for(int i=0;i<thd;i++)
             workers.emplace_back(sc_phase1_bin_worker, std::ref(cur),
                 std::ref(cur.bin_gates), std::ref(mult_array), std::ref(V_u0),
@@ -215,8 +280,6 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
             this_thread::sleep_for (std::chrono::microseconds(1));
         for (auto &worker : workers) worker.join();
         endq.Clear();
-        delete[] L;
-        delete[] R;
     }
     else  for (auto &gate: cur.bin_gates) 
         {
@@ -276,12 +339,19 @@ void prover::sumcheckInitPhase2()
 {
     // fprintf(stderr, "sumcheck level %d, phase2 init start\n", sumcheck_id);
     auto &cur = C.circuit[sumcheck_id];
-    total[0] = ~cur.bit_length_v[0] ? 1ULL << cur.bit_length_v[0] : 0;
+    total[0] = static_cast<u32>(checkedDomainSize(
+        cur.bit_length_v[0],"sumcheck phase 2 branch 0"));
     total_size[0] = cur.size_v[0];
-    total[1] = ~cur.bit_length_v[1] ? 1ULL << cur.bit_length_v[1] : 0;
+    total[1] = static_cast<u32>(checkedDomainSize(
+        cur.bit_length_v[1],"sumcheck phase 2 branch 1"));
     total_size[1] = cur.size_v[1];
-    i8 fft_bl = cur.fft_bit_length;
-    i8 cnt_bl = cur.max_bl_v;
+    for (int branch=0; branch<2; ++branch)
+        if (total_size[branch] > total[branch])
+            throw std::length_error(
+                "sumcheck phase 2 source size exceeds padded domain");
+    prepareSumcheckWorkspace();
+    if (zkgpt::memory_diagnostics::enabled())
+        logWorkspaceMemory("gkr_layer_"+std::to_string(sumcheck_id)+"_phase2");
 
     timer useless_time;
     useless_time.start();
@@ -316,7 +386,9 @@ void prover::sumcheckInitPhase2()
         const int thd=32;
         F sum[40];
         
-        int *L=new int [cur.uni_interval.size()],*R=new int [cur.uni_interval.size()];
+        std::unique_ptr<int[]> left_owner(new int[cur.uni_interval.size()]);
+        std::unique_ptr<int[]> right_owner(new int[cur.uni_interval.size()]);
+        int *L=left_owner.get(),*R=right_owner.get();
         for (u64 j = 0; j <cur.uni_interval.size(); ++j) 
         {
                 workerq.Push(j);
@@ -324,6 +396,7 @@ void prover::sumcheckInitPhase2()
                 R[j]=cur.uni_interval[j].second;
         }
             vector<thread> workers;
+        zkgpt::ThreadJoiner joiner(workers);
             for(int i=0;i<thd;i++)
             {
                 sum[i].clear();
@@ -340,8 +413,6 @@ void prover::sumcheckInitPhase2()
             endq.Clear();
             for(int i=0;i<thd;i++)
                 add_term+=sum[i];
-            delete[] L;
-            delete[] R;
     }
     else for (auto &gate: cur.uni_gates) 
     {
@@ -351,7 +422,9 @@ void prover::sumcheckInitPhase2()
     if(cur.bin_interval.size()>=2)
     {
         const int thd=32;
-        int *L=new int [cur.bin_interval.size()],*R=new int [cur.bin_interval.size()];
+        std::unique_ptr<int[]> left_owner(new int[cur.bin_interval.size()]);
+        std::unique_ptr<int[]> right_owner(new int[cur.bin_interval.size()]);
+        int *L=left_owner.get(),*R=right_owner.get();
         for (u64 j = 0; j <cur.bin_interval.size(); ++j) 
         {
                 workerq.Push(j);
@@ -359,6 +432,7 @@ void prover::sumcheckInitPhase2()
                 R[j]=cur.bin_interval[j].second;
         }
             vector<thread> workers;
+        zkgpt::ThreadJoiner joiner(workers);
             for(int i=0;i<thd;i++)
                 workers.emplace_back(sc_phase2_bin_worker,
                     std::ref(cur.bin_gates), std::ref(mult_array),
@@ -370,8 +444,6 @@ void prover::sumcheckInitPhase2()
                 this_thread::sleep_for (std::chrono::microseconds(1));
             for (auto &worker : workers) worker.join();
             endq.Clear();
-            delete[] L;
-            delete[] R;
     }
     else for (auto &gate: cur.bin_gates) 
     {
@@ -402,9 +474,19 @@ void prover::sumcheckLassoInit(
     const layer &input_layer = C.circuit.at(0);
     if (input_layer.bit_length < 0)
         throw std::runtime_error("sumcheckLassoInit: invalid input bit length");
-    total[1] = 1ULL << static_cast<u32>(input_layer.bit_length);
+    const std::size_t input_domain=checkedDomainSize(
+        input_layer.bit_length,"Lasso input");
+    if (input_layer.size > input_domain)
+        throw std::length_error("sumcheckLassoInit: input size exceeds domain");
+    // Layer sumchecks are complete. Release retained phase capacity before
+    // allocating the independent input-domain Lasso coefficient table.
+    logWorkspaceMemory("gkr_before_phase_workspace_release");
+    releaseSumcheckWorkspace();
+    total[1] = static_cast<u32>(input_domain);
     total_size[1] = input_layer.size;
     r_u.at(0).resize(static_cast<u32>(input_layer.bit_length));
+    lasso_mult_v.assign(input_domain,F_ZERO);
+    logWorkspaceMemory("gkr_lasso_initialized");
 
     i8 max_bl = 0;
     for (u32 i = 1; i < C.size; ++i) {
@@ -587,7 +669,14 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
         tt_f1.start();
         const int k=10;
         int total_work=(total[idx] >> 1);
-        int *L=new int [(1<<k)],*R=new int [(1<<k)];
+        // This path is currently unreachable for the 2^28 full circuit, but
+        // preserve it for larger valid domains without globally reserving its
+        // two scratch tables.
+        tmp_v_2.resize(static_cast<std::size_t>(total_work));
+        tmp_mult_2.resize(static_cast<std::size_t>(total_work));
+        std::unique_ptr<int[]> left_owner(new int[(1<<k)]);
+        std::unique_ptr<int[]> right_owner(new int[(1<<k)]);
+        int *L=left_owner.get(),*R=right_owner.get();
         const int thd=32;
         for (u64 j = 0; j < (1<<k); ++j) 
         {
@@ -599,6 +688,7 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
         for (int j=0; j<thd; ++j)
             qp[j].clear();
         vector<thread> workers;
+        zkgpt::ThreadJoiner joiner(workers);
         for(int j=0;j<thd;j++)
             workers.emplace_back(sumcheckUpdate_worker, std::ref(qp[j]),
                 std::ref(tmp_v), std::ref(tmp_mult), std::ref(tmp_v_2),
@@ -610,8 +700,6 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
         endq.Clear();
         for(int j=0;j<thd;j++)
             ret=ret+qp[j];
-        delete[] L;
-        delete[] R;
         tt_f1.stop();
         tt_f2.start();
         for(int i=0;i<total_work;i++)
@@ -927,17 +1015,38 @@ bool write_ec_data_to_npy(
 
 void prover::commitInput(const vector<G1> &gens,int thr) 
 {
-    int len;
-    if (C.circuit[0].size != (1ULL << C.circuit[0].bit_length)) 
+    const size_t len=val[0].size();
+    const size_t padded_len=1ULL << C.circuit[0].bit_length;
+    if (len>C.circuit[0].size || C.circuit[0].size>padded_len)
+        throw std::length_error("commitInput: invalid input witness shape");
+    if (zkgpt::memory_diagnostics::enabled()) {
+        zkgpt::memory_diagnostics::logProcess("commit_input_before_padding");
+        zkgpt::memory_diagnostics::logVector(
+            "commit_input_before_padding","val[0]",val[0]);
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_before_padding","logical_witness_elements",len);
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_before_padding","padded_witness_elements",padded_len);
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_before_padding","padded_witness_buffers",0);
+    }
+    if (C.circuit[0].size != (1ULL << C.circuit[0].bit_length))
     {
-        len=val[0].size();
-        val[0].resize(1ULL << C.circuit[0].bit_length);
+        val[0].resize(padded_len);
         for (int i = C.circuit[0].size; i < val[0].size(); ++i)
             val[0][i].clear();
     }
+    if (zkgpt::memory_diagnostics::enabled()) {
+        zkgpt::memory_diagnostics::logProcess("commit_input_val0_padded");
+        zkgpt::memory_diagnostics::logVector(
+            "commit_input_val0_padded","val[0]",val[0]);
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_val0_padded","padded_witness_buffers",1);
+    }
     
     int l=ceil(log2(val[0].size()));
-    Fr* dat=new Fr[1<<l];  // 存储input数据的fr形式
+    std::unique_ptr<Fr[]> witness_owner(new Fr[std::size_t{1}<<l]);
+    Fr* dat=witness_owner.get();  // 存储input数据的fr形式
     memset(dat,0,sizeof(Fr)*(1<<l));
     memcpy(dat,val[0].data(),sizeof(Fr)*val[0].size());
 
@@ -954,7 +1063,12 @@ void prover::commitInput(const vector<G1> &gens,int thr)
 
     // Commit the field witness directly. Converting through ll truncates the
     // 126-bit values that Stage B is required to bind.
-    G1* ret=prover_commit(dat,(G1*)gens.data(),l,thr);
+    std::unique_ptr<G1[]> rows_owner(
+        prover_commit(dat,(G1*)gens.data(),l,thr));
+    G1* ret=rows_owner.get();
+    // Publish borrowed views only after all commitment workers joined.
+    committed_witness_=std::move(witness_owner);
+    committed_rows_=std::move(rows_owner);
     
     cc.comm=ret;
     cc.G=gens.back();
@@ -962,7 +1076,28 @@ void prover::commitInput(const vector<G1> &gens,int thr)
     cc.l=l;
     cc.w=dat;
     cc.ww=nullptr;
+    if (zkgpt::memory_diagnostics::enabled()) {
+        zkgpt::memory_diagnostics::logProcess("commit_input_cc_w_ready");
+        zkgpt::memory_diagnostics::logAllocation(
+            "commit_input_cc_w_ready","cc.w",padded_len,sizeof(Fr));
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_cc_w_ready","padded_witness_buffers",2);
+    }
     val[0].resize(len);
+    // Commitment workers are joined before prover_commit returns, and Range
+    // does not retain a val[0] reference until after commitInput. Releasing the
+    // touched padding capacity here preserves cc.w and all witness values while
+    // avoiding an invalid padded tail for the rest of Range/GKR/self-check.
+    val[0].shrink_to_fit();
+    if (zkgpt::memory_diagnostics::enabled()) {
+        zkgpt::memory_diagnostics::logProcess("commit_input_val0_compacted");
+        zkgpt::memory_diagnostics::logVector(
+            "commit_input_val0_compacted","val[0]",val[0]);
+        zkgpt::memory_diagnostics::logAllocation(
+            "commit_input_val0_compacted","cc.w",padded_len,sizeof(Fr));
+        zkgpt::memory_diagnostics::logScalar(
+            "commit_input_val0_compacted","padded_witness_buffers",1);
+    }
 }
 
 __int128 convert(Fr x)	
@@ -995,4 +1130,28 @@ __int128 convert(Fr x)
     if(V>=sign_bit)
         throw std::range_error("field value exceeds the signed 128-bit range");
     return static_cast<__int128>(V);
+}
+
+void prover::logPrivateMemory(const std::string &stage) const {
+    using namespace zkgpt::memory_diagnostics;
+    if (!enabled()) return;
+    logProcess(stage);
+    std::size_t size=0, capacity=0;
+    for (const auto &v:val) { size+=v.size(); capacity+=v.capacity(); }
+    logVectorMetadata(stage,"all_layer_witness",size,capacity,sizeof(F));
+    if (!val.empty()) logVector(stage,"val0",val[0]);
+    logVector(stage,"generators",gens);
+    logScalar(stage,"committed_witness_alive",bool(committed_witness_));
+    logScalar(stage,"committed_rows_alive",bool(committed_rows_));
+    if (committed_witness_) logAllocation(stage,"committed_witness",1ULL<<cc.l,sizeof(Fr));
+    if (committed_rows_) logAllocation(stage,"committed_rows",1ULL<<(cc.l/2),sizeof(G1));
+    logCircuit(stage,C);
+    logVector(stage,"beta_g",beta_g);
+    logVector(stage,"process_static_beta_gs",beta_gs);
+    logVector(stage,"process_static_beta_u",beta_u);
+    std::size_t point_size=0,point_capacity=0;
+    for (const auto &v:r_u) { point_size+=v.size(); point_capacity+=v.capacity(); }
+    for (const auto &v:r_v) { point_size+=v.size(); point_capacity+=v.capacity(); }
+    logVectorMetadata(stage,"gkr_random_points",point_size,point_capacity,sizeof(F));
+    logWorkspaceMemory(stage);
 }

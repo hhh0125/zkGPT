@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Default to debug mode if no argument provided
-BUILD_TYPE=${1:-Debug}
+# Default to release mode if no argument provided
+BUILD_TYPE=${1:-Release}
 BUILD_DIR="cmake-build-${BUILD_TYPE,,}"  # Convert to lowercase
 
 TMP_SUBDIR="${BUILD_DIR}/tmp"

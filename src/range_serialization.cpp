@@ -1,10 +1,13 @@
 #include "range_serialization.hpp"
+#include "thread_joiner.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <exception>
+#include <thread>
 
 namespace {
 
@@ -89,6 +92,22 @@ private:
     std::vector<std::uint8_t> bytes_;
 };
 
+G1 decodeG1(const std::uint8_t *encoded, std::size_t size) {
+    G1 value;
+    if (value.deserialize(encoded, size)!=size || !value.isValid())
+        throw std::runtime_error("invalid G1 encoding");
+    // BN254 G1 has cofactor 1 (#E(Fp) = r), so every on-curve point is
+    // already in the prime-order subgroup; isValidOrder() would add a
+    // full scalar multiplication per decoded point.
+    std::vector<std::uint8_t> canonical(size);
+    if (value.serialize(canonical.data(), canonical.size())!=size ||
+        !std::equal(encoded, encoded+size, canonical.begin()))
+        throw std::runtime_error("non-canonical G1 encoding");
+    // Infinity is permitted for commitments to an all-zero vector and for
+    // IPA messages whose corresponding folded vector is zero.
+    return value;
+}
+
 class Reader {
 public:
     explicit Reader(const std::vector<std::uint8_t> &bytes): bytes_(bytes) {
@@ -126,6 +145,11 @@ public:
         const std::uint32_t value=u32();
         if (value>maximum)
             throw std::length_error(std::string(label)+" length exceeds limit");
+        // Every counted element encodes to at least one byte, so a count
+        // beyond the remaining input is malformed. This also bounds any
+        // reserve() done by the caller before the elements are parsed.
+        if (value>bytes_.size()-position_)
+            throw std::length_error(std::string(label)+" exceeds remaining input");
         return value;
     }
 
@@ -150,18 +174,7 @@ public:
 
     G1 g1() {
         const std::size_t size=G1::getSerializedByteSize();
-        const auto *encoded=take(size);
-        G1 value;
-        if (value.deserialize(encoded, size)!=size || !value.isValid() ||
-            !value.isValidOrder())
-            throw std::runtime_error("invalid G1 encoding");
-        std::vector<std::uint8_t> canonical(size);
-        if (value.serialize(canonical.data(), canonical.size())!=size ||
-            !std::equal(encoded, encoded+size, canonical.begin()))
-            throw std::runtime_error("non-canonical G1 encoding");
-        // Infinity is permitted for commitments to an all-zero vector and for
-        // IPA messages whose corresponding folded vector is zero.
-        return value;
+        return decodeG1(take(size), size);
     }
 
     void magic(const char expected[4]) {
@@ -188,23 +201,35 @@ void writeG1Vector(Writer &writer, const std::vector<G1> &values) {
 
 std::vector<G1> readG1Vector(Reader &reader) {
     const auto count=reader.length(kMaxCommitmentRows, "G1 vector");
-    std::vector<G1> values;
-    values.reserve(count);
-    for (std::uint32_t i=0;i<count;++i) values.push_back(reader.g1());
-    return values;
-}
-
-void writeFrVector(Writer &writer, const std::vector<Fr> &values) {
-    writer.length(values.size());
-    for (const auto &value : values) writer.fr(value);
-}
-
-std::vector<Fr> readFrVector(Reader &reader, std::uint32_t maximum,
-                             const char *label) {
-    const auto count=reader.length(maximum, label);
-    std::vector<Fr> values;
-    values.reserve(count);
-    for (std::uint32_t i=0;i<count;++i) values.push_back(reader.fr());
+    const std::size_t size=G1::getSerializedByteSize();
+    if (count>std::numeric_limits<std::size_t>::max()/size)
+        throw std::length_error("G1 vector byte size overflows");
+    const std::uint8_t *encoded=reader.take(count*size);
+    std::vector<G1> values(count);
+    // Point decompression dominates artifact decoding; points are fixed-size
+    // and independent, so decode them in parallel.
+    const std::size_t threads=count<256 ? 1 :
+        std::min<std::size_t>(count/64, zkgpt::workerThreadCount());
+    std::vector<std::exception_ptr> errors(threads);
+    auto decodeRange=[&](std::size_t t) {
+        try {
+            for (std::size_t i=count*t/threads;i<count*(t+1)/threads;++i)
+                values[i]=decodeG1(encoded+i*size, size);
+        } catch (...) {
+            errors[t]=std::current_exception();
+        }
+    };
+    if (threads==1) {
+        decodeRange(0);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(threads);
+        zkgpt::ThreadJoiner joiner(workers);
+        for (std::size_t t=0;t<threads;++t) workers.emplace_back(decodeRange, t);
+        joiner.join();
+    }
+    for (const auto &error : errors)
+        if (error) std::rethrow_exception(error);
     return values;
 }
 
@@ -366,7 +391,7 @@ std::vector<std::uint8_t> serializeRangePublicStatement(
     const RangePublicStatement &statement) {
     Writer writer;
     writer.raw("ZKRS", 4);
-    writer.u32(kRangeArtifactVersion);
+    writer.u32(kRangeStatementArtifactVersion);
     if (statement.val0_log_size<0)
         throw std::invalid_argument("negative val[0] log size");
     writer.u32(static_cast<std::uint32_t>(statement.val0_log_size));
@@ -407,7 +432,7 @@ bool deserializeRangePublicStatement(
     RangePublicStatement decoded;
     const bool ok=decodeArtifact(bytes, [&](Reader &reader) {
         reader.magic("ZKRS");
-        if (reader.u32()!=kRangeArtifactVersion)
+        if (reader.u32()!=kRangeStatementArtifactVersion)
             throw std::runtime_error("unsupported Range statement version");
         const auto val0_log_size=reader.u32();
         if (val0_log_size>62)
@@ -463,7 +488,7 @@ bool deserializeRangePublicStatement(
 std::vector<std::uint8_t> serializeRangeProof(const RangeProof &proof) {
     Writer writer;
     writer.raw("ZKRP", 4);
-    writer.u32(kRangeArtifactVersion);
+    writer.u32(kRangeProofArtifactVersion);
 
     writer.length(proof.chunk_commitments.size());
     for (const auto &query : proof.chunk_commitments) {
@@ -475,18 +500,7 @@ std::vector<std::uint8_t> serializeRangeProof(const RangeProof &proof) {
     for (const auto &reconstruction : proof.reconstruction_proofs) {
         writer.u64(reconstruction.query_index);
         writer.fr(reconstruction.encoded_evaluation);
-        writeFrVector(writer, reconstruction.chunk_evaluations);
-    }
-
-    writer.length(proof.chunk_openings.size());
-    for (const auto &query : proof.chunk_openings) {
-        writer.length(query.size());
-        for (const auto &opening : query) {
-            writer.u64(opening.query_index);
-            writer.u64(opening.chunk_index);
-            writer.fr(opening.claimed_evaluation);
-            writeMle(writer, opening.opening);
-        }
+        writeMle(writer, reconstruction.encoded_chunk_opening);
     }
 
     writer.length(proof.val0_openings.size());
@@ -518,7 +532,7 @@ bool deserializeRangeProof(const std::vector<std::uint8_t> &bytes,
     RangeProof decoded;
     const bool ok=decodeArtifact(bytes, [&](Reader &reader) {
         reader.magic("ZKRP");
-        if (reader.u32()!=kRangeArtifactVersion)
+        if (reader.u32()!=kRangeProofArtifactVersion)
             throw std::runtime_error("unsupported Range proof version");
 
         const auto commitment_queries=reader.length(
@@ -539,26 +553,8 @@ bool deserializeRangeProof(const std::vector<std::uint8_t> &bytes,
             ReconstructionProof reconstruction;
             reconstruction.query_index=reader.u64();
             reconstruction.encoded_evaluation=reader.fr();
-            reconstruction.chunk_evaluations=readFrVector(
-                reader, kMaxChunksPerQuery, "chunk evaluations");
+            reconstruction.encoded_chunk_opening=readMle(reader);
             decoded.reconstruction_proofs.push_back(std::move(reconstruction));
-        }
-
-        const auto opening_queries=reader.length(
-            kMaxQueries, "chunk opening queries");
-        decoded.chunk_openings.resize(opening_queries);
-        for (auto &query : decoded.chunk_openings) {
-            const auto openings=reader.length(
-                kMaxChunksPerQuery, "chunk openings");
-            query.reserve(openings);
-            for (std::uint32_t i=0;i<openings;++i) {
-                ChunkOpeningProof opening;
-                opening.query_index=reader.u64();
-                opening.chunk_index=reader.u64();
-                opening.claimed_evaluation=reader.fr();
-                opening.opening=readMle(reader);
-                query.push_back(std::move(opening));
-            }
         }
 
         const auto sparse_openings=reader.length(
@@ -598,4 +594,3 @@ bool deserializeRangeProof(const std::vector<std::uint8_t> &bytes,
     if (ok) proof=std::move(decoded);
     return ok;
 }
-

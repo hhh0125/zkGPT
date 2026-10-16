@@ -21,7 +21,8 @@ std::mutex &generatorCacheMutex() {
 
 void validateDescriptor(const GeneratorDomain &descriptor) {
     if (descriptor.domain!="zkGPT/main" &&
-        descriptor.domain!="zkGPT/range")
+        descriptor.domain!="zkGPT/range" &&
+        descriptor.domain!="zkGPT/exp-lookup/v4")
         throw std::invalid_argument("unsupported generator domain");
     if (descriptor.count==0 || descriptor.count>kMaxGeneratorCount)
         throw std::invalid_argument("generator count is outside protocol limits");

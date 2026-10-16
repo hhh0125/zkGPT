@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 
-constexpr std::uint32_t kRangeArtifactVersion = 1;
+constexpr std::uint32_t kRangeStatementArtifactVersion = 1;
+constexpr std::uint32_t kRangeProofArtifactVersion = 2;
 
 std::vector<std::uint8_t> serializeRangePublicStatement(
     const RangePublicStatement &statement);
@@ -18,4 +19,3 @@ std::vector<std::uint8_t> serializeRangeProof(const RangeProof &proof);
 bool deserializeRangeProof(
     const std::vector<std::uint8_t> &bytes, RangeProof &proof,
     std::string *error = nullptr);
-

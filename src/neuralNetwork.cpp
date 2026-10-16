@@ -2,6 +2,7 @@
 // Created by 69029 on 3/16/2021.
 //
 #include "neuralNetwork.hpp"
+#include "memory_diagnostics.hpp"
 #include "stats.hpp"
 #include "utils.hpp"
 #include "global_var.hpp"
@@ -12,6 +13,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <cmath>
 #include <sstream>
@@ -531,6 +533,9 @@ void neuralNetwork::merge_layer(prover &pr,i64 layer_id)
 }
 void neuralNetwork::create(prover &pr, bool merge) 
 {
+    timer circuit_build_timer;
+    circuit_build_timer.start();
+    zkgpt::memory_diagnostics::logProcess("circuit_build_begin");
 
     // 计算指数表格
     compute_e_table();
@@ -540,6 +545,7 @@ void neuralNetwork::create(prover &pr, bool merge)
         headnum * headdim != attn_dim) {
         throw std::invalid_argument("inconsistent LLM dimensions");
     }
+    parameter_regions_.clear();
     witness_registry.clear();
     witness_registry.setShape({static_cast<size_t>(len),
                                static_cast<size_t>(layer_num),
@@ -664,7 +670,14 @@ void neuralNetwork::create(prover &pr, bool merge)
     }
     
     total_in_size += total_max_in_size + total_ave_in_size + total_relu_in_size;
+    zkgpt::memory_diagnostics::logCircuitStorage("circuit_before_input_reset",pr.C);
     initLayer(pr.C.circuit[0], total_in_size, layerType::INPUT);
+    zkgpt::memory_diagnostics::logCircuitStorage("circuit_after_input_reset",pr.C);
+    // initLayer has already removed these temporary input gates. Release only
+    // their empty backing allocation before subset/proving workers can borrow C.
+    if (!pr.C.circuit[0].releaseEmptyUnaryStorage())
+        throw std::logic_error("input unary storage must be empty after reset");
+    zkgpt::memory_diagnostics::logCircuitStorage("circuit_after_empty_input_release",pr.C);
     if (static_cast<size_t>(total_in_size) != pr.val[0].size())
         throw std::logic_error("input witness size accounting mismatch");
     if (!structure_only)
@@ -678,10 +691,18 @@ void neuralNetwork::create(prover &pr, bool merge)
     if (!structure_only)
         validateMappedCircuitWitness(pr);
 
+    circuit_build_timer.stop();
+    std::cout << "Circuit Builder time (including " << (structure_only ? "structure-only witness" : "private witness/parameter")
+              << " construction, subset and validation): " << circuit_build_timer.elapse_sec() << "s\n";
+    zkgpt::memory_diagnostics::logCircuitStorage("circuit_build_complete",pr.C);
     if (structure_only) {
         pr.mat_val=nullptr;
         return;
     }
+
+    zkgpt::memory_diagnostics::logProcess("after_circuit_build");
+    zkgpt::memory_diagnostics::logVector(
+        "after_circuit_build","val[0]",pr.val[0]);
 
     timer T;
     int logn = pr.C.circuit[0].bit_length;
@@ -695,6 +716,14 @@ void neuralNetwork::create(prover &pr, bool merge)
     // activations, and nonlinear auxiliary values.
     pr.commitInput(pr.gens,32);
     T.stop();
+    zkgpt::memory_diagnostics::logProcess("after_val0_commitment");
+    zkgpt::memory_diagnostics::logVector(
+        "after_val0_commitment","val[0]",pr.val[0]);
+    zkgpt::memory_diagnostics::logVector(
+        "after_val0_commitment","val0_generators",pr.gens);
+    zkgpt::memory_diagnostics::logAllocation(
+        "after_val0_commitment","commitment_witness",std::size_t{1}<<pr.cc.l,
+        sizeof(Fr));
     pr.proof_size+= 1<<(pr.cc.l/2);
     cout<<"Full val[0] witness commit time: "<<T.elapse_sec()<<"s"<<endl;
 
@@ -788,6 +817,9 @@ void neuralNetwork::read_layer_norm(int ln_id)
         checked_read(param, weights.data(), width * sizeof(int32_t), path);
         checked_read(param, biases.data(), width * sizeof(int32_t), path);
     }
+    if (wc!=1 || we!=-10 || bc!=1 || be!=-10) throw std::runtime_error("unsupported LayerNorm quantization profile");
+    parameter_regions_.push_back({"ln_"+std::to_string(ln_id)+".weight", static_cast<size_t>(orgsize), static_cast<size_t>(padded_width), static_cast<size_t>(real_width), 1});
+    parameter_regions_.push_back({"ln_"+std::to_string(ln_id)+".bias", static_cast<size_t>(orgsize+padded_width), static_cast<size_t>(padded_width), static_cast<size_t>(real_width), 1});
     layer_norm_w_c[ln_id]=wc;
     layer_norm_w_e[ln_id]=we;
     layer_norm_b_c[ln_id]=bc;
@@ -2043,6 +2075,9 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
     }
 
     const size_t witness_instance = softmax_witness_instance++;
+    witness_registry.addExpQueries(witness_instance,
+        orgsize+10+2*head_len+2*triangular,
+        orgsize+10+2*head_len+3*triangular,triangular);
     witness_registry.addRange(WitnessKind::SOFTMAX,
         witness_name("softmax", witness_instance, "sumE"), orgsize + 10,
         head_len, kIndexBits, false);
@@ -2157,11 +2192,28 @@ void neuralNetwork::softmax_layer_3(layer &circuit, i64 &layer_id,float SQ,float
     q_offset=orgsize+10+HEAD*2*len+4*HEAD*len*(len+1)/2+HEAD*len*HSIZE; 
 }
 
-void neuralNetwork::fullyConnLayer(layer &circuit, i64 &layer_id, i64 first_fc_id,  int x_offset, int x_layer) 
+void neuralNetwork::fullyConnLayer(layer &circuit, i64 &layer_id, i64 first_fc_id,  int x_offset, int x_layer)
 {
     i64 size = channel_out*len;
     initLayer(circuit, size, layerType::FCONN);
     circuit.need_phase2 = true;
+    // FCONN bypasses the generic gate list, so initSubset() cannot discover
+    // its val[0] input mappings.  Record the canonical row-major activation
+    // and weight regions explicitly; GKR Lasso uses these mappings to bind
+    // both matrix-sumcheck endpoint evaluations to the committed witness.
+    const i64 activation_count=len*channel_in;
+    const i64 weight_count=channel_out*channel_in;
+    if (x_layer!=0 || x_offset<0 || first_fc_id<0 ||
+        activation_count<0 || weight_count<0)
+        throw std::invalid_argument("invalid FCONN committed-input mapping");
+    circuit.ori_id_u.reserve(static_cast<std::size_t>(activation_count));
+    circuit.ori_id_v.reserve(static_cast<std::size_t>(weight_count));
+    for (i64 i=0;i<activation_count;++i)
+        circuit.ori_id_u.push_back(static_cast<u32>(x_offset+i));
+    for (i64 i=0;i<weight_count;++i)
+        circuit.ori_id_v.push_back(static_cast<u32>(first_fc_id+i));
+    circuit.size_u[0]=static_cast<u32>(activation_count);
+    circuit.size_v[0]=static_cast<u32>(weight_count);
     val[layer_id].resize(circuit.size);
     if (structure_only) {
         for (auto &value : val[layer_id]) value.clear();
@@ -2221,6 +2273,18 @@ void neuralNetwork::calcInputLayer(layer &circuit)
         return;
     }
 
+    if (const char *path=std::getenv("ZKGPT_PUBLIC_EMBEDDING")) {
+        if (attn_dim!=768 || len!=32) throw std::runtime_error("embedding loader supports 32x768 only");
+        for (auto &value:val[0]) value.clear();
+        std::ifstream input(path); long long value;
+        for (int row=0;row<32;++row) for (int col=0;col<768;++col) {
+            if (!(input>>value)) throw std::runtime_error("invalid embedding integer count");
+            val[0][row*1024+col]=Fr(value);
+        }
+        std::string extra; if (input>>extra) throw std::runtime_error("extra embedding input");
+        const auto scale=search(0.01); input_e=scale.first; input_c=scale.second;
+        return;
+    }
     double num, mx = -10000, mn = 10000;
     vector<double> input_dat;
     int hidden=768;
@@ -2297,6 +2361,7 @@ void neuralNetwork::readBias(i64 first_bias_id) {
 
 void neuralNetwork::readFconBias(i64 first_bias_id, int real_count, int id)
 {
+    parameter_regions_.push_back({"fc_"+std::to_string(id)+".bias", static_cast<size_t>(first_bias_id), static_cast<size_t>(channel_out), static_cast<size_t>(real_count), 1});
     if (structure_only) {
         for (int i=0;i<channel_out;++i)
             val[0][first_bias_id+i].clear();
@@ -2335,6 +2400,7 @@ bool allow_random_fc_weights() {
 // int32 rows(out_dim), int32 cols(in_dim), int32 data[rows * cols]，row-major。
 void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
 {
+    parameter_regions_.push_back({"fc_"+std::to_string(id)+".weight", static_cast<size_t>(first_fc_id), static_cast<size_t>(channel_out)*channel_in, static_cast<size_t>(real_c), static_cast<size_t>(real_r)});
     auto val_0 = val[0].begin() + first_fc_id;
     if (structure_only) {
         for (i64 i=0;i<static_cast<i64>(channel_out)*channel_in;++i)
@@ -2342,7 +2408,10 @@ void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
         mat_values[id]=nullptr;
         return;
     }
-    mat_values[id]=new int[channel_out*channel_in];
+    const std::size_t count=static_cast<std::size_t>(channel_out)*channel_in;
+    matrix_storage_.at(id).reset(new int[count]);
+    matrix_sizes_.at(id)=count;
+    mat_values[id]=matrix_storage_.at(id).get();
     std::fill(mat_values[id], mat_values[id] + channel_out * channel_in, 0);
 
     std::string weight_path = get_fc_weight_path(id);
@@ -2517,13 +2586,25 @@ void neuralNetwork::validateWitnessRegistry(const vector<F> &val0) const {
     }
 
     const std::size_t total = witness_registry.constrainedValueCount();
+    const auto approximate_power_of_two = [](std::size_t value) {
+        if (value == 0) return std::string("0");
+        std::ostringstream output;
+        output << "2^" << std::fixed << std::setprecision(3)
+               << std::log2(static_cast<long double>(value));
+        return output.str();
+    };
     std::cout << "Registered range constraints:\n"
-              << "ROUNDING: " << counts[static_cast<unsigned>(WitnessKind::ROUNDING)] << "\n"
-              << "LAYER_NORM: " << counts[static_cast<unsigned>(WitnessKind::LAYER_NORM)] << "\n"
-              << "GELU: " << counts[static_cast<unsigned>(WitnessKind::GELU)] << "\n"
-              << "SOFTMAX: " << counts[static_cast<unsigned>(WitnessKind::SOFTMAX)] << "\n"
-              << "Total constrained witness values: " << total << "\n"
-              << "val[0] size: " << val0.size() << "\n"
+              << "ROUNDING: ~" << approximate_power_of_two(
+                     counts[static_cast<unsigned>(WitnessKind::ROUNDING)]) << "\n"
+              << "LAYER_NORM: ~" << approximate_power_of_two(
+                     counts[static_cast<unsigned>(WitnessKind::LAYER_NORM)]) << "\n"
+              << "GELU: ~" << approximate_power_of_two(
+                     counts[static_cast<unsigned>(WitnessKind::GELU)]) << "\n"
+              << "SOFTMAX: ~" << approximate_power_of_two(
+                     counts[static_cast<unsigned>(WitnessKind::SOFTMAX)]) << "\n"
+              << "Total constrained witness values: ~"
+              << approximate_power_of_two(total) << "\n"
+              << "val[0] size: ~" << approximate_power_of_two(val0.size()) << "\n"
               << "Coverage ratio: "
               << (val0.empty() ? 0.0 : 100.0 * static_cast<double>(total) /
                                       static_cast<double>(val0.size()))
@@ -2614,4 +2695,17 @@ void neuralNetwork::printInfer(prover &pr) {
         }
     }
     out.close();
+}
+
+void neuralNetwork::logPrivateMemory(const std::string &stage) const {
+    using namespace zkgpt::memory_diagnostics;
+    if (!enabled()) return;
+    std::size_t count=0,elements=0;
+    for (std::size_t i=0;i<matrix_storage_.size();++i)
+        if (matrix_storage_[i]) { ++count; elements+=matrix_sizes_[i]; }
+    logScalar(stage,"owned_matrix_count",count);
+    logAllocation(stage,"owned_matrices",elements,sizeof(int));
+    logVector(stage,"network_table",table);
+    logVector(stage,"gelu_scalar_dump",gelu_delta3_limbs);
+    logVector(stage,"round_scalar_dump",round_delta_limbs);
 }
