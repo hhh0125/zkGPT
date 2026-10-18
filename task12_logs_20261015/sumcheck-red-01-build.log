@@ -1,0 +1,82 @@
+[ 10%] Built target mcl
+[ 16%] Built target mclbn256
+[ 94%] Built target gpt_lib
+[ 97%] Building CXX object src/CMakeFiles/zk_sumcheck_tests.dir/main_zk_sumcheck_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:37:25: error: ‘proveDegree1SumcheckZk’ was not declared in this scope; did you mean ‘proveDegree1Sumcheck’?
+   37 |             auto result=proveDegree1SumcheckZk(pp,f,DH,H,t,"degree1","circuit/layer/lookup/session");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~
+      |                         proveDegree1Sumcheck
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:39:19: error: ‘verifyDegree1SumcheckZk’ was not declared in this scope; did you mean ‘verifyDegree1Sumcheck’?
+   39 |             check(verifyDegree1SumcheckZk(pp,L,DH,result.proof,v,"degree1","circuit/layer/lookup/session",&point,&error),error.c_str());
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~
+      |                   verifyDegree1Sumcheck
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:45:24: error: ‘encodeDegree1Zk’ was not declared in this scope
+   45 |             auto bytes=encodeDegree1Zk(result.proof,L);auto decoded=decodeDegree1Zk(bytes,L);auto dv=session();
+      |                        ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:45:69: error: ‘decodeDegree1Zk’ was not declared in this scope
+   45 |             auto bytes=encodeDegree1Zk(result.proof,L);auto decoded=decodeDegree1Zk(bytes,L);auto dv=session();
+      |                                                                     ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:65:25: error: ‘proveDegree3SumcheckZk’ was not declared in this scope; did you mean ‘proveDegree3Sumcheck’?
+   65 |             auto result=proveDegree3SumcheckZk(pp,eq,f,g,DH,H,t,"degree3","same/session");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~
+      |                         proveDegree3Sumcheck
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:67:19: error: ‘verifyDegree3SumcheckZk’ was not declared in this scope; did you mean ‘verifyDegree3Sumcheck’?
+   67 |             check(verifyDegree3SumcheckZk(pp,eq,DH,result.proof,v,"degree3","same/session",&point,&error),error.c_str());
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~
+      |                   verifyDegree3Sumcheck
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:75:24: error: ‘encodeDegree3Zk’ was not declared in this scope
+   75 |             auto bytes=encodeDegree3Zk(result.proof,L);auto decoded=decodeDegree3Zk(bytes,L);auto cv=session();
+      |                        ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:75:69: error: ‘decodeDegree3Zk’ was not declared in this scope
+   75 |             auto bytes=encodeDegree3Zk(result.proof,L);auto decoded=decodeDegree3Zk(bytes,L);auto cv=session();
+      |                                                                     ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:86:9: error: ‘MaskedSumcheckProof’ was not declared in this scope; did you mean ‘Degree3SumcheckProof’?
+   86 |         MaskedSumcheckProof proof;auto t=session();MaskedSumcheckProver p(pp,1,2,DH,H,proof,t,"gkr","same/session");
+      |         ^~~~~~~~~~~~~~~~~~~
+      |         Degree3SumcheckProof
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:86:52: error: ‘MaskedSumcheckProver’ was not declared in this scope
+   86 |         MaskedSumcheckProof proof;auto t=session();MaskedSumcheckProver p(pp,1,2,DH,H,proof,t,"gkr","same/session");
+      |                                                    ^~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:87:16: error: ‘p’ was not declared in this scope
+   87 |         auto r=p.round({Fr(1),Fr(1),Fr(3)}); // p(x)=x^2-x+1
+      |                ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:89:26: error: ‘MaskedSumcheckVerifier’ was not declared in this scope
+   89 |         auto v=session();MaskedSumcheckVerifier q(pp,1,2,DH,proof,v,"gkr","same/session");check(q.round()==r,"stream challenge mismatch");q.finish(DF);check(t.stateDigest()==v.stateDigest(),"stream transcript");
+      |                          ^~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:89:97: error: ‘q’ was not declared in this scope
+   89 |         auto v=session();MaskedSumcheckVerifier q(pp,1,2,DH,proof,v,"gkr","same/session");check(q.round()==r,"stream challenge mismatch");q.finish(DF);check(t.stateDigest()==v.stateDigest(),"stream transcript");
+      |                                                                                                 ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_sumcheck_tests.cpp:91:15: error: ‘equalityPolynomial’ was not declared in this scope
+   91 |         check(equalityPolynomial({Fr(0)},{Fr(1)}).isZero(),"zero eq factor");
+      |               ^~~~~~~~~~~~~~~~~~
+gmake[3]: *** [src/CMakeFiles/zk_sumcheck_tests.dir/build.make:79: src/CMakeFiles/zk_sumcheck_tests.dir/main_zk_sumcheck_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1156: src/CMakeFiles/zk_sumcheck_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1163: src/CMakeFiles/zk_sumcheck_tests.dir/rule] Error 2
+gmake: *** [Makefile:543: zk_sumcheck_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build --parallel 8 --target zk_sumcheck_tests"
+	User time (seconds): 1.54
+	System time (seconds): 0.21
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 242396
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 68408
+	Voluntary context switches: 100
+	Involuntary context switches: 16
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 2984
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

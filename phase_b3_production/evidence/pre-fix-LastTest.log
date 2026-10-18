@@ -1,0 +1,66 @@
+Start testing: Oct 17 14:49 UTC
+----------------------------------------------------------
+7/8 Testing: route_b_source_plan_unit
+7/8 Test: route_b_source_plan_unit
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_production/build/src/route_b/route_b_source_plan_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT
+"route_b_source_plan_unit" start time: Oct 17 14:49 UTC
+Output:
+----------------------------------------------------------
+input size: 2^28
+++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+Total input size: 2^28
+layer_id: 277
+Circuit Builder time (including structure-only witness construction, subset and validation): 22.007s
+ACCEPT expected=accept actual=accept Bridge=6735 Lasso=591 endpoints=576 chunks=81
+REJECT expected=reject actual=reject missing-FCONN-p1 challenges=0
+REJECT expected=reject actual=reject continuation-as-input challenges=0
+REJECT expected=reject actual=reject offset challenges=0
+REJECT expected=reject actual=reject bits challenges=0
+REJECT expected=reject actual=reject signed challenges=0
+REJECT expected=reject actual=reject length challenges=0
+REJECT expected=reject actual=reject duplicate-ID challenges=0
+REJECT expected=reject actual=reject missing-ID challenges=0
+REJECT expected=reject actual=reject order challenges=0
+REJECT expected=reject actual=reject model-ID challenges=0
+REJECT expected=reject actual=reject implementation-profile challenges=0
+REJECT expected=reject actual=reject mapping-out-of-bounds challenges=0
+REJECT expected=reject actual=reject alias challenges=0
+REJECT expected=reject actual=reject missing-zero-tail challenges=0
+REJECT expected=reject actual=reject missing-constant challenges=0
+REJECT expected=reject actual=reject moved-constant challenges=0
+REJECT expected=reject actual=reject missing-output challenges=0
+REJECT expected=reject actual=reject output-offset challenges=0
+REJECT expected=reject actual=reject correct-count-wrong-semantics challenges=0
+REJECT expected=reject actual=reject unapproved-artifact-policy challenges=0
+REJECT expected=reject actual=reject PC-identity challenges=0
+REJECT expected=reject actual=reject local-dependency challenges=0
+REJECT expected=reject actual=reject mode-downgrade challenges=0
+REJECT expected=reject actual=reject obligation-omission challenges=0
+PASS full12 source-plan unit and 24 metadata rejection cases
+<end of output>
+Test time = 395.05 sec
+----------------------------------------------------------
+Test Passed.
+"route_b_source_plan_unit" end time: Oct 17 14:56 UTC
+"route_b_source_plan_unit" time elapsed: 00:06:35
+----------------------------------------------------------
+
+8/8 Testing: route_b_source_plan_independent_full12
+8/8 Test: route_b_source_plan_independent_full12
+Command: "/usr/local/bin/python3.10" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/route_b/tests/source_plan_independent.py" "--emitter" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_production/build/src/route_b/route_b_source_plan_emit" "--output" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_production/build/source-plan-full12"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT
+"route_b_source_plan_independent_full12" start time: Oct 17 14:56 UTC
+Output:
+----------------------------------------------------------
+{"command": ["/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_production/build/src/route_b/route_b_source_plan_emit", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_production/build/source-plan-full12-1792248989660305073"], "exit": 0, "wall_seconds": 127.66723333206028, "cpu_user_seconds": 170.180991, "cpu_system_seconds": 21.748548, "peak_rss_kib": 18528108, "expected": "complete full12 emit and independent semantic verification"}
+FAIL independent full12: independent comparator accepted offset
+<end of output>
+Test time = 489.08 sec
+----------------------------------------------------------
+Test Failed.
+"route_b_source_plan_independent_full12" end time: Oct 17 15:04 UTC
+"route_b_source_plan_independent_full12" time elapsed: 00:08:09
+----------------------------------------------------------
+
+End testing: Oct 17 15:04 UTC

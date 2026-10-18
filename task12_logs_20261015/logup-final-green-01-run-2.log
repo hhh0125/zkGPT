@@ -1,0 +1,92 @@
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.883063s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+Exp Lookup Verifier time: 0.334526s; queries=528
+PASS positive all boundary/tail/repeated queries
+Exp Lookup Verifier time: 0.330383s; queries=528
+PASS serialized proof roundtrip bytes=78096
+REJECT noncanonical normalization shell: noncanonical exp normalization payload
+REJECT table identity: unexpected exp_table_id
+REJECT delete query: exp query count mismatch
+REJECT lookup proof: LogUp value sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT lookup commitment: LogUp value commitment mismatch
+REJECT transcript: exp transcript binding
+REJECT parent transcript: LogUp value commitment mismatch
+REJECT registry index: exp query E offset
+REJECT delete last layer: missing Softmax query region
+REJECT omit query region: exp query layout metadata
+REJECT region order metadata: LogUp value commitment mismatch
+REJECT malicious witness E+1: LogUp reciprocal sums disagree
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.839084s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+REJECT bypassed prover checks E+1: LogUp table sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT malicious witness scale x2: LogUp reciprocal sums disagree
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.841096s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+REJECT bypassed prover checks scale x2: LogUp table sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT malicious witness t change keep E: LogUp reciprocal sums disagree
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.859803s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+REJECT bypassed prover checks t change keep E: LogUp table sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT malicious witness legal-range E: LogUp reciprocal sums disagree
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.836861s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+REJECT bypassed prover checks legal-range E: LogUp table sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT malicious witness swap E: LogUp reciprocal sums disagree
+  sparse val0 opening query 0: patterns=2
+    proved sparse patterns 2/2 using 2 threads
+  sparse val0 opening query 1: patterns=3
+    proved sparse patterns 3/3 using 2 threads
+Exp Lookup query count: 528; table size: 8192 (canonical entries 655360); padded queries: 1024
+Exp Lookup Prover time: 0.852308s
+Exp Lookup core vector workspace bytes: 262144 (excludes kernels and sparse workspace)
+REJECT bypassed prover checks swap E: LogUp table sumcheck failed: degree-1 sumcheck round consistency failed
+REJECT legacy v3: strict v4 required: legacy proof has no exp lookup
+ALL EXP LOOKUP TESTS PASS
+	Command being timed: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/exp_lookup_tests"
+	User time (seconds): 12.21
+	System time (seconds): 0.04
+	Percent of CPU this job got: 113%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:10.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10636
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10137
+	Voluntary context switches: 421
+	Involuntary context switches: 40
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

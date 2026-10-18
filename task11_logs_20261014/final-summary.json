@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "scope": "experimental n2/n4 only",
+  "acceptance": {
+    "Committed-y primitive design": "PASS",
+    "Hidden scalar commitment": "PASS",
+    "Shared-witness binding": "PASS",
+    "Completeness": "PASS",
+    "Special soundness": "PASS",
+    "Knowledge soundness": "PASS",
+    "Special HVZK": "PASS",
+    "Fiat-Shamir NIZK assumptions": "DOCUMENTED",
+    "Independent verifier": "PASS",
+    "Negative tests": "PASS",
+    "Serialization robustness": "PASS",
+    "Legacy strict-v4 unchanged": "PASS",
+    "Field LogUp integration": "NOT IMPLEMENTED",
+    "Full zkGPT Zero-Knowledge": "NOT CLAIMED"
+  },
+  "knowledge_soundness_scope": "interactive Sigma; Fiat-Shamir conditional classical programmable ROM/forking and OS CSPRNG, not standard-model SHA256/QROM/UC theorem",
+  "unit_tests": {
+    "passed": 59,
+    "failed": 0,
+    "exit_code": 0,
+    "log": "unit-tests-reviewed.log"
+  },
+  "task10_new_regression": {
+    "passed": 43,
+    "failed": 0,
+    "exit_code": 0,
+    "log": "task10-regression.log"
+  },
+  "independent_verifier": {
+    "matched": 30,
+    "total": 30,
+    "accept": 6,
+    "crypto_reject": 12,
+    "decode_reject": 12,
+    "log": "independent-results.json"
+  },
+  "benchmark": {
+    "samples": [
+      {
+        "protocol": "public-y",
+        "n": 2,
+        "rounds": 100,
+        "prove_us_mean": 3352.11,
+        "verify_us_mean": 2211.18,
+        "proof_bytes": 215,
+        "statement_bytes": 186
+      },
+      {
+        "protocol": "committed-y",
+        "n": 2,
+        "rounds": 100,
+        "prove_us_mean": 8868.59,
+        "verify_us_mean": 5533.92,
+        "proof_bytes": 263,
+        "statement_bytes": 280
+      },
+      {
+        "protocol": "public-y",
+        "n": 4,
+        "rounds": 100,
+        "prove_us_mean": 4484.56,
+        "verify_us_mean": 2864.33,
+        "proof_bytes": 279,
+        "statement_bytes": 250
+      },
+      {
+        "protocol": "committed-y",
+        "n": 4,
+        "rounds": 100,
+        "prove_us_mean": 11100.2,
+        "verify_us_mean": 6664.46,
+        "proof_bytes": 327,
+        "statement_bytes": 344
+      }
+    ],
+    "same_conditions": true,
+    "rounds_per_protocol_dimension": 100,
+    "peak_rss_kib": 4900,
+    "rss_scope": "combined process total high-water mark, not per-proof incremental memory",
+    "timing_scope": "steady_clock prove/verify calls include full pp validation/local checks/OS sampling/FS/group equations; exclude fixture setup, codec, startup; alternating protocol execution order; no external system load isolation",
+    "build": "Release -O3 -DNDEBUG; C++17; ZKGPT_NATIVE=OFF; single-thread build; no sanitizers",
+    "platform": "Linux-5.15.0-191-generic-x86_64-with-glibc2.35",
+    "cpu": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz",
+    "compiler": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "historical_task10_benchmark_comparison": "not used; public-y newly rerun in same binary and environment"
+  },
+  "integrity": {
+    "existing_source_count": 97,
+    "existing_source_unchanged": 96,
+    "allowed_changed": [
+      "src/CMakeLists.txt"
+    ],
+    "exact_cmake_delta_matches": true,
+    "historical_evidence_metadata_count": 408,
+    "historical_evidence_metadata_unchanged": true,
+    "old_production_binary_hash_count": 15,
+    "old_production_binary_hashes_unchanged": true,
+    "gpt_lib_compile_source_count": 26,
+    "prototype_sources_in_gpt_lib": [],
+    "task10_files_unchanged": true,
+    "field_probe": "Fr_order=16798108731015832284940804142231733909759579603404752749028378864165570215949\nFp_modulus=16798108731015832284940804142231733909889187121439069848933715426072753864723\ncurve_b=2\nFr_bytes=32\nG1_bytes=32\n"
+  },
+  "new_files": [
+    "src/zk_committed_linear_opening.hpp",
+    "src/zk_committed_linear_opening.cpp",
+    "src/main_zk_committed_opening_tests.cpp",
+    "src/main_zk_committed_opening_verify.cpp",
+    "docs/strict_v5_committed_y_opening_prototype.md"
+  ],
+  "modified_existing_files": [
+    "src/CMakeLists.txt"
+  ],
+  "historical_files_modified": false,
+  "review": "No Critical/Important static finding; two Minor findings addressed; reviewer did not rerun remote tests",
+  "next_stage_missing": [
+    "hidden Sumcheck round/terminal proofs",
+    "secret multiplication/reciprocal proofs",
+    "shared hidden claim equality",
+    "coordinate bridge to original val[0]",
+    "hidden Sparse Opening",
+    "sublinear ZK dot-product/hidden MLE and composition analysis"
+  ],
+  "stopped_at_requested_scope": true,
+  "production_or_full_gpt_tests_run": false
+}

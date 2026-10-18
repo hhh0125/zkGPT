@@ -1,0 +1,50 @@
+{
+  "samples": [
+    {
+      "protocol": "public-y",
+      "n": 2,
+      "rounds": 100,
+      "prove_us_mean": 3352.11,
+      "verify_us_mean": 2211.18,
+      "proof_bytes": 215,
+      "statement_bytes": 186
+    },
+    {
+      "protocol": "committed-y",
+      "n": 2,
+      "rounds": 100,
+      "prove_us_mean": 8868.59,
+      "verify_us_mean": 5533.92,
+      "proof_bytes": 263,
+      "statement_bytes": 280
+    },
+    {
+      "protocol": "public-y",
+      "n": 4,
+      "rounds": 100,
+      "prove_us_mean": 4484.56,
+      "verify_us_mean": 2864.33,
+      "proof_bytes": 279,
+      "statement_bytes": 250
+    },
+    {
+      "protocol": "committed-y",
+      "n": 4,
+      "rounds": 100,
+      "prove_us_mean": 11100.2,
+      "verify_us_mean": 6664.46,
+      "proof_bytes": 327,
+      "statement_bytes": 344
+    }
+  ],
+  "same_conditions": true,
+  "rounds_per_protocol_dimension": 100,
+  "peak_rss_kib": 4900,
+  "rss_scope": "combined process total high-water mark, not per-proof incremental memory",
+  "timing_scope": "steady_clock prove/verify calls include full pp validation/local checks/OS sampling/FS/group equations; exclude fixture setup, codec, startup; alternating protocol execution order; no external system load isolation",
+  "build": "Release -O3 -DNDEBUG; C++17; ZKGPT_NATIVE=OFF; single-thread build; no sanitizers",
+  "platform": "Linux-5.15.0-191-generic-x86_64-with-glibc2.35",
+  "cpu": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz",
+  "compiler": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+  "historical_task10_benchmark_comparison": "not used; public-y newly rerun in same binary and environment"
+}

@@ -1,0 +1,126 @@
+[
+  {
+    "test": "range_tests",
+    "args": [
+      "cmake-build-release/src/range_tests",
+      "--prove-wide",
+      "--commit-kernel"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 9.24931001663208
+  },
+  {
+    "test": "gkr_mutation_tests",
+    "args": [
+      "cmake-build-release/src/gkr_mutation_tests"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 0.14610695838928223
+  },
+  {
+    "test": "zkgpt_artifact_mutation_tests",
+    "args": [
+      "cmake-build-release/src/zkgpt_artifact_mutation_tests"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 223.56511616706848
+  },
+  {
+    "test": "model_binding_tests",
+    "args": [
+      "cmake-build-release/src/model_binding_tests"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 67.10855269432068
+  },
+  {
+    "test": "prepare-oneblock",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "prepare",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt",
+      "1"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 19.479960918426514
+  },
+  {
+    "test": "prove-oneblock",
+    "args": [
+      "cmake-build-release/src/demo_llm_run",
+      "--blocks",
+      "1",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "--artifact-prefix",
+      "task9_logs_20261014/oneblock"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 84.22242641448975
+  },
+  {
+    "test": "verify-oneblock",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "verify",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "task9_logs_20261014/oneblock.strict-v4.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 11.1380295753479
+  },
+  {
+    "test": "prepare-full12",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "prepare",
+      "task9_logs_20261014/full12.anchor.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt",
+      "12"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 224.95913791656494
+  },
+  {
+    "test": "prove-full12",
+    "args": [
+      "cmake-build-release/src/demo_llm_run",
+      "--blocks",
+      "12",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "task9_logs_20261014/full12.anchor.bin",
+      "--artifact-prefix",
+      "task9_logs_20261014/full12"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 1104.2663431167603
+  },
+  {
+    "test": "verify-full12",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "verify",
+      "task9_logs_20261014/full12.anchor.bin",
+      "task9_logs_20261014/full12.strict-v4.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 92.00941491127014
+  }
+]

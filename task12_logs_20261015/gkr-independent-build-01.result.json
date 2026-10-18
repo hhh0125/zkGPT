@@ -1,0 +1,90 @@
+{
+  "tag": "gkr-independent-build-01",
+  "success": true,
+  "records": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source",
+        "-B",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DZKGPT_BUILD_ZK_OPENING_PROTOTYPE=ON",
+        "-DZKGPT_BUILD_COMMITTED_Y_PROTOTYPE=ON"
+      ],
+      "exit": 0,
+      "seconds": 0.2145741879940033,
+      "log": "gkr-independent-build-01-configure.log"
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "--parallel",
+        "8",
+        "--target",
+        "gkr_zk_tests",
+        "gkr_zk_verify",
+        "zk_foundation_tests",
+        "zk_sumcheck_tests",
+        "range_tests",
+        "gkr_mutation_tests",
+        "lasso_folding_tests"
+      ],
+      "exit": 0,
+      "seconds": 48.42088421294466,
+      "log": "gkr-independent-build-01-build.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/gkr_zk_tests"
+      ],
+      "exit": 0,
+      "seconds": 1.7676232778467238,
+      "log": "gkr-independent-build-01-run-0.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/zk_foundation_tests"
+      ],
+      "exit": 0,
+      "seconds": 0.41491281567141414,
+      "log": "gkr-independent-build-01-run-1.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/zk_sumcheck_tests"
+      ],
+      "exit": 0,
+      "seconds": 0.4649689686484635,
+      "log": "gkr-independent-build-01-run-2.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/range_tests"
+      ],
+      "exit": 0,
+      "seconds": 0.31443099211901426,
+      "log": "gkr-independent-build-01-run-3.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/gkr_mutation_tests"
+      ],
+      "exit": 0,
+      "seconds": 0.16387183731421828,
+      "log": "gkr-independent-build-01-run-4.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/lasso_folding_tests"
+      ],
+      "exit": 0,
+      "seconds": 2.468445031903684,
+      "log": "gkr-independent-build-01-run-5.log"
+    }
+  ]
+}

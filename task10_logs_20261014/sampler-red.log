@@ -1,0 +1,6 @@
+PASS sampler_accept_zero
+PASS sampler_accept_modulus_minus_one
+FAIL sampler_reject_exact_modulus: modulus accepted by biased masking
+FAIL sampler_reject_full_ff: noncanonical entropy accepted
+FAIL system_entropy_failure_commitment: entropy failure did not fail closed (or seccomp unavailable)
+RESULT passed=2 failed=3

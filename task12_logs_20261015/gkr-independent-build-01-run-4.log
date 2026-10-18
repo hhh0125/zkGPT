@@ -1,0 +1,84 @@
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 0.000019 s
+GKR input-commitment MLE opening time: proof generation 0.001713 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.0188594s
+Total Prover time(GKR+range):0.0215927=0.0215927+0s
+GKR proof-builder local consistency-check time: 0.000222658s
+Proof size(old): 1.01562KB
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 0.000020 s
+GKR input-commitment MLE opening time: proof generation 0.001876 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.016445s
+Total Prover time(GKR+range):0.0193963=0.0193963+0s
+GKR proof-builder local consistency-check time: 0.000357828s
+Proof size(old): 1.01562KB
+GKR mutation baseline accepted: proof_bytes=5380, trace_entries=75
+Mutation | field | expected | actual | trace fork | result
+phase1_polynomial | layers[parent].phase1_rounds[0].a/b | phase-1 sumcheck | phase-1 sumcheck | gkr.phase1.challenge counter=2 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR phase-1 claim mismatch at layer 8
+phase2_polynomial | layers[parent].phase2_rounds[0].a/b | phase-2 sumcheck | phase-2 sumcheck | gkr.phase2.challenge counter=4 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR phase-2 claim mismatch at layer 8
+normal_final_claim_u1 | layers[parent].final_claim_u1 | parent wiring predicate | parent wiring predicate | none (rejected before next challenge; matched prefix=6) | PASS
+  verifier: GKR final wiring predicate mismatch at layer 8
+normal_final_claim_v1 | layers[parent].final_claim_v1 | parent wiring predicate | parent wiring predicate | none (rejected before next challenge; matched prefix=6) | PASS
+  verifier: GKR final wiring predicate mismatch at layer 8
+fconn_u_polynomial | layers[fconn].matrix_rounds[0].a/b | FCONN-U matrix sumcheck | FCONN-U matrix sumcheck | gkr.matrix.u.7.challenge counter=8 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR matrix u sumcheck claim mismatch at layer 7
+fconn_v_polynomial | layers[fconn].matrix_v_rounds[0].a/b | FCONN-V matrix sumcheck | FCONN-V matrix sumcheck | gkr.matrix.v.7.challenge counter=10 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR matrix v sumcheck claim mismatch at layer 7
+fconn_u_final_evaluation | layers[fconn].final_claim_u0 | FCONN-U matrix sumcheck | FCONN-U matrix sumcheck | none (rejected before next challenge; matched prefix=10) | PASS
+  verifier: GKR matrix u final product mismatch at layer 7
+fconn_u_weight_evaluation | layers[fconn].final_claim_v0 | FCONN-U matrix sumcheck | FCONN-U matrix sumcheck | none (rejected before next challenge; matched prefix=10) | PASS
+  verifier: GKR matrix u final product mismatch at layer 7
+fconn_v_final_evaluation | layers[fconn].matrix_v_final_claim_u0 | FCONN-V matrix sumcheck | FCONN-V matrix sumcheck | none (rejected before next challenge; matched prefix=12) | PASS
+  verifier: GKR matrix v final product mismatch at layer 7
+fconn_v_weight_evaluation | layers[fconn].matrix_v_final_claim_v0 | FCONN-V matrix sumcheck | FCONN-V matrix sumcheck | none (rejected before next challenge; matched prefix=12) | PASS
+  verifier: GKR matrix v final product mismatch at layer 7
+lasso_mapping_claim | lasso.mapping_evaluation | Lasso aggregation claim | Lasso aggregation claim | none (rejected before next challenge; matched prefix=71) | PASS
+  verifier: GKR Lasso mapping evaluation mismatch
+lasso_sumcheck_polynomial | lasso.rounds[0].a/b | Lasso sumcheck | Lasso sumcheck | lasso.sumcheck.challenge counter=66 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR Lasso sumcheck claim mismatch at round 1
+ipa_left_point | lasso.input_opening.ipa.rounds[0].left | Hyrax/IPA opening | Hyrax/IPA opening | ipa-round counter=71 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR input commitment opening failed: IPA final commitment equation failed
+ipa_right_point | lasso.input_opening.ipa.rounds[0].right | Hyrax/IPA opening | Hyrax/IPA opening | ipa-round counter=71 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR input commitment opening failed: IPA final commitment equation failed
+ipa_final_witness | lasso.input_opening.ipa.final_witness | Hyrax/IPA opening | Hyrax/IPA opening | none (rejected before next challenge; matched prefix=74) | PASS
+  verifier: GKR input commitment opening failed: IPA final commitment equation failed
+output_evaluation | proof.output_evaluation | output claim | output claim | none (rejected before next challenge; matched prefix=2) | PASS
+  verifier: GKR output evaluation does not match public output claim
+final_binding | proof.transcript_binding | GKR final binding | GKR final binding | none (trace identical) | PASS
+  verifier: GKR final transcript binding mismatch
+fconn_v_product_preserving_endpoints | matrix_v_final_claim_u0 + matrix_v_final_claim_v0 | FCONN-U matrix sumcheck | FCONN-U matrix sumcheck | gkr.phase1.challenge counter=12 pre-digest-diff=yes challenge-diff=yes | PASS
+  verifier: GKR matrix u sumcheck claim mismatch at layer 5
+lasso_input_opening_claim | lasso.input_evaluation | Lasso aggregation claim | Lasso aggregation claim | none (rejected before next challenge; matched prefix=71) | PASS
+  verifier: GKR Lasso final input claim mismatch
+GKR mutation tests: 19/19 passed
+	Command being timed: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/gkr_mutation_tests"
+	User time (seconds): 0.07
+	System time (seconds): 0.09
+	Percent of CPU this job got: 142%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 54672
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 16009
+	Voluntary context switches: 192
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

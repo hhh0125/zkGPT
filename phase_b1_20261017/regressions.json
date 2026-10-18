@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b1_20261017/build",
+        "--target",
+        "hyrax_opening_tests",
+        "lasso_folding_tests",
+        "zkgpt_decoder_resource_tests",
+        "range_tests",
+        "exp_lookup_tests",
+        "-j",
+        "4"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b1_20261017/build",
+        "-R",
+        "^(hyrax_opening_tests|lasso_folding_tests|zkgpt_decoder_resource_tests|route_b_lasso_unit|exp_lookup_tests)$",
+        "--output-on-failure"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b1_20261017/build/src/range_tests"
+      ],
+      "exit": 0
+    },
+    {
+      "default_off_configure_exit": 0,
+      "no_lasso_target": true
+    }
+  ],
+  "all_pass": true
+}

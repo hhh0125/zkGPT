@@ -1,0 +1,18 @@
+
+# Task11 experimental committed-y prototype; production gpt_lib excludes it.
+option(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE "Build isolated committed-y ZK primitive" OFF)
+if(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE)
+    add_library(zk_committed_opening_prototype STATIC
+        zk_hiding_commitment.cpp zk_linear_opening.cpp zk_committed_linear_opening.cpp)
+    target_include_directories(zk_committed_opening_prototype PUBLIC . ../3rd/mcl/include)
+    target_link_libraries(zk_committed_opening_prototype PUBLIC mcl mclbn256)
+    target_compile_options(zk_committed_opening_prototype PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(zk_committed_opening_tests main_zk_committed_opening_tests.cpp)
+    target_link_libraries(zk_committed_opening_tests PRIVATE zk_committed_opening_prototype)
+    target_compile_options(zk_committed_opening_tests PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(zk_committed_opening_verify main_zk_committed_opening_verify.cpp)
+    target_link_libraries(zk_committed_opening_verify PRIVATE zk_committed_opening_prototype)
+    target_compile_options(zk_committed_opening_verify PRIVATE -Wall -Wextra -Wpedantic)
+    add_test(NAME zk_committed_opening_tests COMMAND zk_committed_opening_tests)
+    set_tests_properties(zk_committed_opening_tests PROPERTIES TIMEOUT 30)
+endif()

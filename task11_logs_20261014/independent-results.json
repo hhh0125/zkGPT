@@ -1,0 +1,252 @@
+{
+  "samples": [
+    {
+      "sample": "invalid-G1",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4820,
+      "diagnostic": "DECODE_REJECT invalid committed element encoding"
+    },
+    {
+      "sample": "noncanonical-Fr",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4868,
+      "diagnostic": "DECODE_REJECT invalid committed element encoding"
+    },
+    {
+      "sample": "oversized-message",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4804,
+      "diagnostic": "DECODE_REJECT public artifact exceeds size bound"
+    },
+    {
+      "sample": "oversized-n",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4820,
+      "diagnostic": "DECODE_REJECT committed prototype length must be 2 or 4"
+    },
+    {
+      "sample": "positive-b0",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4728,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "positive-n2",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4856,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "positive-n4",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4772,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "positive-repeat",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4744,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "positive-zero-w",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4640,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "positive-zero-y",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "classification": "ACCEPT",
+      "peak_rss_kib": 4664,
+      "diagnostic": "ACCEPT committed-y shared-preimage proof"
+    },
+    {
+      "sample": "spliced-D",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4944,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "trailing",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4888,
+      "diagnostic": "DECODE_REJECT trailing committed bytes"
+    },
+    {
+      "sample": "truncated",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4824,
+      "diagnostic": "DECODE_REJECT truncated committed encoding"
+    },
+    {
+      "sample": "wrong-A-C",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4868,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-A-D",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4864,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-C",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4860,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-D",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4872,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-b",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4872,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-context",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4816,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-eta-forged",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4804,
+      "diagnostic": "CRYPTO_REJECT committed D equation failed"
+    },
+    {
+      "sample": "wrong-magic",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4736,
+      "diagnostic": "DECODE_REJECT committed magic mismatch"
+    },
+    {
+      "sample": "wrong-scalar-domain",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4672,
+      "diagnostic": "DECODE_REJECT unsupported scalar generator domain"
+    },
+    {
+      "sample": "wrong-shared-w",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4860,
+      "diagnostic": "CRYPTO_REJECT committed D equation failed"
+    },
+    {
+      "sample": "wrong-transcript-domain",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4892,
+      "diagnostic": "DECODE_REJECT unsupported committed transcript domain"
+    },
+    {
+      "sample": "wrong-vector-domain",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4896,
+      "diagnostic": "DECODE_REJECT unsupported vector generator domain"
+    },
+    {
+      "sample": "wrong-version",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4668,
+      "diagnostic": "DECODE_REJECT unsupported committed proof version"
+    },
+    {
+      "sample": "wrong-z-eta",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4868,
+      "diagnostic": "CRYPTO_REJECT committed D equation failed"
+    },
+    {
+      "sample": "wrong-z-rho",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4680,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-z",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "classification": "CRYPTO_REJECT",
+      "peak_rss_kib": 4816,
+      "diagnostic": "CRYPTO_REJECT committed C equation failed"
+    },
+    {
+      "sample": "wrong-expected-context",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "classification": "DECODE_REJECT",
+      "peak_rss_kib": 4668,
+      "diagnostic": "DECODE_REJECT unexpected application context"
+    }
+  ],
+  "matched": 30,
+  "total": 30,
+  "verifier": "dedicated public-only executable; no witness file argument",
+  "exit_policy": {
+    "0": "accept",
+    "1": "cryptographic rejection",
+    "2": "decode/format/expected-context rejection"
+  }
+}

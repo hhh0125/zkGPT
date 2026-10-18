@@ -1,0 +1,60 @@
+Range wide integer boundary tests passed
+Range Proof built directly from val[0]: 7 registered regions across 5 range queries
+  query 0: bits=63, values=1, padded=1
+  query 1: bits=64, values=3, padded=4
+  query 2: bits=76, values=1, padded=1
+  query 3: bits=101, values=1, padded=1
+  query 4: bits=125, values=1, padded=1
+Range buildFromWitness wide-path tests passed
+Range sumcheck consistency tests passed
+Serializable Range sumcheck tests passed
+Row-major Hyrax MLE opening test passed
+Committed witness capacity/lifecycle tests passed
+GKR proof serialization test passed
+GKR public-instance binding test passed
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 0.000022 s
+GKR input-commitment MLE opening time: proof generation 0.001898 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.0184717s
+Total Prover time(GKR+range):0.021503=0.021503+0s
+GKR proof-builder local consistency-check time: 0.000240089s
+Proof size(old): 1.01562KB
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 0.000030 s
+GKR input-commitment MLE opening time: proof generation 0.002784 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.0202399s
+Total Prover time(GKR+range):0.0247262=0.0247262+0s
+GKR proof-builder local consistency-check time: 0.000519301s
+Proof size(old): 1.01562KB
+  [rejected] FCONN parent U1=3, V1=5: GKR final wiring predicate mismatch at layer 8
+  [rejected] FCONN parent U1=5, V1=3: GKR final wiring predicate mismatch at layer 8
+  [rejected] modified second FCONN matrix round: GKR matrix v sumcheck claim mismatch at layer 7
+  [rejected] absorbed second FCONN polynomial divergence: GKR matrix v sumcheck claim mismatch at layer 7
+  [rejected] modified second FCONN final evaluation: GKR matrix v final product mismatch at layer 7
+  [rejected] valid matrix sumchecks with inconsistent opening: GKR input commitment opening failed: IPA final commitment equation failed
+FCONN two-point proof bytes: 5380, second matrix rounds per FCONN: 2, added committed-input evaluations per FCONN: 2
+Small GKR challenge trace entries: 75
+TRACE_VECTOR circuit_fingerprint=064d729d6cefaf7bca374dba0b46a546e499f5cb086c5bc175a7fdd6f0f40245
+TRACE_VECTOR commitment[0]=eea7bbc432103c12a5a04879b949e5ebb42b396281c7ce74b99a10794f46eb24
+TRACE_VECTOR commitment[1]=aa19358c902b89f07659e43865a21c79f636fe487cd6fe0c82cef8f27ed4810b
+TRACE_VECTOR commitment[2]=904354e1ab5ab031bbf0fa95b00b46e1ef1630f1a128de137a64d46be3caa100
+TRACE_VECTOR commitment[3]=0000000000000000000000000000000000000000000000000000000000000000
+TRACE_VECTOR initial_digest=16f4572357d3f9b4495b4353f26104829af95de276f1360169b92e770f12b2a5
+TRACE_VECTOR first[0] label=gkr.output.point counter=0 pre=16f4572357d3f9b4495b4353f26104829af95de276f1360169b92e770f12b2a5 challenge=d26a303482fb14b634510e43947c1a52969aa00fee2da6f35721dd2f32556b15
+TRACE_VECTOR first[1] label=gkr.output.point counter=1 pre=ba70cfff7dedcc34a4950479ba94f099b959a70390bf8656e746d14d6370a388 challenge=132bec2ad48715a2e005fcbfca4a30427333f1d891386a4e6f5c4b5ecd8a6b1b
+TRACE_VECTOR first[2] label=gkr.phase1.challenge counter=2 pre=a91c99a4fbb122b997cf5dbd27421b82c5e0495e9598af1382fab3116674dc1c challenge=396d609004597e1cc6ddfc13974094a9c272329b6baba8ce78c4f8ea3a5b0218
+TRACE_VECTOR selected label=gkr.matrix.u.7.challenge counter=8 pre=1650cffdda8141270822002d10ba8ad4200c0c6235bcccf7574aaafc953187da challenge=db379168b02502f5ed37b4e798b887dd15dc160c0f594660d1a1699995258d1c
+TRACE_VECTOR selected label=gkr.matrix.v.7.challenge counter=10 pre=f3dcffb586bf65da601bf4daf068e30f24e3e515679253ef3dc4dc0edf648002 challenge=bf97687412fa51d1b4e44a764ac10d7a9f335b3de5dfa6a1300e0d8b5dfc4214
+TRACE_VECTOR selected label=lasso.fconn_v.sigma_u counter=58 pre=b75693f9644b8009952e95324e5d7085fa8f4b2123526b25528e461ae64f71b3 challenge=3a03d548217f32b2d05df58567e3c9670c06b9f2b98436fca18139037030f021
+TRACE_VECTOR selected label=lasso.fconn_v.sigma_v counter=59 pre=efe8cc55f2f32066007a444790f6127647845067e2b6a03f5ff15e9c1ba28931 challenge=4f5fba8479ed0955388790957e8af7e1f2744b04e628510c668bd3cce1be6404
+TRACE_VECTOR final_digest=3b08a8baaf3c80c4089a97af7ddeb83c2e48e633007e7dea545db428856aefd2
+FCONN two-point authentication tests passed
+Independent verifier Range verification time: 5.15e-07s
+zkGPT artifact serialization test passed
+Range layout binding test passed

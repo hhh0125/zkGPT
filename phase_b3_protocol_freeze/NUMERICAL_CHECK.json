@@ -1,0 +1,219 @@
+{
+  "purpose": "Public hand-constructed algebra example; integer-calculator checks only; not a cryptographic test or model proof",
+  "field": "same production scalar field; displayed signed integer representatives; no wraparound needed",
+  "w_logical": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "w_padded": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    0,
+    0,
+    0
+  ],
+  "input_bits": 3,
+  "sources": [
+    {
+      "id": "gkr/1/u/p0",
+      "r": [
+        2
+      ],
+      "m": 2,
+      "p": 2,
+      "pi": [
+        0,
+        1
+      ],
+      "values": [
+        1,
+        2
+      ],
+      "weights": [
+        -1,
+        2
+      ],
+      "a": 3,
+      "kappa": 0,
+      "rho": 2
+    },
+    {
+      "id": "range/0/Z",
+      "r": [
+        3
+      ],
+      "m": 2,
+      "p": 2,
+      "pi": [
+        0,
+        3
+      ],
+      "values": [
+        9,
+        12
+      ],
+      "weights": [
+        -2,
+        3
+      ],
+      "a": 18,
+      "kappa": 8,
+      "rho": 5
+    },
+    {
+      "id": "b1/direct/0",
+      "r": [
+        2,
+        3
+      ],
+      "m": 3,
+      "p": 4,
+      "pi": [
+        2,
+        4,
+        1
+      ],
+      "values": [
+        3,
+        5,
+        2,
+        7
+      ],
+      "weights": [
+        2,
+        -4,
+        -3,
+        6
+      ],
+      "a": 22,
+      "kappa": 42,
+      "rho": 3
+    },
+    {
+      "id": "input/zero-tail",
+      "r": [
+        1,
+        1,
+        1
+      ],
+      "m": 8,
+      "p": 8,
+      "a": 0,
+      "kappa": 0,
+      "rho": 7
+    }
+  ],
+  "H_boolean_values": [
+    -12,
+    -5,
+    6,
+    15,
+    -12,
+    0,
+    0,
+    7
+  ],
+  "initial_claim": -4,
+  "rounds": [
+    {
+      "coefficient_order": "constant,linear,quadratic",
+      "coefficients": [
+        -54,
+        148,
+        -44
+      ],
+      "challenge": 2,
+      "at_0": -54,
+      "at_1": 50,
+      "at_challenge": 66
+    },
+    {
+      "coefficient_order": "constant,linear,quadratic",
+      "coefficients": [
+        -54,
+        120,
+        54
+      ],
+      "challenge": 3,
+      "at_0": -54,
+      "at_1": 120,
+      "at_challenge": 792
+    },
+    {
+      "coefficient_order": "constant,linear,quadratic",
+      "coefficients": [
+        612,
+        -382,
+        -50
+      ],
+      "challenge": 4,
+      "at_0": 612,
+      "at_1": 180,
+      "at_challenge": -1716
+    }
+  ],
+  "folded_w": [
+    [
+      3,
+      5,
+      -5,
+      0
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      13
+    ]
+  ],
+  "folded_H": [
+    [
+      2,
+      24,
+      12,
+      14
+    ],
+    [
+      68,
+      18
+    ],
+    [
+      -132
+    ]
+  ],
+  "final_point": [
+    2,
+    3,
+    4
+  ],
+  "final_w_mle": 13,
+  "final_H_mle": -132,
+  "final_product": -1716,
+  "final_opening": {
+    "C0_row_weights": [
+      -3,
+      4
+    ],
+    "column_eq_weights": [
+      2,
+      -4,
+      -3,
+      6
+    ],
+    "collapsed_witness": [
+      17,
+      -6,
+      -9,
+      -12
+    ],
+    "evaluation": 13
+  },
+  "arithmetic_checks": "all displayed identities matched"
+}

@@ -1,0 +1,60 @@
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mcl.dir/src/fp.cpp.o
+[  5%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/bint-x64-amd64.S.o
+[  8%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/x86-64.S.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+[ 11%] Linking CXX shared library ../../lib/libmcl.so
+[ 11%] Built target mcl
+[ 14%] Building CXX object 3rd/mcl/CMakeFiles/mclbn256.dir/src/bn_c256.cpp.o
+[ 17%] Linking CXX shared library ../../lib/libmclbn256.so
+[ 17%] Built target mclbn256
+[ 20%] Building CXX object src/CMakeFiles/gpt_lib.dir/circuit.cpp.o
+[ 25%] Building CXX object src/CMakeFiles/gpt_lib.dir/generator_cache.cpp.o
+[ 25%] Building CXX object src/CMakeFiles/gpt_lib.dir/exp_lookup.cpp.o
+[ 28%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_proof_builder.cpp.o
+[ 31%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_serialization.cpp.o
+[ 34%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_verifier.cpp.o
+[ 37%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax.cpp.o
+[ 40%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax_opening.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/exp_lookup.cpp:13:10: fatal error: exp_table_values.inc: No such file or directory
+   13 | #include "exp_table_values.inc"
+      |          ^~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[3]: *** [src/CMakeFiles/gpt_lib.dir/build.make:93: src/CMakeFiles/gpt_lib.dir/exp_lookup.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/Makefile2:368: src/CMakeFiles/gpt_lib.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1126: src/CMakeFiles/zk_foundation_tests.dir/rule] Error 2
+gmake: *** [Makefile:530: zk_foundation_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build --parallel 8 --target zk_foundation_tests"
+	User time (seconds): 37.80
+	System time (seconds): 1.42
+	Percent of CPU this job got: 186%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:20.98
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 345996
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 687634
+	Voluntary context switches: 339
+	Involuntary context switches: 161
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 23040
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

@@ -1,0 +1,114 @@
+[
+  {
+    "test": "regression-range_protocol_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/range_protocol_tests"
+    ],
+    "exit": 0,
+    "wall": 0.3174762725830078
+  },
+  {
+    "test": "regression-gkr_mutation_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/gkr_mutation_tests"
+    ],
+    "exit": 0,
+    "wall": 0.17099475860595703
+  },
+  {
+    "test": "regression-zkgpt_artifact_mutation_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/zkgpt_artifact_mutation_tests"
+    ],
+    "exit": 0,
+    "wall": 237.5304660797119
+  },
+  {
+    "test": "regression-zkgpt_decoder_resource_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/zkgpt_decoder_resource_tests"
+    ],
+    "exit": 0,
+    "wall": 0.007936477661132812
+  },
+  {
+    "test": "regression-hyrax_opening_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/hyrax_opening_tests"
+    ],
+    "exit": 0,
+    "wall": 4.333038568496704
+  },
+  {
+    "test": "regression-lasso_folding_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/lasso_folding_tests"
+    ],
+    "exit": 0,
+    "wall": 2.558647871017456
+  },
+  {
+    "test": "regression-prover_lifecycle_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/prover_lifecycle_tests"
+    ],
+    "exit": 0,
+    "wall": 0.43985462188720703
+  },
+  {
+    "test": "regression-circuit_storage_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/circuit_storage_tests"
+    ],
+    "exit": 0,
+    "wall": 0.6188745498657227
+  },
+  {
+    "test": "regression-model_binding_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/model_binding_tests"
+    ],
+    "exit": 0,
+    "wall": 74.02553248405457
+  },
+  {
+    "test": "prepare-single",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/model_binding",
+      "prepare",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task9_logs_20261014/single.anchor.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt",
+      "1"
+    ],
+    "exit": 0,
+    "wall": 22.04071307182312
+  },
+  {
+    "test": "prove-single",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/demo_llm_run",
+      "--blocks",
+      "1",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task9_logs_20261014/single.anchor.bin",
+      "--artifact-prefix",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task9_logs_20261014/single"
+    ],
+    "exit": 0,
+    "wall": 89.63133478164673
+  },
+  {
+    "test": "verify-single",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-release/src/model_binding",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task9_logs_20261014/single.anchor.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task9_logs_20261014/single.strict-v4.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt"
+    ],
+    "exit": 0,
+    "wall": 13.909898042678833
+  }
+]

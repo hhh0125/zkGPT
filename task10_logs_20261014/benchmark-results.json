@@ -1,0 +1,33 @@
+{
+  "measurements": [
+    {
+      "n": "2",
+      "rounds": "100",
+      "prove_us_mean": "4876.17",
+      "verify_us_mean": "3253.32",
+      "proof_bytes": "215",
+      "statement_bytes": "186"
+    },
+    {
+      "n": "4",
+      "rounds": "100",
+      "prove_us_mean": "6900.39",
+      "verify_us_mean": "4460.21",
+      "proof_bytes": "279",
+      "statement_bytes": "250"
+    }
+  ],
+  "process": {
+    "stage": "prototype-benchmark",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task10_logs_20261014/build/src/zk_opening_tests",
+      "--benchmark"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "seconds": 2.0223745279945433,
+    "peak_rss_kib": 4952,
+    "pass": true
+  },
+  "notes": "100 rounds per length; includes repeated verifier parameter derivation/validation; CSPRNG/system and crypto checks enabled."
+}

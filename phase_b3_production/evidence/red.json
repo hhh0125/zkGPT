@@ -1,0 +1,14 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-fsyntax-only",
+    "-I",
+    "src/route_b",
+    "src/route_b/tests/source_plan_tests.cpp"
+  ],
+  "expected": "nonzero: source_plan.hpp absent",
+  "exit": 1,
+  "stdout": "",
+  "stderr": "src/route_b/tests/source_plan_tests.cpp:1:10: fatal error: source_plan.hpp: No such file or directory\n    1 | #include \"source_plan.hpp\"\n      |          ^~~~~~~~~~~~~~~~~\ncompilation terminated.\n"
+}

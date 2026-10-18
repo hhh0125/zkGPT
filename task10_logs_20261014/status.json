@@ -1,0 +1,72 @@
+{
+  "Primitive design grounded in reviewed construction": "PASS",
+  "Hiding commitment implementation": "PASS",
+  "Hiding security argument": "PASS",
+  "ZK linear opening implementation": "PASS",
+  "Opening completeness": "PASS",
+  "Opening binding / knowledge soundness": "PASS",
+  "Opening Zero-Knowledge": "PASS",
+  "Independent verifier": "PASS",
+  "Serialization robustness": "PASS",
+  "Legacy strict-v4 unchanged": "PASS",
+  "Full zkGPT Zero-Knowledge": "NOT CLAIMED",
+  "security_model": "special HVZK with uniform coins; NIZK conditional on classical programmable ROM, secure OS CSPRNG, pinned default MCL BN254 and unknown generator relations; not standard-model SHA256/QROM/whole-GPT claim",
+  "unit_tests": {
+    "passed": 43,
+    "failed": 0,
+    "exit": 0
+  },
+  "independent_verifier": {
+    "cases": 16,
+    "accept": 3,
+    "crypto_reject": 6,
+    "decode_reject": 7,
+    "expected_exits_matched": 16
+  },
+  "benchmark": {
+    "measurements": [
+      {
+        "n": "2",
+        "rounds": "100",
+        "prove_us_mean": "4876.17",
+        "verify_us_mean": "3253.32",
+        "proof_bytes": "215",
+        "statement_bytes": "186"
+      },
+      {
+        "n": "4",
+        "rounds": "100",
+        "prove_us_mean": "6900.39",
+        "verify_us_mean": "4460.21",
+        "proof_bytes": "279",
+        "statement_bytes": "250"
+      }
+    ],
+    "process": {
+      "stage": "prototype-benchmark",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task10_logs_20261014/build/src/zk_opening_tests",
+        "--benchmark"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 2.0223745279945433,
+      "peak_rss_kib": 4952,
+      "pass": true
+    },
+    "notes": "100 rounds per length; includes repeated verifier parameter derivation/validation; CSPRNG/system and crypto checks enabled."
+  },
+  "full_proof_execution": "NOT RUN",
+  "legacy_retests": "NOT RUN per user instruction",
+  "deferred_minors": [
+    "additional zero-C/nonce, n2-b0 and maximum-length boundary tests",
+    "MCL global suite settings hardening beyond default-configuration API preconditions"
+  ],
+  "source_sha256": {
+    "src/zk_hiding_commitment.hpp": "a1ba6d289a9ae43398401bf1893fb024594b6ea4699178436c7816607a04b658",
+    "src/zk_hiding_commitment.cpp": "47be73ef23fef0ab2714f519b052b7e9ebdf0a58f71a33449910d243d72557a4",
+    "src/zk_linear_opening.hpp": "43ee9250d31b05a05ca980ae0d0e733877d50ecebab9c86303d1297189ac0c4a",
+    "src/zk_linear_opening.cpp": "140faf41ceee508c6fef4a7b6511b623051ac42fa96c7cc291240d61b06e6e98",
+    "src/main_zk_opening_tests.cpp": "6a7ce62488c40dad2f0615cd5757c5f56de62049ef6664670592024544103452"
+  }
+}

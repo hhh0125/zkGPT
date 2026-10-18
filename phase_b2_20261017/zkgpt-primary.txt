@@ -1,0 +1,1297 @@
+                      zkGPT:AnEfficientNon-interactive Zero-knowledge Proof Framework
+                                                              for LLMInference
+                                                          1,∗            2,∗                  1          1
+                                             Wenjie Qu , Yijun Sun , Xuanming Liu , Tao Lu ,
+                                                                 1             2                   1,²
+                                                   Yanpei Guo , Kai Chen , Jiaheng Zhang
+                          1National University of Singapore, 2Hong Kong University of Science and Technology
+                                      Abstract                                 process is black-boxed to users. The service providers will
+              Large Language Models (LLMs) are widely employed for             not reveal the model for users to validate the service since the
+              their ability to generate human-like text. However, service      model parameters are trade secrets [10]. Hence, it is difficult
+              providers may deploy smaller models to reduce costs, poten-      for users to validate the service’s integrity, e.g., the specified
+              tially deceiving users. Zero-Knowledge Proofs (ZKPs) offer a     model computes the output.
+              solution by allowing providers to prove LLM inference with-        Thezero-knowledge proof (ZKP) [29] is a promising solu-
+              out compromising the privacy of model parameters. Existing       tion to prove the integrity of machine learning (ML) services.
+              solutions either do not support LLM architectures or suffer      In ZKP, a prover produces a proof π to convince the verifier
+              fromsignificant inefficiency and tremendous overhead. To ad-     that the result of a public function f on public input x and the
+              dress this issue, this paper introduces several new techniques.  secret input of the prover w is indeed y = f(x,w). The secret
+              Weproposenewmethodstoefficiently prove linear and non-           input w is usually referred to as the witness. ZKP guarantees
+              linear layers in LLMs, reducing computation overhead by or-      that the verifier will output rejection with overwhelming prob-
+              ders of magnitude. To further enhance efficiency, we propose     ability if the prover cheats on calculation, while the proof π
+              constraint fusion to reduce the overhead of proving non-linear   does not reveal any additional information about the secret
+              layers and circuit squeeze to improve parallelism. We imple-     w. Using f as the function that represents the calculation of
+              mentourefficient protocol, specifically tailored for popular     the model, x as user input, and w as model weights within
+              LLMarchitectures like GPT-2, and deploy optimizations to         the ZKP protocol, the service provider can prove the correct-
+              enhance performance. Experiments show that our scheme can        ness of LLM inference. In real-world applications, regulatory
+              prove GPT-2 inference in less than 25 seconds. Compared          authorities can frequently and anonymously query the LLM
+              with state-of-the-art systems such as Hao et al. (USENIX Se-     service and require the service provider to prove the validity
+              curity’24) and ZKML (Eurosys’24), our work achieves nearly       of the generated answers via ZKP. If the provider fails to pro-
+              279×and185×speedup,respectively.                                 vide the valid proof, they may face penalties. This approach
+                                                                               effectively safeguards consumer rights while imposing small
+              1   Introduction                                                 overhead on existing infrastructure.
+                                                                                 In recent years, extensive research has been conducted on
+              Recently, Large Language Models (LLMs) (e.g., GPT-4 [2])         ZKPforML,coveringarangeofmodelsfromclassicdeci-
+              have revolutionized dialogue synthesis, applied in Chat-         sion trees to modern neural networks (NN). However, most
+              Bots [3], web search [33], and assisting programmers [63].       of these works either do not support LLM architectures [9,
+              Duetotheirdemandingresourcerequirements, AI companies            18,19,35,37,40,61,68], or support LLMs [10,31,41,55]
+              typically deploy LLMs on cloud servers. Users access these       but face significant limitations, such as inefficiency and high
+              models through APIs. Considering the huge daily serving          communication overhead. For example, concurrent work [10]
+              costs, service providers are incentivized to cheat by using      requires over an hour to generate a single proof for the infer-
+              smaller models and giving lower-quality results to save costs.   ence of GPT-2 [50]. Such lengthy proof generation times ren-
+              In fact, many users have observed the performance degra-         der these approaches impractical for real-world applications
+              dation of GPT-4 and ChatGPT [21,22,51] and suspect that          involving LLMs. The core challenge in developing practical
+              OpenAI is using a smaller model. However, the inference          ZKPschemesforLLMsliesinefficiently proving different
+                                                                               layers involved in LLMs, such as matrix multiplication, atten-
+                 *Equal contribution.                                          tion [57], GeLU [32], and normalization [5]. This challenge
+                 ²Corresponding author.                                        arises for two main reasons: (1) the linear layers in LLMs are
+                     large in scale and frequently invoked, making their proof gen-
+                                                                                                                                 Transformer Model
+                                                                                                                                                                                          ...
+                     eration time consuming. (2) ZKP primarily operates within                                                                              Block-1       Block-2                      Block-L
+                     arithmetic fields that only support addition and multiplication
+                                                                                                                                         NN Layer
+                     operations, making it difficult to efficiently prove non-linear                                                                   Mat mul     Softmax       GeLU         Norm
+                     layers.                                                                                                    Constraint
+                                                                                                                                                                                  Constraint-1
+                                                                                                                                                                                      ...
+                         In this paper, we aim to address the challenge of designing                                                                        NN Layer-i
+                     efficient ZKPs for both linear and non-linear layers, with the                                                                                              Constraint-K
+                     goal of generating practical ZKPs for GPT models.                                                                                            add   mul
+                                                                                                                                                                                          div   sqrt   exp
+                     Efficient proof for linear layers. The linear layers in LLMs
+                     encounter weight matrices that are extremely large. This                                                                                     Arithmetic              Range       Exp
+                                                                                                                                                                   Relation              Relation    Relation
+                     makesprovingmatrixmultiplications time consuming. There-                                                  Circuit
+                     fore, we first focus on improving the efficiency of these proofs.                                                                        Arithmetic Circuit               Lookup
+                     Thaler et al. [56] proposed a dedicated protocol for verifiable                                             Backend Protocol
+                                                                                                                                                                     GKR       &     Lasso
+                     matrix multiplication, which we incorporate into our system.
+                     Whilethealgorithm achieves optimal prover time in theory,                                                         Figure 1: Workflow of the prover for LLM.
+                     there remains significant room for improving its practical im-
+                     plementation. In particular, the execution time of this protocol
+                     is bottlenecked by the computation of the bookkeeping table                                          nentiation result. Then, each exponentiation operation can be
+                     for each matrix. The bookkeeping table stores evaluations of                                         verified with a single query to the lookup table. By leveraging
+                     the multi-linear extension of each matrix column at a given                                          advice, our approach reduces the number of relations required
+                     randompoint. The classical method [40,56] for this task uti-                                         for proof by several orders of magnitude, significantly low-
+                     lizes the memory method in [58] to evaluate each column’s                                            ering the prover’s overhead for non-linear layers. To prove
+                     multi-linear extension. This requires approximately 4n·m                                             range relations and exponentiation operations, we employ the
+                     field multiplications per matrix, where n and m represent the                                        recent lookup scheme Lasso [53]. For proving the involved
+                     numberofrowsandcolumnsofthematrix,respectively. The                                                  arithmetic relations, we adopt the GKR protocol [30]. By in-
+                     major drawback of this method is that it does not leverage                                           tegrating the above proposed techniques, we have developed
+                     certain special properties of matrix elements to reduce com-                                         a proof system capable of efficiently proving different LLM
+                     putation as we have observed.                                                                        layers.
+                         Wepropose a grouping algorithm to address this bottle-                                               Comparedwithexisting ZKP schemes for LLMs [10,31,
+                     neck efficiently, reducing the number of field multiplications                                       41,55], our system offers significant advantages in the fol-
+                     involved in [56] to approximately half. We further accelerate                                        lowing aspects: (1) Prover efficiency. Our efficient design
+                     our grouping algorithm by leveraging two key properties of                                           for proving both linear and non-linear layers greatly reduces
+                     our matrix elements: (1) the presence of many padded zeros                                           the cost of proving LLMs. For example, [55] directly uses
+                     due to sumcheck requirements, and (2) the relatively small                                           the protocol in [56] to prove matrix multiplication. Under
+                     range of values resulting from quantization. By utilizing our                                        the same settings, our system is nearly ten times faster than
+                     proposed method, the prover’s bottleneck shifts to n·m field                                         [55] in proving these layers due to the efficiency of our algo-
+                     additions. Since field multiplications are several times more                                        rithm. Additionally, our system can prove all normalization
+                     expensive than field additions, our algorithm achieves nearly                                        layers in a GPT-2 model in less than 30 seconds, whereas
+                     a tenfold acceleration on this theoretically optimal protocol.                                       Hao et al. [31] requires more than 4000 seconds. (2) Non-
+                     Efficient proof for non-linear layers. Proving non-linear                                            interactive and light communication. Oursystem can be easily
+                     layers also poses challenges in ZKP due to the involvement                                           transformedintoanon-interactiveproofusingtheFiat-Shamir
+                     of ZKP-unfriendly operations such as division, square root,                                          Transformation[20],enablingtheprooftobedownloadedand
+                     and exponentiation. Previous work based on floating-point                                            publicly verified offline. In contrast, previous VOLE-based so-
+                     circuits [61] or numerical iterations [31] incurs high overhead                                      lutions [31,41] cannot be converted to non-interactive proofs.
+                     when proving these operations. For example, [61] requires                                            Additionally, VOLE-based solutions require gigabytes of data
+                     thousands of relations to prove division and exponentiation                                          transfer between the prover and verifier, whereas our method
+                     operations. The inefficiency of existing methods stems from                                          is communication-efficient, with a proof size of 101 KB.
+                     simulating non-arithmetic computations using arithmetic op-                                          Performanceimprovementtechniques. Although our sys-
+                     erations. To address this issue, we propose to use the compu-                                        temdemonstrates several advantages, further optimizations
+                     tation result as advice, instead of simulating the computation                                       are essential to ensure its applicability in real-world scenarios.
+                     in the arithmetic field. We found that, with the use of advice,                                      Specifically, we aim to generate proof for GPT-2 inference
+                     division and square root operations can be proved by a single                                        within one minute on a CPU server. To achieve this, we per-
+                     range relation. For exponentiation operations, we prepare a                                          form comprehensive optimizations at both the constraint and
+                     lookup table containing all possible evaluations of the expo-                                        circuit levels.
+                Constraints in ZKPs are essentially equations that define         of magnitude. For non-linear layers, we propose efficient
+              the computational relationships between variables. In our           methodsbasedonadvicetoprovedifferentZKP-unfriendly
+              system, the constraints correspond to the computation pro-          operations. This reduces the proving cost by orders com-
+              cess of the LLM. These constraints are then converted into          pared with existing prevalent solutions. To further enhance
+              arithmetic and non-arithmetic relations. Non-arithmetic rela-       our system’s efficiency, we propose constraint fusion, re-
+              tions include range and exponentiation relations. Finally, our      ducing the number of range relations to prove. Addition-
+              backend proves these relations. The workflow is illustrated in      ally, We propose circuit squeeze, which offers substantial
+              Figure 1. Our improvements consist of two key components:           parallelism acceleration by eliminating the sequential de-
+              constraint fusion and circuit squeeze.                              pendency in proving different NN layers.
+                At the constraint level, we propose a generalized optimiza-    3. We conduct extensive experiments on real-world CPU
+              tion technique called constraint fusion. This technique aims        servers to validate the efficiency of our system. Results
+              to combine the computation of two adjacent rounding con-            showthat our implementation achieves over 279× speedup
+              straints, thereby reducing the overall number of rounding           compared to Hao et al. (USENIX Security’24) and 185×
+              constraints. In our system, range relations are introduced for      speedupoverthestate-of-the-artPlonk-basedapproach[10]
+              checking the correctness of rounding constraints; however,          (Eurosys’24). Even compared to the concurrent VOLE-
+              the large number of range relations becomes a bottleneck dur-       based scheme [41], our non-interactive system delivers a
+              ing the proof generation. By reducing the number of rounding        5.1×speedupinprover time and reduces the proof size by
+              constraints, we can alleviate the associated range relations,       23,000×.
+              thereby mitigating prover overhead. Importantly, our con-
+              straint fusion technique preserves the original computational
+              precision. After applying constraint fusion, we significantly    2    Background
+              reduce the proving cost of different LLM layers.
+                Atthe circuit level, we propose a technique called circuit     2.1    LLMandquantization
+              squeeze to accelerate the prover. We observed existing GKR-      An LLM primarily consists of L stacked transformer
+              based systems [6,40] cannot effectively utilize multi-thread     blocks [57]. Each transformer block comprises various layers,
+              parallelism. Profiling reveals that the low utilization stems    including matrix multiplication, normalization (LLMs use
+              from the cost of thread synchronization during the sumcheck      layer normalization [5]), attention, and GeLU. The input to
+              at each layer. Our circuit squeeze significantly enhances par-   anLLMisanembeddingmatrixxofdimensionss×d,where
+              allelism by reducing circuit depth and increasing the number     s is the length of text tokens, d denotes the hidden dimension
+              of gates per layer. This optimization is possible due to the     size of the LLM. After x passes through the initial LLM trans-
+              topological independence of subcircuits responsible for ver-     former block, the output is a matrix f with dimensions s×d.
+              ifying each rounding constraint. This independence arises        This matrix f is then passed to the next transformer block.
+              from our design choice to store the outputs of rounding com-     Theprocess repeats through all L blocks.
+              putations as advice in the input layer, rather than computing       Real number calculations in ML models pose significant
+              them directly. For matrix multiplication layers not connected    challenges for ZKP. Most ZKP approaches for ML [10,18,19,
+              to standardGKR-stylegates,weextendtheprotocolfrom[56]            35,40,41,55] utilize quantization to convert real numbers to
+              to support proving multiple matrix multiplications simulta-      integers, making computations easier to prove. We adopt the
+              neously. Our method provides substantial acceleration for        quantization approachfromzkCNN[40],wherearealnumber
+              the LLM circuit by eliminating sequential dependencies in        x is mapped to an integer q using the formula x = S(q−z). S
+              proving computations across different NN layers.                 denotes a floating-point number representing the quantization
+                Ourkeycontributions are summarized as follows.                 scale, and z is an integer known as the zero-point. All values
+                                                                               of LLMparameters and intermediate results in computation
+              1. WearethefirsttopresentapracticalZKPdesignforLLMs              are expressed as Q-bit integers q. The scale S and zero-point
+                undergeneralsettings. Oursystemovercomestheinefficien-         z are typically shared within a NN layer or tensor.
+                cies and limitations of existing works, particularly those        Whentwonumbersareaddedandtheirscalesarethesame,
+                related to large communication overhead and hardware re-       we add their integer parts: x +x = S(q      −z +q −z ).
+                                                                                                            1    2       x    1    x     2
+                quirements. The framework is compatible with LLMs uti-                                                    1         2
+                                                                               However, when multiplying two numbers, we must perform
+                lizing prevalent architectures such as GPT-2 [50] and is       rescaling to avoid overflow. Specifically, when multiplying
+                capable of proving its inference under 25 seconds.             x =S q and y=S q to obtain z=S q (in this and subse-
+                                                                                     x x          y y                z z
+                                                                               quent derivations, we neglect the zero-point for simplicity),
+              2. We propose efficient proof constructions for linear and                                C         
+                                                                               we compute q = round        1 ·q ·q   , where C and C are
+                non-linear layers. For linear layers, we propose a new al-                    z           C    x  y           1       2
+                                                                                                           2
+                                                                                                          C     S ·S
+                gorithm to accelerate the matrix multiplication protocol       Q-bit integers that ensure  1 ≈ x y. This approach allows
+                                                                                                          C      Sz
+                in [56], reducing its concrete computation cost by orders                                  2
+                           floating-point addition and multiplication to be approximated                                                                         Atthei-th circuit layer, the prover and verifier invoke the
+                                                                                                                                                                                                                                                                ˜
+                           through integer computation.                                                                                                     sumcheck protocol to reduce two evaluations of V to two
+                                                                                                                                                                                         ˜                                                           ˜           i
+                                                                                                                                                            evaluations of V                     (·) and two evaluations of V                               (·).
+                                                                                                                                                                                           i−1                                                         i,in
+                           2.2          GKRforML-friendlycircuit                                                                                                 Whenreachingtheinputlayer,theverifierhasreceivedtwo
+                                                                                                                                                                                         ˜
+                                                                                                                                                            evaluations ofV                     (·) for the input at each layer. To combine
+                                                                                                                                                                                           i,in
+                           Inoursystem,thecomputationstepsofthequantizedLLMare                                                                              these evaluations into a single evaluation of the multi-linear
+                           converted into constraints. And relations to prove are derived                                                                                                                 ˜
+                                                                                                                                                            extension of the input V (·), the prover and verifier invoke
+                                                                                                                                                                                                           in
+                           from constraints. These relations generally fall into two types.                                                                 the sumcheck protocol.
+                           Thefirst type is arithmetic relations, composed of additions
+                           and multiplications. We prove the arithmetic relations by                                                                        2.3          Lookupprotocolandrangeproofsupport
+                           converting them into an arithmetic circuit and using the GKR
+                           protocol [30]. The second type is non-arithmetic relations,                                                                      Lookupprotocols are key components in ZKPs to prove non-
+                           such as range relations and exponentiation relations. They are                                                                   arithmetic relations. They allow the prover to convince the
+                           proved by the Lasso protocol [53] introduced in Section 2.3.                                                                     verifier that a secret vector is contained within a public table.
+                                TheGKRprotocol[30]usesthesumcheckprotocol[42]as                                                                             Specifically, for a vector H ∈ Fm, the prover proves that each
+                           a building block to prove circuits consisting of addition and                                                                    element of H exists within T ∈ Fn, where T is a public table
+                           multiplication gates. Each gate takes at most two inputs from                                                                    of size n, and m is the number of queries to the table.
+                           the previous layer and computes the result.                                                                                           In our approach, we utilize lookup protocols to prove ex-
+                                GKRprotocol is widely adopted in ZKP due to its effi-                                                                       ponentiation relations and range relations. When verifying
+                           ciency. However, the classical GKR protocol has a significant                                                                    the range relation ℓ ≤ x ≤ r for i = 0,1,...,m−1, we can
+                                                                                                                                                                                                  i        i        i
+                           limitation under many ML scenarios: The weight matrices of                                                                       transform it into proving 0 ≤ x −ℓ ≤t and 0 ≤r −x ≤t. ℓ
+                                                                                                                                                                                                                      i       i                           i        i            i
+                           MLmodelsarecommittedintheinputlayer. Since each gate                                                                             and r are integers, and t is defined as the maximum value of
+                                                                                                                                                                      i
+                           only receives input from the preceding layer, these weights                                                                      r −ℓ . WethenconstructalookuptableTcontainingnumbers
+                                                                                                                                                              i       i
+                           must be relayed across the circuit to reach the desired layer.                                                                   0,1,...,t. Using the lookup protocol, we check that all x −ℓ
+                                                                                                                                                                                                                                                                        i       i
+                           This process introduces numerous additional gates, leading to                                                                    andr −x areinthetableT,thusprovingthemrangerelations.
+                                                                                                                                                                     i       i
+                           high computational overhead.                                                                                                     In our scenario, t may be quite large, potentially exceeding
+                                                                                                                                                              32
+                                Define identity function eq(x,y), which takes two bit-                                                                      2 ,resulting in a huge table size. Such large tables are infea-
+                           strings x and y of the same length as input. eq(·,·) returns 1                                                                   sible for most existing lookup table approaches [16,23,66,67],
+                           whenx=y;otherwisereturns 0. Suppose eq˜ (·,·) is the multi-                                                                      as these approaches either require prover time linear in the
+                           linear extension of eq(·,·). eq˜ (x,y) =                                    ℓ     ((1−x)(1−y)+                                   table size n or need preprocessing time of O(nlogn).
+                                                                                                   ∏                       i              i
+                                                                                                       i=1
+                           x y ).                                                                                                                                However, a recent advancement in lookup protocols,
+                             i  i
+                           Definition 1 (Multi-linear Extension [13]). Let V :                                                                              Lasso [53], addresses this problem. When the table is struc-
+                           {0,1}ℓ →Fbeafunction.Themulti-linear extension ofV is                                                                            turedÐmeaningthatthequerytothetablecanbedecomposed
+                                                                       ˜        ℓ                              ˜                                            into sub-queries to much smaller subtablesÐthe prover’s cost
+                           the unique polynomialV :F →FsuchthatV(x ,x ,...,x )=
+                                                                                                                      1     2           ℓ                   in Lasso, for any integer parameter c > 1, is dominated by
+                                                                                                                       ˜
+                           V(x ,x ,...,x ) for all x ,x ,...,x ∈ {0,1}. V can be ex-                                                                                                                               1/c
+                                  1     2        ˜ ℓ                       1     2             ℓ                                                            committing to 3·c·m+c·n                                       field elements. The table we
+                           pressed asV(x ,x ,...,x ) = ∑                                           ℓ eq˜ (x,b)·V(b).
+                                                        1     2           ℓ            b∈{0,1}                                                              use in our scheme to check range relations satisfies the struc-
+                                ToresolvetheabovelimitationofGKR, [40,69]introduced                                                                         tured table requirement in Lasso. Moreover, the exponentia-
+                           an elegant circuit construction alongside an extension of the                                                                    tion table utilized in our scheme is relatively small. Therefore,
+                           GKRprotocol. They modified the definitions of addition and                                                                       despite the exponentiation table being unstructured, Lasso
+                           multiplication gates to enable them to receive input either                                                                      achieves an efficient complexity of O(n+m). For technical
+                           fromthepreceding layer or from the input layer directly. This                                                                    details of Lasso, please refer to [53]. For technical details of
+                           reducestheneedtorelayvaluesfromtheinputlayer.Formore                                                                             integrating Lasso into GKR, please refer to Appendix A.
+                           details, please refer to [40]. This particular circuit configu-
+                           ration is referred to as a "machine learning-friendly circuit"                                                                   3        Technical Overview
+                           (ML-friendly circuit).
+                                Following the notations in [40], we define a function V :                                                                   AnLLMconsists of many linear and non-linear layers. To
+                                                                                                                                             i
+                                       s
+                           {0,1} i →Fthattakesabinarystringbandreturnstheoutput                                                                             ensure applicability in real-world scenarios, a practical ZKP
+                           of gate b in layer i. With this definition, V corresponds to                                                                     system for LLMs should be able to efficiently prove both
+                                                                                                               0
+                           the input layer, and V corresponds to the circuit output. We                                                                     types of layers. In this paper, we design efficient proofs for
+                                                                    d                                        ˜
+                           denote the multi-linear extension of V asV . We also denote                                                                      linear and non-linear layers in LLMs.
+                                                                                                    i          i
+                           the subset of values in the input layer that connect to the i-th                                                                 Efficient proof for linear layers. Our proof of linear layers
+                                                                                                                                    ˜
+                           layer asV              , with its multi-linear extension denoted asV                                            (·).             is based on the well-known protocol in [56] to prove ma-
+                                             i,in                                                                                     i,in
+                                                                                                                                                            trix multiplication. This protocol is adopted directly in many
+                                 existing ZKP for ML systems [6,40,55]. It proves the mul-                                                                                                      prover efficiency, we introduce optimization methods at both
+                                 tiplication of matrix A with shape n×m and matrix B with                                                                                                       the constraint and circuit levels.
+                                 shape m×kresultsinmatrixC.Thisprotocolachievesatheo-                                                                                                           Constraint fusion. Our first optimization idea is to merge
+                                 retical complexity of O(nm+mk),whichisoptimal.However,                                                                                                         adjacent rounding constraints to reduce the number of range
+                                 weidentified significant opportunities to improve its practi-                                                                                                  relations to be proved. We discovered that proving range re-
+                                 cal implementation by notably reducing the field operations                                                                                                    lations is the bottleneck in our system, as it is more costly
+                                 required by the protocol.                                                                                                                                      than proving arithmetic relations. To address this issue, we
+                                       Thetimecost of [56] is dominated by computing the book-                                                                                                  combine computations across adjacent rounding constraints
+                                 keeping table for the input matrices A and B. We propose                                                                                                       before rounding. Under appropriate conditions, merging these
+                                 a grouping algorithm to accelerate the computation of the                                                                                                      constraints reduces proving overhead by saving range rela-
+                                 bookkeeping table. Grouping performs many dot products be-                                                                                                     tions to prove introduced by rounding. We developed rules
+                                 tween input matrix elements and precomputed eq˜ evaluations,                                                                                                   to automatically determine the optimal merging strategies for
+                                 effectively halving field multiplications.                                                                                                                     different LLM layers.
+                                       Further optimization opportunities arise from leveraging                                                                                                       For example, during the computation of the normalization
+                                                                                                                                                                                                                                                                                                                                       n     x
+                                                                                                                                                                                                                                                                                                                                   ∑           i
+                                 the properties of matrix elements in our scenario. Due to the                                                                                                  layer,givenaninputvectorxwithlengthn,itsmeanµ= i=1
+                                 requirement of sumcheck, the matrix dimensions are padded                                                                                                                                                  q                                                                                            n
+                                                                                                                                                                                                                                                       n                  2
+                                                                                                                                                                                                                                                   (         (x −µ) )
+                                 to powers of 2 with zero. During each dot product compu-                                                                                                       and variance σ =                                    ∑i=1 i                    . Assume we want to prove
+                                                                                                                                                                                                                                                               n
+                                 tation, we skip these zero elements, saving numerous field                                                                                                     σ is correct. [31,41] proves the following constraints: (1)
+                                                                                                                                                                                                                                  n                                                          n                      2
+                                                                                                                                                                                                                                        q                                               (          (q −q ) )
+                                                                                                                                                                                                                               ∑i=1 x                                                     ∑i=1 x                µ
+                                 operations. Additionally, due to quantization, all matrix field                                                                                                q =round(                                   i ) (2) q = round(                                           i              ) (3) q =
+                                                                                                                                                                                                   µ             √                   n                        t                                        n                                σ
+                                 elements have relatively small values. Thus we accelerate                                                                                                      round( q ). Based on these constraints, their systems can
+                                                                                                                                                                                                                         t
+                                 computation by precomputing field multiplication results.                                                                                                      prove q in three range relations.
+                                                                                                                                                                                                                  σ
+                                       As a result of these optimizations, our final implementa-                                                                                                      However,leveraging the idea of merging adjacent rounding
+                                 tion of bookkeeping table computation for matrix A is bot-                                                                                                     constraints, we can reduce the range relations that need to
+                                 tlenecked by n·m field additions. In contrast, the classical                                                                                                   be proven to one. Specifically, we merge the constraints on
+                                                                                                                                  ⌈logn⌉+⌈logm⌉+1
+                                 implementation in [40,56] consumes 2                                                                                                  field                    q andq , and substitute them into the last constraint on q .
+                                                                                      ⌈logn⌉+⌈logm⌉                                                                                                µ                 t                                                                                                              n        σ
+                                 multiplications and 2                                                                field additions. In many                                                  Wefirst turn q and q into the analytic form: q = ∑i=1qxi
+                                 cases, this amounts to approximately 4n·m field multiplica-                                                                                                                                        µ                 t                                                               µ                 n
+                                                                                                                                                                                                                              n                     2
+                                                                                                                                                                                                                         (          (q −q ) )
+                                                                                                                                                                                                                           ∑            x        µ
+                                                                                                                                                                                                and q =                       i=1        i               . By substituting them into q , we
+                                 tions. Given that field multiplications are several times more                                                                                                               t                         n r                                                                                        σ
+                                                                                                                                                                                                                                                                         ∑n       q
+                                 expensive than field additions [27,44], our optimization is                                                                                                                                                            n                           x
+                                                                                                                                                                                                                                                                            i=1       i   2
+                                                                                                                                                                                                                                                   (          (q −                      ) )
+                                                                                                                                                                                                                                                     ∑            x            n
+                                                                                                                                                                                                have q = round(                                         i=1         i                         ). We eventually de-
+                                 estimated to reduce the overhead of [56]’s protocol by nearly                                                                                                                   σ                                                     n
+                                                                                                                                                                                                                                                                                                          2             n
+                                 an order of magnitude.                                                                                                                                         rive the following range relation: n(2q −1) ≤ ∑                                                                                 (nq −
+                                                                                                                                                                                                    n                                                                                       σ                           i=1             xi
+                                                                                                                                                                                                                     2                                   2
+                                 Efficient proof for non-linear layers. Non-linear functions                                                                                                    ∑ q ) <n(2q +1) .
+                                                                                                                                                                                                    i=1 xi                                σ
+                                 in LLMs are composed of division, square root, and expo-                                                                                                       Circuit squeeze. We observe that our circuit, like existing
+                                 nentiation operations, which are not ZKP-friendly. Previous                                                                                                    GKR-basedZKPsystemsforML[6,38,40],cannoteffectively
+                                 work[31,61] proved these operations with hundreds or even                                                                                                      utilize multi-thread parallelism. This inefficiency comes from
+                                 thousands of relations, thus incurring high overhead. To re-                                                                                                   two main factors: (1) the small size of each circuit layer
+                                 solve this inefficiency, inspired by the idea of checking advice                                                                                               and (2) the Fiat-Shamir Transformation [20], which restricts
+                                 correctness in [26,28], we propose to check division, square                                                                                                   parallelization to be conducted within each layer. As a result,
+                                 root, and exponentiation in one non-arithmetic relation.                                                                                                       significant time is wasted on synchronization due to the small
+                                       Take division as an example. The division of quantized                                                                                                   sizes handled by each sumcheck.
+                                                                           C        qx
+                                 x,y is z = round( 1 ·                                   ), whereC ,C are integers such that                                                                          Ouroptimization design stems from the fact that the com-
+                                                                           C        qy                            1        2
+                                                                             2
+                                  C               S                                                                                                                                             putation order of the GKR protocol follows the circuit archi-
+                                    1 ≈             x    . We deriveC q (2q −1)≤2C ·q <C q (2q +
+                                  C            Sy·Sz                                      2 y             z                          1        x            2 y             z
+                                    2                                                                                                                                                           tecture. Thus, we have to reorganize the circuit architecture to
+                                 1). Similarly, square root can be transformed into one range                                                                                                   improve parallelism opportunity. Our key observation is that
+                                 relation. For exponentiation operations, we prepare a lookup                                                                                                   due to our advice design, the subcircuits checking different
+                                 table containing all possible evaluations of the exponentiation                                                                                                constraints have no topological dependence. We can squeeze
+                                 result. Then, each exponentiation operation can be verified                                                                                                    different subcircuits into the same set of layers leveraging this
+                                 throughasinglequerytothelookuptable.Therangerelations                                                                                                          topological independence.
+                                 and lookup queries above are proved with the state-of-the-                                                                                                           The remaining challenge is how to squeeze multiple ma-
+                                 art Lasso [53] lookup protocol. For arithmetic relations, we                                                                                                   trix multiplication layers. This challenge arises because ma-
+                                 composethemintoanarithmetic circuit and prove them with                                                                                                        trix multiplications are proven through the protocol in [56]
+                                 the ML-friendly GKR protocol introduced in Section 2.2.                                                                                                        rather than GKR-style sumcheck. To address this, we design
+                                       Now we are ready to prove each LLM layer using the                                                                                                       a new protocol that simultaneously checks the correctness of
+                                 previously designed building blocks. To further maximize the                                                                                                   multiple matrix multiplications based on sumcheck. Circuit
+                                 squeezingsubstantiallyenhancestheperformanceoftheLLM                                                                                                                 where Q = |q | , q ,q                                             share scale S with q , q                                            =
+                                                                                                                                                                                                                            g              g            th        G                                     g                    g        th
+                                 circuit by boosting the utilization of multi-thread parallelism.                                                                                               round(th/S ).
+                                                                                                                                                                                                                            g
+                                                                                                                                                                                                Normalization. For matrix x, the normalization layer is
+                                                                                                                                                                                                                                                         x −µ
+                                                                                                                                                                                                computed as y = γ · ij                                             i  +β , where µ ,σ is the mean
+                                 4          Efficient Proof for LLM                                                                                                                                                                 i j            j         σ                  j                        i      i
+                                                                                                                                                                                                                                                               i
+                                                                                                                                                                                                and variance of row i of x, γ,β are vectors parameterizing the
+                                 4.1             Constraints for LLM layers                                                                                                                     affine transform. The constraints are listed as follows:
+                                 Utilizing the quantization scheme introduced in Section 2.1,
+                                 wederive the constraints for different LLM layers.                                                                                                                                                                           d
+                                 Matrixmultiplication.FormatrixaandweightW,thematrix                                                                                                                                         q =round(                              q /d)
+                                 multiplication layer is computed as b = a·W. The result                                                                                                                                        µi                          ∑ xij
+                                 matrixbneedstoberescaledtoavoidoverflow.Theconstraint                                                                                                                                                                      j=1
+                                                                     S ·S                                                                                                                                                                                     d
+                                 is q =round( a W a·W).                                                                                                                                                                                                                                      2
+                                          b                             S                                                                                                                                                     q =round(                            (q          −q ) /d)
+                                                                           b                                                                                                                                                     t                          ∑ x                        µ
+                                 Attention. The attention layer takes h matrix triples                                                                                                                                            i                                        i j           i
+                                                                                                                                                                                                                                                            j=1
+                                 (Q,K,V) from each head as input and computes:                                                                                                                                                                              √                                                                             (3)
+                                       i       i      i                                                                                                                                                                     q =round( q )
+                                                                                                                                                                                                                               σ                                    t
+                                                                                             Q·K                                                                                                                                  i                                  i
+                                                                                                i     i
+                                 P = Concat(Softmax( √ )V).                                                              The computation of
+                                                                                                   d         i                                                                                                                                              q        −q
+                                                  i=1,···,h                                                                                                                                                                  q =round( xij                                    µi )
+                                                                                                                                                                                                                                s
+                                 each head is data-independent before concatenation; for                                                                                                                                          i                            S ·q
+                                                                                                                                                                                                                                                                  s        σ
+                                 simplicity, we only write the constraints for a single head,                                                                                                                                                                                i
+                                                                                                                                                                                                                                                            S S                                   S
+                                 and neglect the subscript for each head. Our constraints are                                                                                                                              q         =round( s γ ·q ·q + γ ·q )
+                                                                                                                                                                                                                              y                                               γ         s                      β
+                                                                                                                                                                                                                                i j                            S                j         i       S               j
+                                 listed as follows:                                                                                                                                                                                                               y                                  y
+                                                                                                                                                                                                      where µ,σ share scale S with q , β share scale S with γ.
+                                                                                                                                                                                                                                                               x                  x                                        γ
+                                                                                                                                                                                                      Duetothesimilarity in computational workflows, the con-
+                                                                             S ·S                                                                                                               straints proposed in the concurrent work by Lu et al. [41]
+                                              q =round( Q Kq ·q )
+                                                 C                                S              Q         K                                                                                    share some similarities with ours. The key distinction lies in
+                                                                                     C
+                                                                                  S                                                                                                             our novel zk-friendly approximation for GeLU, referred to as
+                                                                                    C
+                                              q =round(                             √ ·q )
+                                                 E                           S           d         C                                                                                            z-GeLU, detailed in Appendix C. In contrast, Lu et al. [41]
+                                                                                E                                                                                                               adopt the approximation from I-BERT [36] directly.
+                                      q               =maxq , fori=1,···s
+                                         E                                E
+                                            max,i                            i j
+                                            q         =exp(q                          −q ), fori=1,···s, j =1,···,i
+                                               e                          E                   E
+                                                 i j                         max,i               i j                                                                                            4.2             Efficient proof for linear layers
+                                             q        =round(                          qeij              ), for i = 1,···s, j = 1,··· ,i
+                                                s
+                                                 i j                         S ∑i               q                                                                                               After deriving the LLM constraints, we now consider how to
+                                                                                s       j=1 eij                                                                                                 efficiently prove them. We first consider linear layers since
+                                                                             S ·S
+                                               q =round( s Vq ·q )                                                                                                                              they account for the majority of computation in plain-text
+                                                  P                               S             s       V
+                                                                                     P                                                                                                          LLMinference.Weintegratethededicatedprotocolformatrix
+                                                                                                                                                                           (1)                  multiplication in [56] into the ML-friendly GKR framework
+                                       whereS ,S ,S ,S ,S ,S ,S arethescalesofq ,q ,q ,                                                                                                         in a manner identical to that of [40]. Although the protocol
+                                                          Q K V C E s P                                                                                    Q K V
+                                 q , q , q and q , respectively.                                                                                                                                achieves optimal prover time in theory, we identify significant
+                                    C        E         s               P
+                                 GeLU. GeLU is computed as G = g · Φ(g). Directly                                                                                                               opportunities to improve its concrete efficiency.
+                                 proving it in ZKP is very challenging. Multiple ap-
+                                 proximations have been proposed but are not enough                                                                                                             4.2.1             Analysis of classical implementation of [56]
+                                 ZKP-friendly.                           We design a better approximation as                                                                                    The protocol of [56] is as follows: Denote the two input
+                                               g+|g|                                                           2
+                                 G= 2 −1|g|>=th·g·(a·|g| +b·|g|+c). For design                                                                                                                  matrices as A,B, and the output matrix asC. Assume A,B,C
+                                 details and comparisons, please see Appendix C. The                                                                                                            have original shapes n×m,m×k,n×k, respectively. Due to
+                                 constraints corresponding to our approximation are listed as                                                                                                   requirements of sumcheck, these matrices are all padded to
+                                 follows:                                                                                                                                                       powersof2inbothwidthandheight. [56]’sprotocolusesthe
+                                                                                                                                                                                                                                                                                                         ˜
+                                                                     s =1                                                                                                                       sumcheckprotocol to reduce the claim onC(z) to claims on
+                                                                                  |qg|≥q                                                                                                         ˜            ˜
+                                                                                               th                                                                                               A(·),B(·). z is a random point chosen by the verifier. Denote
+                                                                                                      2 2                                                                                       a||b as the concatenation of vectors a and b. Let z = r||r′,
+                                                                                                aS q +bS |q |+c
+                                                                  q =round(                           g g                  g      g             )                                                                            ⌈logn⌉           ′           ⌈logk⌉
+                                                                     p                                               S                                                                          where r ∈ F                              ,r ∈F                        . By the property of matrix mul-
+                                                                                                                        p                                                  (2)                                                                    ˜            ′                                           ˜                ˜            ′
+                                                                                                                                                                                                tiplication, we have C(r||r ) = ∑                                                             ⌈logm⌉ A(r||c)B(c||r ).
+                                                                 q =round(S ·q ·q )                                                                                                                                                                                            c∈{0,1}
+                                                                    D                              p        g        p                                                                                Before running the sumcheck protocol on this equa-
+                                                                               q +Q
+                                                                 q = g                          g −s·q                                                                                          tion, the prover first computes the bookkeeping tables:
+                                                                    G                                             D                                                                              ˜                                 ˜            ′                                                       ⌈logm⌉
+                                                                                       2                                                                                                        A(r||c) and B(c||r ) for all c ∈ {0,1}                                                                                .      Existing
+                                                                                                  properties of matrix A, since the elements of A are directly
+                                Precompute             Precompute           Matrix Element
+                                                                                                  used in each inner dot product. Specifically, during the com-
+                                                                                                  putation of each inner dot product, we can skip over elements
+                                                                                                  in A that are zeros, thereby reducing the number of field opera-
+                                                                                                  tions required by our method. This opportunity arises because
+                                                                                                  matrix A is padded with many zero elements to satisfy the
+                                                                                                  requirement of sumcheck.
+                                                                                                  Saving field multiplication by precomputing. We also ob-
+                                                                                                  serve another important property of matrix A is that elements
+                                                                                                  in A are all quantized numbers. This means that all of their
+                                   ...         ...        ...        ...        ...               value satisfy ∈[0,2Q], where 2Q <<|F|. Thus,the multiplica-
+                                                                                                                                                   ˜
+                 Figure 2: Intuition of grouping algorithm for computing the                      tion between each eq˜ (y,·) and different A(b||c) only obtains
+                 bookkeeping table.                                                               at most 2Q+1 different results. Furthermore, these possible
+                                                                                                                             Q
+                                                                                                  results are {0,1,··· ,2 } times of eq˜ (y,b⌈logn⌉           ···b        ).
+                                                                                                                                                       2   +1      ⌈logn⌉
+                 methods [40,56] leverage the following equation to itera-                       Wecanefficiently derive all these results by only performing
+                                                                                                  simple field additions on eq˜ (y,b⌈logn⌉        ···b       ).
+                                        ˜            ˜                                                                                     2  +1       ⌈logn⌉
+                 tively   compute A(r||c):          A(r ,··· ,r ,b      ,··· ,b       ||c)
+                                                        1        i   i+1        ⌈logn⌉            Cost analysis. The full algorithm for computing the book-
+                                      ˜
+                 = (1 − r)            A(r ,··· ,r     ,0,b     ,··· ,b        ||c)    +r
+                  ˜             i         1        i−1      i+1        ⌈logn⌉             i       keeping table for matrix A is shown in Algorithm 1. The
+                 A(r ,··· ,r      ,1,b     ,··· ,b       ||c).    This    is    identical
+                     1        i−1      i+1        ⌈logn⌉                                          two bottlenecks in our computation is precomputing the field
+                 to the "memorization" method in [58] to evaluate multi-                          multiplication results in line 10 and performing the inner
+                 linear extension. The method’s computation cost for each c                       dot product based on precomputed results in line 18. These
+                           ⌈logn⌉−1                    ⌈logn⌉+1                                                                           logn
+                 is 2·(2            +···+1) ≈ 2                  field multiplications                                                   ⌈ 2 ⌉+Q
+                 and 2⌈logn⌉ field additions. Therefore, the total cost for                       two parts each correspond to 2                    field additions and
+                                ˜             ⌈logn⌉+⌈logm⌉+1                                     n·mfield additions. Our optimizations can significantly mit-
+                 computing A(r||·) is 2                          field multiplications            igate computation overhead compared with existing imple-
+                 and 2⌈logn⌉+⌈logm⌉ field additions.                                              mentation [56]. Take computing the bookkeeping table of
+                 4.2.2    Optimizations based on grouping and matrix ele-                         the matrix of shape 3072×768 in the GPT-2 feedforward
+                          mentproperties                                                          layer as an example. Based on previous analysis, the classical
+                                                                                                  method costs 8.4×106 field multiplications and 4.2×106
+                 Next, we will introduce our efficient algorithm for computing                    field additions. Substituting Q = 16, Our optimized method
+                                                                                                                    ⌈logn⌉+Q               6
+                 the bookkeeping table.                                                           costs n·m+2 2              ≈4.5×10 field additions. Assume
+                 Efficient computation by grouping. By the defini-                                one field multiplication is 5 times cost of one field addition.
+                                                                              ˜
+                 tion    of   multi-linear extension, we             have     A(r||c) =           Ourmethodis10.2×moreefficientthantheclassicalmethod.
+                                          ˜
+                 ∑         ⌈logn⌉ eq˜ (r,b)A(b||c).    Without loss        of    general-         Theoptimization techniques presented in our work could also
+                   b∈{0,1}                                                                        be used to accelerate the evaluation of multi-linear extensions
+                 ity, assume ⌈logn⌉ is even.               Let r = x||y,b = L||R,
+                                              ⌈logn⌉                                              under other scenarios in ZKP.
+                 where      x,y,L,R ∈ F 2 .             We observe that eq˜ (·):
+                 eq˜ (r,b) = eq˜ (x,L) · eq˜ (y,R).      Leveraging this property,                4.3     Efficient proof for non-linear layers
+                 wehave:
+                  ˜                                                               ˜
+                 A(r||c) =         ∑ eq˜(x,L)·(              ∑ eq˜(y,R)·A(L||R||c)) Provingnon-linear layers in the LLM also poses a significant
+                                     ⌈logn⌉                     ⌈logn⌉                            challenge. The challenge comes from these layers invoking
+                             L∈{0,1}    2               R∈{0,1}   2
+                                                                                       (4)        ZKP-unfriendly operations such as division, square root, and
+                                                                                                  exponentiation. Existing approaches either simulate these
+                    Computing using the above equation is more efficient. The                     operations in the circuitÐusing binary decomposition and
+                 procedure is as follows: All eq˜ (x,·) and eq˜ (y,·) are precom-                 floating-point emulation [40,61] or proving numerical itera-
+                                        ⌈logn⌉                                                    tions [17,31]. These approaches all incur a large number of
+                 puted once in O(2 2 ) field operations. Imagine there are
+                   ⌈logn⌉                                                                         relations to prove and significant overhead. For example, [61]
+                 2 2     groups represented by different L. Computing Equa-                       requires thousands of relations to prove division and exponen-
+                 tion 4 could be viewed as conducting a dot product between                       tiation operations.
+                                ˜
+                 eq˜ (y,·) and A(L,·,||c) in each group; then the result of the                      Recent advances in ZKP systems [4,26] leverage advice to
+                 dot product in each group forms a vector; at last this vector                    efficiently prove non-arithmetic operations. [4] proves ZKP-
+                                                                             ˜
+                 performs a dot product with eq˜ (x,·) to obtain A(r||c). An                      unfriendly bitwise operations like XOR by taking the result
+                 intuitive example can be found in Figure 2.                                      as advice and querying it in the lookup table. This is much
+                 Skipping computation by leveraging sparsity. The benefit                         cheaper than simulating XOR in a binary circuit. Inspired
+                 of leveraging grouping is that we can efficiently exploit the
+               bythese works, we propose using the computation result of             the whole LLM computation. The entire protocol is detailed
+               division, square root, and exponentiation as advice and check         in Protocol 1 in Appendix A. The proofs of soundness and
+               the correctness of the computation. This is much cheaper than         completeness for the zkGPT protocol are provided in Ap-
+               simulating the computation in arithmetic relations.                   pendix B. The zero-knowledge property can be incorporated
+                 For the division operation z = x, the actual constraint             into the protocol by using masking polynomials in a manner
+                                                     y
+                               C   q                         S          C
+               is q = round( 1 · x). We approximate           x  using   1 , C       similar to that described in [69].
+                   z           C   q                       S ·S         C    1
+                                2   y                       y  z         2
+               and C are integers. C ,C are obtained by searching in
+                     2                  1   2                              S
+                                Q                                           x        5   Constraint level optimization
+               an interval [1,2 ] and finding the nearest fraction to Sy·Sz.
+                                                                1    C   qx
+               By the property of rounding, we have q −           ≤ 1 ·     <
+                                                           z    2    C   qy
+                                                                      2              In the previous sections we have built a non-interactive ZKP
+               q +1. Thus,C q (2q −1)≤2C ·q ≤C q (2q +1)−1.
+                z   2          2 y    z            1   x     2 y    z                system for LLM. To ensure better applicability in real-world
+               Similarly, we can convert proving square root operation               scenarios, we illustrate how we optimize our system at the
+                            √                                       2
+               q =round( q ) into a range relation: (2q −1) ≤ 4q ≤
+                y              x                             y             x         constraint level in this section.
+                         2
+               (2q +1) −1. Therefore, for division and square root op-                 Previous works most related to our research [35,40] in-
+                  y
+               erations, we can transform checking their correctness into            troduced a technique to fuse the rescaling division after con-
+               a single range relation. For proving exponentiation opera-            volution with the subsequent ReLU constraint, reducing the
+               tions, we construct a lookup table containing pairs of in-            numberofrelations to prove. However, they did not analyze
+                                            S ·q
+               put and output (q ,round(e t t )). Exponentiation operation           constraint fusion opportunities in general cases, limiting the
+                                 t          S
+                                             z
+                             S ·q
+               q =round(e t t ) can be proved by querying (q ,q ) in this            method’s applicability to other NNs.
+                z            Sz                                   t  z
+               table, checking whether the pair belongs to the table. By lever-      5.1    Constraint level optimization opportunity
+               aging the Lasso lookup protocol, we can efficiently prove
+               these non-arithmetic relations. Experiment results show that          In Section 4.1, we derive the constraints for each LLM layer.
+               our designs save the time cost of proving non-linear layers by        Roundingis incorporated in these constraints to ensure that
+               several orders.                                                       intermediate results remain within the integer domain. How-
+                 Provingnon-linearlayers in the LLM also involves proving            ever, the mapping of LLM layers to constraint sets is not
+               somearithmetic relations. We assemble these relations into            unique; different approximations can lead to multiple sets of
+               an arithmetic circuit and then prove the circuit using the ML-        constraints, each with varying proving costs. These costs are
+               friendly GKR protocol.                                                largely influenced by the number of roundings, as rounding
+                                                                                     introduces range relations to prove, which are more computa-
+               4.4    Putting everything together                                    tionally expensive than proving arithmetic relations.
+               Withthe building blocks presented in the previous sections,             Constraint fusion draws inspiration from operator fu-
+               we construct a ZKP protocol for LLM. The values in the                sion [11,46], a well-known method for accelerating NN exe-
+               LLMcircuit’s input layer consist of public input and secret           cutions. The core idea of constraint fusion is to consolidate
+               witnesses. Following previous works [41,55], our LLM cir-             various constraints into a more concise structure. In particular,
+               cuit takes the input embedding matrix as public input. The            the approach involves merging computations within two adja-
+               witness includes model weight, intermediate results obtained          cent rounding operations, resulting in one merged rounding
+               by rounding, and queries to every lookup table. The prover            constraint, thereby decreasing the overhead of proving range
+               commits to all witness values. The commitment to weight is            relations.
+               done once in preprocessing and reused across all users. The             However, assessing the benefits of merging constraints is
+               intermediate results and lookup query values depend on user           challenging. Some merges can reduce the number of round-
+               input. Thus,theircommitmentarecomputedforeachusersep-                 ings at free cost. Some may even significantly increase over-
+               arately. The verifier runs the Lasso protocol with the prover to      head. Additionally, some merges might not immediately re-
+               checkwhetherthenon-arithmeticrelations are satisfied. Then,           duce roundings but could pave the way for more effective
+               the prover and verifier run the GKR protocol on the arith-            merges later. The diverse and varying forms of constraints
+               metic circuit, checking all the arithmetic relations between          across computations further complicate manual analysis.
+               the variables. For the specified matrix multiplication layer, it      5.2    Constraint merging rules
+               is proven by the dedicated protocol in [56] leveraging our
+               optimized algorithm in Section 4.2. After the GKR protocol,           Constraint classification. To better analyze the benefit of
+               the prover and verifier reduce the claim to the correctness of        merging constraints inside the constraint, we classify the ex-
+               a claim at the input layer. They open the commitment to the           isting constraints with rounding into several types:
+               input layer values to determine whether the protocol passes.             • Type-I: constraints that only contain arithmetic compu-
+               Thecompliance of all the relations ensures the correctness of              tation (Add: q = q     +q ,Mul:q =q ∗q ).
+                                                                                                         y    x     x          y    x    x
+                                                                                                               1     2               1    2
+              Table1:Mergingdifferenttypesofconstraints.Whethermerg-              MergingType-III with Type-II or Type-III is profitable.
+              ing constraint i with constraint j is profitable (denoted as P),                                            √
+                                                                                Consider the first constraint q = round( q ) and the sec-
+              potentially beneficial (denoted as PB), or unprofitable (de-                                 y               x
+                                                                                                            C
+                                                                                ond constraint q = round      yy′ q  , where C    andC are
+                                                                                                z           C q  y′            yy′     z
+              noted as UP).                                                                                  z y
+                                                                                             C      S S
+                                                                                integers and yy′ ≈ y y′. The rounding constraint derives to
+                                                                                              C      S
+                                 Second const.                                           2 2 z       2z 2             2 2
+                                                                                (2q −1) C q ≤4C q ≤(2q +1) C q .Althoughextra
+                First const.                       I     II    III   IV            z        z x      yy′ y′     z       z  x
+                               I                  PB    PB     PB    UP         square computation introduce arithmetic overhead, it is still
+                                                                                minimal compared to the rounding saved. Similar with merg-
+                               II                 PB     P     P     UP         ing Type-III with Type-II, merging Type-III with Type-III is
+                              III                 PB     P     P     UP         profitable too.
+                              IV                  UP UP UP UP                     MergingType-Iwithothers(exceptType-IV)ormerg-
+                                                                                ing others (except Type-IV) with Type-I is potentially ben-
+                 • Type-II: constraints that contain division mixed with        eficial. It is easy to see that merging Type-I with other con-
+                   arithmetic computation. A typical representation is q =      straints does not introduce extra gate or change the round-
+                                                                       y        ing constraints since Type-I constraint only contain arith-
+                          Sx Sx
+                   round( 1 2q q ) (we omit the addition for simplic-           meticcomputation.Whilemergingdoesnotdirectlyeliminate
+                            Sy   x1 x2
+                   ity).                                                        rounding, it creates opportunities for further merging with ad-
+                 • Type-III: constraints that contain square root mixed with    jacent constraints, potentially reducing overall complexity
+                   division and arithmetic computation. The simplified rep-     and overhead.
+                                            √                                     MergingwithType-IVorMergingType-IVwithothers
+                   resentation is y = round(  t), where t is Type-I or Type-    is unprofitable. For the first case, since the query for the
+                   II constraint.                                               lookup table must be an integer, rounding can not be elimi-
+                 • Type-IV: constraints that contain exponentiations.           nated for this case. For the second case, it prevents reusing
+                                                                                the same exponentiation table across different LLM layers,
+              Type-I and Type-II constraints are used in all LLM layers.        leading to a high commitment cost for multiple extra tables
+              Type-III constraint is used in Normalization. Type-IV is em-      and diluting the final performance.
+              ployed by softmax function in attention layer.                      Sequentialmergingstrategy.Givenagroupofconstraints,
+                Table 1 presents all potential constraint merging combi-        wesequentially merge adjacent constraints when the merging
+              nations. A profitable merge results in performance gains by       is either profitable (P) or potentially beneficial (PB). This
+              reducing the number of rounding constraints while introduc-       merging process is repeated until no further profitable merges
+              ing minimal or no overhead on the arithmetic circuit side.        are possible. The final set of constraints remains consistent
+              Apotentially beneficial merging offers opportunities for im-      regardless of the merging order.
+              provement, though it may not directly reduce rounding or            Error analysis. Assume we have constraint q =
+                                                                                                                                        y
+              increase proving costs. An unprofitable merge harms perfor-       round(F(q )), q = round(G(q )), F,G are arbitrary real
+                                                                                           x     z              y
+              manceastheintroducedoverheadoutweighsthesavingsfrom               number functions. Denote the merged constraint as q ′ =
+                                                                                                                                        z
+              reducingthenumberofroundingconstraints.Weperformcon-              round(G(F(q ))). Denote p=G(F(q )). We find that |q ′ −
+                                                                                              x                       x                 z
+              straint merging only for profitable or potentially beneficial     p| ≤|q −p|. This is because of, q ′ equals round(p). Thus it
+                                                                                       z                          z
+              cases, leaving unprofitable ones untouched. The constraint        is the integer that minimizes |q ′ − p|. Since q is also belongs
+                                                                                                              z             z
+              type may change with fusion, but it remains one of the four       to the integer domain, |q ′ − p| ≤ |q − p| must hold. This
+                                                                                                          z          z
+              fundamental types. In the following, we elaborate on profit       means that constraint fusion never increases the numerical
+              analysis of representative combinations in Table 1.               error of quantization. In contrast, it often reduces this error.
+                MergingType-IIwithitself is profitable. Merging Type-
+              II constraints reduces the number of range relations to prove,    5.3    Optimized constraint after merging
+              anddoesnotintroduceextraoverheadonthearithmeticcircuit
+              side.                                                             After conducting sequential merging for each LLM layer, we
+                MergingType-IIwithType-IIIisprofitable.Forinstance,             can get appropriate constraint groups.
+                                                     C          
+                                                       x x                      Attention. Aftermergingq withq andq         withq ,weare
+                                                        1 2                                               C       E       s       P
+              assumethefirstconstraintisq =round           q q     , where                                                i j      i j
+                                           y           C    x1 x2
+                                                         y                      able to effectively reduce the number of rounding constraints
+              C     andC areintegers. And the second constraint is q =
+               x1x2  √ y                                               z        of attention from 3hs(s+1)+sd to 1hs(s+1)+sd. This
+              round( q ) . After merging, the rounding constraint derives                          2                  2
+                        y                                                       reduction results in a nearly 30% decrease in the total number
+                                                    2
+              one range relations forming (2q −1) C ≤ 4C         q q ≤
+                                               z       y      x1x2 x1 x2        of rounding constraints required compared to the original
+                       2
+              (2q +1) C . Although merging introduces small overhead
+                 z        y                                                     attention.
+              due to the arithmetic circuit (square), it is minimal compared
+              to the rounding saved.
+                                                                                     ForsVOLE-basedsystems[31,41],highcommunicationover-
+                                  S ·S                                               head undermines the parallelism opportunity. As profiled in
+                    q =round( Q√K ·q ·q )                                            emp-zk [12], doubling computational resources yields less
+                      E           S    d    Q    K
+                                    E                                                than 10% speedup under limited network bandwidth.
+                 qE     =maxqE , fori=1,···s                                            Although GKR-based systems [6,38,40] do not require
+                   max,i          i j                                       (5)
+                   q    =exp(q        −q ), fori=1,···s, j =1,···,i                  networkcommunication,theystillsufferfromlowparallelism
+                     e          E         E
+                      i j         max,i    i j                                       utilization. In the GKR protocol, parallelization is conducted
+                                  S (q ·q )
+                   q    =round( V e V ij)                                            within the sumcheck protocol of each layer. Different en-
+                     P
+                      i j         S    i   q
+                                    P∑      eik
+                                       k=1                                           tries of the bookkeeping table are computed using multi-
+                  GELUAftermergingq withq ,weareabletoeffectively                    threadedparallelismbyleveragingthe"distributedsumcheck"
+                                          D        G                                 paradigm proposed in [65]. The parallelization is limited
+               reduce the number of GeLU rounding constraints from 2sd               within the sumcheck of each layer due to the Fiat-Shamir
+               to sd. This reduction results in a nearly 50% decrease in the         Transformation. Note that NNs typically consist of many lay-
+               total number of rounding constraints required compared to             ers, each with several constraints. Thus, for proving an NN
+               the original GeLU.                                                    circuit, the computation required for sumcheck in each layer
+                                                                                     is relatively small. Consequently, the synchronization process
+                  s =1|qx|≥qth                                                       occupies a large proportion of computation time, leading to
+                              q +Q                                          (6)      poor speedup.
+                               x     x               2 2
+                 q =round(             −s·(Q (a·S q +b·S Q +c)))
+                  g              2             x     x x       x  x                     Based on previous observations, our optimization is to
+                  Normalization. The merging process for Normalization               squeezethecircuitintoawiderandshallowershape.However,
+               differs slightly from the usual strategy; After merging q  with       circuit squeezing faces the challenge that GKR circuits natu-
+                                                                        µi           rally impose layer-wise dependency. If variable b is computed
+               q andq ,wedidnotmergeq withq              to preventincreasing
+                t       s                     σ        y
+                 i      i                      i       i j                           based on variable a, then b has to be placed in subsequent
+               the arithmetic and commitment overhead by a factor of N. As           layers of a. This makes it seem impossible to squeeze the
+               a result, we reduce the number of rounding constraints for            circuit without making large changes to the circuit first.
+               normalization from 3s+2sd to s+sd. This leads to nearly
+               a 50% decrease in the total number of rounding constraints            6.2    Acceleration by circuit squeeze
+               compared to the original normalization.
+                                                                                     The core idea of circuit squeeze is to break the layer-wise
+                                 s d                  d       2                      dependencybasedoncommitment.Then,multiplesubcircuits
+                                    ∑ (q ·d−∑ q )
+                   q =round(          j=1   xij       j=1 xij   )                    are topologically independent and could be squeezed into the
+                     σ
+                      i                          d2                         (7)      sameset of layers. Circuit squeezing helps reduce the circuit
+                                  S        q    −∑d q          S                     depth and increase the number of gates per layer, offering
+                   q   =round( γ ·q · xij·d          j=1 xij + γ ·q )                muchbetter opportunities for parallelism.
+                    yij           S    γj       q ·d           S     βj
+                                   y              σ              y
+                                                   i                                 Zerooverheadcircuit squeeze. Inspired by the construction
+                  For a detailed explanation of the rounding savings effect          of the Plonk [24] proof system, which has no sequential de-
+               from constraint fusion, readers are referred to Table 7 in the        pendency in proving different constraints, we discover that
+               Appendix.                                                             committing intermediate results in the input layer can elimi-
+                                                                                     nate the topological dependency in the GKR circuit.
+               6    Circuit Optimization                                                Since each subcircuit checks constraints using advice to
+                                                                                     reduce overhead, no additional commitment effort is required
+               Apersistent challenge in ZKP is maximizing the utilization            to squeeze these subcircuits. Moreover, as each subcircuit
+               of computational resources during proof generation. ZKP par-          directly takes input from the input layer, they are topologi-
+               allelization [39,62,65] offers a promising solution. However,         cally independent. Leveraging this independence, multiple
+               existing ZKP systems for ML [6,38,40,41,61] fail to fully             subcircuits can be combinedinto a single set of layers,thereby
+               exploit parallelism. We address this limitation by leveraging         restructuring the circuit into a wider and shallower form.
+               the insight that the LLM execution trace is already known                In general, we can apply circuit squeezing as follows: for
+               during proving. Consequently, proving LLM execution does              each circuit layer that checks the correctness of a rounding
+               not need to follow the sequential order of LLM computation.           constraint, starting from the i-th layer (i > 1), we move each
+                                                                                     gate originally in layer j to the (j −i+1)-th layer, while
+               6.1    Circuit level optimization opportunity                         maintaining the connections between these gates. For our
+                                                                                     LLMcircuit,sinceintermediate results are already committed
+               Wediscover that existing ZKP for ML approaches [6,31,38,              as advice, squeezing incurs zero overhead.
+               40,41] achieve poor speedup under multi-thread parallelism.           Circuit squeeze for matrix multiplication. However, the
+                 above mentioned technique to merge layers comprised of                                 Table 2: Acceleration of matrix optimizations.
+                 normal GKRgates is not applicable to matrix multiplication                              (32×768)·(768×3072)     Optimized  GPT-2matrices   Optimized
+                 layers. Because these layers are proved using the dedicated                      Time           0.25s             0.037s        9.8s          1.5s
+                 protocol [56]. And the protocol in [56] only supports proving
+                 one matrix multiplication in each invocation.
+                    Tosolve this problem, we design a new protocol general-                     7    Experiment
+                 izing [56] to support proving multiple matrix multiplication.
+                 Assumethecircuit layer we consider is layer 1, and the num-                    In this section, we present a comprehensive evaluation of our
+                 ber of matrix multiplications is M. After execution of GKR                     ZKPframeworkforLLM.
+                                                           ˜             ˜
+                 onprevious layers, we have claimsV (r ) andV (r ).
+                                                            1   1         1  2
+                    Inspired by the method in [6] proving multi-channel con-                    7.1     Implementations
+                 volution in sumcheck, we can check multiple matrix multi-
+                 plications by concatenating the matrices and checking the                      Software. Our work is mainly implemented in C++. Our
+                 "batched" matrix multiplication relation using sumcheck. De-                   implementations of sum-check and ML-friendly GKR are
+                 note the two matrices involving in the i-th matrix multiplica-                 based on the open source implementation of zkCNN [40].
+                 tion as A ,B , the output of the i−th matrix multiplication as                WeuseHyrax[59]asourpolynomialcommitmentscheme
+                           i   i                                                                because of its efficient prover time, reasonable proof size, and
+                C. Assume all A are padded to the same shape, with each
+                  i                  i                                                          transparency. The prover time is O(N) and the proof size and
+                 dimension to the power of 2. B is padded in the same man-                                                 √
+                                                      i                                         the verifier time are O(      N)forapolynomialofsizeN.We
+                 ner. Denote A has shape n×m, B has shape m×k,C has
+                                  i                       i                        i                                     *
+                 shape n×k. Assume the number of matrix multiplications                         utilize the mcl library to implement operations on finite field
+                 Misalso padded to the power of 2. Denote the concatena-                        and BN254elliptic curve adopted in [7,39]. BN254 provides
+                 tion of A as A ∈ FM×n×m, B ∈ FM×m×k is defined similarly.                      around 100 bits of security.
+                           i
+                V ∈FM×n×k is the flattened form of the concatenation of                         Hardware. Our evaluations are performed on a server
+                  1
+                                      logM              logn             logk                   equipped with an Intel Xeon 6126 2.60GHz 16-Core CPU
+                C.For∀i∈{0,1}              , j ∈ {0,1}      , p ∈ {0,1}       , we have
+                  i                                                                             and 200GB of memory. We leverage 32 thread parallelization
+                V (i||j||p) = ∑           logm A(i||j||c)·B(i||c||p).
+                  1                c∈{0,1}                                                      bydefault.
+                    The above equation is well-suited for proving within
+                 the sumcheck protocol. Let r = r′||r′||r′,r = r′′||r′′||r′′,                   Implementation acceleration. We accelerate the prover’s
+                                                      1         x   y  2          x    y        commitmentofthecircuit’s input values using multi-thread
+                          ′  ′′     logM    ′  ′′     logn   ′  ′′     logk
+                 where r ,r ∈ F           ,r ,r   ∈F ,r,r ∈F . We have
+                 the following:             x  x             y  y                               parallelism and Pippenger algorithm [49]. Each sumcheck
+                                                                                                involved in the GKR protocol is accelerated by multi-thread
+                       ˜            ˜                                                           parallelism.
+                   α·V (r )+β·V (r )
+                        1  1        1   2                                                       Quantization details. In our experiments, we use quantiza-
+                                ˜   ′  ′      ˜  ′     ′      ˜  ′′  ′′     ˜  ′′     ′′
+                 = ∑logmαA(r||rx||c)·B(r ||c||ry)+βA(r ||rx||c)·B(r ||c||ry)                    tion level Q = 16. This means that all quantized values q
+                   c∈{0,1}                                                            (8)       belongs to range [0,65536]. For ensuring value bound, the
+                                                                                                prover proves that the committed quantized weight lies within
+                    Running sumcheck on the above equation, we can reduce                                       Q
+                                                                                                the range [0,2 ], while the quantized input embedding is pub-
+                               ˜            ˜           ˜           ˜
+                 claims on V (r ) and V (r ) to A(·) and B(·). The remain-                      lic and easy to verify. Rescaling with appropriate scaling
+                               1   1         1   2
+                 ing challenge is whether we can generalize the efficient                       factor is performed at each layer to ensure the computation
+                 method to run the protocol in [56] in Section 4.2 to our                                                             Q
+                                                                                                results always fall the range [0,2 ].
+                 new protocol. Essentially, we need to efficiently compute                      Baselines. In this paper, we compare the performance of our
+                 ˜   ′  ′       ˜  ′      ′   ˜  ′′  ′′      ˜  ′′      ′′
+                 A(r ||r ||c),B(r ||c||r ),A(r ||r ||c),B(r ||c||r ) for each c∈                system with existing ZKP systems for LLM [10,31,41,55].
+                        x                 y          x                 y
+                 {0,1}logm.     By symmetry, we only need to consider                           [10] and [41] natively supports multi-thread parallelism thus
+                                                        ˜  ′   ′                               we directly use their implementation for comparison. The
+                 how to efficiently compute A(r ||r ||c). By the prop-
+                                                               x
+                                                                        ˜   ′  ′                proof system of [55] is purely based on GPU parallelism
+                 erty of multi-linear extension, we have A(r ||r ||c) =
+                                                                               x
+                                          ′  ′   ′   ˜   ′                                      implemented by CUDA. Thus, we run it on a server with
+                 ∑ ′       logM+logn eq˜ (r ||r ,b )·A(b ||c).
+                   b ∈{0,1}                  x                                                  NVIDIAA100GPU.FortheVOLE-basedschemes[31,41],
+                    The equation above is similar in form to the bookkeep-
+                 ing table used in the matrix multiplication protocol of [56].                 weevaluate performance under a standard network environ-
+                 Leveraging techniques similar to Algorithm 1 described in                      mentwith500Mbpsbandwidth.
+                 Section 4.2, we can compute the above equation efficiently.
+                 Duetospaceconstraints, we omit the details.
+                 7.2     PerformanceofzkGPT                                                        Table 3: Time comparison of different proof systems for GPT-
+                 7.2.1    Performanceoflinear layers                                               2 model.
+                 Wefirstbenchmarktheperformanceofourefficientalgorithm                                           Scheme                 Prover time   Verifier Time  Proof size
+                                                                                                                           ²
+                 for accelerating proof of matrix multiplications under single                                Haoetal[31]                         6096s               6.85 GB
+                                                                                                          ZKML[10](32thread)              4026s           12.1s        7.8 K
+                                                                                                                     ³
+                 thread. The results can be found in Table 2.                                            Luetal[41] (32 thread)           112.3s          31.4s       2.24 GB
+                    Wecanseethatouralgorithmdoesachieveverysignificant                               zkLLM[55](6912CUDAcores)              15.8s          0.54s        126K
+                 optimization effect compared with the original algorithm in                          Ours (Single thread) wo all opt     319.6s          0.46s        154K
+                 [56]. For the case of proving matrix multiplication happening                          Ours (32 thread) wo all opt        52.3s          0.46s        154K
+                                                                                                         Ours (32 thread) w all opt        21.8s          0.35s        101K
+                 in the GPT-2 feed-forward network, our method achieves an
+                 acceleration ratio of 6.8×.                                                       Table 4: Generate text quality of GPT-2 and our quantization
+                    For a single transformer block in GPT-2, it contains 4 ma-                     onvarious datasets.
+                 trix multiplications, each weight matrix has shape 768×                                          Dataset        WikiText2    PTB     LAMBADA
+                 2304,768×768,768×3024,3024×768, respectively. We                                                  FP32             29.3      41.3        48.4
+                 also profile the overhead of proving all of these matrix multi-                             Ourquantization        29.5      41.7        48.7
+                 plications happening in GPT-2 inference in Table 2. We can
+                 see that, proving these multiplications utilizing the classical
+                 methodin [56]requires about 10 seconds, which is quite con-                          WhencomparingwithzkLLM[55],thoughourconcrete
+                 siderablecomparedwithourgoalofsqueezingourprovertime                              prover performance is 30% slower, we mainly attribute it to
+                 of GPT-2 inference into one minute. Leveraging our optimiza-                      different hardware configurations. CPUs generally have infe-
+                 tions, the time cost of proving all multiplications in GPT-2                      rior parallel computing power compared with GPUs. For the
+                 can be reduced by 6.5×. This highlights the significance of                      16 core CPU we use in our experiments, it has 10.2 TFLOPS
+                 our efficient method for proving matrix multiplications.                          computing power in total. While for A100 GPU, its comput-
+                                                                                                   ing power is 312 TFLOPS when fully utilized [47], which
+                 7.2.2    Overall performance                                                      is 30× stronger. This indicates that our system utilizes com-
+                 Next, we compare our system with existing ZKP systems for                         putation power in a much more effective way. This roots in
+                 LLM. We also measure the LLM functionality loss caused                            multiple reasons (1) zkLLM proves each transformer block
+                 by quantization. From Table 3, we can see that even un-                           sequentially; Due to our circuit squeezing technique, our sys-
+                 der single thread setting and without our optimizations, our                      tem has better parallelization opportunity than zkLLM. (2)
+                 system achieves quite impressive performance compared to                          zkLLMdirectly adopts the matrix multiplication protocol in
+                 existing work. Compared with one of the state-of-the-art                          [56], while our optimized method consumes much less field
+                 non-interactive proof schemes ZKML [10] which requires                            operations. (3) zkLLM did not propose techniques to reduce
+                 morethan1hourtogenerateaproofforGPT-2,oursystem                                   the number of non-arithmetic relations to prove from the con-
+                 is 13× more efficient, consuming approximately 5 minutes.                         straint level. Thus our system is very likely to outperform
+                 The major reason is that our system is based on GKR and                           themunderthesamehardware.
+                 avoids the expensive FFT operations in Plonk-based systems.                          Wealso assess the functional degradation resulting from
+                 Comparing with state-of-the-art VOLE based scheme [41],                           quantization. Following previous works in quantization [15,
+                 though our system’s prover time is a few times longer with-                       64], we leverage the perplexity (PPL) [34] metric computed
+                 out multi-thread parallelism and optimizations, our scheme is                     on multiple datasets. This metric measures the quality of
+                 non-interactive and the proof size is smaller by two orders of                    LLMgeneratedtext, lower PPL indicated higher quality. We
+                 magnitude. This reduces the need of heavy communication                           employWikiText-2 [45], PTB corpus [43], and LAMBADA
+                 burden for the verifier, also enabling the proof to be verified                   dataset [48], which are all commonly used benchmarks in
+                 bythe public.                                                                     LLM quantization [14,36,64]. On the three datasets, we
+                    Afterapplyingourproposedoptimizationsandmulti-thread                           can see that, the increase on PPL are all less than 0.5. This
+                 parallelism, the advantage of our system is amplified. Table 3                    indicates that the LLM functionality loss introduced by our
+                 shows that our fully optimized system is 185× more efficient                      quantization is very small.
+                 than the state-of-the-art non-interactive scheme ZKML, and                            ² [31] is not open-sourced. We sum and report the numbers provided in
+                 5.1× more efficient than the state-of-the-art VOLE-based                          their paper.
+                 scheme Lu et al [41], while our communication is 23000×                               ³For VOLEbasedsystemsweincludethecommunicationtimeinto the
+                 moreefficient. Note that in MLaaS settings, the verifier nor-                     prover time for fair comparison.
+                 mally owns much less computation power.
+                      *https://github.com/herumi/mcl
+              Table 5: Acceleration ratio of constraint fusion and circuit      ever, their approach does not support end-to-end proof gener-
+              squeeze.                                                          ation for LLMs. Lu et al. [41] proposed optimizations to [31],
+                                    Prover Time   Prover Time  Prover Time      achieving significantly better performance. Another concur-
+                                   (woCons-Opt)   (woCirc-Opt)   (all Opt)      rent work, zkLLM [55], focused on proving the attention
+                  Commitadvice          1.5s          0.8s         0.8s         layer using digit decomposition. Their system is implemented
+                GKR     Layer SC        6.0s         20.3s         5.7s         purely with GPU parallelism. However, it is incompatible
+                      CombineSC         3.3s          3.1s         3.2s         with provers lacking advanced GPUs.
+                     Lookup            22.4s         12.3s        12.1s           Comparedtoproving inference, proving training processes
+                      Total            33.2s         36.5s        21.8s         is far more challenging. Several studies [1,25,54,60] have
+                                                                                explored the ZKP of training various ML models. Current
+              7.3    Effect of optimization at different levels                 approaches still involve significant overhead.
+                                                                                Proof aggregation. Our constraint merging technique is
+              Wealsostudytheeffect of our proposed two optimizations,           very different from proof-aggregation techniques like Bul-
+              constraint fusion, circuit compression, respectively.             letproofs [8]. They focus on reducing proof size, but cannot
+                FromTable5wecanseethecomparisonbetweenourfully                  reduce the prover’s computation. Our constraint merging tech-
+              optimized system and our optimized system only disabling          nique decreases the prover time.
+              constraint and circuit optimization, respectively. The over-
+              all acceleration ratio of constraint optimization is 1.5×, its    9   Discussion
+              mainly composed of reducing the lookup procedure runtime
+              by1.8×andreducingthecommitmenttimeonauxiliaryin-                  9.1    Analysis of different merging levels
+              puts by 1.9×. The lookupruntimeisreducedduetoconstraint
+              optimization reduces the numberofrangerelations the system        Wealso explore the impact of different constraint merging
+              has to check. The commitment time is reduced mainly be-           levels. (A) No merging, which is the slowest case. (B) Our
+              cause the number of committed intermediate rounding results       proposed method. (C) Fastest merging, which is conducting
+              is reduced. For circuit optimization, we can see that for the     all beneficial mergings to the constraints. (D) Full merging,
+              per-layer sumcheck procedure in GKR protocol, by adopting         which is conducting all possible mergings to the constraints.
+              circuit optimization, we can achieve an acceleration ratio of     The constraints for level (A) are introduced in Section 4.1,
+              1.7× compared with not adopting circuit optimization. Be-         and the constraints for level (B) are introduced in Section 5.3.
+              fore adopting circuit optimization, the layer-wise sumcheck       Ourproposed method (B) theoretically achieves nearly ideal
+              in GKRprotocol is actually quite time consuming. After opti-      performance.
+              mizing this part, the time ratio of GKR layer-wise sumcheck         Next, we analyze the possible mergings that could be con-
+              is reduced to 26%.                                                ducted on top of level (B).
+                FromTable3wecanseethat,comparedwithoursystem                    Attention. In Equation 5, merging the computations of
+              without optimization implemented in single thread, further        q   and q     is not feasible.This is because ensuring the
+                                                                                 e        P
+              jointly adopting constraint optimization and circuit optimiza-      i j      i j
+                                                                                correctness of qP requires lookup queries that must be fully
+              tion accelerates the end-to-end performance by 14.7×, un-                          i j
+              locking great optimization opportunities aside from trivially     computable within the GKR circuit. Thus, all variables used
+                                                                                that cannot be directly arithmetically computed (q   ) has to
+              accelerating everything by multi-thread parallelism.                                                                eij
+                                                                                be checked with additional lookup constraints that cannot
+                                                                                be merged. However, merging q           and q    together is
+                                                                                                                  E          e
+                                                                                                                   max,i      i, j
+              8   Related Work                                                  possible. The merged constraint is as follows:
+              Zero-Knowledge Proof for machine learning. There has                q   =exp(maxq −q ), fori=1,···s,j=1,···,i (9)
+                                                                                   e               E     E
+              been significant research on developing ZKPs for ML. Pi-              i j        j    i j   i j
+              oneering work [68] introduced methods to prove decision
+              trees. Subsequent efforts focused on verifying the correctness    Level (D) adopts this merging. However, it introduces an
+              of CNNexecutions, as seen in [18], [37], [61] and [35]. To        infeasible computational cost. Specifically, checking the com-
+              address inefficiencies in previous approaches, zkCNN [40]         putation of q    using a lookup table can be modeled as a
+                                                                                             ei,j
+              developed a specialized protocol to prove convolutions. [6]       non-linear function with q   as its input. Based on our quan-
+                                                                                                          E
+                                                                                                           i
+              further optimized zkCNN [40].                                     tization, q  is a vector with length 32 each element is 16
+                                                                                          E
+                                                                                           i
+                Recently, there has been a surge in research on building        bit. Consequently, the total number of possible inputs to this
+                                                                                                  16×32     512
+              ZKPsforLLMs.ZKML[10]generatedproofsforGPT-2[50]                   lookup table is 2       =2 ,resulting in a prohibitively
+              inference, requiring over an hour to generate a proof for GPT-    computational cost. Both level (B) and level (C) avoid this
+              2. Concurrently, Hao et al. [31] employed digit decompo-          merging since such aggressive merging significantly harms
+              sition to prove non-linear layers in neural networks. How-        performance.
+                           Gelu.GeLUcannotbefurthermerged,thisisduetochecking                                                                               11 Acknowledgment
+                           Equation 6 requires checking the range relation 2q −1 ≤
+                                                                                                                                g
+                                                                                     2 2                                                        .           Wewouldlike to extend our gratitude to the reviewers and
+                           q +|q |−1                              · |q | a·S q +b·S |q |+c < 2q +1
+                             x          x           |   |              x                                x     x                       g
+                                                     qx ≥q                           x x
+                           In the relation, 1 th                           cannot be arithmetically computed.                                               shepherd for their constructive feedback on our work.
+                                                             |   |
+                                                              qx ≥qth
+                           Thus,shastobeprovidedintheinputlayeraswitness.Andan
+                           additional lookup query is required to ensure the correctness                                                                    Ethics considerations
+                           of s. In conclusion, GeLU is already fully merged in level (B)
+                           and cannot be further merged.                                                                                                    Our research focuses on enhancing the transparency of ex-
+                           Normalization. The layer normalization constraint for level                                                                      isting LLM cloud services. Our method allows LLM ser-
+                           (B)isdepictedinEquation5.Level(C)and(D)furthermerges                                                                             vice providers to assure customers that outputs are gener-
+                           q withq .However,itonlyreducesthenumberofrounding
+                             σ                y                                                                                                             ated correctly without compromising the model’s privacy. We
+                               i               i j
+                           constraints from sd+s to sd and is marginally beneficial.                                                                        strictly follow ethical guidelines, avoiding deceptive practices,
+                                                                                                                                                            unauthorized disclosures, live system experiments, or any ac-
+                           9.2          Generalizability of our optimizations for                                                                           tions that could jeopardize the well-being of our team. Con-
+                                        matrix multiplication proof                                                                                         sequently, our work aims to improve transparency in LLM
+                                                                                                                                                            services without introducing new ethical concerns beyond
+                           Ourefficient construction for proving matrix multiplication                                                                      those already associated with LLMs.
+                           in Section 4.2 consists of three techniques. The first tech-
+                           nique grouping reduces costs in general scenarios. Because                                                                       OpenScience
+                           grouping imposes no assumptions on the density of matri-
+                           ces. The second technique skipping computations based on                                                                         Weprovidethesourcecodeofourstudyathttps://zenodo.
+                           sparsity is effective only if the padded (power of 2) matrix                                                                     org/records/14727819.
+                           is sparse. However this is often the case in real-world matrix
+                           multiplications, since the width or height of the matrix often                                                                   References
+                           does not equal the power of 2. The third technique saving
+                           field multiplication by precomputing requires the properties                                                                       [1] Kasra Abbaszadeh, Christodoulos Pappas, Jonathan
+                           of quantization to the input matrices. Thus it is mainly gener-                                                                            Katz, and Dimitrios Papadopoulos. Zero-knowledge
+                           alizable to most cases of zero-knowledge machine learning.                                                                                 proofs of training for deep neural networks. Cryptology
+                           9.3          Limitations of zkGPT                                                                                                          ePrint Archive, 2024.
+                                                                                                                                                              [2] Josh Achiam, Steven Adler, Sandhini Agarwal, Lama
+                           Theprimary limitation of zkGPT’s design lies in its reliance                                                                               Ahmad,IlgeAkkaya,Florencia Leoni Aleman, Diogo
+                           onquantization, rendering it unsuitable for directly proving                                                                               Almeida, Janko Altenschmidt, Sam Altman, Shyamal
+                           the floating-point inference of neural networks. However, as                                                                               Anadkat, et al. Gpt-4 technical report. arXiv preprint
+                           previously noted, most existing ZKP systems for machine                                                                                    arXiv:2303.08774, 2023.
+                           learning [10,18,37,40,41,55] share this limitation due to                                                                          [3] Eleni Adamopoulou and Lefteris Moussiades.                                                               An
+                           their dependence on quantization. Future work that could                                                                                   overview of chatbot technology. In IFIP international
+                           be done includes (1) Exploring the proof generation under                                                                                  conference on artificial intelligence applications and
+                           floating-point computation. (2) Exploring proof generation                                                                                 innovations, pages 373±383. Springer, 2020.
+                           for LLMtraining. (3) Exploring domain-specific distributed
+                           proof generation system tailored for LLM inference/training.                                                                       [4] Arasu Arun, Srinath Setty, and Justin Thaler.                                                          Jolt:
+                                                                                                                                                                      Snarksforvirtualmachinesvialookups. InAnnualInter-
+                           10 Conclusion                                                                                                                              national Conference on the Theory and Applications of
+                                                                                                                                                                      Cryptographic Techniques, pages 3±33. Springer, 2024.
+                           In this paper, we introduce a highly efficient ZKP framework                                                                       [5] Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E
+                           for large language models (LLMs). Our efficient methods                                                                                    Hinton.                  Layer normalization.                                arXiv preprint
+                           for proving both linear and non-linear layers in LLMs offer                                                                                arXiv:1607.06450, 2016.
+                           huge performance improvements by orders of magnitude.
+                           Additionally, we propose optimization techniques at both                                                                           [6] DavidBalbás,DarioFiore,MariaIsabelGonzálezVasco,
+                           the constraint and circuit levels. Finally, we implement our                                                                               DamienRobissout,andClaudioSoriente. Modularsum-
+                           scheme on GPT-2, and the evaluation results demonstrate a                                                                                  check proofs with applications to machine learning and
+                           significant speedup compared to existing methods.                                                                                          image processing. In Proceedings of the 2023 ACM
+                                                                                                                                                                      SIGSACConferenceonComputerandCommunications
+                                                                                                                                                                      Security, pages 1437±1451, 2023.
+              [7] Gautam Botrel, Thomas Piellard, Youssef El Housni,     [17] Jens Ernstberger, Chengru Zhang, Luca Ciprian, Philipp
+                  Ivo Kubjas, and Arya Tabaie. Consensys/gnark: v0.9.0,       Jovanovic, and Sebastian Steinhorst. Zero-knowledge
+                  February 2023.                                              location privacy via accurate floating point snarks. arXiv
+              [8] Benedikt Bünz, Jonathan Bootle, Dan Boneh, Andrew           preprint arXiv:2404.14983, 2024.
+                  Poelstra,Pieter Wuille,andGregMaxwell. Bulletproofs:   [18] Boyuan Feng, Lianke Qin, Zhenfei Zhang, Yufei Ding,
+                  Short proofs for confidential transactions and more. In     and Shumo Chu. Zen: An optimizing compiler for veri-
+                  2018 IEEE symposium on security and privacy (SP),           fiable, zero-knowledge neural network inferences. Cryp-
+                  pages 315±334. IEEE, 2018.                                  tology ePrint Archive, 2021.
+              [9] Matteo Campanelli, Antonio Faonio, Dario Fiore,        [19] Boyuan Feng, Zheng Wang, Yuke Wang, Shu Yang, and
+                  Tianyu Li, and Helger Lipmaa.   Lookup arguments:           Yufei Ding. Zeno: A type-based optimization frame-
+                  improvements, extensions and applications to zero-          workforzeroknowledgeneural network inference. In
+                  knowledge decision trees. In IACR International Con-        Proceedings of the 29th ACM International Conference
+                  ference on Public-Key Cryptography, pages 337±369.          onArchitectural Support for Programming Languages
+                  Springer, 2024.                                             andOperating Systems, pages 450±464, 2024.
+             [10] Bing-Jyue Chen, Suppakit Waiwitlikhit, Ion Stoica, and [20] AmosFiatandAdiShamir. Howtoproveyourself:Prac-
+                  Daniel Kang. Zkml: An optimizing system for ml infer-       tical solutions to identification and signature problems.
+                  ence in zero-knowledge proofs. In Proceedings of the        In Conference on the theory and application of crypto-
+                  Nineteenth European Conference on Computer Systems,         graphic techniques, pages 186±194. Springer, 1986.
+                  pages 560±574, 2024.                                   [21] OpenAI      Forum.             Gpt4-turbo    more
+             [11] Tianqi Chen, Thierry Moreau, Ziheng Jiang, Lianmin          ªstupid/lazyº   -    it’s  not   a    gpt4,  2024.
+                  Zheng, Eddie Yan, Haichen Shen, Meghan Cowan,               URL:          https://community.openai.com/t/
+                  Leyuan Wang, Yuwei Hu, Luis Ceze, et al. {TVM}:             gpt4-turbo-more-stupid-lazy-its-not-a-gpt4/
+                  Anautomated {End-to-End} optimizing compiler for            608008.
+                  deep learning. In 13th USENIX Symposium on Oper-       [22] OpenAI Forum. Openai did made gpt3.5 more stupid?,
+                  ating Systems Design and Implementation (OSDI 18),          2024.   URL: https://community.openai.com/t/
+                  pages 578±594, 2018.                                        openai-did-made-gpt3-5-more-stupid/262979.
+             [12] Xiao   Wang     Chenkai    Weng.          Emp-zk       [23] Ariel Gabizon and Zachary J Williamson. plookup: A
+                  toolkit, 2024.      URL:    https://github.com/             simplified polynomial protocol for lookup tables. Cryp-
+                  emp-toolkit/emp-zk?tab=readme-ov-file#                      tology ePrint Archive, 2020.
+                  throughput-of-circuit-based-zk-protocol.
+             [13] Graham Cormode, Michael Mitzenmacher, and Justin       [24] Ariel Gabizon, Zachary J Williamson, and Oana Ciob-
+                  Thaler. Practical verified computation with streaming       otaru.  Plonk: Permutations over lagrange-bases for
+                  interactive proofs. In Proceedings of the 3rd Innovations   oecumenical noninteractive arguments of knowledge.
+                  in Theoretical Computer Science Conference, pages 90±       Cryptology ePrint Archive, 2019.
+                  112, 2012.                                             [25] SanjamGarg,AarushiGoel,SomeshJha,SaeedMahlou-
+             [14] Tim Dettmers, Mike Lewis, Younes Belkada, and Luke          jifar, Mohammad Mahmoody, Guru-Vamsi Policharla,
+                  Zettlemoyer. Gpt3. int8 (): 8-bit matrix multiplication     and Mingyuan Wang.       Experimenting with zero-
+                  for transformers at scale. Advances in Neural Informa-      knowledge proofs of training. In Proceedings of the
+                  tion Processing Systems, 35:30318±30332, 2022.              2023 ACMSIGSACConferenceonComputerandCom-
+                                                                              munications Security, pages 1880±1894, 2023.
+             [15] Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and      [26] Sanjam Garg, Abhishek Jain, Zhengzhong Jin, and
+                  LukeZettlemoyer. Qlora: Efficient finetuning of quan-       Yinuo Zhang. Succinct zero knowledge for floating
+                  tized llms. In Advances in Neural Information Process-      point computations. In Proceedings of the 2022 ACM
+                  ing Systems, volume 36, pages 10088±10115, 2023.            SIGSACConferenceonComputerandCommunications
+             [16] Liam Eagen, Dario Fiore, and Ariel Gabizon.    cq:          Security, pages 1203±1216, 2022.
+                  Cached quotients for fast lookups. Cryptology ePrint   [27] Sergey B Gashkov and Igor S Sergeev. Complexity of
+                  Archive, 2022.                                              computation in finite fields. Journal of Mathematical
+                                                                              Sciences, 191:661±685, 2013.
+             [28] Lior Goldberg, Shahar Papini, and Michael Riabzev.         [40] Tianyi Liu, Xiang Xie, and Yupeng Zhang. Zkcnn: Zero
+                   Cairo±a turing-complete stark-friendly cpu architecture.       knowledge proofs for convolutional neural network pre-
+                   Cryptology ePrint Archive, 2021.                               dictions and accuracy. In Proceedings of the 2021 ACM
+             [29] S Goldwasser, S Micali, and C Rackoff. The knowledge            SIGSACConferenceonComputerandCommunications
+                   complexityofinteractive proof-systems. In Proceedings          Security, pages 2968±2985, 2021.
+                   of the seventeenth annual ACM symposium on Theory         [41] Tao Lu, Haoyu Wang, Wenjie Qu, Zonghui Wang, Jinye
+                   of computing, pages 291±304, 1985.                             He, Tianyang Tao, Wenzhi Chen, and Jiaheng Zhang.
+             [30] Shafi Goldwasser, Yael Tauman Kalai, and Guy N Roth-            Anefficient and extensible zero-knowledge proof frame-
+                   blum. Delegating computation: interactive proofs for           work for neural networks. Cryptology ePrint Archive,
+                   muggles. Journal of the ACM (JACM), 62(4):1±64,                2024.
+                   2015.                                                     [42] Carsten Lund, Lance Fortnow, Howard Karloff, and
+             [31] Meng Hao, Hanxiao Chen, Hongwei Li, Chenkai Weng,               NoamNisan. Algebraic methods for interactive proof
+                   YuanZhang,HaomiaoYang,andTianweiZhang. Scal-                   systems. Journal of the ACM (JACM), 39(4):859±868,
+                   able zero-knowledge proofs for non-linear functions in         1992.
+                   machinelearning. In 33rd USENIX Security Symposium        [43] Mitch Marcus, Beatrice Santorini, and Mary Ann
+                  (USENIXSecurity 24), pages 3819±3836, 2024.                     Marcinkiewicz. Building a large annotated corpus of
+             [32] DanHendrycksandKevinGimpel. Gaussianerrorlinear                 english: The penn treebank. Computational linguistics,
+                   units (gelus). arXiv preprint arXiv:1606.08415, 2016.          19(2):313±330, 1993.
+             [33] Bernard J Jansen and Udo Pooch. A review of web            [44] Alfred J Menezes, Paul C Van Oorschot, and Scott A
+                   searching studies and a framework for future research.         Vanstone. Handbook of applied cryptography. CRC
+                   journal of the American Society for Information Science        press, 2018.
+                   andTechnology, 52(3):235±246, 2001.                       [45] Stephen Merity. The wikitext long term dependency
+             [34] Fred Jelinek, Robert L Mercer, Lalit R Bahl, and                language modeling dataset. Salesforce Metamind, 9,
+                   James K Baker. PerplexityÐa measure of the diffi-              2016.
+                   culty of speech recognition tasks. The Journal of the     [46] Wei Niu, Jiexiong Guan, Yanzhi Wang, Gagan Agrawal,
+                   Acoustical Society of America, 62(S1):S63±S63, 1977.           and Bin Ren. Dnnfusion: accelerating deep neural net-
+             [35] Daniel Kang, Tatsunori Hashimoto, Ion Stoica, and               works execution with advanced operator fusion. In Pro-
+                   Yi Sun. Scaling up trustless dnn inference with zero-          ceedings of the 42nd ACM SIGPLAN International Con-
+                   knowledge proofs. arXiv preprint arXiv:2210.08674,             ference on Programming Language Design and Imple-
+                   2022.                                                          mentation, pages 883±898, 2021.
+             [36] Sehoon Kim, Amir Gholami, Zhewei Yao, Michael W            [47] NVIDIA. Nvidia a100 datasheet, 2024. URL: https:
+                   Mahoney, and Kurt Keutzer. I-bert: Integer-only bert           //www.nvidia.com/en-us/data-center/a100/.
+                   quantization. In International conference on machine      [48] Denis Paperno, Germán Kruszewski, Angeliki Lazari-
+                   learning, pages 5506±5518. PMLR, 2021.                         dou, Quan Ngoc Pham, Raffaella Bernardi, Sandro
+             [37] Seunghwa Lee, Hankyung Ko, Jihye Kim, and Hyunok                Pezzelle, Marco Baroni, Gemma Boleda, and Raquel
+                   Oh. vcnn: Verifiable convolutional neural networkbased         Fernández.   The lambada dataset: Word prediction
+                   onzk-snarks. Cryptology ePrint Archive, 2020.                  requiring a broad discourse context.  arXiv preprint
+                                                                                  arXiv:1606.06031, 2016.
+             [38] Alan Li, Qingkai Liang, and Mo Dong. Sparsity-aware        [49] Nicholas Pippenger. On the evaluation of powers and
+                   protocol for zk-friendly ml models: Shedding lights on         relatedproblems. In17thAnnualSymposiumonFounda-
+                   practical zkml. Cryptology ePrint Archive, 2024.               tions of Computer Science (sfcs 1976), pages 258±263.
+             [39] T. Liu, T. Xie, J. Zhang, D. Song, and Y. Zhang. Pianist:       IEEEComputerSociety, 1976.
+                   Scalable zkrollups via fully distributed zero-knowledge   [50] Alec Radford, Jeffrey Wu, Rewon Child, David Luan,
+                   proofs. In 2024 IEEE Symposium on Security and Pri-            Dario Amodei, Ilya Sutskever, et al. Language mod-
+                   vacy (SP), pages 39±39, Los Alamitos, CA, USA, may             els are unsupervised multitask learners. OpenAI blog,
+                   2024. IEEE Computer Society.                                   1(8):9, 2019.
+                           [51] Alex Saltanov.                                  Openai keeps dumbing down                                                    [63] Min-You Wu and Daniel D Gajski. Hypertool: A pro-
+                                      chatgpt, 2024.                        URL: https://pub.aimind.so/                                                                 grammingaidformessage-passingsystems. IEEEtrans-
+                                      openai-keeps-dumbing-down-chatgpt-6a6e4a173237.                                                                                   actions on parallel and distributed systems, 1(3):330±
+                           [52] Jacob T Schwartz. Fast probabilistic algorithms for                                                                                     343, 1990.
+                                      verification of polynomial identities.                                         Journal of the                          [64] Guangxuan Xiao, Ji Lin, Mickael Seznec, Hao Wu,
+                                     ACM(JACM),27(4):701±717,1980.                                                                                                      Julien Demouth, and Song Han. Smoothquant: Accu-
+                           [53] SrinathSetty,Justin Thaler,and Riad Wahby. Unlocking                                                                                    rate and efficient post-training quantization for large
+                                      the lookup singularity with lasso. In Annual Interna-                                                                             language models. In International Conference on Ma-
+                                      tional Conference on the Theory and Applications of                                                                               chine Learning, pages 38087±38099. PMLR, 2023.
+                                      Cryptographic Techniques, pages 180±209. Springer,                                                                     [65] TianchengXie,JiahengZhang,ZeruiCheng,FanZhang,
+                                      2024.                                                                                                                             YupengZhang,YongzhengJia,DanBoneh,andDawn
+                           [54] AliShahinShamsabadi,SierraCalandaWyllie,Nicholas                                                                                        Song. zkbridge: Trustless cross-chain bridges made
+                                      Franzese, Natalie Dullerud, Sébastien Gambs, Nicolas                                                                              practical. In Proceedings of the 2022 ACM SIGSAC
+                                      Papernot, Xiao Wang, and Adrian Weller. Confidential-                                                                             Conference on Computer and Communications Security,
+                                      profitt: confidential proof of fair training of trees. In The                                                                     pages 3003±3017, 2022.
+                                      Eleventh International Conference on Learning Repre-                                                                   [66] Arantxa Zapico, Vitalik Buterin, Dmitry Khovratovich,
+                                      sentations, 2022.                                                                                                                 MaryMaller, Anca Nitulescu, and Mark Simkin. Caulk:
+                           [55] Haochen Sun, Jason Li, and Hongyang Zhang. zkllm:                                                                                       Lookuparguments in sublinear time. In Proceedings of
+                                      Zeroknowledgeproofsforlargelanguagemodels. 2024.                                                                                  the 2022 ACM SIGSAC Conference on Computer and
+                                                                                                                                                                        Communications Security, pages 3121±3134, 2022.
+                           [56] Justin Thaler. Time-optimalinteractive proofs forcircuit                                                                     [67] Arantxa Zapico, Ariel Gabizon, Dmitry Khovratovich,
+                                      evaluation. In Annual Cryptology Conference,pages 71±                                                                             MaryMaller, and Carla Rafols. Baloo: Nearly optimal
+                                      89. Springer, 2013.                                                                                                               lookup arguments. Cryptology ePrint Archive, 2022.
+                           [57] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob                                                                             [68] Jiaheng Zhang, Zhiyong Fang, Yupeng Zhang, and
+                                      Uszkoreit, Llion Jones, Aidan N Gomez, èukasz Kaiser,                                                                             DawnSong. Zero knowledge proofs for decision tree
+                                      andIlliaPolosukhin. Attentionisallyouneed. Advances                                                                               predictions and accuracy. In Proceedings of the 2020
+                                      in neural information processing systems, 30, 2017.                                                                               ACMSIGSACConferenceonComputerandCommuni-
+                           [58] Victor Vu, Srinath Setty, Andrew J Blumberg, and                                                                                        cations Security, pages 2039±2053, 2020.
+                                      Michael Walfish. A hybrid architecture for interactive                                                                 [69] Jiaheng Zhang, Tianyi Liu, Weijie Wang, Yinuo Zhang,
+                                      verifiable computation. In 2013 IEEE Symposium on                                                                                 Dawn Song, Xiang Xie, and Yupeng Zhang. Doubly
+                                      Security and Privacy, pages 223±237. IEEE, 2013.                                                                                  efficient interactive proofs for general arithmetic circuits
+                           [59] Riad S Wahby, Ioanna Tzialla, Abhi Shelat, Justin                                                                                       withlinearprovertime. InProceedingsofthe2021ACM
+                                      Thaler, and Michael Walfish. Doubly-efficient zksnarks                                                                            SIGSACConferenceonComputerandCommunications
+                                      without trusted setup. In 2018 IEEE Symposium on                                                                                  Security, pages 159±177, 2021.
+                                      Security and Privacy (SP), pages 926±943. IEEE, 2018.
+                           [60] Suppakit Waiwitlikhit, Ion Stoica, Yi Sun, Tatsunori                                                                         A zkGPTprotocol
+                                      Hashimoto, and Daniel Kang. Trustless audits with-
+                                      out revealing data or models. In Forty-first International                                                             The core part of the zkGPT protocol is integrating Lasso
+                                      Conference on Machine Learning, 2024.                                                                                  lookup protocol in the GKR protocol. The details are as
+                           [61] Chenkai Weng, Kang Yang, Xiang Xie, Jonathan Katz,                                                                           follows: Assume our system invokes t lookup tables. For
+                                      and Xiao Wang. Mystique: Efficient conversions for                                                                     table j, we have to check the consistency of lookup vec-
+                                      {Zero-Knowledge} proofs with applications to ma-                                                                       tor Aj (Aj is part of the circuit’s witness and committed
+                                                                                                                                                             together with the input). We can leverage random com-
+                                      chine learning. In 30th USENIX Security Symposium                                                                                                                                       ˜                       t        ′′ ˜
+                                     (USENIXSecurity 21), pages 501±518, 2021.                                                                               bination to check the claim Aj(rj) as ∑j=1rjAj(rj) =
+                                                                                                                                                                                                 t        ′′    ′                             ′′
+                                                                                                                                                                             s     ˜                          ˜
+                                                                                                                                                             ∑                in V (z)∑                 r C (r ,z), where r are random points
+                                                                                                                                                                 z∈{0,1}            in            j=1 j         j     j                       j
+                           [62] Howard Wu, Wenting Zheng, Alessandro Chiesa,                                                                                 send by the verifier. C′(·) returns 1 if the x-th value in Aj
+                                                                                                                                                                                                           j
+                                      Raluca Ada Popa, and Ion Stoica. DIZK: A distributed                                                                   is the z-th value in V , otherwise returns 0. The sumcheck
+                                                                                                                                                                                                       in           ˜                                            ˜
+                                      zero knowledge proof system. In 27th USENIX Secu-                                                                      protocol reduces claims to A to a single claim onV (·).
+                                                                                                                                                                                                                      j                                            in
+                                      rity Symposium (USENIX Security 18), pages 675±692,                                                                         After invoking the Lasso protocol, we can check the con-
+                                      Baltimore, MD, August 2018. USENIX Association.                                                                        sistency of lookup vectors leveraging the above method. For
+                 Protocol 1 (zkGPT Protocol). LetC be a circuit with m layers computing an LLM with model parameters W. Let X = X
+                                                                                                                                     1
+                 be the input embedding, X =y be the model’s output embeddingC(W,X) , and X be the output of the i-th layer ofC.
+                                     λ     m                        λ                               i
+                 • zkGPT.KeyGen(1 ): Run pp←zkPC.KeyGen(1 )andoutputspp.                       ˜                  ˜
+                 • zkGPT.Commit(W,pp,r): Define the multi-linear extension of W as W. P commits to W by running com                      ←
+                                    ˜                                                                                                W
+                 zkGPT.Commit W,pp,r          andsends V com .
+                                          W                     W
+                   ⟨                                              ⟩
+                 • zkGPT.Prove(W,r ),zkGPT.Verify(com ) (X,pp):
+                                       W                       W
+                 (1) Upon receiving X from V,P evaluates the LLM to compute the prediction y = X , the values in each layer X ,
+                                                                                                           m                              i
+                 the intermediate values aux, the lookup queries L. L is composed of L ∥L , where L is the lookup values for the
+                                                                                             1  2          1
+                 range check table, L is the lookup values for the exponentiation table. P commits to aux,L by running com               ←
+                                      2                                 ˜                                                            aux
+                 zkPC.Commit(aux˜ ,pp,r      ),com ←zkPC.Commit(L,pp,r ) and sends V com               ,com and y = X . Without loss of
+                                          aux      L                           L                    aux     L            m
+                 generality, we pad X,W, aux, L to the maximum length of the four, denoted as N. We arrange the input of the circuit as
+                 X∥W∥aux∥Lofsize4N.                                                                                            m ×N
+                 (2) For the range check table and exponentiation table, P sends the Lasso-commitment to matrix M1 ∈ {0,1} 1        1,M2 ∈
+                       m ×N
+                 {0,1} 2    2, each consisting of c different log(m) )-variate multi-linear polynomials dim ,...,dim , respectively. V picks
+                                                                                                          1         c
+                                logm1       logm2                                          e      e
+                 randomr ∈F          ,r ∈F        andsends r ,r to P. P claims to V on L (r ),L (r ).
+                          1            2                     1  2                          1  1    2  2
+                 (3) P and V apply Lasso Protocol on range check table and exponentiation table respectively. P proves that
+                              f                e                       f                e
+                 ∑       logN M (r ,y)T [y] = L (r ) and ∑        logN M (r ,y)T [y] = L (r ).
+                   y∈{0,1}  1   1  1    1       1  1        y∈{0,1}  2   2  2    2       2  2
+                                       (m)                        ˜  (m)
+                 (4) V sends random r     . Both parties compute X    r    .
+                                                                 m
+                                                  ˜   (i)
+                 (5) For i = m,m−1,...,2, with X     r    ,
+                                                   i
+                                                                                                ˜            ˜          ˜
+                 If layer i is a matrix multiplication layer, P and V run a sumcheck protocol on X (x,y) = ∑ X   (x,z)·W     (z,y) using the
+                                                                                                 i          z i−1         i−1  (i−1)
+                                                                                                                          ˜
+                 sumcheck algorithm for matrix multiplication proposed in [56]. At the end of the sumcheck, V receives X        r      and
+                                                                                                                         i−1
+                  ˜      (i−1)
+                 W     r      .
+                   i−1
+                 If layer i belongs to other constraint layers, P and V run the GKR protocol. At the end of the sumcheck, V receives
+                 ˜     (i−1)               (i−1)
+                 X     r       andauxx       r      .
+                  i−1                ˜   i−1
+                                                        ˜  (1) ˜      (i−1) g        (i−1)                      e       e
+                 (6) At the input layer, V has received X  r    , W     r      , aux     r       for i = m,...,1, and L (r ),L (r ). P and
+                                                        1          i−1              i−1                                1  1    2˜ 2
+                 V runasumcheckprotocol to combine them into a single evaluation. At the end of the sumcheck, V receives in(r).
+                 (7) V validates in (r ) by opening the polynomial commitments. In particular, as the size of the input is 4N, let
+                                      in                       
+                                             −                                                   ˜                              −
+                 r = r ,...,r          and r    = r ,...,r       ,P and V run ⟨zkPC.Open(W,r ),zkPC.Verify(com )⟩(r ,pp) and
+                        1      logN+2                1      logN                                     W                    W
+                                                                  −                   ˜  −             −                  ˜   −
+                 ⟨zkPC.Open(aux,r      ),zkPC.Verify(com      )⟩(r ,pp). V receivesW (r ) and aux˜ (r ), and evaluates X (r ) locally. V
+                                    aux                    aux                                                            1
+                             ˜      ˜    −                               ˜   −                               −                       
+                 checksthatin(r)=X (r )· 1−r               1−r          +W(r )· 1−r              r      +aux˜ (r )·r         1−r          +
+                                     1            logN+1        logN+2                   logN+1   logN+2             logN+1       logN+2
+                 ˜   −                             
+                 L(r )·(1−r          ) 1−r          . If all the checks pass, V outputs 1; otherwise, V outputs 0.
+                              logN+1        logN+2
+              the details of the entire zkGPT protocol combining Lasso and                   ˜∗ (m)     ˜  (m)                          1
+                                                                                      col 1, X   r     ̸=X r        withall but probability   .
+              GKRprotocol, please refer to Protocol 1. For the security                      m             m                             |F|
+                                                                                                                   ˜∗   (m)
+                                                                                      Since with high probability X    r     is incorrect, and
+              analysis of the zkGPT protocol, please refer to Section B.                                            m
+                                                                                      in is correct, due to the soundness of GKR, the checks
+              B SecurityAnalysisofzkGPTprotocol                                       in Step (5) and Step (7) of Protocol 1 can only pass with
+                                                                                      negligible probability.
+              Proof. Completeness. The completeness is straightforward              • Case 2: some values in aux is incorrect, L is fully com-
+              by the completeness of the GKR protocol and Lasso protocol.             puted using this aux. In this case, due to the equiva-
+              Soundness. For the analysis of soundness, our protocol could            lence between our defined constraints and corresponding
+              be viewed as the combination of GKR protocol and Lasso                  lookup relations, there must be some values in L incon-
+              protocol. Suppose the prediction sent by P is not correctly             sistent with the relations in two lookup tables. Due to
+              computed, i.e., y ̸= pred(W,X), but still passes the verifica-          the soundness of Lasso protocol, the checks in Lasso
+              tion. This event can be divided into four cases:                                                                      1
+                                                                                                                               m +Nc+m +N
+                                                                                      canonlypasswithprobabilityatmostO( 1          1   2   2 )
+                 • Case 1: all the values in aux,L are computed correctly.            which is negligible.                           |F|
+                   BytheSchwartz-Zippellemma[52],inStep(4)ofProto-                  • Case 3: some values in aux is correct, L is inconsistent
+                           z-GeLU      xσ(1.702x)    h-GeLU      i-GeLU                 Table 7: Comparison of before and after fusion.
+                 L dist     0.0054        0.012        0.031     0.0082
+                  2                                                                Rounding Numbers    Normalization     Attention     GeLU
+                 L dist     0.012         0.020        0.068      0.018
+                  ∞                                                                                       3s+2sd       3hs(s+1)+sd      2Ds
+                                                                                      Before Fusion        49224       2  43584       196608
+              Table 6: Comparison of different approximation methods for                                   s+sd        1hs(s+1)+sd      Ds
+              GELU.Asmetricsforapproximation error, we report L2 and                  After Fusion         24608       2  30912        98304
+              L distance from GELU across the range of [−4,4].
+                ∞
+                                                                                  D Efficient matrix multiplication protocol
+                   withthis aux. Then some arithmetic relations checking L                                                               ˜
+                   and aux are not satisfied. Due to the soundness of GKR,       Algorithm1Efficientalgorithm for bookkeeping table A(r||·)
+                   the checks in Step (5) and Step (7) of Protocol 1 can           1: Input: Matrix A, number of rows before padding n, num-
+                   only pass with negligible probability.                             ber of rows before padding m, random evaluation point r,
+                                                                                      quantization bits Q (quantization range: [0,2Q]).
+                 • Case 4: some values in aux is incorrect, L is inconsistent                              ⌈logm⌉           ˜
+                   with this aux. Similarly, some arithmetic relations check-      2: Output: array BK[2        ], BK[c] = A(r||c)
+                   ing L and aux are not satisfied. Due to the soundness of        3: Initialize array BK as zeros
+                   GKR,thechecksinStep(5)andStep(7)ofProtocol1                     4: Partition r = x||y
+                   can only pass with negligible probability.                      5: Computeeq˜ (x,·),eq˜ (y,·) using the memorization method
+                                                                                                                    ⌈logn⌉       ⌈logn⌉
+                                                                                      in [58], stored in table EQ [2  2  ],EQ [2 2 ]
+                                                                                                                 x            y
+              Bytheunionbound,theprobability of V outputting 1 when                                        ⌈logn⌉  Q
+                                                                                   6: Initialize array FM[2  2  ][2  +1]withzeros
+              y ̸= pred(W,X) is negligible.                                        7: Compute FM[R][t]=eq˜ (y,R)·t:
+                                                                                                    ⌈logn⌉
+                                                                                   8: for R ∈ {0,1}   2   do
+                                                                                                         Q
+                                                                                   9:   for t ∈ {1,··· ,2 } do
+              C GeLUapproximations                                                10:      FM[R][t] =FM[R][t−1]+EQ [R]
+                                                                                                                          y
+                                                                                  11:   endfor
+              There have been various studies in quantization lit-                12: end for
+              erature   for approximating     GeLU function.       For ex-        13: for c ∈ [0,m−1] do
+              ample,    [32] suggests using Sigmoid function to ap-                                          ⌈logn⌉
+              proximate    erf:   GeLU(x) ≈ xσ(1.702x), where          σ(·)       14:   Initialize array AC[2  2  ] with zeros
+              is  the   Sigmoid function.        [36]   proposed another          15:   Computetheinner dot product:
+              approximation      function   for   GeLU:      i-GeLU(x) =          16:   for b ∈ [0,n−1] do
+                h             h                                   ii              17:      Partition bin(b) = b ||b
+               x           x            x                    2                                                 L   R
+                 1+sgn(√ ) a(clip(|√ |,max=−b)+b) +1 ,                            18:      AC[b ]+=FM[b ][A[b][c]]
+               2            2            2                                                      L            R
+              where sgn denotes the sign function. Their method preserves         19:   endfor          logn
+                                                                                                       ⌈ 2 ⌉
+              decent accuracy and has been adopted in ZKP systems like            20:   for L ∈ {0,1}       do
+              Luetal[41]. However, directly integrating i-GeLU into our           21:      BK[c]+=EQx[L]·AC[L]
+              circuit will introduce large overhead due to invoking a large       22:   endfor
+              numberofnon-arithmetic operations. This motivates the need          23: end for
+              of deriving a more ZK-friendly approximation for GeLU.              24: return BK
+                 We observe that y = GeLU(x) converges to y = x for
+              x → +∞, and converges to y = 0 for x → −∞. A natural
+              idea occurs: we could directly use ReLU to replace GeLU
+              when the input absolute value is large, and use a low or-
+              der polynomial to handle the case when the input abso-
+              lute value is small. We observe that the difference func-
+              tion D(x) = ReLU(x)−GeLU(x) is an even function. When
+                                              ′
+              designing a simple function D (x) to approximate D(x) on
+                                    ′                                ′
+              [0,+∞), we can set D (x) = 0 for x ≥t, when x <t, D (x) =
+                    2                                          ′
+              x(a·x +b·x+c). Then we solve min max |D (x)−D(x)|
+                                                  a,b,c,t x∈[0,t)
+              to obtain z−GeLU.
+                 Wecomparez-GELUalongwithexistingapproximations
+              in Tab 6, where z-GELU has an average error of 5.4×10−3.
+              This is 1.7× more accurate than current state-of-the-art i-
+              GELUwhoseaverageis8.2×10−2.

@@ -1,0 +1,78 @@
+[  8%] Built target mcl
+[ 13%] Built target mclbn256
+[ 94%] Built target gpt_lib
+[ 97%] Building CXX object src/CMakeFiles/zk_logup_tests.dir/main_zk_logup_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:4:17: error: ‘zkgpt’ has not been declared
+    4 | using namespace zkgpt::zk;
+      |                 ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:4:24: error: ‘zk’ is not a namespace-name
+    4 | using namespace zkgpt::zk;
+      |                        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:9:4: error: ‘FieldLogUpZkStatement’ was not declared in this scope
+    9 |    FieldLogUpZkStatement s; s.query_index=2;s.actual_query_size=n-2;
+      |    ^~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:9:29: error: ‘s’ was not declared in this scope
+    9 |    FieldLogUpZkStatement s; s.query_index=2;s.actual_query_size=n-2;
+      |                             ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:11:60: error: ‘matrixShape’ was not declared in this scope
+   11 |    s.generator_domain={"zkGPT/range",static_cast<uint32_t>(matrixShape(n).columns)};
+      |                                                            ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:15:37: error: ‘makeProductionParameters’ was not declared in this scope
+   15 |    s.padding_value=q.back();auto pp=makeProductionParameters(s.generator_domain);
+      |                                     ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:16:29: error: ‘Layout’ has not been declared
+   16 |    auto c=commitMatrix(pp,q,Layout::ColumnMajor);s.query=c.public_commitment;
+      |                             ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:16:11: error: ‘commitMatrix’ was not declared in this scope
+   16 |    auto c=commitMatrix(pp,q,Layout::ColumnMajor);s.query=c.public_commitment;
+      |           ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:17:32: error: ‘HyraxFrWitnessView’ was not declared in this scope
+   17 |    auto p=proveFieldLogUpZk(s,{HyraxFrWitnessView(q.data(),q.size()),c.witness.row_blinders},counts,1);
+      |                                ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:17:11: error: ‘proveFieldLogUpZk’ was not declared in this scope; did you mean ‘proveFieldLogUp’?
+   17 |    auto p=proveFieldLogUpZk(s,{HyraxFrWitnessView(q.data(),q.size()),c.witness.row_blinders},counts,1);
+      |           ^~~~~~~~~~~~~~~~~
+      |           proveFieldLogUp
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:19:8: error: ‘verifyFieldLogUpZk’ was not declared in this scope; did you mean ‘verifyFieldLogUp’?
+   19 |    if(!verifyFieldLogUpZk(s,p,&error))throw std::runtime_error(error);
+      |        ^~~~~~~~~~~~~~~~~~
+      |        verifyFieldLogUp
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:20:15: error: ‘encodeFieldLogUpZkProof’ was not declared in this scope
+   20 |    auto bytes=encodeFieldLogUpZkProof(s,p);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:21:17: error: ‘decodeFieldLogUpZkProof’ was not declared in this scope
+   21 |    auto decoded=decodeFieldLogUpZkProof(s,bytes);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_zk_logup_tests.cpp:22:8: error: ‘verifyFieldLogUpZk’ was not declared in this scope; did you mean ‘verifyFieldLogUp’?
+   22 |    if(!verifyFieldLogUpZk(s,decoded,&error))throw std::runtime_error(error);
+      |        ^~~~~~~~~~~~~~~~~~
+      |        verifyFieldLogUp
+gmake[3]: *** [src/CMakeFiles/zk_logup_tests.dir/build.make:79: src/CMakeFiles/zk_logup_tests.dir/main_zk_logup_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1268: src/CMakeFiles/zk_logup_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1275: src/CMakeFiles/zk_logup_tests.dir/rule] Error 2
+gmake: *** [Makefile:582: zk_logup_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build --parallel 8 --target zk_logup_tests"
+	User time (seconds): 1.57
+	System time (seconds): 0.20
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.78
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 241248
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 68128
+	Voluntary context switches: 100
+	Involuntary context switches: 21
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 3088
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

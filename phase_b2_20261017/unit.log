@@ -1,0 +1,167 @@
+PASS fixture argument
+PASS production C0 log-size 1
+PASS production C0 row match 1/0
+PASS production C0 log-size 5
+PASS production C0 row match 5/0
+PASS production C0 row match 5/1
+PASS production padding 5
+PASS production padding 6
+PASS production padding 7
+PASS production C0 log-size 8
+PASS production C0 row match 8/0
+PASS production C0 row match 8/1
+PASS production C0 log-size 31
+PASS production C0 row match 31/0
+PASS production C0 row match 31/1
+PASS production C0 row match 31/2
+PASS production C0 row match 31/3
+PASS production padding 31
+PASS production C0 log-size 256
+PASS production C0 row match 256/0
+PASS production C0 row match 256/1
+PASS production C0 row match 256/2
+PASS production C0 row match 256/3
+PASS production C0 row match 256/4
+PASS production C0 row match 256/5
+PASS production C0 row match 256/6
+PASS production C0 row match 256/7
+PASS production C0 row match 256/8
+PASS production C0 row match 256/9
+PASS production C0 row match 256/10
+PASS production C0 row match 256/11
+PASS production C0 row match 256/12
+PASS production C0 row match 256/13
+PASS production C0 row match 256/14
+PASS production C0 row match 256/15
+PASS query_one: 
+PASS query_one proof roundtrip
+PASS query_one C0/instance roundtrip
+PASS query_one claim identities
+PASS query_one claim MLE
+PASS query_one challenge count
+PASS both_one: 
+PASS both_one proof roundtrip
+PASS both_one C0/instance roundtrip
+PASS both_one claim identities
+PASS both_one claim MLE
+PASS both_one challenge count
+PASS power_two: 
+PASS power_two proof roundtrip
+PASS power_two C0/instance roundtrip
+PASS power_two claim identities
+PASS power_two claim MLE
+PASS power_two challenge count
+PASS nonpower_query_and_witness: 
+PASS nonpower_query_and_witness proof roundtrip
+PASS nonpower_query_and_witness C0/instance roundtrip
+PASS nonpower_query_and_witness claim identities
+PASS nonpower_query_and_witness claim MLE
+PASS nonpower_query_and_witness challenge count
+PASS repeated_values_distinct_positions: 
+PASS repeated_values_distinct_positions proof roundtrip
+PASS repeated_values_distinct_positions C0/instance roundtrip
+PASS repeated_values_distinct_positions claim identities
+PASS repeated_values_distinct_positions claim MLE
+PASS repeated_values_distinct_positions challenge count
+PASS approved_alias: 
+PASS approved_alias proof roundtrip
+PASS approved_alias C0/instance roundtrip
+PASS approved_alias claim identities
+PASS approved_alias claim MLE
+PASS approved_alias challenge count
+PASS one_witness_repeated: 
+PASS one_witness_repeated proof roundtrip
+PASS one_witness_repeated C0/instance roundtrip
+PASS one_witness_repeated claim identities
+PASS one_witness_repeated claim MLE
+PASS one_witness_repeated challenge count
+PASS multiple_regions: 
+PASS multiple_regions proof roundtrip
+PASS multiple_regions C0/instance roundtrip
+PASS multiple_regions claim identities
+PASS multiple_regions claim MLE
+PASS multiple_regions challenge count
+PASS maximum_small: 
+PASS maximum_small proof roundtrip
+PASS maximum_small C0/instance roundtrip
+PASS maximum_small claim identities
+PASS maximum_small claim MLE
+PASS maximum_small challenge count
+PASS same_C0_exp_t: 
+PASS same_C0_exp_t proof roundtrip
+PASS same_C0_exp_t C0/instance roundtrip
+PASS same_C0_exp_t claim identities
+PASS same_C0_exp_t claim MLE
+PASS same_C0_exp_t challenge count
+PASS same_C0_exp_E: 
+PASS same_C0_exp_E proof roundtrip
+PASS same_C0_exp_E C0/instance roundtrip
+PASS same_C0_exp_E claim identities
+PASS same_C0_exp_E claim MLE
+PASS same_C0_exp_E challenge count
+PASS same C0 distinct CQ
+PASS query_value
+PASS binding_evaluation
+PASS statement_C0_digest
+PASS linear_combination
+PASS row_IPA
+PASS query_IPA
+PASS lookup_sumcheck
+PASS transcript_IPA_order
+PASS missing_row
+PASS wrong_C0
+PASS other_model_layout
+PASS changed_mapping
+PASS mapping_out_of_bounds
+PASS mapping_bad_region
+PASS region_overlap
+PASS region_overflow
+PASS illegal_alias
+PASS query_length
+PASS witness_length
+PASS padding_rule
+PASS field
+PASS curve
+PASS backend
+PASS duplicate_region_name
+PASS unknown_version
+PASS selected_query
+PASS trailing_bytes
+PASS truncated_artifact
+PASS missing_required_field
+PASS truncate_0
+PASS truncate_1
+PASS truncate_8
+PASS truncate_40
+PASS truncate_80
+PASS noncanonical_field
+PASS transcript_field_order
+PASS attack A B1 still valid
+PASS attack A rejected at relation
+PASS attack B internally valid alternative statement
+PASS attack B unapproved mapping rejected
+PASS attack B digest relabel cannot change transcript
+PASS attack C internally valid alternative model
+PASS attack C unapproved model rejected
+PASS registry derives range/t/E queries
+PASS trusted_registry_exp_t: 
+PASS trusted_registry_exp_t proof roundtrip
+PASS trusted_registry_exp_t C0/instance roundtrip
+PASS trusted_registry_exp_t claim identities
+PASS trusted_registry_exp_t claim MLE
+PASS trusted_registry_exp_t challenge count
+PASS trusted_registry_exp_E: 
+PASS trusted_registry_exp_E proof roundtrip
+PASS trusted_registry_exp_E C0/instance roundtrip
+PASS trusted_registry_exp_E claim identities
+PASS trusted_registry_exp_E claim MLE
+PASS trusted_registry_exp_E challenge count
+PASS trusted_registry_range: 
+PASS trusted_registry_range proof roundtrip
+PASS trusted_registry_range C0/instance roundtrip
+PASS trusted_registry_range claim identities
+PASS trusted_registry_range claim MLE
+PASS trusted_registry_range challenge count
+PASS registry signed derived query not silently accepted
+PASS wrong runtime field
+166 checks passed

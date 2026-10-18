@@ -1,0 +1,82 @@
+MEASURE n=1 table=8 bytes=6256 response_Fr=15 prove_ms=37.5276 verify_ms=27.3295
+PASS real hidden FieldLogUp n=1
+MEASURE n=2 table=8 bytes=7056 response_Fr=18 prove_ms=27.5661 verify_ms=27.7611
+PASS real hidden FieldLogUp n=2
+MEASURE n=8 table=8 bytes=8688 response_Fr=24 prove_ms=32.0979 verify_ms=32.582
+PASS real hidden FieldLogUp n=8
+MEASURE n=16 table=8 bytes=9456 response_Fr=24 prove_ms=38.3953 verify_ms=57.5935
+PASS real hidden FieldLogUp n=16
+MEASURE n=32 table=8 bytes=10544 response_Fr=36 prove_ms=63.0916 verify_ms=53.8545
+PASS real hidden FieldLogUp n=32
+MEASURE n=64 table=8 bytes=11376 response_Fr=36 prove_ms=44.1157 verify_ms=43.3121
+PASS real hidden FieldLogUp n=64
+PASS repeated-table-v1
+PASS singleton-table-v1
+LOCAL_REJECT FieldLogUp reciprocal sums disagree
+CRYPTO_REJECT false-query: table shared sum: representation equation
+PASS malicious query outside table
+CRYPTO_REJECT false-reciprocal: query reciprocal identity: representation equation
+PASS false-reciprocal
+CRYPTO_REJECT false-multiplicity: table shared sum: representation equation
+PASS false-multiplicity
+CRYPTO_REJECT false-public-table-factor: public table factor: equality equation
+PASS false-public-table-factor
+CRYPTO_REJECT distinct-shared-claims: table shared sum: representation equation
+PASS distinct-shared-claims
+FAIL wrong-transcript-domain: false proof accepted
+CRYPTO_REJECT wrong-terminal: query reciprocal identity: representation equation
+PASS terminal mutation
+CRYPTO_REJECT wrong-mask: table identity: representation equation
+PASS mask mutation
+CRYPTO_REJECT wrong-row: table identity: representation equation
+PASS row mutation
+CRYPTO_REJECT wrong-opening-response: hidden opening 3: hidden linear equation
+PASS response mutation
+CRYPTO_REJECT wrong-shared-claim: query shared sum: representation equation
+PASS shared claim mutation
+CRYPTO_REJECT wrong-public-factor-response: public table factor: equality equation
+PASS public factor response
+CRYPTO_REJECT wrong-final-binding: FieldLogUp final binding
+PASS final binding
+CRYPTO_REJECT spliced-query-commitment: table identity: representation equation
+PASS splice original query commitment
+PASS context binding
+PASS generator domain binding
+PASS fixed table pair binding
+DECODE_REJECT LogUp proof version/dimensions
+DECODE_REJECT codec exact size
+DECODE_REJECT LogUp proof version/dimensions
+DECODE_REJECT LogUp matrix decode shape
+PASS version length and dimension bounds
+LOCAL_REJECT linear witness does not open statement
+PASS borrowed row blinder mismatch local
+CRYPTO_REJECT padding-metadata-replay: table identity: representation equation
+PASS padding metadata binding
+LOCAL_REJECT FieldLogUp zero public denominator
+PASS zero public denominator rejects without remapping
+PASS zero public terminal factor equality
+29 passed, 1 failed
+Command exited with non-zero status 1
+	Command being timed: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/zk_logup_tests"
+	User time (seconds): 2.83
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.86
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6064
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 437
+	Voluntary context switches: 70
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

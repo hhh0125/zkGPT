@@ -1,0 +1,117 @@
+PASS wrong runtime field
+PASS query_one 
+PASS query_one canonical roundtrip
+PASS query_one authenticated claim
+PASS table_one 
+PASS table_one canonical roundtrip
+PASS table_one authenticated claim
+PASS both_one 
+PASS both_one canonical roundtrip
+PASS both_one authenticated claim
+PASS power_two 
+PASS power_two canonical roundtrip
+PASS power_two authenticated claim
+PASS nonpower_repeated 
+PASS nonpower_repeated canonical roundtrip
+PASS nonpower_repeated authenticated claim
+PASS duplicate_table 
+PASS duplicate_table canonical roundtrip
+PASS duplicate_table authenticated claim
+PASS minimum_bit 
+PASS minimum_bit canonical roundtrip
+PASS minimum_bit authenticated claim
+PASS sos_1_2 
+PASS sos_1_2 canonical roundtrip
+PASS sos_1_2 authenticated claim
+PASS sos_2_1 
+PASS sos_2_1 canonical roundtrip
+PASS sos_2_1 authenticated claim
+PASS sos_1_1_2 
+PASS sos_1_1_2 canonical roundtrip
+PASS sos_1_1_2 authenticated claim
+PASS max_small_bound 
+PASS max_small_bound canonical roundtrip
+PASS max_small_bound authenticated claim
+PASS max_table_eight_segments 
+PASS max_table_eight_segments canonical roundtrip
+PASS max_table_eight_segments authenticated claim
+PASS MLE bit order 0
+PASS MLE bit order 1
+PASS MLE bit order 2
+PASS MLE bit order 3
+PASS MLE bit order 4
+PASS MLE bit order 5
+PASS reject query_value
+PASS reject selector_commitment
+PASS reject dim_evaluation
+PASS reject sumcheck_round
+PASS reject final_evaluation
+PASS reject ipa_opening
+PASS reject table_digest
+PASS reject read_counter_commitment
+PASS reject final_counter_commitment
+PASS reject read_value_commitment
+PASS reject memory_product_root
+PASS reject grand_product_round
+PASS reject grand_product_endpoint
+PASS reject final_counter_evaluation
+PASS reject padding_evaluation
+PASS reject challenge_message
+PASS reject missing_opening
+PASS reject missing_memory
+PASS reject extra_dim
+PASS reject invalid_constant_E
+PASS replace approved table
+PASS change query length
+PASS change table length
+PASS reject trailing_bytes
+PASS reject truncated_artifact
+PASS reject missing_required_field
+PASS reject reordered_fields
+PASS reject unknown_version
+PASS reject oversize_dim_count
+PASS reject noncanonical_field
+PASS reject invalid_curve_encoding
+PASS instance reject table_digest_bytes
+PASS instance reject table_content_stale_digest
+PASS instance reject noncanonical_instance_integer
+PASS instance reject unsupported_field
+PASS instance reject unsupported_curve
+PASS instance reject altered_padding_rule
+PASS instance reject zero_table_length
+PASS instance reject instance_trailing_bytes
+PASS instance reject instance_truncated
+PASS reject truncate_0
+PASS reject truncate_1
+PASS reject truncate_8
+PASS reject truncate_12
+PASS reject truncate_47
+PASS reject truncate_83
+PASS reject truncate_3928
+PASS malicious commitment regenerated
+PASS regenerated_invalid_query canonical regenerated artifact
+PASS reject regenerated_invalid_query
+PASS regenerated_padding_address canonical regenerated artifact
+PASS reject regenerated_padding_address
+PASS segmented regenerated artifact canonical
+PASS segmented invalid address regenerated
+PASS regenerated_bad_query_padding canonical regenerated artifact
+PASS reject regenerated_bad_query_padding
+PASS regenerated_bad_dim_padding canonical regenerated artifact
+PASS reject regenerated_bad_dim_padding
+PASS regenerated_bad_read_counter canonical regenerated artifact
+PASS reject regenerated_bad_read_counter
+PASS honest prover invalid query
+PASS honest prover invalid address
+PASS empty table
+PASS empty query
+PASS query limit
+PASS table limit
+PASS malformed adversarial witness shape
+PASS oversized decoder input
+PASS oversized file input
+PASS wrong address width
+PASS non SOS rejected
+PASS zero-width segment
+PASS deterministic transcript replay
+TOTAL 116 checks PASS

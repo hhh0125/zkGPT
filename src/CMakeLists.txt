@@ -131,3 +131,15 @@ if(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE)
     add_test(NAME zk_committed_opening_tests COMMAND zk_committed_opening_tests)
     set_tests_properties(zk_committed_opening_tests PROPERTIES TIMEOUT 30)
 endif()
+
+# Route B Phase B1: isolated opt-in Lasso/Surge prototype.
+option(ZKGPT_BUILD_LASSO_PROTOTYPE "Build isolated Lasso/Surge prototype" OFF)
+if(ZKGPT_BUILD_LASSO_PROTOTYPE)
+    add_subdirectory(lasso)
+endif()
+
+# Route B P0: isolated, default-off production source contract.
+option(ZKGPT_ENABLE_ROUTE_B_PRODUCTION "Build Route B production source contract" OFF)
+if(ZKGPT_ENABLE_ROUTE_B_PRODUCTION)
+    add_subdirectory(route_b)
+endif()

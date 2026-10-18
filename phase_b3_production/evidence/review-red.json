@@ -1,0 +1,72 @@
+{
+  "expected": "all regression cases pass",
+  "actual_exit": 1,
+  "checks": [
+    {
+      "case": "nested-JSON-type",
+      "expected": "reject integer substituted for boolean",
+      "actual": "accept",
+      "passed": false
+    },
+    {
+      "case": "Lasso-E-query-oracle",
+      "expected": "exp/vector/1",
+      "actual": "exp/P=Cx+alpha*CE",
+      "passed": false
+    },
+    {
+      "case": "Lasso-E-local-length",
+      "expected": 131072,
+      "actual": null,
+      "passed": false
+    },
+    {
+      "case": "Lasso-E-address-oracle",
+      "expected": "exp/vector/3",
+      "actual": null,
+      "passed": false
+    },
+    {
+      "case": "Lasso-E-child-ID",
+      "expected": "lasso/exp/E-indexed",
+      "actual": null,
+      "passed": false
+    },
+    {
+      "case": "all-six-Exp-dependencies-0",
+      "expected": [
+        "exp/membership/0",
+        "exp/membership/1",
+        "exp/membership/2",
+        "exp/membership/3",
+        "exp/membership/4",
+        "exp/membership/5"
+      ],
+      "actual": [
+        "exp/branch/0",
+        "exp/branch/1",
+        "exp/membership/0",
+        "range/uint32-t-E"
+      ],
+      "passed": false
+    },
+    {
+      "case": "all-six-Exp-dependencies-1",
+      "expected": [
+        "exp/membership/0",
+        "exp/membership/1",
+        "exp/membership/2",
+        "exp/membership/3",
+        "exp/membership/4",
+        "exp/membership/5"
+      ],
+      "actual": [
+        "exp/branch/0",
+        "exp/branch/1",
+        "exp/membership/0",
+        "range/uint32-t-E"
+      ],
+      "passed": false
+    }
+  ]
+}

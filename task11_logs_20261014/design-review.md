@@ -1,0 +1,38 @@
+# Task 11 design/security review
+
+2026-10-14 Asia/Shanghai. User spec: pasted Task 11 request. Implementation only n=2/4, Linux/MCL BN254; user explicitly authorized autonomous execution after review. Preserve current dirty checkout, historical evidence, production semantics. Separate build and opt-in targets; no commits or full GPT proof.
+
+## Audit of actual Task 10
+Remote sources and logs downloaded byte-for-byte to audit/. Existing sampleUniformScalar calls getrandom, retries EINTR/partial reads, immediately throws on errors/zero reads, uses canonical deserialize+reserialize rejection, accepts zero, caps at 4096. No new secret RNG needed. MCL BN254 Fr r=16798108731015832284940804142231733909759579603404752749028378864165570215949; Fp p=16798108731015832284940804142231733909889187121439069848933715426072753864723; curve is y²=x³+2 (confirm runtime probe), prime-order G1, default 32-byte compressed encoding; not Ethereum BN_SNARK1.
+
+Task10 public-y: A_C=Commit(d,a), A_F=<b,d>, z=d+cw, z_rho=a+c rho. Verify Commit(z,z_rho)=A_C+cC and <b,z>=A_F+cy. Its Statement explicitly contains y. Existing API and sources remain untouched. New namespace zkproto::committed and separate names/codecs avoid collisions. Actual CMake excludes existing primitive sources from production; inspect compile_commands after new exclusion.
+
+## Protocol
+pp comprises existing G_i,H and separately hashAndMapToG1-derived U,H_y under zkGPT/experimental/zk-committed-linear-opening/generators/v1 with /u,/h-y labels. Validate derived exact points, nonzero subgroup, and no equal/negative collisions with all existing bases. Independence means unknown discrete-log relations under hash/map assumptions, not linear independence in a cyclic group. Reject caller-supplied related bases.
+
+x=(suite,version,vector_domain,scalar_domain,context,n,C,D,b). Context is public caller-specified application binding, max128 bytes, and must be supplied/checked by integration. Secrets (w,rho,eta), y=<b,w>. F_b(w,rho,eta)=(Commit(w,rho),<b,w>U+eta H_y). Independently uniform d,a,e; A_C=Commit(d,a), A_D=<b,d>U+eH_y; challenge nonzero Fr; z=d+cw,z_rho=a+c rho,z_eta=e+c eta. Both verifier equations use exactly the same z. No y, <b,d>, nonce/blind or raw witness fields in Statement/proof.
+
+Completeness follows by linearity. Two accepting records with same x,A_C,A_D and c!=c' extract w=(z-z')/(c-c'),rho=(z_rho-z_rho')/(c-c'),eta=(z_eta-z_eta')/(c-c'); subtracting both group equations yields exactly one shared preimage. Interactive knowledge error 1/(r-1); FS knowledge security is conditional on classical programmable ROM, resettable PPT prover, polynomial queries, forking at effective challenge query, canonical transcript, and sufficiently unpredictable challenge. Existence alone is not binding: blinding makes F surjective; knowledge of common openings and computational binding matter.
+
+HVZK for any fixed nonzero c: independently uniform z,z_rho,z_eta, set A_C=Commit(z,z_rho)-cC, A_D=<b,z>U+z_eta H_y-cD. Translation of uniform masks is bijective; joint distribution is exactly the real conditional distribution. b=0 leaves w masked; no public unmasked endpoint. Simulator needs no witness, y or blind. Algebraic tests verify equations, not distributions; proof of distribution is mathematical.
+
+For fixed w, independent uniform rho,eta make (C,D) product-uniform on G1², independent of w, even for b=0. Shared w causes no extra correlation with independent blinds. Low-level caller-chosen blinds are not automatically hiding. Binding of C relies on unknown generator representation relations; binding of D on unknown log_U(H_y). Finding a collision for distinct committed values produces a nontrivial relation. Equal evaluations of different w are intentionally indistinguishable at D; D alone never binds full vector coordinates.
+
+FS uses SHA256 modeled as RO over length-prefixed full canonical x, every pp base, proof version/domain and both first messages; append LE32 counter, reuse Task10 scalarCandidate, reject zero/noncanonical, cap4096. ROM simulation chooses c,z's, computes A's, samples geometric accepted-counter (q=(r-1)/2^256), programs each earlier counter with an independently sampled 32-byte output uniformly conditioned on rejection (noncanonical Fr encoding or zero) and terminal counter with canonical(c); abort/retry on preexisting queries. A_C,A_D have independent full group entropy via a,e, so bad-event probability for polynomial prior queries is negligible. Forking must preserve statement+both first messages and earlier counter answers, replace effective accepted output to obtain a different c, then extract. Finite-cap abort is negligible under ideal RO. No SHA256 standard-model, QROM, simulation-extractability, concurrency/UC, or constant-time claims.
+
+Fresh d,a,e on every prove call. Reusing masks at differing challenges leaks all witness components by the above extractor, including across different Statements. Same public C,D,b may be repeatedly proven with new masks; sequential polynomial ROM proofs can be simulated with the same oracle and query-collision bounds. Do not promote this to unspecified adaptive/concurrent protocol composition; application must bind session/circuit/layout/query via context and analyze its own leaked public statements. Identical statement+context proof replay is naturally valid; changing context must reject. This primitive is not an anti-replay service.
+
+## Codec/implementation decisions
+New ZKCS/ZKCP magic, version1, fixed domains. LE32 lengths, 32-byte canonical MCL Fr/G1; validate isValid/isValidOrder and exact reencoding. Allow identity commitments/nonces; prohibit identity generators. n only2/4; domain/context max128; each message max4096; reject trailing/truncated inputs. Dedicated verifier binary reads bounded public files only, derives pp itself, exits0 accept,1 cryptographic rejection,2 decode/format rejection. No production skip-check or RNG injection APIs.
+
+## Tests and integration limitations
+Test-first stubs only in log directory, never linked into final targets. Positive boundaries including b0 and zero/nonzero y; local mismatches; malformed wire; public-only child processes. Test-only malicious builder creates structurally valid FS proofs with mismatched openings and same z: first equation true, second false, bypassing only test producer checks. OS entropy failure tested with seccomp in isolated fork.
+Field LogUp remains unimplemented: committed scalar claims, shared hidden Sumcheck claims, multiplication/reciprocal constraints, masked round polynomials and terminal evaluations, same-coordinate bridge to val[0], hidden sparse opening and sublinear ZK dot-product all still needed. O(n) Sigma not suitable for n131072/76032 production queries.
+
+## Primary references reviewed
+- Ivan Damgård, On Sigma-protocols: https://cs.au.dk/~ivan/Sigma.pdf (special soundness/HVZK definitions). Our equations and joint hiding above are direct algebraic derivations, not unverified citation claims.
+- CFRG Sigma Proofs for Linear Relations draft03: https://www.ietf.org/ietf-ftp/internet-drafts/draft-irtf-cfrg-sigma-protocols-03.html (homomorphism framework; draft, not certification).
+
+Review decision: no mathematical blocker for this scoped primitive under the stated assumptions. Implementation must still demonstrate sound validation, shared z and no secret serialization.
+
+Final review: no Critical/Important static finding. Minor rejected-output distribution clarified here; added full Statement truncation and unique header/length regression coverage. No protocol/API behavior changed. Finite-cap simulation includes negligible all-rejected abort; conditioned successful simulation differs only by that abort bound.

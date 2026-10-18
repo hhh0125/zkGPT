@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cmake",
+    "-S",
+    ".",
+    "-B",
+    "phase_b3_production/build-default-off",
+    "-DCMAKE_BUILD_TYPE=Release"
+  ],
+  "exit": 0,
+  "wall_seconds": 0.5954136769287288,
+  "expected": "exit0, isolated default-off new code",
+  "checks": {
+    "default_OFF": true,
+    "no_production_library_default_off": true,
+    "no_route_b_sources_in_legacy_gpt_lib": true,
+    "separate_production_library_exists": true
+  }
+}

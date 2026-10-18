@@ -1,0 +1,21 @@
+[
+  {
+    "name": "ctest-final",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "phase_b2_20261017/build",
+      "-R",
+      "^(route_b_lasso_.*|route_b_binding_.*|hyrax_opening_tests|lasso_folding_tests|zkgpt_decoder_resource_tests|exp_lookup_tests)$",
+      "--output-on-failure"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "range-lightweight",
+    "command": [
+      "phase_b2_20261017/build/src/range_tests"
+    ],
+    "exit": 0
+  }
+]

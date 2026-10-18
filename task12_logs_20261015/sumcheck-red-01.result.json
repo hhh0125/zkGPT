@@ -1,0 +1,36 @@
+{
+  "tag": "sumcheck-red-01",
+  "success": false,
+  "records": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source",
+        "-B",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DZKGPT_BUILD_ZK_OPENING_PROTOTYPE=ON",
+        "-DZKGPT_BUILD_COMMITTED_Y_PROTOTYPE=ON"
+      ],
+      "exit": 0,
+      "seconds": 0.21466699102893472,
+      "log": "sumcheck-red-01-configure.log"
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "--parallel",
+        "8",
+        "--target",
+        "zk_sumcheck_tests"
+      ],
+      "exit": 2,
+      "seconds": 1.7687136069871485,
+      "log": "sumcheck-red-01-build.log"
+    }
+  ]
+}

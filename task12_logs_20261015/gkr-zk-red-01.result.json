@@ -1,0 +1,36 @@
+{
+  "tag": "gkr-zk-red-01",
+  "success": false,
+  "records": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source",
+        "-B",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DZKGPT_BUILD_ZK_OPENING_PROTOTYPE=ON",
+        "-DZKGPT_BUILD_COMMITTED_Y_PROTOTYPE=ON"
+      ],
+      "exit": 0,
+      "seconds": 0.21429334906861186,
+      "log": "gkr-zk-red-01-configure.log"
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "--parallel",
+        "8",
+        "--target",
+        "gkr_zk_tests"
+      ],
+      "exit": 2,
+      "seconds": 6.380548621993512,
+      "log": "gkr-zk-red-01-build.log"
+    }
+  ]
+}

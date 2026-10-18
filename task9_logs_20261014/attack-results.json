@@ -1,0 +1,79 @@
+[
+  {
+    "test": "malicious-local-check-oneblock",
+    "args": [
+      "task9_logs_20261014/exp-attack-v4/malicious_exp_prover",
+      "--blocks",
+      "1",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "--artifact-prefix",
+      "task9_logs_20261014/malicious-local-check-oneblock"
+    ],
+    "exit": 134,
+    "expected": "nonzero",
+    "driver_seconds": 73.65422749519348
+  },
+  {
+    "test": "malicious-prove-oneblock",
+    "args": [
+      "task9_logs_20261014/exp-attack-v4/malicious_exp_prover_bypass",
+      "--blocks",
+      "1",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "--artifact-prefix",
+      "task9_logs_20261014/malicious-oneblock"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 84.40968251228333
+  },
+  {
+    "test": "malicious-verify-oneblock",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "verify",
+      "task9_logs_20261014/oneblock.anchor.bin",
+      "task9_logs_20261014/malicious-oneblock.strict-v4.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt"
+    ],
+    "exit": 1,
+    "expected": 1,
+    "driver_seconds": 5.574521780014038
+  },
+  {
+    "test": "malicious-prove-full12",
+    "args": [
+      "task9_logs_20261014/exp-attack-v4/malicious_exp_prover_bypass",
+      "--blocks",
+      "12",
+      "--range-threads",
+      "8",
+      "--trusted-model",
+      "task9_logs_20261014/full12.anchor.bin",
+      "--artifact-prefix",
+      "task9_logs_20261014/malicious-full12"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "driver_seconds": 1088.0004880428314
+  },
+  {
+    "test": "malicious-verify-full12",
+    "args": [
+      "cmake-build-release/src/model_binding",
+      "verify",
+      "task9_logs_20261014/full12.anchor.bin",
+      "task9_logs_20261014/malicious-full12.strict-v4.bin",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task8_logs_20261013/embedding.txt"
+    ],
+    "exit": 1,
+    "expected": 1,
+    "driver_seconds": 34.99159550666809
+  }
+]

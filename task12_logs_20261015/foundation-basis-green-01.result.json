@@ -1,0 +1,44 @@
+{
+  "tag": "foundation-basis-green-01",
+  "success": true,
+  "records": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source",
+        "-B",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DZKGPT_BUILD_ZK_OPENING_PROTOTYPE=ON",
+        "-DZKGPT_BUILD_COMMITTED_Y_PROTOTYPE=ON"
+      ],
+      "exit": 0,
+      "seconds": 0.21458555106073618,
+      "log": "foundation-basis-green-01-configure.log"
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "--parallel",
+        "8",
+        "--target",
+        "zk_foundation_tests"
+      ],
+      "exit": 0,
+      "seconds": 10.891013720072806,
+      "log": "foundation-basis-green-01-build.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/zk_foundation_tests"
+      ],
+      "exit": 0,
+      "seconds": 0.365473176818341,
+      "log": "foundation-basis-green-01-run-0.log"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "tag": "foundation-compile-01",
+  "success": true,
+  "records": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source",
+        "-B",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DZKGPT_BUILD_ZK_OPENING_PROTOTYPE=ON",
+        "-DZKGPT_BUILD_COMMITTED_Y_PROTOTYPE=ON"
+      ],
+      "exit": 0,
+      "seconds": 0.21447778306901455,
+      "log": "foundation-compile-01-configure.log"
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build",
+        "--parallel",
+        "8",
+        "--target",
+        "zk_foundation_tests"
+      ],
+      "exit": 0,
+      "seconds": 15.805657427292317,
+      "log": "foundation-compile-01-build.log"
+    },
+    {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build/src/zk_foundation_tests"
+      ],
+      "exit": 0,
+      "seconds": 1.4178092367947102,
+      "log": "foundation-compile-01-run-0.log"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+[ 10%] Built target mcl
+[ 15%] Built target mclbn256
+[ 17%] Building CXX object src/CMakeFiles/gpt_lib.dir/exp_lookup.cpp.o
+[ 20%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_logup.cpp.o
+[ 22%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_sumcheck.cpp.o
+[ 25%] Linking CXX static library libgpt_lib.a
+[ 87%] Built target gpt_lib
+[ 95%] Built target gkr_test_support
+[ 97%] Building CXX object src/CMakeFiles/gkr_zk_tests.dir/main_gkr_zk_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:14:47: error: no matching function for call to ‘GKRProofBuilder::GKRProofBuilder(prover*, const layeredCircuit&, const WitnessShape&, const GeneratorDomain&, ChallengeTraceRecorder*, const char [19])’
+   14 |             &prover_trace,"task12/gkr/session");
+      |                                               ^
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/tests/gkr_test_fixture.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:23:5: note: candidate: ‘GKRProofBuilder::GKRProofBuilder(prover*, const layeredCircuit&, const WitnessShape&, const GeneratorDomain&, ChallengeObserver*)’
+   23 |     GKRProofBuilder(prover *pr, const layeredCircuit &cir,
+      |     ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:23:5: note:   candidate expects 5 arguments, 6 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:17:7: note: candidate: ‘GKRProofBuilder::GKRProofBuilder(const GKRProofBuilder&)’
+   17 | class GKRProofBuilder
+      |       ^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:17:7: note:   candidate expects 1 argument, 6 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:17:7: note: candidate: ‘GKRProofBuilder::GKRProofBuilder(GKRProofBuilder&&)’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/gkr_proof_builder.hpp:17:7: note:   candidate expects 1 argument, 6 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:16:32: error: ‘class GKRProofBuilder’ has no member named ‘zkPublicStatement’; did you mean ‘publicStatement’?
+   16 |         auto statement=builder.zkPublicStatement();auto proof=builder.zkProof();std::string error;
+      |                                ^~~~~~~~~~~~~~~~~
+      |                                publicStatement
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:16:71: error: ‘class GKRProofBuilder’ has no member named ‘zkProof’; did you mean ‘proof’?
+   16 |         auto statement=builder.zkPublicStatement();auto proof=builder.zkProof();std::string error;
+      |                                                                       ^~~~~~~
+      |                                                                       proof
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:17:15: error: ‘verifyGKRZk’ was not declared in this scope; did you mean ‘verifyGKR’?
+   17 |         check(verifyGKRZk(fixture.circuit(),statement,proof,&error,&verifier_trace),"real GKR ZK completeness: "+error);
+      |               ^~~~~~~~~~~
+      |               verifyGKR
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:20:20: error: ‘serializeGKRZkProof’ was not declared in this scope; did you mean ‘serializeGKRProof’?
+   20 |         auto bytes=serializeGKRZkProof(fixture.circuit(),proof);GKRZkProof decoded;
+      |                    ^~~~~~~~~~~~~~~~~~~
+      |                    serializeGKRProof
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:20:65: error: ‘GKRZkProof’ was not declared in this scope; did you mean ‘GKRProof’?
+   20 |         auto bytes=serializeGKRZkProof(fixture.circuit(),proof);GKRZkProof decoded;
+      |                                                                 ^~~~~~~~~~
+      |                                                                 GKRProof
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:21:61: error: ‘decoded’ was not declared in this scope
+   21 |         check(deserializeGKRZkProof(bytes,fixture.circuit(),decoded,&error),"ZK proof decode: "+error);
+      |                                                             ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:21:15: error: ‘deserializeGKRZkProof’ was not declared in this scope; did you mean ‘deserializeGKRProof’?
+   21 |         check(deserializeGKRZkProof(bytes,fixture.circuit(),decoded,&error),"ZK proof decode: "+error);
+      |               ^~~~~~~~~~~~~~~~~~~~~
+      |               deserializeGKRProof
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:24:55: error: ‘GKRZkPublicStatement’ does not name a type; did you mean ‘GKRPublicStatement’?
+   24 |         auto reject=[&](const std::string& name,const GKRZkPublicStatement& s,const GKRZkProof& p) {
+      |                                                       ^~~~~~~~~~~~~~~~~~~~
+      |                                                       GKRPublicStatement
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:27:10: error: expected ‘)’ before ‘;’ token
+   27 |         };
+      |          ^
+      |          )
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:24:24: note: to match this ‘(’
+   24 |         auto reject=[&](const std::string& name,const GKRZkPublicStatement& s,const GKRZkProof& p) {
+      |                        ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:27:10: error: expected ‘{’ before ‘;’ token
+   27 |         };
+      |          ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:32:76: error: ‘class GKRProofBuilder’ has no member named ‘zkParameters’
+   32 |         auto p=proof;p.layers[normal].normal_mask.coefficients[0]+=builder.zkParameters().U;reject("wrong mask",statement,p);
+      |                                                                            ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:34:56: error: ‘class GKRProofBuilder’ has no member named ‘zkParameters’
+   34 |         p=proof;p.layers[normal].terminals[0]+=builder.zkParameters().U;reject("wrong GKR terminal",statement,p);
+      |                                                        ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:36:51: error: ‘class GKRProofBuilder’ has no member named ‘zkParameters’
+   36 |         p=proof;p.lasso.input_commitment+=builder.zkParameters().U;reject("wrong Lasso hidden claim",statement,p);
+      |                                                   ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/source/src/main_gkr_zk_tests.cpp:39:67: error: ‘class GKRProofBuilder’ has no member named ‘zkParameters’
+   39 |         auto s=statement;s.arithmetic.val0_commitment[0]+=builder.zkParameters().U;reject("wrong original val0 row",s,proof);
+      |                                                                   ^~~~~~~~~~~~
+gmake[3]: *** [src/CMakeFiles/gkr_zk_tests.dir/build.make:79: src/CMakeFiles/gkr_zk_tests.dir/main_gkr_zk_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1194: src/CMakeFiles/gkr_zk_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1201: src/CMakeFiles/gkr_zk_tests.dir/rule] Error 2
+gmake: *** [Makefile:556: gkr_zk_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task12_logs_20261015/build --parallel 8 --target gkr_zk_tests"
+	User time (seconds): 12.24
+	System time (seconds): 0.75
+	Percent of CPU this job got: 204%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.36
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 341780
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 313064
+	Voluntary context switches: 201
+	Involuntary context switches: 66
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 47888
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2
