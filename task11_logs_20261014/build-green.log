@@ -1,0 +1,79 @@
+[  8%] Building CXX object 3rd/mcl/CMakeFiles/mcl.dir/src/fp.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+[ 16%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/bint-x64-amd64.S.o
+[ 25%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/x86-64.S.o
+[ 33%] Linking CXX shared library ../../lib/libmcl.so
+[ 33%] Built target mcl
+[ 41%] Building CXX object 3rd/mcl/CMakeFiles/mclbn256.dir/src/bn_c256.cpp.o
+[ 50%] Linking CXX shared library ../../lib/libmclbn256.so
+[ 50%] Built target mclbn256
+[ 58%] Building CXX object src/CMakeFiles/zk_committed_opening_prototype.dir/zk_hiding_commitment.cpp.o
+[ 66%] Building CXX object src/CMakeFiles/zk_committed_opening_prototype.dir/zk_linear_opening.cpp.o
+[ 75%] Building CXX object src/CMakeFiles/zk_committed_opening_prototype.dir/zk_committed_linear_opening.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp: In function ‘zkproto::committed::Bytes zkproto::committed::encodeStatement(const Statement&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp:88:5: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   88 |     for(const auto& b:s.coefficients)e.element(b);return e.bytes;
+      |     ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp:88:51: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   88 |     for(const auto& b:s.coefficients)e.element(b);return e.bytes;
+      |                                                   ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp: In function ‘bool zkproto::committed::verify(const Parameters&, const Statement&, const Proof&, std::string*)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp:142:9: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+  142 |         if(error)error->clear();return true;
+      |         ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/zk_committed_linear_opening.cpp:142:33: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  142 |         if(error)error->clear();return true;
+      |                                 ^~~~~~
+[ 83%] Linking CXX static library libzk_committed_opening_prototype.a
+[ 83%] Built target zk_committed_opening_prototype
+[ 91%] Building CXX object src/CMakeFiles/zk_committed_opening_tests.dir/main_zk_committed_opening_tests.cpp.o
+[100%] Linking CXX executable zk_committed_opening_tests
+[100%] Built target zk_committed_opening_tests
+[ 33%] Built target mcl
+[ 50%] Built target mclbn256
+[ 83%] Built target zk_committed_opening_prototype
+[ 91%] Building CXX object src/CMakeFiles/zk_committed_opening_verify.dir/main_zk_committed_opening_verify.cpp.o
+[100%] Linking CXX executable zk_committed_opening_verify
+[100%] Built target zk_committed_opening_verify
+[ 36%] Built target mcl
+[ 54%] Built target mclbn256
+[ 63%] Building CXX object src/CMakeFiles/zk_opening_prototype.dir/zk_hiding_commitment.cpp.o
+[ 72%] Building CXX object src/CMakeFiles/zk_opening_prototype.dir/zk_linear_opening.cpp.o
+[ 81%] Linking CXX static library libzk_opening_prototype.a
+[ 81%] Built target zk_opening_prototype
+[ 90%] Building CXX object src/CMakeFiles/zk_opening_tests.dir/main_zk_opening_tests.cpp.o
+[100%] Linking CXX executable zk_opening_tests
+[100%] Built target zk_opening_tests
+	Command being timed: "cmake --build /home/yttan/project/zkGPT/zkGPT-main/zkGPT/task11_logs_20261014/build --target zk_committed_opening_tests zk_committed_opening_verify zk_opening_tests --parallel 1"
+	User time (seconds): 47.45
+	System time (seconds): 1.44
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:48.89
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 327112
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 663221
+	Voluntary context switches: 659
+	Involuntary context switches: 151
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 46056
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

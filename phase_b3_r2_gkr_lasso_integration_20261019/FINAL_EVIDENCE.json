@@ -1,0 +1,1530 @@
+{
+  "schema": "B3-R2-evidence-v1",
+  "date": "2026-10-19",
+  "repository": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+  "head": "7be84bdb5b41132c31ba556784580ddd2c66c4fc",
+  "scope": "existing oneblock clamp1 quantized public constraint system; not full GPT-2/paper equivalence",
+  "status": {
+    "code": "CODED",
+    "unit": "UNIT-TESTED",
+    "composition": "INTEGRATED",
+    "real_oneblock_constraint_system": "INDEPENDENTLY-VERIFIED",
+    "paper_equivalent": false,
+    "full12_independent": false,
+    "full_zero_knowledge": false,
+    "overall_original_paper_goal": "BLOCKED"
+  },
+  "answers": {
+    "reused_existing_GKR": true,
+    "new_R2_route_uses_Lasso_instead_of_LogUp": true,
+    "real_model_range_and_exp_queries": true,
+    "authenticated_common_witness": true,
+    "all_GKR_terminals_directly_in_final_sumcheck": true,
+    "real_oneblock_scoped_independent": true,
+    "full12_integrated_independent": false,
+    "source_deletions": [],
+    "remaining_numeric_obligations": [
+      "true pmax",
+      "Attention scaling",
+      "rounding/LN/GELU/fusion paper alignment"
+    ],
+    "remaining_security_obligations": [
+      "joint soundness reduction/error budget",
+      "PC knowledge and Fiat-Shamir extractor composition",
+      "hiding commitments/masked proofs/simulator"
+    ]
+  },
+  "counts": {
+    "modified_source_files": 13,
+    "added_source_files": 35,
+    "deleted_source_files": 0,
+    "root_ctest": 29,
+    "lookup_independent_cases": 17,
+    "fixture_independent_cases": 14,
+    "GKR_mutation_checks": 19,
+    "ASAN_tests": 3,
+    "real_mutation_cases": 11,
+    "real_range_regions": 52,
+    "real_range_values": 2553984,
+    "real_exp_pairs": 6336,
+    "real_GKR_terminals": 48
+  },
+  "commands": {
+    "final_regression": [
+      {
+        "command": [
+          "cmake",
+          "-S",
+          ".",
+          "-B",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "-DCMAKE_BUILD_TYPE=Release"
+        ],
+        "exit": 0,
+        "seconds": 0.9840475991368294,
+        "log": "final-v3-final-0.log",
+        "log_sha256": "393ce03a1f20da27c6a1e36f19b5c9af45df5b1e6b46e97b1a4e78f14aa64789"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "-j",
+          "8"
+        ],
+        "exit": 0,
+        "seconds": 4.462603025138378,
+        "log": "final-v3-final-1.log",
+        "log_sha256": "5535a876d0628c97c36006a29a2d2b448e61af9d3d9bd2259bccfe2ad6f5f60e"
+      },
+      {
+        "command": [
+          "ctest",
+          "--test-dir",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "--output-on-failure",
+          "-j",
+          "4"
+        ],
+        "exit": 0,
+        "seconds": 23.593460074160248,
+        "log": "final-v3-final-2.log",
+        "log_sha256": "79776b68596b61233ed57bb0a49796f4f0a91c21ba9f4044679e5104b30dbcf9"
+      },
+      {
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/gkr_mutation_tests"
+        ],
+        "exit": 0,
+        "seconds": 0.11003910703584552,
+        "log": "final-v3-final-3.log",
+        "log_sha256": "e28408c934a65dc147e535f4898c9dde78ed24663155519c0ed4e1b3dfb6884b"
+      },
+      {
+        "command": [
+          "python3",
+          "src/paper_r1/lookup_independent.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r1/r2_lookup_batch_tests",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r1/r2_lookup_verify"
+        ],
+        "exit": 0,
+        "seconds": 7.789568492677063,
+        "log": "final-v3-final-4.log",
+        "log_sha256": "803ba37a71286316e7d7b568f4b48a4b57d4bbccdf94108f10170c467b7e3a27"
+      },
+      {
+        "command": [
+          "python3",
+          "src/paper_r2/independent.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_integration_tests",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_verify"
+        ],
+        "exit": 0,
+        "seconds": 4.182017980609089,
+        "log": "final-v3-final-5.log",
+        "log_sha256": "e56ba554e2c16b7ca839be7fb49c98d6c9d64c5425b6a6b64125e008528d7b05"
+      },
+      {
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit": 0,
+        "seconds": 0.0098142153583467,
+        "log": "final-v3-final-6.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "asan": [
+      {
+        "command": [
+          "cmake",
+          "-S",
+          "src/paper_r1",
+          "-B",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer",
+          "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"
+        ],
+        "exit": 0,
+        "seconds": 0.28740838216617703,
+        "log": "asan-v3-0.log"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+          "--target",
+          "r2_mapped_input_tests",
+          "r2_lookup_batch_tests",
+          "r2_lookup_verify",
+          "r2_exp_profile_tests",
+          "-j",
+          "8"
+        ],
+        "exit": 0,
+        "seconds": 16.090212342794985,
+        "log": "asan-v3-1.log"
+      },
+      {
+        "command": [
+          "ctest",
+          "--test-dir",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+          "-R",
+          "r2_mapped_input|r2_lookup_batch|r2_exp_profile",
+          "--output-on-failure"
+        ],
+        "exit": 0,
+        "seconds": 10.273543084971607,
+        "log": "asan-v3-2.log"
+      }
+    ],
+    "artifact_tools": [
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "--target",
+          "r2_model_attack_artifacts",
+          "-j",
+          "8"
+        ],
+        "exit": 0,
+        "seconds": 0.19122140388935804,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/final-seal-0.log",
+        "log_sha256": "9f5a3f16a519e472e8078416d1103d93ad784fa99e7082bc7f9842bb510cad4d"
+      },
+      {
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit": 0,
+        "seconds": 0.009588705375790596,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/final-seal-1.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_attack_artifacts",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts"
+        ],
+        "exit": 0,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-generate.log",
+        "log_sha256": "96795cb9ad427cc42c0168bf1603ff1c4e842873116e4a5effb9c532918e2926",
+        "note": "actual generation recorded by run_real_attacks.py; not rerun here"
+      }
+    ],
+    "real_normal_v3": [
+      {
+        "command": [
+          "cmake",
+          "-S",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+          "-B",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "-DCMAKE_BUILD_TYPE=Release"
+        ],
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+        "exit": 0,
+        "seconds": 0.9409001176245511,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-0.log",
+        "log_sha256": "3c44a1fbe24bfd6b7f1511230ca94942fab2a3d5f9d0550a0d2c523440993ead"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "--target",
+          "r2_model_integrated",
+          "r2_model_verify",
+          "-j",
+          "8"
+        ],
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+        "exit": 0,
+        "seconds": 0.40796935791149735,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-1.log",
+        "log_sha256": "46cd0b6a6803d3de9831cad60eb09d7bb30df5c4e0aa95e446e60e2a1fcb4db4"
+      },
+      {
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-prove.time",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_integrated",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts"
+        ],
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+        "exit": 0,
+        "seconds": 652.3544966666959,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-2.log",
+        "log_sha256": "171321811842781ce580901df44aabe7f6b5333b610782dfad1ac3829346fcb0"
+      },
+      {
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-verify.time",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts/model.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts/model.proof"
+        ],
+        "cwd": "/tmp/r2-real-model-independent-zlw1k83z",
+        "exit": 0,
+        "seconds": 270.9264615899883,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-3.log",
+        "log_sha256": "23bc51fc6ff8eee179308a1a373e50622323f50059bf17167dae933298ddaf08"
+      }
+    ],
+    "real_detached_v3": [
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+          "--target",
+          "r2_model_integrated",
+          "r2_model_verify",
+          "-j",
+          "8"
+        ],
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+        "expected": 0,
+        "exit": 0,
+        "seconds": 0.3098066132515669,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-0.log",
+        "log_sha256": "54b083473e86f6d36c04df6cd5f4f5c49b3db76188c9f9ac135ceca984eed149"
+      },
+      {
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-prove.time",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_integrated",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-artifacts",
+          "--hostile-range"
+        ],
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+        "expected": 0,
+        "exit": 0,
+        "seconds": 646.0460282899439,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-1.log",
+        "log_sha256": "b79ea08f122de3363b58a4d4f8400bea6375f93ca59ac9e7153afd577c8b44d6"
+      },
+      {
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-verify.time",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-artifacts/model.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-artifacts/model.proof"
+        ],
+        "cwd": "/tmp/r2-real-hostile-v3-independent-tf1tdv6r",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 176.3032018430531,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-v3-2.log",
+        "log_sha256": "6a48399a2185fa476fb9ccfc6fd8badbf6aa4d5f3b5d5f0f66f7cc235851a5ad"
+      }
+    ],
+    "real_mutations_v3": [
+      {
+        "case": "Exp-address",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-address.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-address.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-j5sz8onm",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 135.33194872410968,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-Exp-address.log",
+        "log_sha256": "208cb577a7ff75396c9e77dc77e4e90ab680f29435cee17332a5ac63dcc74248",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.88486s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "Exp-index-commitment",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-index-commitment.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-index-commitment.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-446ll2dn",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 29.071253046859056,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-Exp-index-commitment.log",
+        "log_sha256": "8f8604ec04a7dcff4f8fc57af83f338e5836846dda3d554bf9c40dc608f1699b",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.8908s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "Exp-memory",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-memory.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-memory.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-tx6_rt9q",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 140.1499442528002,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-Exp-memory.log",
+        "log_sha256": "e233c72d6277f389ae529cb161b5c4ba342775b5cee560225ec2f1b1ffd28205",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.94094s\nREJECT memory multiset equation\n"
+      },
+      {
+        "case": "Exp-profile",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-profile.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-profile.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-mxnjs6z5",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 9.213487193919718,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-Exp-profile.log",
+        "log_sha256": "ebc8375b077b960f78e89f823734d8e7daf2dc96007d2368b5eb218fc88b4407",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.87646s\nREJECT model query statement differs from verifier-owned layout\n"
+      },
+      {
+        "case": "Exp-value-commitment",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-value-commitment.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/Exp-value-commitment.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-qyv9tde_",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 28.663139873184264,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-Exp-value-commitment.log",
+        "log_sha256": "7b598cce6e57d9237e37448ddac27a662161cc1279aadb76df759bcc95d0847f",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.81883s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "derived-map",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/derived-map.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/derived-map.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-m2k_p5xr",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 8.837906265165657,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-derived-map.log",
+        "log_sha256": "2fb9e74030a6e93b8e3320f356a0412c97efd018f750128e8cad68d4e50540c9",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.80721s\nREJECT model query statement differs from verifier-owned layout\n"
+      },
+      {
+        "case": "missing-range",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/missing-range.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/missing-range.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-n05pz2ry",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 9.551857993938029,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-missing-range.log",
+        "log_sha256": "7a5be211a73f67d5d442518467cf7f803efb7f979e2e53d0de167283a950b06a",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.77994s\nREJECT model query statement differs from verifier-owned layout\n"
+      },
+      {
+        "case": "model-W",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/model-W.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/model-W.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-9n5oxonx",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 28.827645677141845,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-model-W.log",
+        "log_sha256": "be23454ff8179723c63d1cc0c6c3b45755793f12482ccdb02ff9d851adb49f40",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.78443s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "parent-commitment",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/parent-commitment.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/parent-commitment.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-lr6e0jkk",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 28.551294464152306,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-parent-commitment.log",
+        "log_sha256": "3707df71eca66c8e2fe7b0948bd6e244a1d952d94aa8fca559cf6b7b30bdbf6c",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.78611s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "public-Y",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/public-Y.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/public-Y.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-gduzc0x4",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 27.99574609613046,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-public-Y.log",
+        "log_sha256": "8cf5d9cdcb9af7b6abf50c6756e805dfa566ea82c1dba4a5d6b5075d6a8c0833",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.78747s\nREJECT IPA final equation\n"
+      },
+      {
+        "case": "public-padding",
+        "command": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/public-padding.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts/public-padding.proof"
+        ],
+        "cwd": "/tmp/r2-real-attack-independent-4vytm4z2",
+        "expected": 2,
+        "exit": 2,
+        "seconds": 6.5133219342678785,
+        "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attack-v3b-public-padding.log",
+        "log_sha256": "a4fdd9d6afbe47234552f372170e5309b10453613a42b07e98d21a08cb224f2f",
+        "output": "input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 1.78268s\nREJECT public activation padding must be zero\n"
+      }
+    ]
+  },
+  "coverage": {
+    "ranges": [
+      {
+        "bits": 1,
+        "actual": 131072,
+        "padded": 131072,
+        "source_spans": 1
+      },
+      {
+        "bits": 32,
+        "actual": 13056,
+        "padded": 16384,
+        "source_spans": 2
+      },
+      {
+        "bits": 64,
+        "actual": 1346688,
+        "padded": 2097152,
+        "source_spans": 13
+      },
+      {
+        "bits": 64,
+        "actual": 557120,
+        "padded": 1048576,
+        "source_spans": 8
+      },
+      {
+        "bits": 126,
+        "actual": 506048,
+        "padded": 524288,
+        "source_spans": 9
+      }
+    ],
+    "Exp_profile": 1,
+    "Exp_actual": 6336,
+    "Exp_padded": 8192,
+    "W_actual": 13645824,
+    "W_padded": 16777216,
+    "public_constraints": 65656,
+    "estimated_lookup_prover_bytes_excluding_circuit_GKR": 4954521600,
+    "max_generators": 4096,
+    "max_rounds": 24
+  },
+  "artifacts": {
+    "scale-artifacts/valid.statement": {
+      "bytes": 33350,
+      "sha256": "475d26bb55189d3fc9753acd4e9f73f322046c9d93d3185033e89ca57426805a"
+    },
+    "scale-artifacts/valid.proof": {
+      "bytes": 1379212,
+      "sha256": "5057609a74c0247cc2bc9e0b1152a457c4416fe5c32c452d49185a45fbce9ec7"
+    },
+    "fixture-artifacts/truncated.proof": {
+      "bytes": 87948,
+      "sha256": "1480c92153147aae6c6ff709ebb8ad5304fcb3bc1a8b5d6c5200530f0d2005c2"
+    },
+    "fixture-artifacts/memory.proof": {
+      "bytes": 87949,
+      "sha256": "4b28457d54b1f5ad0e143bb3bfdfffa91a75242bce83e29e8bb53f48f1af0bff"
+    },
+    "fixture-artifacts/gkr.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "fixture-artifacts/bridge.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "fixture-artifacts/valid.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "fixture-artifacts/model.statement": {
+      "bytes": 1261,
+      "sha256": "f031875d361a50291aced37a6fc9b5a8bfec52afe4f7a92b74a089aed904e371"
+    },
+    "fixture-artifacts/memory.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "fixture-artifacts/gkr.proof": {
+      "bytes": 87949,
+      "sha256": "25981d739db0edd3e0346df6c9dfe4c2cadf2934d99c35f7cd8a6a6cdc8e4edd"
+    },
+    "fixture-artifacts/public-X.proof": {
+      "bytes": 87949,
+      "sha256": "f7aa84b5377e746769d95deed8e9b1ee71945f734ae79f692e86d3a93bd10dd5"
+    },
+    "fixture-artifacts/public-X.statement": {
+      "bytes": 1256,
+      "sha256": "0fe1c78506ba94a442282d0f827ea259a17452dc44838d559e503cc8201e6ac9"
+    },
+    "fixture-artifacts/model.proof": {
+      "bytes": 87949,
+      "sha256": "9411b57ba58a0c1b2562ed3380eb17bcb6f1c078d6c513954c8f98cbd08897e9"
+    },
+    "fixture-artifacts/input.proof": {
+      "bytes": 87949,
+      "sha256": "2b6574c96b535061a4b5bde01a9324a3d99b4ba5373328ea3d887e0f9b3fe04c"
+    },
+    "fixture-artifacts/input.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "fixture-artifacts/valid.proof": {
+      "bytes": 87949,
+      "sha256": "f5a24f9baeb43fba45422d43418f358f73d291d10983ec9e30bf38dc0d4a0a1a"
+    },
+    "fixture-artifacts/address-map.statement": {
+      "bytes": 1256,
+      "sha256": "25946a86466ad7f04bb7bcc73b27136356070cf54eaa474430696efea364a05d"
+    },
+    "fixture-artifacts/bridge.proof": {
+      "bytes": 87949,
+      "sha256": "a6633237a9f4cd5cead6d2a29e1e74b97025dc34ef50eeb60e8b6c1a0854e693"
+    },
+    "fixture-artifacts/address-map.proof": {
+      "bytes": 87949,
+      "sha256": "bf4419eda473c5f01ea767b9b51d9d25d622ae68550786865beaeddc11c6faa3"
+    },
+    "fixture-artifacts/truncated.statement": {
+      "bytes": 1256,
+      "sha256": "b2f2f568a14e4881b7a9f06ba7fa7f7c2e672a546eb091e54891914e867a96ba"
+    },
+    "lookup-artifacts/truncated.proof": {
+      "bytes": 102354,
+      "sha256": "be8d6748109dd36db5997930e1d6dc0e4321c3c8a977457b74176139ef13a3d0"
+    },
+    "lookup-artifacts/constant.proof": {
+      "bytes": 102355,
+      "sha256": "61f5426f155e776b3ef310c39f80b99c5f4b23e1a7217f1632be695fc244fe8c"
+    },
+    "lookup-artifacts/master-opening.proof": {
+      "bytes": 102355,
+      "sha256": "dddd2df2093eb7dca87788ac9839b65a7a96e1fa3fdd2753c4d5ff1e928d966a"
+    },
+    "lookup-artifacts/memory-root.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/constant.statement": {
+      "bytes": 1127,
+      "sha256": "b66c1fdf5878573018d026156e50bf4d10a3a3d096b9c05343bd02a288f7a8d1"
+    },
+    "lookup-artifacts/query-commitment.proof": {
+      "bytes": 102355,
+      "sha256": "b56a62285e411085c625b7a747e48100042f21c4f7add2cc67df2c68100660f9"
+    },
+    "lookup-artifacts/selector.proof": {
+      "bytes": 102355,
+      "sha256": "9930b6bf529572efade10d2c9930c14802517f20a8d5d16240458543105f0f4d"
+    },
+    "lookup-artifacts/valid.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/read-counter.proof": {
+      "bytes": 102355,
+      "sha256": "a397a2c5ceccfab3ad61c9403327d1e41761eae968e8dceaa18cced2d81976ce"
+    },
+    "lookup-artifacts/model.statement": {
+      "bytes": 1138,
+      "sha256": "57991bfb22b202ca6128ed0133349eed0bf52f7e9bc96833081007b4f0091fcb"
+    },
+    "lookup-artifacts/query-commitment.statement": {
+      "bytes": 1127,
+      "sha256": "198df6ba6d6f47db4708b779fc82d49d5cf0b89e7f138af419a04a86cf390a65"
+    },
+    "lookup-artifacts/fresh-local-child-padding.proof": {
+      "bytes": 102355,
+      "sha256": "ee75ecc87eb652247cd8d14e6c62e242e3955c3eacd985a65867a0789c1cdd70"
+    },
+    "lookup-artifacts/master-opening.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/public-Y.statement": {
+      "bytes": 1127,
+      "sha256": "3b6b25eadf3da4f2e4cf84baf665dd125d1668eb36c1ee600d04413f893fa7bd"
+    },
+    "lookup-artifacts/table-instance.proof": {
+      "bytes": 102355,
+      "sha256": "b1251ac407e56e73d6d300e115d764746562d220c377f63a4de63a8b02f43fe9"
+    },
+    "lookup-artifacts/memory-root.proof": {
+      "bytes": 102355,
+      "sha256": "22d7274e985da66da125bc6a32c139bbd9ed45c5418ee2fda5268402554f9f18"
+    },
+    "lookup-artifacts/fresh-local-child-padding.statement": {
+      "bytes": 1127,
+      "sha256": "71517b65a984a1f8865de1b7c3302e37a27c51f60cb5489fe6cbfb70d21e5fbd"
+    },
+    "lookup-artifacts/read-counter.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/sumcheck.proof": {
+      "bytes": 102355,
+      "sha256": "e91a68f1512fbdc1eb0b1956de5060b53790785d4de95810dc0083d8615a301c"
+    },
+    "lookup-artifacts/fresh-local-different-witness.statement": {
+      "bytes": 1127,
+      "sha256": "236a2794afb578ce85f108a87d11a987d758868169f5626127465c1c941ab682"
+    },
+    "lookup-artifacts/model.proof": {
+      "bytes": 102355,
+      "sha256": "d4e28c48fa9062571bae8451d6ee4c799dcdaee38b46e36b6da1159605b6d49e"
+    },
+    "lookup-artifacts/trailing.proof": {
+      "bytes": 102356,
+      "sha256": "7c07e80cad6ff7ba5c00427cad4e8665354600e0eb36f571f3d8e494189c9198"
+    },
+    "lookup-artifacts/fresh-local-different-witness.proof": {
+      "bytes": 102355,
+      "sha256": "10c4f1a5355a3ce6289dea16c2d217822f7b7621f7022ba2f1e9295f9b882703"
+    },
+    "lookup-artifacts/fresh-local-master-padding.statement": {
+      "bytes": 1127,
+      "sha256": "d08f2bb9eaf6b49b5747b21f02c4d4f56e05bf52857b35beecb6d74a5f3f6282"
+    },
+    "lookup-artifacts/selector.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/table-instance.statement": {
+      "bytes": 1138,
+      "sha256": "4454224463a62887be5311860ee1695bd3a8b7bfa60e9cbfb97c2dccaea4d5ab"
+    },
+    "lookup-artifacts/public-Y.proof": {
+      "bytes": 102355,
+      "sha256": "dd8abdf8ecde2e36c3dcef27a56e9c19718304c8bd7d603cc4f025531a67395b"
+    },
+    "lookup-artifacts/sumcheck.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/trailing.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/valid.proof": {
+      "bytes": 102355,
+      "sha256": "0af23a0ef6f68db5b95f2d2af35d7511c62bd37aa5b4d9a738bff64fe23e9746"
+    },
+    "lookup-artifacts/fresh-local-master-padding.proof": {
+      "bytes": 102355,
+      "sha256": "61fe1c8ae7e009b6c972a75fca68267eabb0ab70ddf5d260572e032f7f1e9b4a"
+    },
+    "lookup-artifacts/truncated.statement": {
+      "bytes": 1127,
+      "sha256": "78fd50d929eb205577dd7123f18bac2da98d3138dbf116721c770333e0cc5ca5"
+    },
+    "lookup-artifacts/source-map.proof": {
+      "bytes": 102355,
+      "sha256": "686a9c51e5938bd78b8fa54093e56ae79c66c012cf1d501b88485ba9baa55194"
+    },
+    "lookup-artifacts/source-map.statement": {
+      "bytes": 1127,
+      "sha256": "7b91668196207a13880d798713ea6993ac763540f4b5a94a7c3768bb3e1609e1"
+    },
+    "real-model-source-artifacts/model.statement": {
+      "bytes": 2989636,
+      "sha256": "e11b4478470e6e69dda38237c2c7f69d92880e8e476a288769b99cdcd35040c7"
+    },
+    "real-model-source-artifacts/model.source-proof": {
+      "bytes": 8663,
+      "sha256": "d89af40db1f796db48ee45f33abdec3ab3e05915d5ba25323869ccb55454af1f"
+    },
+    "real-model-source-artifacts/result.json": {
+      "bytes": 365,
+      "sha256": "ed9d771aaf2a8249068d117c89ee44debd905582d37498513f1a17035380782d"
+    },
+    "real-integrated-artifacts/model.statement": {
+      "bytes": 3120949,
+      "sha256": "082a6a4ce31fd05d7f4d329340a7cbf5a5203152c75f2220529275b0ba0ca076"
+    },
+    "real-integrated-artifacts/model.proof": {
+      "bytes": 4260851,
+      "sha256": "a1c2086e3a41fee0817b72c0422684ea6a31c766663f90c7ab89ff53aed86d35"
+    },
+    "real-integrated-artifacts/result.json": {
+      "bytes": 331,
+      "sha256": "1096e812b38cfdbf1e0c013bd23de8e61bebe9beac49f8959953c049368f4934"
+    },
+    "real-hostile-artifacts/model.statement": {
+      "bytes": 3120949,
+      "sha256": "58dc0eecc4bd209ac622f4131b5a9fc6a46243f3f1cdf844f7f44dfad3b5889c"
+    },
+    "real-hostile-artifacts/model.proof": {
+      "bytes": 4260851,
+      "sha256": "03ef63ee5c0670a104f3655704b36354232f3e06d20274a5a37e90d3ee1dc0fa"
+    },
+    "real-hostile-artifacts/result.json": {
+      "bytes": 333,
+      "sha256": "5de35dbc0d9afe4a8926f010ee9030fad323d33306136cd0b383bcbf78c2ac6d"
+    },
+    "real-integrated-v3-artifacts/model.statement": {
+      "bytes": 3120949,
+      "sha256": "4aefc959f00e9b3beeba6f7d91edf1a19bf70c35fa4f56b82a1dac66dfcc953e"
+    },
+    "real-integrated-v3-artifacts/model.proof": {
+      "bytes": 4260851,
+      "sha256": "924774b85f5f852b22905224f108602064e5bab5243f270b2fec95c4d560e1f1"
+    },
+    "real-integrated-v3-artifacts/result.json": {
+      "bytes": 333,
+      "sha256": "f2507dd19cf16cfcb69b8bc84c3b43916f19c1bcbd913458fbf9221cde5688e3"
+    },
+    "real-hostile-v3-artifacts/model.statement": {
+      "bytes": 3120949,
+      "sha256": "12c0553c442c0ce51ec0572ccfc020ed89fa3b328e18aa5615afd46f248ad3b1"
+    },
+    "real-hostile-v3-artifacts/model.proof": {
+      "bytes": 4260851,
+      "sha256": "ab24f6c05a04d2147b91c9e82a4d7f1db45b867b47fd6a804d9df475be4028af"
+    },
+    "real-hostile-v3-artifacts/result.json": {
+      "bytes": 333,
+      "sha256": "75b97c0103b63811fc62f57614b90e59ae7940524fb781a35da9b25371cab89b"
+    },
+    "real-attacks-v3-artifacts/Exp-profile.proof": {
+      "bytes": 4260851,
+      "sha256": "aa10cc00c54b18754bfbabe1004fcc68ef5d3578072771ea7280c00ff87f78f0"
+    },
+    "real-attacks-v3-artifacts/Exp-index-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "377f9839259ae84ce0d4f641769fbf8e5cb5a797fc5c1e8f23bb2e628531fb3f"
+    },
+    "real-attacks-v3-artifacts/Exp-value-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "c7fec59be2a5f14acf7a1f48e58957b384df44212a044962c3241d196ff6ace1"
+    },
+    "real-attacks-v3-artifacts/parent-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "1418efda50b29472c2d8837149d0b96c2a005fa1266e00d2643d8ace2cdb73c5"
+    },
+    "real-attacks-v3-artifacts/Exp-value-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "2d5d5753963f9806e224757470cc4acdfb7120b1585384b9419077ffce7c8437"
+    },
+    "real-attacks-v3-artifacts/derived-map.statement": {
+      "bytes": 3120949,
+      "sha256": "736ae853c7535e14e13f0cc56d7762fe344a2edcc949077c10a50e552aaee3ae"
+    },
+    "real-attacks-v3-artifacts/parent-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "9abde1a477e1b0d38bb4daba447888c390d89d7b412f03907316a302b961a262"
+    },
+    "real-attacks-v3-artifacts/coverage.json": {
+      "bytes": 541,
+      "sha256": "96e6c25df55b3913ced95d4be312cf41ba63bf6534aaf9dd99aee8c8b789f34e"
+    },
+    "real-attacks-v3-artifacts/model-W.statement": {
+      "bytes": 3120949,
+      "sha256": "95e722eb8ba4380cd7cde959a8015554fea32c6e4308a86fc5ac6b17a01fea50"
+    },
+    "real-attacks-v3-artifacts/public-Y.statement": {
+      "bytes": 3120949,
+      "sha256": "07752b8f1cdad56b744ab6d7f6c94dab72c3868a672ce2fbd35ceaa16b47180f"
+    },
+    "real-attacks-v3-artifacts/missing-range.statement": {
+      "bytes": 3120909,
+      "sha256": "8bbffa6c86b158e2f051b2099da8c20cf56f525299156d29ae2cf0ccdeaa9182"
+    },
+    "real-attacks-v3-artifacts/model-W.proof": {
+      "bytes": 4260851,
+      "sha256": "5000a9a7426a82efb565910e33a20c3cfe751df2e38b1c32ac02f9401b8272f2"
+    },
+    "real-attacks-v3-artifacts/derived-map.proof": {
+      "bytes": 4260851,
+      "sha256": "2c07610821b7cab5ac0f89beccc725063a1d17638938358f50976d2c4df04fe5"
+    },
+    "real-attacks-v3-artifacts/public-padding.proof": {
+      "bytes": 4260851,
+      "sha256": "25d03bf60ff7c4bd2b762b58be8b24762f5c955b413e555064c869e9cbf58d8d"
+    },
+    "real-attacks-v3-artifacts/public-padding.statement": {
+      "bytes": 3120949,
+      "sha256": "5a3b8ff82e0d32099165c0446b2668ce640c132c3fd5aae64cb67494551ae938"
+    },
+    "real-attacks-v3-artifacts/Exp-profile.statement": {
+      "bytes": 3120949,
+      "sha256": "b271059084275efe648f67b1da19605a1041fd59688bbdcc87d0af56432e3685"
+    },
+    "real-attacks-v3-artifacts/public-Y.proof": {
+      "bytes": 4260851,
+      "sha256": "394e35c61175c935dcbb885ffc7ed9cf8b98edc04de9de5a9739bc1a8fa2307a"
+    },
+    "real-attacks-v3-artifacts/Exp-index-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "ba178db45b9bdb84e9f78d479a98fff575220bde10d4817427d2d17db59278ee"
+    },
+    "real-attacks-v3b-artifacts/Exp-profile.proof": {
+      "bytes": 4260851,
+      "sha256": "aa10cc00c54b18754bfbabe1004fcc68ef5d3578072771ea7280c00ff87f78f0"
+    },
+    "real-attacks-v3b-artifacts/Exp-index-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "377f9839259ae84ce0d4f641769fbf8e5cb5a797fc5c1e8f23bb2e628531fb3f"
+    },
+    "real-attacks-v3b-artifacts/Exp-value-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "c7fec59be2a5f14acf7a1f48e58957b384df44212a044962c3241d196ff6ace1"
+    },
+    "real-attacks-v3b-artifacts/parent-commitment.statement": {
+      "bytes": 3120949,
+      "sha256": "1418efda50b29472c2d8837149d0b96c2a005fa1266e00d2643d8ace2cdb73c5"
+    },
+    "real-attacks-v3b-artifacts/Exp-address.statement": {
+      "bytes": 3120949,
+      "sha256": "4aefc959f00e9b3beeba6f7d91edf1a19bf70c35fa4f56b82a1dac66dfcc953e"
+    },
+    "real-attacks-v3b-artifacts/Exp-value-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "2d5d5753963f9806e224757470cc4acdfb7120b1585384b9419077ffce7c8437"
+    },
+    "real-attacks-v3b-artifacts/derived-map.statement": {
+      "bytes": 3120949,
+      "sha256": "736ae853c7535e14e13f0cc56d7762fe344a2edcc949077c10a50e552aaee3ae"
+    },
+    "real-attacks-v3b-artifacts/parent-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "9abde1a477e1b0d38bb4daba447888c390d89d7b412f03907316a302b961a262"
+    },
+    "real-attacks-v3b-artifacts/coverage.json": {
+      "bytes": 541,
+      "sha256": "96e6c25df55b3913ced95d4be312cf41ba63bf6534aaf9dd99aee8c8b789f34e"
+    },
+    "real-attacks-v3b-artifacts/model-W.statement": {
+      "bytes": 3120949,
+      "sha256": "95e722eb8ba4380cd7cde959a8015554fea32c6e4308a86fc5ac6b17a01fea50"
+    },
+    "real-attacks-v3b-artifacts/public-Y.statement": {
+      "bytes": 3120949,
+      "sha256": "07752b8f1cdad56b744ab6d7f6c94dab72c3868a672ce2fbd35ceaa16b47180f"
+    },
+    "real-attacks-v3b-artifacts/Exp-memory.proof": {
+      "bytes": 4260851,
+      "sha256": "eae6e9992ae1e59b2b99352359998041b69c0632972f6a65950d685616b41cd9"
+    },
+    "real-attacks-v3b-artifacts/missing-range.proof": {
+      "bytes": 2943577,
+      "sha256": "cef7b70e4c47f426280b8330aa004a8f247d5cbba056e69ce0002cf66a80e9d7"
+    },
+    "real-attacks-v3b-artifacts/missing-range.statement": {
+      "bytes": 3120909,
+      "sha256": "8bbffa6c86b158e2f051b2099da8c20cf56f525299156d29ae2cf0ccdeaa9182"
+    },
+    "real-attacks-v3b-artifacts/Exp-memory.statement": {
+      "bytes": 3120949,
+      "sha256": "4aefc959f00e9b3beeba6f7d91edf1a19bf70c35fa4f56b82a1dac66dfcc953e"
+    },
+    "real-attacks-v3b-artifacts/model-W.proof": {
+      "bytes": 4260851,
+      "sha256": "5000a9a7426a82efb565910e33a20c3cfe751df2e38b1c32ac02f9401b8272f2"
+    },
+    "real-attacks-v3b-artifacts/derived-map.proof": {
+      "bytes": 4260851,
+      "sha256": "2c07610821b7cab5ac0f89beccc725063a1d17638938358f50976d2c4df04fe5"
+    },
+    "real-attacks-v3b-artifacts/public-padding.proof": {
+      "bytes": 4260851,
+      "sha256": "25d03bf60ff7c4bd2b762b58be8b24762f5c955b413e555064c869e9cbf58d8d"
+    },
+    "real-attacks-v3b-artifacts/public-padding.statement": {
+      "bytes": 3120949,
+      "sha256": "5a3b8ff82e0d32099165c0446b2668ce640c132c3fd5aae64cb67494551ae938"
+    },
+    "real-attacks-v3b-artifacts/Exp-address.proof": {
+      "bytes": 4260851,
+      "sha256": "405e6950c3c25d506ed63e0a2ba1bddc71b0f9234ec62e7060c2c441490291f8"
+    },
+    "real-attacks-v3b-artifacts/Exp-profile.statement": {
+      "bytes": 3120949,
+      "sha256": "b271059084275efe648f67b1da19605a1041fd59688bbdcc87d0af56432e3685"
+    },
+    "real-attacks-v3b-artifacts/public-Y.proof": {
+      "bytes": 4260851,
+      "sha256": "394e35c61175c935dcbb885ffc7ed9cf8b98edc04de9de5a9739bc1a8fa2307a"
+    },
+    "real-attacks-v3b-artifacts/Exp-index-commitment.proof": {
+      "bytes": 4260851,
+      "sha256": "ba178db45b9bdb84e9f78d479a98fff575220bde10d4817427d2d17db59278ee"
+    },
+    "build-v3/src/paper_r2/r2_model_integrated": {
+      "bytes": 2189216,
+      "sha256": "8387047ebcfadb2c2a20e9678b9d046da36ac7ce561e59427238be623b817c48"
+    },
+    "build-v3/src/paper_r2/r2_model_verify": {
+      "bytes": 1832192,
+      "sha256": "e343a24f732f3cc5587406dfafb9665f0fb0f8687af2913b4dca8da6fb19e8dc"
+    },
+    "build-v3/src/paper_r2/r2_integration_tests": {
+      "bytes": 1967384,
+      "sha256": "c7d2ba8d6cbf8450886004ad60acdc9278905aa8992df13210e4ad3f6435e484"
+    },
+    "build-v3/src/paper_r2/r2_verify": {
+      "bytes": 1429728,
+      "sha256": "bdeb54d554f37528f8b053cc515ef75ed072e9e75530eeeb6c8e073ecc517c90"
+    },
+    "build-v3/src/paper_r2/r2_model_attack_artifacts": {
+      "bytes": 1060416,
+      "sha256": "ccee58ae46e56d497ce3f4a2dd3078c24fde44660f11e1176186cc6e12f239d8"
+    }
+  },
+  "parameter_file_hashes": {
+    "fc_0.bin": {
+      "bytes": 7077896,
+      "sha256": "fb4abf46ebb80705eef043e9d3c57f608e851cdc4598abbc0731409a4b97b5c0"
+    },
+    "fc_0_bias.bin": {
+      "bytes": 9220,
+      "sha256": "5591fdcdfda410933452988c5b21b8ab8ad2dc79e6e052e82249bbf1fda23610"
+    },
+    "fc_1.bin": {
+      "bytes": 2359304,
+      "sha256": "46c991157d14d5761a26ddc3cdfdd3058f80931bd96ed0d898d59c3cbc7d3f8d"
+    },
+    "fc_10.bin": {
+      "bytes": 9437192,
+      "sha256": "cc45017a4c6b1ca017766667c34cd2ba91acf8b36358222c1e91194755ed1c83"
+    },
+    "fc_10_bias.bin": {
+      "bytes": 12292,
+      "sha256": "e301b820063a243db51f00af2a9a3f389c14384e59c97727b781d74a0d0e67e4"
+    },
+    "fc_11.bin": {
+      "bytes": 9437192,
+      "sha256": "a285710cb3bd16be92fd67cabdbe61df7eb48cc676e9f5811c7be7249e759751"
+    },
+    "fc_11_bias.bin": {
+      "bytes": 3076,
+      "sha256": "42e29d455dc4d2534d06bb853b426192b68a3e5e1fb066710295406c287be2a9"
+    },
+    "fc_12.bin": {
+      "bytes": 7077896,
+      "sha256": "6f9ba38976fe226879ce2c7a2c93625195787a65054f5a95e047ea08db442f58"
+    },
+    "fc_12_bias.bin": {
+      "bytes": 9220,
+      "sha256": "563809274e91a0989b47265c3c4a52845582da43ca2465b7eeac33d377e04a76"
+    },
+    "fc_13.bin": {
+      "bytes": 2359304,
+      "sha256": "d695919f359e70872007c0544a30bf966e9529125c93cb33f3c09150ff955b2d"
+    },
+    "fc_13_bias.bin": {
+      "bytes": 3076,
+      "sha256": "3b4cbf398ab59833630eb8c3cab28128f4c7b0b43df4ffe5a3e07ba90b21d09c"
+    },
+    "fc_14.bin": {
+      "bytes": 9437192,
+      "sha256": "310287e9486716e9e8ac25278e0812775aec80c932ec18c4fd59f6e852d6e417"
+    },
+    "fc_14_bias.bin": {
+      "bytes": 12292,
+      "sha256": "fc5a36ac135753b00646dad040577065ca3eb889b868ee91adc4cb72fddfc32a"
+    },
+    "fc_15.bin": {
+      "bytes": 9437192,
+      "sha256": "7f44178a62ab2c0320d2b68624bcc23c1a5cdbb5a3f6d4472508e328f3651fd7"
+    },
+    "fc_15_bias.bin": {
+      "bytes": 3076,
+      "sha256": "e6618286163f9f63d093bf8c91586a8c1eec8090e87c6b6ed807bfac38bb7a5f"
+    },
+    "fc_16.bin": {
+      "bytes": 7077896,
+      "sha256": "19f0c26ba7d6351fb67913f3807a676d8c93e9679c0217e29b7b80834de62a8b"
+    },
+    "fc_16_bias.bin": {
+      "bytes": 9220,
+      "sha256": "c8e07962f394b072559dea9b97564db8a678d89659aeea611719ab262623589c"
+    },
+    "fc_17.bin": {
+      "bytes": 2359304,
+      "sha256": "8a32bb25e6321fa478735d5b277aadb59ae2b6648590e72608fc9dc9079210bc"
+    },
+    "fc_17_bias.bin": {
+      "bytes": 3076,
+      "sha256": "dd4249384ef06acb8c87b8576f473f325a03515d16e3165e0dc29055545d73b0"
+    },
+    "fc_18.bin": {
+      "bytes": 9437192,
+      "sha256": "3cf71aaacf421f1eaa1812c929b6c8e9b94551270f128a07f03fd384c013153f"
+    },
+    "fc_18_bias.bin": {
+      "bytes": 12292,
+      "sha256": "8d2742c2ea9868d07ed4529a4e9b6096548fd14eb011eef052781381efa117fe"
+    },
+    "fc_19.bin": {
+      "bytes": 9437192,
+      "sha256": "94618aca7485e0dd1f6ba42f3f4d957b66e3d15ffd10ca7a1cd271740d4e897a"
+    },
+    "fc_19_bias.bin": {
+      "bytes": 3076,
+      "sha256": "958fcb42eb2393ee79f75be0dbc3eac41c5ff715ee053729a429db8631c66f7a"
+    },
+    "fc_1_bias.bin": {
+      "bytes": 3076,
+      "sha256": "f42903adef0f4c402e89fd05cbdbffb1a1248c4606b6bfe29d140b574043e55d"
+    },
+    "fc_2.bin": {
+      "bytes": 9437192,
+      "sha256": "42c3a2076aec94e64bbc93fe6585b883131a73eef272fbeab2d8065f3e3a6d40"
+    },
+    "fc_20.bin": {
+      "bytes": 7077896,
+      "sha256": "45bc843db3cf9924e2ab5d77c7942d175ca51cfab6547c67671a1037b937bff9"
+    },
+    "fc_20_bias.bin": {
+      "bytes": 9220,
+      "sha256": "0d2ed9af9bd79b8189f831ff6e2714896c15c6145e2b47930252be1339c8724a"
+    },
+    "fc_21.bin": {
+      "bytes": 2359304,
+      "sha256": "1672b18f2f0227b109042327be63adf23987986ae3b28da6be8acce142d8046a"
+    },
+    "fc_21_bias.bin": {
+      "bytes": 3076,
+      "sha256": "a0f461c40c99120115959f7b21b0ec64da920db8abd8b279023438d541cecc8b"
+    },
+    "fc_22.bin": {
+      "bytes": 9437192,
+      "sha256": "e4ccdb0a4c5b581f993efc54ae7813e30d12eeb00b4cf1cf46b70468968936cb"
+    },
+    "fc_22_bias.bin": {
+      "bytes": 12292,
+      "sha256": "5171d07622a20acf42ac52ce66ea8ed56884b41e7938d7a311d49e4325e762db"
+    },
+    "fc_23.bin": {
+      "bytes": 9437192,
+      "sha256": "f29495b535a2253679b3317562e53a9eb0ff6906e20781c9ce76d09e76db2c90"
+    },
+    "fc_23_bias.bin": {
+      "bytes": 3076,
+      "sha256": "373b77347931b37794b007cbf7b7fe2594f275eef1f6bb87664fc0cc52e3de89"
+    },
+    "fc_24.bin": {
+      "bytes": 7077896,
+      "sha256": "efb4ad7b66f94c783c66d578770038e1ae55720863448f4e03f04f314b9192dd"
+    },
+    "fc_24_bias.bin": {
+      "bytes": 9220,
+      "sha256": "d72ed36338a0a318b7fb9c946b9c0319284373f722cfecb8fd4babc0dd2a1533"
+    },
+    "fc_25.bin": {
+      "bytes": 2359304,
+      "sha256": "500cf3b48e470928559b4c474a9e8494053b42a9bbab0f4818e267196c6052a4"
+    },
+    "fc_25_bias.bin": {
+      "bytes": 3076,
+      "sha256": "783a31c460fdde886757269a8c1d8a7d83bf49f8f54071783aff52ad658fce00"
+    },
+    "fc_26.bin": {
+      "bytes": 9437192,
+      "sha256": "438a456eda6085f59fcb2fd02f72dec40dc2cfe0b0b044dfab0c50a96d3bb2bc"
+    },
+    "fc_26_bias.bin": {
+      "bytes": 12292,
+      "sha256": "21d056cb5c5730bbc5b2fbb073ec47bafdb89fd9449bbd83b32c85e89b145cd7"
+    },
+    "fc_27.bin": {
+      "bytes": 9437192,
+      "sha256": "6e39ce27bd3120ef1298066ae5e68aa5ab9f8bc88bf386ad372edbd79c5877c4"
+    },
+    "fc_27_bias.bin": {
+      "bytes": 3076,
+      "sha256": "600dad134ada8e1abe8a123ec665ee18dbcfa095f848cc60b83c572721680971"
+    },
+    "fc_28.bin": {
+      "bytes": 7077896,
+      "sha256": "f35c0f7a88f9b16b2f5cd38eb63ca5176ac664fea24c88eb3bafada194eb8ff5"
+    },
+    "fc_28_bias.bin": {
+      "bytes": 9220,
+      "sha256": "203f42d54f5f161ac181e6ea581ae5bae92c96857a1a8c955501f5b7502b6500"
+    },
+    "fc_29.bin": {
+      "bytes": 2359304,
+      "sha256": "0d049b2269912ebd055805461d13ac96656222f69c7bd38c64aecf64d6b207f5"
+    },
+    "fc_29_bias.bin": {
+      "bytes": 3076,
+      "sha256": "6025bcc147846f35d3aac6343d1a98f047e1734f7a68a23a8d835d6f4b7b9794"
+    },
+    "fc_2_bias.bin": {
+      "bytes": 12292,
+      "sha256": "95349d52b80aa47e3e62330040b1173d128c5244777105c889237a274beea0b4"
+    },
+    "fc_3.bin": {
+      "bytes": 9437192,
+      "sha256": "93e058ca754dc8a7903da18c537324c4b028b4b76c30ad01d1572bfd8a565176"
+    },
+    "fc_30.bin": {
+      "bytes": 9437192,
+      "sha256": "e5f6dfe9b99bc895a894302d44c78a7901ea729d0c31a9a72c7e544d28c451fc"
+    },
+    "fc_30_bias.bin": {
+      "bytes": 12292,
+      "sha256": "29e0d2a35ac51a62168c860c2469c8bd0a688eff1c000c866cc275f2632c4684"
+    },
+    "fc_31.bin": {
+      "bytes": 9437192,
+      "sha256": "1bd01027c3115fea5b9567628c5108677b9a309f85bdd2bbd182322b846a4c36"
+    },
+    "fc_31_bias.bin": {
+      "bytes": 3076,
+      "sha256": "e55d874eb08d4e819bbf7b86e0d6d40843a1e894966ea6a130c1cb0cf95a5b85"
+    },
+    "fc_32.bin": {
+      "bytes": 7077896,
+      "sha256": "844f48dd2a28650c0e6dd31ca8b4e6a1ae45c7223e7458c4aac2a7c72eed409e"
+    },
+    "fc_32_bias.bin": {
+      "bytes": 9220,
+      "sha256": "c460f1d2551fa456aa6dbd372aa55c89856540f5f3386733ab6306264626c30b"
+    },
+    "fc_33.bin": {
+      "bytes": 2359304,
+      "sha256": "5f999d8eaee8c605a7f2f3b1956c4d0a29a006163dc921b64e6b6c2d03968a48"
+    },
+    "fc_33_bias.bin": {
+      "bytes": 3076,
+      "sha256": "7d4915ec4176169fd9b373da6a7b9b72d802dfbc2917055d4987b20269f88687"
+    },
+    "fc_34.bin": {
+      "bytes": 9437192,
+      "sha256": "2f91ded41685be4be7f718836a9e02499e824af54550ea15c8fe9d74e74ca8fb"
+    },
+    "fc_34_bias.bin": {
+      "bytes": 12292,
+      "sha256": "5e0e7bf38671c8826d670051a377a74f6a40d35fc3faca8330eabaee3b032e33"
+    },
+    "fc_35.bin": {
+      "bytes": 9437192,
+      "sha256": "ffaa114f7fa5cdf17c6c89c41f2de954c16e7a38a8d53287255b463a71ab1d5a"
+    },
+    "fc_35_bias.bin": {
+      "bytes": 3076,
+      "sha256": "d49b5b2d8ee24f2a831e17fe024ddf2df353908ffb435973eca522754a531ce9"
+    },
+    "fc_36.bin": {
+      "bytes": 7077896,
+      "sha256": "970ed9010f6acb4452decd98e5699ef7762d781f8ce9562e69a53389f440b5f3"
+    },
+    "fc_36_bias.bin": {
+      "bytes": 9220,
+      "sha256": "39128e62e6e6da8f0f1e516afe247173e4d9ceedf426e840f51ecf713188ddf9"
+    },
+    "fc_37.bin": {
+      "bytes": 2359304,
+      "sha256": "69bac4d2f0c3fc7c1412c1813ac44db84f0c4d084c6dced34420c76f5d11847b"
+    },
+    "fc_37_bias.bin": {
+      "bytes": 3076,
+      "sha256": "71e8e8716af9281f87ea17a97043c25797291e90cf61a11bbeddf0a00ee53147"
+    },
+    "fc_38.bin": {
+      "bytes": 9437192,
+      "sha256": "0fef9412794750ce7151e541f7076c8f717355a3913685af5099b66674f5e3aa"
+    },
+    "fc_38_bias.bin": {
+      "bytes": 12292,
+      "sha256": "3720b18662448a78dc83df5d0b9431ae14f8ed6394178c39a7aab4fd5cb33765"
+    },
+    "fc_39.bin": {
+      "bytes": 9437192,
+      "sha256": "605d22a160739ab89e2a2d8a85a92f39ba89545cb541c054f8be96b6c9cb4a12"
+    },
+    "fc_39_bias.bin": {
+      "bytes": 3076,
+      "sha256": "4f601f144dbddb68e734d0ae6e7b07318110f4dde86a51f197e46dee5bf7f640"
+    },
+    "fc_3_bias.bin": {
+      "bytes": 3076,
+      "sha256": "19a121bdc7abd4e51596cd6e3e583a50072a89fae17ac2b658d6d1fd337bf0ff"
+    },
+    "fc_4.bin": {
+      "bytes": 7077896,
+      "sha256": "7560c9f2bc04ca21e07aa72df87d39cc0fa84425074acf3d99d1f861b6dad7d3"
+    },
+    "fc_40.bin": {
+      "bytes": 7077896,
+      "sha256": "6a001d93d26476c32bdefedf725ada23a805c781949538a6114fc17469222763"
+    },
+    "fc_40_bias.bin": {
+      "bytes": 9220,
+      "sha256": "d8a3e8e5c5361e97585023cb0e92daf1aaa382c350d11f9f2a7e75dab5ea6e36"
+    },
+    "fc_41.bin": {
+      "bytes": 2359304,
+      "sha256": "2cee86f2f2c37985ab098f0e75fc356e9482d147b5e269345c5560591ce31c5d"
+    },
+    "fc_41_bias.bin": {
+      "bytes": 3076,
+      "sha256": "744757086debe66c11179ae63d40d0496e592d9ceaa3b67a0dcd7e8d64bcdb83"
+    },
+    "fc_42.bin": {
+      "bytes": 9437192,
+      "sha256": "a66cb228ef6ebe8380fdd4ad1f77f992594e63a51d459194ff7b7efbb485c299"
+    },
+    "fc_42_bias.bin": {
+      "bytes": 12292,
+      "sha256": "d75e1d6521c5fb3f2bfa0b1744cab6121da2f32338ef6187c8c3be8470784a2a"
+    },
+    "fc_43.bin": {
+      "bytes": 9437192,
+      "sha256": "cd980df7046dcb9758c8746be9d0615d130eb4fa5b5ea59259431910148cb308"
+    },
+    "fc_43_bias.bin": {
+      "bytes": 3076,
+      "sha256": "4716a958668ee151f226b4cae32ff3b6689e2e535852202f5219271ddc851965"
+    },
+    "fc_44.bin": {
+      "bytes": 7077896,
+      "sha256": "f2b1e10451097e233115dde94e986015b3c02270ce4655db8f2545a4f5a7247d"
+    },
+    "fc_44_bias.bin": {
+      "bytes": 9220,
+      "sha256": "9fbb561026874ff1180f58c3b7b7458580b8d737f6f98684bd351d3425c06d21"
+    },
+    "fc_45.bin": {
+      "bytes": 2359304,
+      "sha256": "bfcebaef4b097b567b2c64fbafc070e6ec74c16c89aa49d8738aed9ef36fbb6a"
+    },
+    "fc_45_bias.bin": {
+      "bytes": 3076,
+      "sha256": "154c784bbc93fb7be375609bcf1e272ecb79bc00ae0d424bafc448b6a83a74e3"
+    },
+    "fc_46.bin": {
+      "bytes": 9437192,
+      "sha256": "a2e5e62724356c0e8085a13922f16e2a6b6999bab0e0470f2850dd7d1e6e9be6"
+    },
+    "fc_46_bias.bin": {
+      "bytes": 12292,
+      "sha256": "025ebc3a842e563f28513b16e636ac8f8e5682ff40d9ae374c0c019dacf35e0d"
+    },
+    "fc_47.bin": {
+      "bytes": 9437192,
+      "sha256": "31c6e649285dba44b6cf868b5428196bd35709d79a75f1f28819e34151115f8b"
+    },
+    "fc_47_bias.bin": {
+      "bytes": 3076,
+      "sha256": "6fa7feeded88e7a121e87adf8ba198041b5e39dacfed52a96bd2b51ee3ffcdee"
+    },
+    "fc_4_bias.bin": {
+      "bytes": 9220,
+      "sha256": "c9fd78a88b1079ce44bf8c94a5d8ef38147ab7b05e9bcd8ba2cd5c907600ff96"
+    },
+    "fc_5.bin": {
+      "bytes": 2359304,
+      "sha256": "72dee293c26d8a817bf858744d05a827d873f3b71b55aa65a4d9824a97e7ec9c"
+    },
+    "fc_5_bias.bin": {
+      "bytes": 3076,
+      "sha256": "4da003794c3988d5500495ab97920a041229f7667f7a1f93387cc7a08200fdda"
+    },
+    "fc_6.bin": {
+      "bytes": 9437192,
+      "sha256": "b8c75b52f48d3c8fe03718cd9ba66ae81bfc3eb230b64465b0d710656561b76e"
+    },
+    "fc_6_bias.bin": {
+      "bytes": 12292,
+      "sha256": "2f3a7c426dbc0e9c5c13df8cdc91c181b2030cc57adeed2de3f3ac67055af6db"
+    },
+    "fc_7.bin": {
+      "bytes": 9437192,
+      "sha256": "4b502f0a64b71a9840adc0ffaaee64a83a6a2f07d567374df8cb69d48754bcb8"
+    },
+    "fc_7_bias.bin": {
+      "bytes": 3076,
+      "sha256": "93ca1fd6d0ae6ca4de10ae58d2d55a1ee8098e34eb696bffded51effda960e1f"
+    },
+    "fc_8.bin": {
+      "bytes": 7077896,
+      "sha256": "f5aea54c31e126f2ef9b8e0c0e9ea4cc5fb5359abb724d28481d0fd066f8a39f"
+    },
+    "fc_8_bias.bin": {
+      "bytes": 9220,
+      "sha256": "772e7618a1d740b7b266bb90e22c0fd3f5e7587bffc88b86498fff653576f8da"
+    },
+    "fc_9.bin": {
+      "bytes": 2359304,
+      "sha256": "f6d47eefb81e4224ce592888821948071c426bc961bba84ee8e4f9211ac34d87"
+    },
+    "fc_9_bias.bin": {
+      "bytes": 3076,
+      "sha256": "6d31c1e3a307e0f2b0772b49862a6614b5d4ab7a9455f9cec11300adb5b4a58b"
+    },
+    "ln_0.bin": {
+      "bytes": 6164,
+      "sha256": "621224e1c5811b34fe85f801980e62508f917b788abd46d662d5e98a96f5a224"
+    },
+    "ln_1.bin": {
+      "bytes": 6164,
+      "sha256": "8223d4f4cd4005d36d2bceaa90030dc2534bfebcf13b90cf2f124e4dbc5065e2"
+    },
+    "ln_10.bin": {
+      "bytes": 6164,
+      "sha256": "1ff823be82a8ffe74adf5bb72af50764050dde7b7ac8aee5f4984a935de6cb3f"
+    },
+    "ln_11.bin": {
+      "bytes": 6164,
+      "sha256": "d810cf19206181894ebc89062136aa600131efb955ef6cf57c5b945b597082fa"
+    },
+    "ln_12.bin": {
+      "bytes": 6164,
+      "sha256": "d3335fdef177a950ee5875f143dc054ab0b5a19a2fcd1dfa47a78cf7b2b89748"
+    },
+    "ln_13.bin": {
+      "bytes": 6164,
+      "sha256": "3f39329f51ff001cb5e826eb5c672de62c1becda77e73adf23002abb7e954ab4"
+    },
+    "ln_14.bin": {
+      "bytes": 6164,
+      "sha256": "cd5b228c2f8d6c3ec625fe08779630333ca017022d76abd838c485ceb2d94dea"
+    },
+    "ln_15.bin": {
+      "bytes": 6164,
+      "sha256": "339e549cb9e2caf4319c62d6127dfd479f9af2167fdad619fefb3df2a141edba"
+    },
+    "ln_16.bin": {
+      "bytes": 6164,
+      "sha256": "90eff25fb4040e992dbb67e5a63cca28d34f4bce13b17da4c056899110173550"
+    },
+    "ln_17.bin": {
+      "bytes": 6164,
+      "sha256": "2c0d4eb7c620191d8ee4aba2a0480bf3527c130b000a1aab9eb3eaf2177e6492"
+    },
+    "ln_18.bin": {
+      "bytes": 6164,
+      "sha256": "d0488b90ec84966702079da3d2c74afb88171d7cc40505f91736cfffabc2a80f"
+    },
+    "ln_19.bin": {
+      "bytes": 6164,
+      "sha256": "e4b6d6acdd1cd215d98c58895bcb47249dfd61e6ce2d1e091fe14f4548f3fc54"
+    },
+    "ln_2.bin": {
+      "bytes": 6164,
+      "sha256": "f25402bbd21803da31831ac70d25840c8a15ff07872ca61d773032a3364cfa6d"
+    },
+    "ln_20.bin": {
+      "bytes": 6164,
+      "sha256": "79ec9ef7bd4df61e723a5d9e805f5fa92ba97cf1a96d983794950fbb83148ae0"
+    },
+    "ln_21.bin": {
+      "bytes": 6164,
+      "sha256": "d8bbfdf76b85d6323c25b6fdd15be8698a4753b0c3f626c0869018770b70236e"
+    },
+    "ln_22.bin": {
+      "bytes": 6164,
+      "sha256": "2c642b132e0bb22426ec5f59ba3b0af48b19071bacfcb0f5e5f842b7c1b7e296"
+    },
+    "ln_23.bin": {
+      "bytes": 6164,
+      "sha256": "422d56ec6ba5b4ed9d10fb43f7b311132de57195c9638cdd790add952d5e2f3d"
+    },
+    "ln_3.bin": {
+      "bytes": 6164,
+      "sha256": "d7450cfed6a7d4271e2c65fc917572ca399a1e929a60107e1f9d8484a5f2c88f"
+    },
+    "ln_4.bin": {
+      "bytes": 6164,
+      "sha256": "8b22dc4374735d2b25f7b28c93ec554d19df2ac6819e866f3d892ae566ffc39f"
+    },
+    "ln_5.bin": {
+      "bytes": 6164,
+      "sha256": "59e20389ab60d04dd3447bbd317b32f29233f96167972c123a5c8f39377dcd75"
+    },
+    "ln_6.bin": {
+      "bytes": 6164,
+      "sha256": "52d232ef98f2d1090d96a324231c65644c124d6d39ddf4eba7ed393b077c86de"
+    },
+    "ln_7.bin": {
+      "bytes": 6164,
+      "sha256": "e585e49c3ff25fff509ccc8ee4c504df468473258622c5e5fc546007289a61c3"
+    },
+    "ln_8.bin": {
+      "bytes": 6164,
+      "sha256": "928fed57e81b85c36bd2c8ecddfe5d15080b5099e23d7f926eda2827ce0a7b19"
+    },
+    "ln_9.bin": {
+      "bytes": 6164,
+      "sha256": "d64024523ec2ff08efadbe1c6e17803145595bb09c5fa91ce773df2693745f99"
+    }
+  },
+  "verifier_symbol_check": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "git_state": {
+    "baseline_head": "7be84bdb5b41132c31ba556784580ddd2c66c4fc",
+    "head": "7be84bdb5b41132c31ba556784580ddd2c66c4fc",
+    "branch": "main",
+    "preexisting_deletions": [
+      "g1_0402.npy"
+    ],
+    "new_deletions": [],
+    "status_file": "evidence/GIT_STATUS_FINAL.txt"
+  },
+  "source_manifest": "CHANGED_FILES.json",
+  "memory_KiB": {
+    "normal_prover_peak": 6860504,
+    "normal_verifier_peak": 1574260,
+    "hostile_prover_peak": 7397056,
+    "hostile_verifier_peak": 1574248
+  },
+  "review": {
+    "mode": "three focused static reviews plus independent finite-field kernel checks",
+    "unresolved_critical_or_important_findings": 0,
+    "kernel_DP_cases_checked_by_reviewer": 3382,
+    "prefix_weight_cases_checked_by_reviewer": 1560,
+    "limitation": "not a full independent cryptographic audit"
+  },
+  "history_note": "v1/v2/source-only/scale diagnostics are retained but not counted as final v3 real integration evidence"
+}

@@ -1,0 +1,155 @@
+["python3", "src/paper_r1/independent.py", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build-asan/r1_fixtures", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build-asan/r1_verify"]
+[
+  {
+    "case": "valid",
+    "expected": 0,
+    "exit": 0,
+    "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+    "stderr": ""
+  },
+  {
+    "case": "other-model",
+    "expected": 0,
+    "exit": 0,
+    "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+    "stderr": ""
+  },
+  {
+    "case": "model-substitution",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "query",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "memory-root",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT memory multiset equation"
+  },
+  {
+    "case": "read-counter",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "gkr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT GKR gate endpoint"
+  },
+  {
+    "case": "final-L",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "indexed-value",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "transcript",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT sumcheck recurrence"
+  },
+  {
+    "case": "public-X",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "public-Y",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "model-commitment",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "table",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "trailing",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT trailing artifact bytes"
+  },
+  {
+    "case": "truncated",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT truncated artifact"
+  },
+  {
+    "case": "noncanonical-Fr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT noncanonical Fr"
+  },
+  {
+    "case": "invalid-G1",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT noncanonical G1"
+  },
+  {
+    "case": "oversized",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT wire count limit"
+  }
+]
+{"case": "exp-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT exact unclamped Exp relation (not full zkGPT)", "stderr": ""}
+{"case": "exp-branch", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "exp-memory", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT memory multiset equation"}
+{"case": "div-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT committed positive division relation (not full zkGPT)", "stderr": ""}
+{"case": "div-relation", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "div-positivity", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "div-source", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "div-trailing", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT trailing artifact bytes"}
+{"case": "sqrt-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT positive integer sqrt relation (not full zkGPT)", "stderr": ""}
+{"case": "sqrt-relation", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "sqrt-positivity", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "sqrt-source", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "sqrt-truncated", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT truncated artifact"}
+Artifacts retained: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build-asan/independent_runs/8c366acd02e348f7b54fd631187af05b
+PASS independent 32 cases; no prover entry points; no witness/model files in verifier working directory
+
+STDERR
+
+exit=0 elapsed=10.964576139114797

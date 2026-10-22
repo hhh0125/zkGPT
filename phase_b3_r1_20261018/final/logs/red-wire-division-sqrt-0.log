@@ -1,0 +1,26 @@
+["g++", "-std=c++17", "-I3rd/mcl/include", "-Isrc/paper_r1", "-fsyntax-only", "src/paper_r1/fixtures_main.cpp"]
+
+STDERR
+src/paper_r1/fixtures_main.cpp: In function ‘int main(int, char**)’:
+src/paper_r1/fixtures_main.cpp:135:9: error: ‘DivisionStatement’ was not declared in this scope
+  135 |         DivisionStatement ds{{"fixture/div",PCSpec::make("fixture/div-A",3,4,Layout::ColumnMajor),
+      |         ^~~~~~~~~~~~~~~~~
+src/paper_r1/fixtures_main.cpp:139:9: error: ‘ds’ was not declared in this scope; did you mean ‘dq’?
+  139 |         ds.numerator=commit(ds.spec.numerator,da);ds.denominator=commit(ds.spec.denominator,db);
+      |         ^~
+      |         dq
+src/paper_r1/fixtures_main.cpp:143:56: error: ‘serializeDivision’ was not declared in this scope
+  143 |         writeFile((dir/"div-valid.statement").string(),serializeDivision(ds));
+      |                                                        ^~~~~~~~~~~~~~~~~
+src/paper_r1/fixtures_main.cpp:153:9: error: ‘PositiveSqrtStatement’ was not declared in this scope
+  153 |         PositiveSqrtStatement ps{{"fixture/sqrt",PCSpec::make("fixture/sqrt-x",3,4,Layout::RowMajor),
+      |         ^~~~~~~~~~~~~~~~~~~~~
+src/paper_r1/fixtures_main.cpp:156:9: error: ‘ps’ was not declared in this scope; did you mean ‘es’?
+  156 |         ps.input=commit(ps.spec.input,sx);ps.root=commit(ps.spec.root,sy);
+      |         ^~
+      |         es
+src/paper_r1/fixtures_main.cpp:159:57: error: ‘serializePositiveSqrt’ was not declared in this scope
+  159 |         writeFile((dir/"sqrt-valid.statement").string(),serializePositiveSqrt(ps));
+      |                                                         ^~~~~~~~~~~~~~~~~~~~~
+
+exit=1 elapsed=0.9472286449745297

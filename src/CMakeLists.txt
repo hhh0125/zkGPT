@@ -143,3 +143,11 @@ option(ZKGPT_ENABLE_ROUTE_B_PRODUCTION "Build Route B production source contract
 if(ZKGPT_ENABLE_ROUTE_B_PRODUCTION)
     add_subdirectory(route_b)
 endif()
+
+add_executable(r2_gkr_terminal_tests main_r2_gkr_terminal_tests.cpp)
+target_link_libraries(r2_gkr_terminal_tests PRIVATE gkr_test_support)
+add_test(NAME r2_gkr_terminals COMMAND r2_gkr_terminal_tests)
+
+# R2 reuses existing production GKR and R1 lookup primitives.
+add_subdirectory(paper_r1)
+add_subdirectory(paper_r2)

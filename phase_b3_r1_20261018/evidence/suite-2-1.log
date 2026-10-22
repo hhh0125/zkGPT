@@ -1,0 +1,35 @@
+["cmake", "--build", "phase_b3_r1_20261018/build", "-j4"]
+[ 16%] Building CXX object CMakeFiles/paper_r1.dir/pc.cpp.o
+[ 16%] Building CXX object CMakeFiles/paper_r1.dir/core.cpp.o
+[ 25%] Building CXX object CMakeFiles/paper_r1.dir/sumcheck.cpp.o
+[ 33%] Building CXX object CMakeFiles/paper_r1.dir/memory.cpp.o
+[ 41%] Building CXX object CMakeFiles/paper_r1.dir/range.cpp.o
+[ 50%] Linking CXX static library libpaper_r1.a
+[ 50%] Built target paper_r1
+[ 58%] Building CXX object CMakeFiles/r1_range_tests.dir/tests_range.cpp.o
+[ 66%] Building CXX object CMakeFiles/r1_memory_tests.dir/tests_memory.cpp.o
+[ 75%] Building CXX object CMakeFiles/r1_core_tests.dir/tests_core.cpp.o
+[ 83%] Linking CXX executable r1_core_tests
+[ 83%] Built target r1_core_tests
+[ 91%] Linking CXX executable r1_memory_tests
+[ 91%] Built target r1_memory_tests
+[100%] Linking CXX executable r1_range_tests
+[100%] Built target r1_range_tests
+
+STDERR
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘zkgpt::r1::RangeProof zkgpt::r1::proveRange(const RangeSpec&, const Commitment&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:17:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   17 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:17:129: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   17 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |                                                                                                                                 ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘void zkgpt::r1::verifyRange(const RangeSpec&, const Commitment&, const RangeProof&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:20:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   20 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:20:102: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   20 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |                                                                                                      ^~~~~~~~~~~~~~
+
+exit=0 elapsed=7.541034472640604

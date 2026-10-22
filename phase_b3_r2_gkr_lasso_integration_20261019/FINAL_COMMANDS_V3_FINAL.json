@@ -1,0 +1,87 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit": 0,
+    "seconds": 0.9840475991368294,
+    "log": "final-v3-final-0.log",
+    "log_sha256": "393ce03a1f20da27c6a1e36f19b5c9af45df5b1e6b46e97b1a4e78f14aa64789"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "-j",
+      "8"
+    ],
+    "exit": 0,
+    "seconds": 4.462603025138378,
+    "log": "final-v3-final-1.log",
+    "log_sha256": "5535a876d0628c97c36006a29a2d2b448e61af9d3d9bd2259bccfe2ad6f5f60e"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "--output-on-failure",
+      "-j",
+      "4"
+    ],
+    "exit": 0,
+    "seconds": 23.593460074160248,
+    "log": "final-v3-final-2.log",
+    "log_sha256": "79776b68596b61233ed57bb0a49796f4f0a91c21ba9f4044679e5104b30dbcf9"
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/gkr_mutation_tests"
+    ],
+    "exit": 0,
+    "seconds": 0.11003910703584552,
+    "log": "final-v3-final-3.log",
+    "log_sha256": "e28408c934a65dc147e535f4898c9dde78ed24663155519c0ed4e1b3dfb6884b"
+  },
+  {
+    "command": [
+      "python3",
+      "src/paper_r1/lookup_independent.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r1/r2_lookup_batch_tests",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r1/r2_lookup_verify"
+    ],
+    "exit": 0,
+    "seconds": 7.789568492677063,
+    "log": "final-v3-final-4.log",
+    "log_sha256": "803ba37a71286316e7d7b568f4b48a4b57d4bbccdf94108f10170c467b7e3a27"
+  },
+  {
+    "command": [
+      "python3",
+      "src/paper_r2/independent.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_integration_tests",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_verify"
+    ],
+    "exit": 0,
+    "seconds": 4.182017980609089,
+    "log": "final-v3-final-5.log",
+    "log_sha256": "e56ba554e2c16b7ca839be7fb49c98d6c9d64c5425b6a6b64125e008528d7b05"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.0098142153583467,
+    "log": "final-v3-final-6.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

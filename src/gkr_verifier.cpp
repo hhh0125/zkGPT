@@ -337,7 +337,10 @@ Transcript initializeGKRTranscript(
     if (isZeroFingerprint(trusted_circuit_fingerprint) ||
         trusted_circuit_fingerprint!=statement.circuit_fingerprint)
         throw std::invalid_argument("untrusted GKR circuit fingerprint");
-    Transcript transcript(kGKRTranscriptDomain,observer,instance);
+    const bool integrated=statement.integration_context!=std::array<std::uint8_t,32>{};
+    Transcript transcript(integrated ? "zkGPT.paper-r1.integrated.GKR.v1" : kGKRTranscriptDomain,observer,instance);
+    if (integrated) transcript.appendBytes("integration.context",
+        statement.integration_context.data(),statement.integration_context.size());
     transcript.appendU64("protocol.version", statement.protocol_version);
     transcript.appendString("curve.id", "BN254");
     transcript.appendBytes("circuit.fingerprint",
@@ -366,10 +369,11 @@ Transcript initializeGKRTranscript(
     return transcript;
 }
 
-bool verifyGKR(const layeredCircuit &circuit,
+static bool verifyGKRImpl(const layeredCircuit &circuit,
                const GKRPublicStatement &statement,
                const GKRProof &proof, std::string *error,
-               ChallengeObserver *observer) {
+               ChallengeObserver *observer, std::vector<GKRInputTerminalClaim> *claims) {
+    if (claims) claims->clear();
     try {
         validateStatementMetadata(circuit,statement);
         const auto trusted_fingerprint=fingerprintCircuit(circuit);
@@ -743,9 +747,45 @@ bool verifyGKR(const layeredCircuit &circuit,
         if (transcript.challenge("gkr.proof.final") !=
             proof.transcript_binding)
             fail("GKR final transcript binding mismatch");
+        if (claims) {
+            std::vector<GKRInputTerminalClaim> authenticated;
+            auto add=[&](std::uint32_t layer_id,unsigned port,unsigned matrix_point,
+                         const vector<Fr> &r,const Fr &value) {
+                const auto &l=circuit.circuit.at(layer_id);
+                const int bits=port ? l.bit_length_v[0] : l.bit_length_u[0];
+                if (bits<0 || r.size()<static_cast<size_t>(bits))
+                    fail("GKR terminal point dimension");
+                const auto actual=port ? l.size_v[0] : l.size_u[0];
+                GKRInputTerminalClaim q;
+                q.layer_index=layer_id; q.port=port; q.matrix_point=matrix_point;
+                q.actual_size=actual; q.padded_size=size_t(1)<<bits;
+                q.point.assign(r.begin(),r.begin()+bits); q.value=value;
+                authenticated.push_back(std::move(q));
+            };
+            for (std::uint32_t i=1;i<circuit.size;++i) {
+                const auto &l=circuit.circuit[i];
+                if (l.bit_length_u[0]>=0) add(i,0,0,r_u[i],final_u0[i]);
+                if (l.bit_length_v[0]>=0) add(i,1,0,r_v[i],final_v0[i]);
+                if (l.ty==layerType::FCONN) {
+                    add(i,0,1,fconn_v_r_u[i],fconn_v_final_u0[i]);
+                    add(i,1,1,fconn_v_r_v[i],fconn_v_final_v0[i]);
+                }
+            }
+            claims->swap(authenticated);
+        }
         return true;
     } catch (const std::exception &exception) {
         if (error) *error = exception.what();
         return false;
     }
+}
+
+bool verifyGKR(const layeredCircuit &circuit,const GKRPublicStatement &statement,
+               const GKRProof &proof,std::string *error,ChallengeObserver *observer) {
+    return verifyGKRImpl(circuit,statement,proof,error,observer,nullptr);
+}
+bool verifyGKRWithClaims(const layeredCircuit &circuit,const GKRPublicStatement &statement,
+    const GKRProof &proof,std::vector<GKRInputTerminalClaim> &claims,
+    std::string *error,ChallengeObserver *observer) {
+    return verifyGKRImpl(circuit,statement,proof,error,observer,&claims);
 }

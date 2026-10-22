@@ -1,0 +1,39 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "--target",
+      "r2_model_attack_artifacts",
+      "-j",
+      "8"
+    ],
+    "exit": 0,
+    "seconds": 0.19122140388935804,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/final-seal-0.log",
+    "log_sha256": "9f5a3f16a519e472e8078416d1103d93ad784fa99e7082bc7f9842bb510cad4d"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.009588705375790596,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/final-seal-1.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_attack_artifacts",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-artifacts"
+    ],
+    "exit": 0,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-attacks-v3b-generate.log",
+    "log_sha256": "96795cb9ad427cc42c0168bf1603ff1c4e842873116e4a5effb9c532918e2926",
+    "note": "actual generation recorded by run_real_attacks.py; not rerun here"
+  }
+]

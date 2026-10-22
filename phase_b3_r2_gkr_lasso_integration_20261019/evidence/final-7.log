@@ -1,0 +1,2496 @@
+src/CMakeLists.txt:1: trailing whitespace.
++# aux_source_directory(. gpt_src)
+src/CMakeLists.txt:2: trailing whitespace.
++# list(FILTER gpt_src EXCLUDE REGEX "main*")
+src/CMakeLists.txt:3: trailing whitespace.
++# option(ENABLE_MY_ASSERT "Turn on MY_ASSERT checks" ON)
+src/CMakeLists.txt:4: trailing whitespace.
++# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+src/CMakeLists.txt:5: trailing whitespace.
++# add_library(gpt_lib ${gpt_src})
+src/CMakeLists.txt:6: trailing whitespace.
++
+src/CMakeLists.txt:7: trailing whitespace.
++
+src/CMakeLists.txt:8: trailing whitespace.
++# add_executable(demo_llm_run main_demo_llm.cpp)
+src/CMakeLists.txt:9: trailing whitespace.
++# target_link_libraries(demo_llm_run gpt_lib mcl mclbn256)
+src/CMakeLists.txt:10: trailing whitespace.
++
+src/CMakeLists.txt:11: trailing whitespace.
++
+src/CMakeLists.txt:12: trailing whitespace.
++aux_source_directory(. gpt_src)
+src/CMakeLists.txt:13: trailing whitespace.
++list(FILTER gpt_src EXCLUDE REGEX "main*")
+src/CMakeLists.txt:14: trailing whitespace.
++list(FILTER gpt_src EXCLUDE REGEX "(^|/)zk_(hiding_commitment|linear_opening|committed_linear_opening)\\.cpp$")
+src/CMakeLists.txt:15: trailing whitespace.
++
+src/CMakeLists.txt:16: trailing whitespace.
++add_library(gpt_lib ${gpt_src})
+src/CMakeLists.txt:17: trailing whitespace.
++
+src/CMakeLists.txt:18: trailing whitespace.
++# gpt_lib 的 include
+src/CMakeLists.txt:19: trailing whitespace.
++target_include_directories(gpt_lib
+src/CMakeLists.txt:20: trailing whitespace.
++    PUBLIC
+src/CMakeLists.txt:21: trailing whitespace.
++    ${CMAKE_CURRENT_SOURCE_DIR}
+src/CMakeLists.txt:22: trailing whitespace.
++    ${CNPY_INCLUDE_DIR}
+src/CMakeLists.txt:23: trailing whitespace.
++    ${CMAKE_SOURCE_DIR}/3rd/mcl/include
+src/CMakeLists.txt:24: trailing whitespace.
++)
+src/CMakeLists.txt:25: trailing whitespace.
++
+src/CMakeLists.txt:26: trailing whitespace.
++
+src/CMakeLists.txt:27: trailing whitespace.
++# gpt_lib 的 link
+src/CMakeLists.txt:28: trailing whitespace.
++target_link_libraries(gpt_lib
+src/CMakeLists.txt:29: trailing whitespace.
++    PRIVATE
+src/CMakeLists.txt:30: trailing whitespace.
++    ${CNPY_LIBRARY}
+src/CMakeLists.txt:31: trailing whitespace.
++    mcl
+src/CMakeLists.txt:32: trailing whitespace.
++    mclbn256
+src/CMakeLists.txt:33: trailing whitespace.
++    pthread
+src/CMakeLists.txt:34: trailing whitespace.
++    z
+src/CMakeLists.txt:35: trailing whitespace.
++)
+src/CMakeLists.txt:36: trailing whitespace.
++
+src/CMakeLists.txt:37: trailing whitespace.
++add_executable(demo_llm_run main_demo_llm.cpp)
+src/CMakeLists.txt:38: trailing whitespace.
++target_link_libraries(demo_llm_run PRIVATE gpt_lib)
+src/CMakeLists.txt:39: trailing whitespace.
++
+src/CMakeLists.txt:40: trailing whitespace.
++add_library(gkr_test_support STATIC
+src/CMakeLists.txt:41: trailing whitespace.
++    tests/gkr_test_fixture.cpp
+src/CMakeLists.txt:42: trailing whitespace.
++    tests/zkgpt_artifact_test_fixture.cpp)
+src/CMakeLists.txt:43: trailing whitespace.
++target_link_libraries(gkr_test_support PUBLIC gpt_lib)
+src/CMakeLists.txt:44: trailing whitespace.
++target_include_directories(gkr_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+src/CMakeLists.txt:45: trailing whitespace.
++
+src/CMakeLists.txt:46: trailing whitespace.
++add_executable(range_tests main_range_tests.cpp)
+src/CMakeLists.txt:47: trailing whitespace.
++target_link_libraries(range_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:48: trailing whitespace.
++
+src/CMakeLists.txt:49: trailing whitespace.
++add_executable(range_protocol_tests main_range_tests.cpp)
+src/CMakeLists.txt:50: trailing whitespace.
++target_link_libraries(range_protocol_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:51: trailing whitespace.
++
+src/CMakeLists.txt:52: trailing whitespace.
++add_executable(gkr_mutation_tests main_gkr_mutation_tests.cpp)
+src/CMakeLists.txt:53: trailing whitespace.
++target_link_libraries(gkr_mutation_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:54: trailing whitespace.
++
+src/CMakeLists.txt:55: trailing whitespace.
++add_executable(zkgpt_artifact_mutation_tests
+src/CMakeLists.txt:56: trailing whitespace.
++    main_zkgpt_artifact_mutation_tests.cpp)
+src/CMakeLists.txt:57: trailing whitespace.
++target_link_libraries(zkgpt_artifact_mutation_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:58: trailing whitespace.
++
+src/CMakeLists.txt:59: trailing whitespace.
++add_executable(zkgpt_decoder_resource_tests
+src/CMakeLists.txt:60: trailing whitespace.
++    main_zkgpt_decoder_resource_tests.cpp)
+src/CMakeLists.txt:61: trailing whitespace.
++target_link_libraries(zkgpt_decoder_resource_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:62: trailing whitespace.
++
+src/CMakeLists.txt:63: trailing whitespace.
++add_test(NAME zkgpt_decoder_resource_tests
+src/CMakeLists.txt:64: trailing whitespace.
++         COMMAND zkgpt_decoder_resource_tests)
+src/CMakeLists.txt:65: trailing whitespace.
++set_tests_properties(zkgpt_decoder_resource_tests PROPERTIES TIMEOUT 30)
+src/CMakeLists.txt:66: trailing whitespace.
++
+src/CMakeLists.txt:67: trailing whitespace.
++add_executable(range_artifact_verify main_range_artifact_verify.cpp)
+src/CMakeLists.txt:68: trailing whitespace.
++target_link_libraries(range_artifact_verify PRIVATE gpt_lib)
+src/CMakeLists.txt:69: trailing whitespace.
++
+src/CMakeLists.txt:70: trailing whitespace.
++add_executable(zkgpt_artifact_verify main_zkgpt_artifact_verify.cpp)
+src/CMakeLists.txt:71: trailing whitespace.
++target_link_libraries(zkgpt_artifact_verify PRIVATE gpt_lib)
+src/CMakeLists.txt:72: trailing whitespace.
++
+src/CMakeLists.txt:73: trailing whitespace.
++add_executable(lasso_folding_tests main_lasso_folding_tests.cpp)
+src/CMakeLists.txt:74: trailing whitespace.
++target_link_libraries(lasso_folding_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:75: trailing whitespace.
++add_test(NAME lasso_folding_tests COMMAND lasso_folding_tests)
+src/CMakeLists.txt:76: trailing whitespace.
++set_tests_properties(lasso_folding_tests PROPERTIES TIMEOUT 180)
+src/CMakeLists.txt:77: trailing whitespace.
++
+src/CMakeLists.txt:78: trailing whitespace.
++add_executable(prover_lifecycle_tests main_prover_lifecycle_tests.cpp)
+src/CMakeLists.txt:79: trailing whitespace.
++target_link_libraries(prover_lifecycle_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:80: trailing whitespace.
++add_test(NAME prover_lifecycle_tests COMMAND prover_lifecycle_tests)
+src/CMakeLists.txt:81: trailing whitespace.
++
+src/CMakeLists.txt:82: trailing whitespace.
++add_executable(hyrax_opening_tests main_hyrax_opening_tests.cpp)
+src/CMakeLists.txt:83: trailing whitespace.
++target_link_libraries(hyrax_opening_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:84: trailing whitespace.
++add_test(NAME hyrax_opening_tests COMMAND hyrax_opening_tests)
+src/CMakeLists.txt:85: trailing whitespace.
++set_tests_properties(hyrax_opening_tests PROPERTIES TIMEOUT 180)
+src/CMakeLists.txt:86: trailing whitespace.
++
+src/CMakeLists.txt:87: trailing whitespace.
++add_executable(circuit_storage_tests main_circuit_storage_tests.cpp)
+src/CMakeLists.txt:88: trailing whitespace.
++target_link_libraries(circuit_storage_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:89: trailing whitespace.
++add_test(NAME circuit_storage_tests COMMAND circuit_storage_tests)
+src/CMakeLists.txt:90: trailing whitespace.
++set_tests_properties(circuit_storage_tests PROPERTIES TIMEOUT 180)
+src/CMakeLists.txt:91: trailing whitespace.
++
+src/CMakeLists.txt:92: trailing whitespace.
++add_executable(model_binding main_model_binding.cpp)
+src/CMakeLists.txt:93: trailing whitespace.
++target_link_libraries(model_binding PRIVATE gpt_lib)
+src/CMakeLists.txt:94: trailing whitespace.
++add_executable(model_binding_tests main_model_binding_tests.cpp)
+src/CMakeLists.txt:95: trailing whitespace.
++target_link_libraries(model_binding_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:96: trailing whitespace.
++
+src/CMakeLists.txt:97: trailing whitespace.
++add_executable(exp_lookup_tests main_exp_lookup_tests.cpp)
+src/CMakeLists.txt:98: trailing whitespace.
++target_link_libraries(exp_lookup_tests PRIVATE gpt_lib)
+src/CMakeLists.txt:99: trailing whitespace.
++add_test(NAME exp_lookup_tests COMMAND exp_lookup_tests)
+src/CMakeLists.txt:100: trailing whitespace.
++set_tests_properties(exp_lookup_tests PROPERTIES TIMEOUT 240)
+src/CMakeLists.txt:101: trailing whitespace.
++
+src/CMakeLists.txt:102: trailing whitespace.
++# Experimental primitive is opt-in and never linked into gpt_lib.
+src/CMakeLists.txt:103: trailing whitespace.
++option(ZKGPT_BUILD_ZK_OPENING_PROTOTYPE "Build isolated experimental ZK primitive" OFF)
+src/CMakeLists.txt:104: trailing whitespace.
++if(ZKGPT_BUILD_ZK_OPENING_PROTOTYPE)
+src/CMakeLists.txt:105: trailing whitespace.
++    add_library(zk_opening_prototype STATIC
+src/CMakeLists.txt:106: trailing whitespace.
++        zk_hiding_commitment.cpp zk_linear_opening.cpp)
+src/CMakeLists.txt:107: trailing whitespace.
++    target_include_directories(zk_opening_prototype PUBLIC . ../3rd/mcl/include)
+src/CMakeLists.txt:108: trailing whitespace.
++    target_link_libraries(zk_opening_prototype PUBLIC mcl mclbn256)
+src/CMakeLists.txt:109: trailing whitespace.
++    target_compile_options(zk_opening_prototype PRIVATE -Wall -Wextra -Wpedantic)
+src/CMakeLists.txt:110: trailing whitespace.
++    add_executable(zk_opening_tests main_zk_opening_tests.cpp)
+src/CMakeLists.txt:111: trailing whitespace.
++    target_link_libraries(zk_opening_tests PRIVATE zk_opening_prototype)
+src/CMakeLists.txt:112: trailing whitespace.
++    target_compile_options(zk_opening_tests PRIVATE -Wall -Wextra -Wpedantic)
+src/CMakeLists.txt:113: trailing whitespace.
++    add_test(NAME zk_opening_prototype_tests COMMAND zk_opening_tests)
+src/CMakeLists.txt:114: trailing whitespace.
++    set_tests_properties(zk_opening_prototype_tests PROPERTIES TIMEOUT 30)
+src/CMakeLists.txt:115: trailing whitespace.
++endif()
+src/CMakeLists.txt:116: trailing whitespace.
++
+src/CMakeLists.txt:117: trailing whitespace.
++# Task11 experimental committed-y prototype; production gpt_lib excludes it.
+src/CMakeLists.txt:118: trailing whitespace.
++option(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE "Build isolated committed-y ZK primitive" OFF)
+src/CMakeLists.txt:119: trailing whitespace.
++if(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE)
+src/CMakeLists.txt:120: trailing whitespace.
++    add_library(zk_committed_opening_prototype STATIC
+src/CMakeLists.txt:121: trailing whitespace.
++        zk_hiding_commitment.cpp zk_linear_opening.cpp zk_committed_linear_opening.cpp)
+src/CMakeLists.txt:122: trailing whitespace.
++    target_include_directories(zk_committed_opening_prototype PUBLIC . ../3rd/mcl/include)
+src/CMakeLists.txt:123: trailing whitespace.
++    target_link_libraries(zk_committed_opening_prototype PUBLIC mcl mclbn256)
+src/CMakeLists.txt:124: trailing whitespace.
++    target_compile_options(zk_committed_opening_prototype PRIVATE -Wall -Wextra -Wpedantic)
+src/CMakeLists.txt:125: trailing whitespace.
++    add_executable(zk_committed_opening_tests main_zk_committed_opening_tests.cpp)
+src/CMakeLists.txt:126: trailing whitespace.
++    target_link_libraries(zk_committed_opening_tests PRIVATE zk_committed_opening_prototype)
+src/CMakeLists.txt:127: trailing whitespace.
++    target_compile_options(zk_committed_opening_tests PRIVATE -Wall -Wextra -Wpedantic)
+src/CMakeLists.txt:128: trailing whitespace.
++    add_executable(zk_committed_opening_verify main_zk_committed_opening_verify.cpp)
+src/CMakeLists.txt:129: trailing whitespace.
++    target_link_libraries(zk_committed_opening_verify PRIVATE zk_committed_opening_prototype)
+src/CMakeLists.txt:130: trailing whitespace.
++    target_compile_options(zk_committed_opening_verify PRIVATE -Wall -Wextra -Wpedantic)
+src/CMakeLists.txt:131: trailing whitespace.
++    add_test(NAME zk_committed_opening_tests COMMAND zk_committed_opening_tests)
+src/CMakeLists.txt:132: trailing whitespace.
++    set_tests_properties(zk_committed_opening_tests PROPERTIES TIMEOUT 30)
+src/CMakeLists.txt:133: trailing whitespace.
++endif()
+src/CMakeLists.txt:134: trailing whitespace.
++
+src/CMakeLists.txt:135: trailing whitespace.
++# Route B Phase B1: isolated opt-in Lasso/Surge prototype.
+src/CMakeLists.txt:136: trailing whitespace.
++option(ZKGPT_BUILD_LASSO_PROTOTYPE "Build isolated Lasso/Surge prototype" OFF)
+src/CMakeLists.txt:137: trailing whitespace.
++if(ZKGPT_BUILD_LASSO_PROTOTYPE)
+src/CMakeLists.txt:138: trailing whitespace.
++    add_subdirectory(lasso)
+src/CMakeLists.txt:139: trailing whitespace.
++endif()
+src/CMakeLists.txt:140: trailing whitespace.
++
+src/CMakeLists.txt:141: trailing whitespace.
++# Route B P0: isolated, default-off production source contract.
+src/CMakeLists.txt:142: trailing whitespace.
++option(ZKGPT_ENABLE_ROUTE_B_PRODUCTION "Build Route B production source contract" OFF)
+src/CMakeLists.txt:143: trailing whitespace.
++if(ZKGPT_ENABLE_ROUTE_B_PRODUCTION)
+src/CMakeLists.txt:144: trailing whitespace.
++    add_subdirectory(route_b)
+src/CMakeLists.txt:145: trailing whitespace.
++endif()
+src/CMakeLists.txt:146: trailing whitespace.
++
+src/CMakeLists.txt:147: trailing whitespace.
++add_executable(r2_gkr_terminal_tests main_r2_gkr_terminal_tests.cpp)
+src/CMakeLists.txt:148: trailing whitespace.
++target_link_libraries(r2_gkr_terminal_tests PRIVATE gkr_test_support)
+src/CMakeLists.txt:149: trailing whitespace.
++add_test(NAME r2_gkr_terminals COMMAND r2_gkr_terminal_tests)
+src/CMakeLists.txt:150: trailing whitespace.
++
+src/CMakeLists.txt:151: trailing whitespace.
++# R2 reuses existing production GKR and R1 lookup primitives.
+src/CMakeLists.txt:152: trailing whitespace.
++add_subdirectory(paper_r1)
+src/CMakeLists.txt:153: trailing whitespace.
++add_subdirectory(paper_r2)
+src/gkr_protocol.hpp:1: trailing whitespace.
++#pragma once
+src/gkr_protocol.hpp:2: trailing whitespace.
++
+src/gkr_protocol.hpp:3: trailing whitespace.
++#include "range_protocol.hpp"
+src/gkr_protocol.hpp:4: trailing whitespace.
++
+src/gkr_protocol.hpp:5: trailing whitespace.
++#include <array>
+src/gkr_protocol.hpp:6: trailing whitespace.
++#include <cstdint>
+src/gkr_protocol.hpp:7: trailing whitespace.
++#include <vector>
+src/gkr_protocol.hpp:8: trailing whitespace.
++
+src/gkr_protocol.hpp:9: trailing whitespace.
++// GKR is part of the zkGPT top-level v2 protocol.  Version 2 uniquely means
+src/gkr_protocol.hpp:10: trailing whitespace.
++// the chain-compressed SHA-256 Transcript below and circuit fingerprint v2;
+src/gkr_protocol.hpp:11: trailing whitespace.
++// v1 artifacts are intentionally not negotiated or upgraded in place.
+src/gkr_protocol.hpp:12: trailing whitespace.
++inline constexpr std::uint32_t kZkGPTProtocolVersion = 2;
+src/gkr_protocol.hpp:13: trailing whitespace.
++// Encoding v3 adds the second, independently challenged FCONN matrix
+src/gkr_protocol.hpp:14: trailing whitespace.
++// sumcheck.  The top-level protocol remains the unpublished development v2,
+src/gkr_protocol.hpp:15: trailing whitespace.
++// but a v2 (single-point) GKR proof must never be decoded as this schema.
+src/gkr_protocol.hpp:16: trailing whitespace.
++inline constexpr std::uint32_t kGKRProofEncodingVersion = 3;
+src/gkr_protocol.hpp:17: trailing whitespace.
++inline constexpr char kGKRTranscriptDomain[] =
+src/gkr_protocol.hpp:18: trailing whitespace.
++    "zkGPT-proof-v2-chain-sha256";
+src/gkr_protocol.hpp:19: trailing whitespace.
++
+src/gkr_protocol.hpp:20: trailing whitespace.
++class layeredCircuit;
+src/gkr_protocol.hpp:21: trailing whitespace.
++
+src/gkr_protocol.hpp:22: trailing whitespace.
++struct GKRPublicStatement {
+src/gkr_protocol.hpp:23: trailing whitespace.
++    std::uint32_t protocol_version = kZkGPTProtocolVersion;
+src/gkr_protocol.hpp:24: trailing whitespace.
++    WitnessShape model_shape;
+src/gkr_protocol.hpp:25: trailing whitespace.
++    int val0_log_size = 0;
+src/gkr_protocol.hpp:26: trailing whitespace.
++    std::vector<G1> val0_commitment;
+src/gkr_protocol.hpp:27: trailing whitespace.
++    GeneratorDomain val0_generator_domain;
+src/gkr_protocol.hpp:28: trailing whitespace.
++    std::array<std::uint8_t, 32> circuit_fingerprint{};
+src/gkr_protocol.hpp:29: trailing whitespace.
++    Fr output_evaluation;
+src/gkr_protocol.hpp:30: trailing whitespace.
++};
+src/gkr_protocol.hpp:31: trailing whitespace.
++
+src/gkr_protocol.hpp:32: trailing whitespace.
++std::array<std::uint8_t, 32> fingerprintCircuit(
+src/gkr_protocol.hpp:33: trailing whitespace.
++    const layeredCircuit &circuit);
+src/gkr_protocol.hpp:34: trailing whitespace.
++std::string circuitFingerprintHex(
+src/gkr_protocol.hpp:35: trailing whitespace.
++    const std::array<std::uint8_t, 32> &fingerprint);
+src/gkr_protocol.hpp:36: trailing whitespace.
++
+src/gkr_protocol.hpp:37: trailing whitespace.
++void validateGKRPublicStatement(
+src/gkr_protocol.hpp:38: trailing whitespace.
++    const layeredCircuit &circuit, const GKRPublicStatement &statement,
+src/gkr_protocol.hpp:39: trailing whitespace.
++    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint);
+src/gkr_protocol.hpp:40: trailing whitespace.
++
+src/gkr_protocol.hpp:41: trailing whitespace.
++Transcript initializeGKRTranscript(
+src/gkr_protocol.hpp:42: trailing whitespace.
++    const GKRPublicStatement &statement,
+src/gkr_protocol.hpp:43: trailing whitespace.
++    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint,
+src/gkr_protocol.hpp:44: trailing whitespace.
++    ChallengeObserver *observer = nullptr,
+src/gkr_protocol.hpp:45: trailing whitespace.
++    const std::string &instance = "gkr-main");
+src/gkr_protocol.hpp:46: trailing whitespace.
++
+src/gkr_protocol.hpp:47: trailing whitespace.
++struct GKRQuadraticRound {
+src/gkr_protocol.hpp:48: trailing whitespace.
++    Fr a;
+src/gkr_protocol.hpp:49: trailing whitespace.
++    Fr b;
+src/gkr_protocol.hpp:50: trailing whitespace.
++    Fr c;
+src/gkr_protocol.hpp:51: trailing whitespace.
++};
+src/gkr_protocol.hpp:52: trailing whitespace.
++
+src/gkr_protocol.hpp:53: trailing whitespace.
++struct GKRLayerProof {
+src/gkr_protocol.hpp:54: trailing whitespace.
++    std::uint32_t layer_index = 0;
+src/gkr_protocol.hpp:55: trailing whitespace.
++    std::uint32_t layer_type = 0;
+src/gkr_protocol.hpp:56: trailing whitespace.
++    std::vector<GKRQuadraticRound> phase1_rounds;
+src/gkr_protocol.hpp:57: trailing whitespace.
++    std::vector<GKRQuadraticRound> phase2_rounds;
+src/gkr_protocol.hpp:58: trailing whitespace.
++    // For FCONN layers, matrix_rounds authenticates the parent u point and
+src/gkr_protocol.hpp:59: trailing whitespace.
++    // matrix_v_rounds authenticates the parent v point.  Normal layers must
+src/gkr_protocol.hpp:60: trailing whitespace.
++    // leave both matrix-specific final fields below equal to zero.
+src/gkr_protocol.hpp:61: trailing whitespace.
++    std::vector<GKRQuadraticRound> matrix_rounds;
+src/gkr_protocol.hpp:62: trailing whitespace.
++    std::vector<GKRQuadraticRound> matrix_v_rounds;
+src/gkr_protocol.hpp:63: trailing whitespace.
++    Fr final_claim_u0;
+src/gkr_protocol.hpp:64: trailing whitespace.
++    Fr final_claim_u1;
+src/gkr_protocol.hpp:65: trailing whitespace.
++    Fr final_claim_v0;
+src/gkr_protocol.hpp:66: trailing whitespace.
++    Fr final_claim_v1;
+src/gkr_protocol.hpp:67: trailing whitespace.
++    Fr matrix_v_final_claim_u0 = Fr(0);
+src/gkr_protocol.hpp:68: trailing whitespace.
++    Fr matrix_v_final_claim_v0 = Fr(0);
+src/gkr_protocol.hpp:69: trailing whitespace.
++};
+src/gkr_protocol.hpp:70: trailing whitespace.
++
+src/gkr_protocol.hpp:71: trailing whitespace.
++struct GKRLassoProof {
+src/gkr_protocol.hpp:72: trailing whitespace.
++    std::vector<GKRQuadraticRound> rounds;
+src/gkr_protocol.hpp:73: trailing whitespace.
++    Fr input_evaluation;
+src/gkr_protocol.hpp:74: trailing whitespace.
++    Fr mapping_evaluation;
+src/gkr_protocol.hpp:75: trailing whitespace.
++    MleOpeningProof input_opening;
+src/gkr_protocol.hpp:76: trailing whitespace.
++};
+src/gkr_protocol.hpp:77: trailing whitespace.
++
+src/gkr_protocol.hpp:78: trailing whitespace.
++struct GKRProof {
+src/gkr_protocol.hpp:79: trailing whitespace.
++    Fr output_evaluation;
+src/gkr_protocol.hpp:80: trailing whitespace.
++    std::vector<GKRLayerProof> layers;
+src/gkr_protocol.hpp:81: trailing whitespace.
++    GKRLassoProof lasso;
+src/gkr_protocol.hpp:82: trailing whitespace.
++    Fr transcript_binding;
+src/gkr_protocol.hpp:83: trailing whitespace.
++};
+src/gkr_protocol.hpp:84: trailing whitespace.
++
+src/gkr_protocol.hpp:85: trailing whitespace.
++// Values are authenticated only when verifyGKRWithClaims returns success.
+src/gkr_protocol.hpp:86: trailing whitespace.
++// The verifier-owned circuit selects ori_id_u/ori_id_v; no prover source list.
+src/gkr_protocol.hpp:87: trailing whitespace.
++struct GKRInputTerminalClaim {
+src/gkr_protocol.hpp:88: trailing whitespace.
++    std::uint32_t layer_index=0;
+src/gkr_protocol.hpp:89: trailing whitespace.
++    unsigned port=0, matrix_point=0;
+src/gkr_protocol.hpp:90: trailing whitespace.
++    std::size_t actual_size=0, padded_size=0;
+src/gkr_protocol.hpp:91: trailing whitespace.
++    std::vector<Fr> point;
+src/gkr_protocol.hpp:92: trailing whitespace.
++    Fr value=0;
+src/gkr_protocol.hpp:93: trailing whitespace.
++};
+src/gkr_verifier.cpp:1: trailing whitespace.
++#include "gkr_verifier.hpp"
+src/gkr_verifier.cpp:2: trailing whitespace.
++
+src/gkr_verifier.cpp:3: trailing whitespace.
++#include "generator_cache.hpp"
+src/gkr_verifier.cpp:4: trailing whitespace.
++#include "hyrax_opening.hpp"
+src/gkr_verifier.cpp:5: trailing whitespace.
++#include "polynomial.h"
+src/gkr_verifier.cpp:6: trailing whitespace.
++#include "utils.hpp"
+src/gkr_verifier.cpp:7: trailing whitespace.
++#include "thread_joiner.hpp"
+src/gkr_verifier.cpp:8: trailing whitespace.
++#include <cybozu/sha2.hpp>
+src/gkr_verifier.cpp:9: trailing whitespace.
++
+src/gkr_verifier.cpp:10: trailing whitespace.
++#include <algorithm>
+src/gkr_verifier.cpp:11: trailing whitespace.
++#include <atomic>
+src/gkr_verifier.cpp:12: trailing whitespace.
++#include <array>
+src/gkr_verifier.cpp:13: trailing whitespace.
++#include <limits>
+src/gkr_verifier.cpp:14: trailing whitespace.
++#include <stdexcept>
+src/gkr_verifier.cpp:15: trailing whitespace.
++#include <exception>
+src/gkr_verifier.cpp:16: trailing whitespace.
++#include <thread>
+src/gkr_verifier.cpp:17: trailing whitespace.
++#include <sstream>
+src/gkr_verifier.cpp:18: trailing whitespace.
++
+src/gkr_verifier.cpp:19: trailing whitespace.
++namespace {
+src/gkr_verifier.cpp:20: trailing whitespace.
++
+src/gkr_verifier.cpp:21: trailing whitespace.
++using std::size_t;
+src/gkr_verifier.cpp:22: trailing whitespace.
++using std::string;
+src/gkr_verifier.cpp:23: trailing whitespace.
++using std::vector;
+src/gkr_verifier.cpp:24: trailing whitespace.
++
+src/gkr_verifier.cpp:25: trailing whitespace.
++class FingerprintWriter {
+src/gkr_verifier.cpp:26: trailing whitespace.
++public:
+src/gkr_verifier.cpp:27: trailing whitespace.
++    ~FingerprintWriter() { flush(); }
+src/gkr_verifier.cpp:28: trailing whitespace.
++    void u64(std::uint64_t value) {
+src/gkr_verifier.cpp:29: trailing whitespace.
++        std::uint8_t bytes[8];
+src/gkr_verifier.cpp:30: trailing whitespace.
++        for (unsigned i=0;i<8;++i)
+src/gkr_verifier.cpp:31: trailing whitespace.
++            bytes[i]=static_cast<std::uint8_t>(value>>(8*i));
+src/gkr_verifier.cpp:32: trailing whitespace.
++        buffer_.insert(buffer_.end(),bytes,bytes+8);
+src/gkr_verifier.cpp:33: trailing whitespace.
++        if (buffer_.size()>=kFlushSize) flush();
+src/gkr_verifier.cpp:34: trailing whitespace.
++    }
+src/gkr_verifier.cpp:35: trailing whitespace.
++    void digest(const std::array<std::uint8_t,32> &value) {
+src/gkr_verifier.cpp:36: trailing whitespace.
++        buffer_.insert(buffer_.end(),value.begin(),value.end());
+src/gkr_verifier.cpp:37: trailing whitespace.
++    }
+src/gkr_verifier.cpp:38: trailing whitespace.
++    void text(const char *value) {
+src/gkr_verifier.cpp:39: trailing whitespace.
++        const string text_value(value);
+src/gkr_verifier.cpp:40: trailing whitespace.
++        u64(text_value.size());
+src/gkr_verifier.cpp:41: trailing whitespace.
++        buffer_.insert(buffer_.end(),text_value.begin(),text_value.end());
+src/gkr_verifier.cpp:42: trailing whitespace.
++    }
+src/gkr_verifier.cpp:43: trailing whitespace.
++    std::array<std::uint8_t,32> finish() {
+src/gkr_verifier.cpp:44: trailing whitespace.
++        flush();
+src/gkr_verifier.cpp:45: trailing whitespace.
++        std::array<std::uint8_t,32> result{};
+src/gkr_verifier.cpp:46: trailing whitespace.
++        if (hash_.digest(result.data(),result.size(),nullptr,0)!=result.size())
+src/gkr_verifier.cpp:47: trailing whitespace.
++            throw std::runtime_error("failed to finalize circuit fingerprint");
+src/gkr_verifier.cpp:48: trailing whitespace.
++        finished_=true;
+src/gkr_verifier.cpp:49: trailing whitespace.
++        return result;
+src/gkr_verifier.cpp:50: trailing whitespace.
++    }
+src/gkr_verifier.cpp:51: trailing whitespace.
++private:
+src/gkr_verifier.cpp:52: trailing whitespace.
++    static constexpr size_t kFlushSize=1ULL<<20;
+src/gkr_verifier.cpp:53: trailing whitespace.
++    cybozu::Sha256 hash_;
+src/gkr_verifier.cpp:54: trailing whitespace.
++    vector<std::uint8_t> buffer_;
+src/gkr_verifier.cpp:55: trailing whitespace.
++    bool finished_=false;
+src/gkr_verifier.cpp:56: trailing whitespace.
++    void flush() {
+src/gkr_verifier.cpp:57: trailing whitespace.
++        if (!finished_ && !buffer_.empty()) {
+src/gkr_verifier.cpp:58: trailing whitespace.
++            hash_.update(buffer_.data(),buffer_.size());
+src/gkr_verifier.cpp:59: trailing whitespace.
++            buffer_.clear();
+src/gkr_verifier.cpp:60: trailing whitespace.
++        }
+src/gkr_verifier.cpp:61: trailing whitespace.
++    }
+src/gkr_verifier.cpp:62: trailing whitespace.
++};
+src/gkr_verifier.cpp:63: trailing whitespace.
++
+src/gkr_verifier.cpp:64: trailing whitespace.
++void fail(const string &message) {
+src/gkr_verifier.cpp:65: trailing whitespace.
++    throw std::runtime_error(message);
+src/gkr_verifier.cpp:66: trailing whitespace.
++}
+src/gkr_verifier.cpp:67: trailing whitespace.
++
+src/gkr_verifier.cpp:68: trailing whitespace.
++void appendQuadratic(Transcript &transcript, const string &label,
+src/gkr_verifier.cpp:69: trailing whitespace.
++                     const GKRQuadraticRound &round) {
+src/gkr_verifier.cpp:70: trailing whitespace.
++    transcript.appendFr(label + ".a", round.a);
+src/gkr_verifier.cpp:71: trailing whitespace.
++    transcript.appendFr(label + ".b", round.b);
+src/gkr_verifier.cpp:72: trailing whitespace.
++    transcript.appendFr(label + ".c", round.c);
+src/gkr_verifier.cpp:73: trailing whitespace.
++}
+src/gkr_verifier.cpp:74: trailing whitespace.
++
+src/gkr_verifier.cpp:75: trailing whitespace.
++Fr evaluate(const GKRQuadraticRound &round, const Fr &point) {
+src/gkr_verifier.cpp:76: trailing whitespace.
++    return round.a * point * point + round.b * point + round.c;
+src/gkr_verifier.cpp:77: trailing whitespace.
++}
+src/gkr_verifier.cpp:78: trailing whitespace.
++
+src/gkr_verifier.cpp:79: trailing whitespace.
++bool isZeroFingerprint(const std::array<std::uint8_t, 32> &fingerprint) {
+src/gkr_verifier.cpp:80: trailing whitespace.
++    return std::all_of(fingerprint.begin(),fingerprint.end(),
+src/gkr_verifier.cpp:81: trailing whitespace.
++                       [](std::uint8_t byte) { return byte==0; });
+src/gkr_verifier.cpp:82: trailing whitespace.
++}
+src/gkr_verifier.cpp:83: trailing whitespace.
++
+src/gkr_verifier.cpp:84: trailing whitespace.
++void validateStatementMetadata(const layeredCircuit &circuit,
+src/gkr_verifier.cpp:85: trailing whitespace.
++                               const GKRPublicStatement &statement) {
+src/gkr_verifier.cpp:86: trailing whitespace.
++    if (statement.protocol_version != kZkGPTProtocolVersion)
+src/gkr_verifier.cpp:87: trailing whitespace.
++        fail("GKR statement has unsupported protocol version");
+src/gkr_verifier.cpp:88: trailing whitespace.
++    if (circuit.size < 2 || circuit.circuit.size() != circuit.size)
+src/gkr_verifier.cpp:89: trailing whitespace.
++        fail("GKR public circuit has invalid layer count");
+src/gkr_verifier.cpp:90: trailing whitespace.
++    if (statement.val0_log_size < 0 || statement.val0_log_size > 30)
+src/gkr_verifier.cpp:91: trailing whitespace.
++        fail("GKR statement has invalid val0 log size");
+src/gkr_verifier.cpp:92: trailing whitespace.
++    const size_t expected_commitments = size_t{1}
+src/gkr_verifier.cpp:93: trailing whitespace.
++        << (statement.val0_log_size / 2);
+src/gkr_verifier.cpp:94: trailing whitespace.
++    if (statement.val0_commitment.size() != expected_commitments)
+src/gkr_verifier.cpp:95: trailing whitespace.
++        fail("GKR statement commitment count does not match val0 shape");
+src/gkr_verifier.cpp:96: trailing whitespace.
++    const size_t expected_generators = size_t{1}
+src/gkr_verifier.cpp:97: trailing whitespace.
++        << (statement.val0_log_size - statement.val0_log_size / 2);
+src/gkr_verifier.cpp:98: trailing whitespace.
++    if (statement.val0_generator_domain.domain != "zkGPT/main" ||
+src/gkr_verifier.cpp:99: trailing whitespace.
++        statement.val0_generator_domain.count != expected_generators)
+src/gkr_verifier.cpp:100: trailing whitespace.
++        fail("GKR statement has invalid val0 generator descriptor");
+src/gkr_verifier.cpp:101: trailing whitespace.
++    const auto &shape = statement.model_shape;
+src/gkr_verifier.cpp:102: trailing whitespace.
++    if (shape.sequence_length == 0 || shape.layer_count == 0 ||
+src/gkr_verifier.cpp:103: trailing whitespace.
++        shape.head_count == 0 || shape.head_dimension == 0 ||
+src/gkr_verifier.cpp:104: trailing whitespace.
++        shape.hidden_dimension == 0 || shape.mlp_dimension == 0 ||
+src/gkr_verifier.cpp:105: trailing whitespace.
++        shape.head_count > std::numeric_limits<size_t>::max() /
+src/gkr_verifier.cpp:106: trailing whitespace.
++                           shape.head_dimension ||
+src/gkr_verifier.cpp:107: trailing whitespace.
++        shape.head_count * shape.head_dimension != shape.hidden_dimension)
+src/gkr_verifier.cpp:108: trailing whitespace.
++        fail("GKR statement has invalid model shape");
+src/gkr_verifier.cpp:109: trailing whitespace.
++}
+src/gkr_verifier.cpp:110: trailing whitespace.
++
+src/gkr_verifier.cpp:111: trailing whitespace.
++void validateStatementFingerprint(
+src/gkr_verifier.cpp:112: trailing whitespace.
++    const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:113: trailing whitespace.
++    const std::array<std::uint8_t, 32> &trusted_fingerprint) {
+src/gkr_verifier.cpp:114: trailing whitespace.
++    if (isZeroFingerprint(trusted_fingerprint) ||
+src/gkr_verifier.cpp:115: trailing whitespace.
++        isZeroFingerprint(statement.circuit_fingerprint))
+src/gkr_verifier.cpp:116: trailing whitespace.
++        fail("GKR circuit fingerprint must not be all zero");
+src/gkr_verifier.cpp:117: trailing whitespace.
++    if (trusted_fingerprint!=statement.circuit_fingerprint)
+src/gkr_verifier.cpp:118: trailing whitespace.
++        fail("GKR public circuit fingerprint mismatch");
+src/gkr_verifier.cpp:119: trailing whitespace.
++}
+src/gkr_verifier.cpp:120: trailing whitespace.
++
+src/gkr_verifier.cpp:121: trailing whitespace.
++void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
+src/gkr_verifier.cpp:122: trailing whitespace.
++                       const vector<Fr> &r_g0, const vector<Fr> &r_g1,
+src/gkr_verifier.cpp:123: trailing whitespace.
++                       const Fr &alpha, const Fr &beta,
+src/gkr_verifier.cpp:124: trailing whitespace.
++                       const Fr &zero_scale, const vector<Fr> &r_u,
+src/gkr_verifier.cpp:125: trailing whitespace.
++                       const vector<Fr> *r_v, Fr uni[2], Fr bin[3]) {
+src/gkr_verifier.cpp:126: trailing whitespace.
++    const auto &current = circuit.circuit.at(layer_id);
+src/gkr_verifier.cpp:127: trailing whitespace.
++    vector<Fr> beta_g(size_t{1} << current.bit_length);
+src/gkr_verifier.cpp:128: trailing whitespace.
++    initBetaTable(beta_g, current.bit_length, r_g0.begin(), r_g1.begin(),
+src/gkr_verifier.cpp:129: trailing whitespace.
++                  alpha, beta);
+src/gkr_verifier.cpp:130: trailing whitespace.
++    if (current.zero_start_id < current.size) {
+src/gkr_verifier.cpp:131: trailing whitespace.
++        for (size_t gate = current.zero_start_id; gate < beta_g.size(); ++gate)
+src/gkr_verifier.cpp:132: trailing whitespace.
++            beta_g[gate] *= zero_scale;
+src/gkr_verifier.cpp:133: trailing whitespace.
++    }
+src/gkr_verifier.cpp:134: trailing whitespace.
++
+src/gkr_verifier.cpp:135: trailing whitespace.
++    vector<Fr> beta_u(size_t{1} << current.max_bl_u);
+src/gkr_verifier.cpp:136: trailing whitespace.
++    initBetaTable(beta_u, current.max_bl_u, r_u.begin(), F_ONE);
+src/gkr_verifier.cpp:137: trailing whitespace.
++    uni[0].clear();
+src/gkr_verifier.cpp:138: trailing whitespace.
++    uni[1].clear();
+src/gkr_verifier.cpp:139: trailing whitespace.
++    bin[0].clear();
+src/gkr_verifier.cpp:140: trailing whitespace.
++    bin[1].clear();
+src/gkr_verifier.cpp:141: trailing whitespace.
++    bin[2].clear();
+src/gkr_verifier.cpp:142: trailing whitespace.
++    const size_t unary_threads = current.uni_gates.size() < 16384 ? 1 :
+src/gkr_verifier.cpp:143: trailing whitespace.
++        zkgpt::workerThreadCount();
+src/gkr_verifier.cpp:144: trailing whitespace.
++    vector<std::array<Fr, 2>> unary_partial(unary_threads);
+src/gkr_verifier.cpp:145: trailing whitespace.
++    // Gate bounds are validated inside the workers (single pass).
+src/gkr_verifier.cpp:146: trailing whitespace.
++    std::atomic<bool> out_of_range{false};
+src/gkr_verifier.cpp:147: trailing whitespace.
++    vector<std::thread> workers;
+src/gkr_verifier.cpp:148: trailing whitespace.
++    workers.reserve(unary_threads);
+src/gkr_verifier.cpp:149: trailing whitespace.
++    for (size_t thread_id = 0; thread_id < unary_threads; ++thread_id) {
+src/gkr_verifier.cpp:150: trailing whitespace.
++        workers.emplace_back([&, thread_id] {
+src/gkr_verifier.cpp:151: trailing whitespace.
++            const size_t begin = current.uni_gates.size() * thread_id /
+src/gkr_verifier.cpp:152: trailing whitespace.
++                                 unary_threads;
+src/gkr_verifier.cpp:153: trailing whitespace.
++            const size_t end = current.uni_gates.size() * (thread_id + 1) /
+src/gkr_verifier.cpp:154: trailing whitespace.
++                               unary_threads;
+src/gkr_verifier.cpp:155: trailing whitespace.
++            for (size_t i = begin; i < end; ++i) {
+src/gkr_verifier.cpp:156: trailing whitespace.
++                const auto &gate = current.uni_gates[i];
+src/gkr_verifier.cpp:157: trailing whitespace.
++                if (gate.g >= beta_g.size() || gate.u >= beta_u.size()) {
+src/gkr_verifier.cpp:158: trailing whitespace.
++                    out_of_range = true;
+src/gkr_verifier.cpp:159: trailing whitespace.
++                    return;
+src/gkr_verifier.cpp:160: trailing whitespace.
++                }
+src/gkr_verifier.cpp:161: trailing whitespace.
++                const unsigned source_class = gate.lu == 0 ? 0U : 1U;
+src/gkr_verifier.cpp:162: trailing whitespace.
++                unary_partial[thread_id][source_class] +=
+src/gkr_verifier.cpp:163: trailing whitespace.
++                    beta_g[gate.g] * beta_u[gate.u] * gate.sc;
+src/gkr_verifier.cpp:164: trailing whitespace.
++            }
+src/gkr_verifier.cpp:165: trailing whitespace.
++        });
+src/gkr_verifier.cpp:166: trailing whitespace.
++    }
+src/gkr_verifier.cpp:167: trailing whitespace.
++    for (auto &worker : workers) worker.join();
+src/gkr_verifier.cpp:168: trailing whitespace.
++    for (const auto &partial : unary_partial) {
+src/gkr_verifier.cpp:169: trailing whitespace.
++        uni[0] += partial[0];
+src/gkr_verifier.cpp:170: trailing whitespace.
++        uni[1] += partial[1];
+src/gkr_verifier.cpp:171: trailing whitespace.
++    }
+src/gkr_verifier.cpp:172: trailing whitespace.
++    if (out_of_range)
+src/gkr_verifier.cpp:173: trailing whitespace.
++        fail("GKR public circuit contains an out-of-range unary gate");
+src/gkr_verifier.cpp:174: trailing whitespace.
++
+src/gkr_verifier.cpp:175: trailing whitespace.
++    if (!r_v) return;
+src/gkr_verifier.cpp:176: trailing whitespace.
++    vector<Fr> beta_v(size_t{1} << current.max_bl_v);
+src/gkr_verifier.cpp:177: trailing whitespace.
++    initBetaTable(beta_v, current.max_bl_v, r_v->begin(), F_ONE);
+src/gkr_verifier.cpp:178: trailing whitespace.
++    uni[0] *= beta_v[0];
+src/gkr_verifier.cpp:179: trailing whitespace.
++    uni[1] *= beta_v[0];
+src/gkr_verifier.cpp:180: trailing whitespace.
++    const size_t binary_threads = current.bin_gates.size() < 16384 ? 1 :
+src/gkr_verifier.cpp:181: trailing whitespace.
++        zkgpt::workerThreadCount();
+src/gkr_verifier.cpp:182: trailing whitespace.
++    vector<std::array<Fr, 3>> binary_partial(binary_threads);
+src/gkr_verifier.cpp:183: trailing whitespace.
++    workers.clear();
+src/gkr_verifier.cpp:184: trailing whitespace.
++    workers.reserve(binary_threads);
+src/gkr_verifier.cpp:185: trailing whitespace.
++    for (size_t thread_id = 0; thread_id < binary_threads; ++thread_id) {
+src/gkr_verifier.cpp:186: trailing whitespace.
++        workers.emplace_back([&, thread_id] {
+src/gkr_verifier.cpp:187: trailing whitespace.
++            const size_t begin = current.bin_gates.size() * thread_id /
+src/gkr_verifier.cpp:188: trailing whitespace.
++                                 binary_threads;
+src/gkr_verifier.cpp:189: trailing whitespace.
++            const size_t end = current.bin_gates.size() * (thread_id + 1) /
+src/gkr_verifier.cpp:190: trailing whitespace.
++                               binary_threads;
+src/gkr_verifier.cpp:191: trailing whitespace.
++            for (size_t i = begin; i < end; ++i) {
+src/gkr_verifier.cpp:192: trailing whitespace.
++                const auto &gate = current.bin_gates[i];
+src/gkr_verifier.cpp:193: trailing whitespace.
++                if (gate.g >= beta_g.size() || gate.u >= beta_u.size() ||
+src/gkr_verifier.cpp:194: trailing whitespace.
++                    gate.v >= beta_v.size() || gate.l > 2) {
+src/gkr_verifier.cpp:195: trailing whitespace.
++                    out_of_range = true;
+src/gkr_verifier.cpp:196: trailing whitespace.
++                    return;
+src/gkr_verifier.cpp:197: trailing whitespace.
++                }
+src/gkr_verifier.cpp:198: trailing whitespace.
++                binary_partial[thread_id][gate.l] +=
+src/gkr_verifier.cpp:199: trailing whitespace.
++                    beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * gate.sc;
+src/gkr_verifier.cpp:200: trailing whitespace.
++            }
+src/gkr_verifier.cpp:201: trailing whitespace.
++        });
+src/gkr_verifier.cpp:202: trailing whitespace.
++    }
+src/gkr_verifier.cpp:203: trailing whitespace.
++    for (auto &worker : workers) worker.join();
+src/gkr_verifier.cpp:204: trailing whitespace.
++    for (const auto &partial : binary_partial)
+src/gkr_verifier.cpp:205: trailing whitespace.
++        for (unsigned i = 0; i < 3; ++i) bin[i] += partial[i];
+src/gkr_verifier.cpp:206: trailing whitespace.
++    if (out_of_range)
+src/gkr_verifier.cpp:207: trailing whitespace.
++        fail("GKR public circuit contains an out-of-range binary gate");
+src/gkr_verifier.cpp:208: trailing whitespace.
++}
+src/gkr_verifier.cpp:209: trailing whitespace.
++
+src/gkr_verifier.cpp:210: trailing whitespace.
++Fr finalPredicateValue(const Fr uni[2], const Fr bin[3],
+src/gkr_verifier.cpp:211: trailing whitespace.
++                       const GKRLayerProof &layer) {
+src/gkr_verifier.cpp:212: trailing whitespace.
++    return bin[0] * layer.final_claim_u0 * layer.final_claim_v0 +
+src/gkr_verifier.cpp:213: trailing whitespace.
++           bin[1] * layer.final_claim_u1 * layer.final_claim_v1 +
+src/gkr_verifier.cpp:214: trailing whitespace.
++           bin[2] * layer.final_claim_u1 * layer.final_claim_v0 +
+src/gkr_verifier.cpp:215: trailing whitespace.
++           uni[0] * layer.final_claim_u0 +
+src/gkr_verifier.cpp:216: trailing whitespace.
++           uni[1] * layer.final_claim_u1;
+src/gkr_verifier.cpp:217: trailing whitespace.
++}
+src/gkr_verifier.cpp:218: trailing whitespace.
++
+src/gkr_verifier.cpp:219: trailing whitespace.
++} // namespace
+src/gkr_verifier.cpp:220: trailing whitespace.
++
+src/gkr_verifier.cpp:221: trailing whitespace.
++namespace {
+src/gkr_verifier.cpp:222: trailing whitespace.
++
+src/gkr_verifier.cpp:223: trailing whitespace.
++// Hash of one layer's metadata and wiring (same field order as v1).
+src/gkr_verifier.cpp:224: trailing whitespace.
++std::array<std::uint8_t, 32> fingerprintLayer(const layer &layer) {
+src/gkr_verifier.cpp:225: trailing whitespace.
++    FingerprintWriter writer;
+src/gkr_verifier.cpp:226: trailing whitespace.
++    writer.u64(static_cast<std::uint64_t>(layer.ty));
+src/gkr_verifier.cpp:227: trailing whitespace.
++    writer.u64(layer.size);
+src/gkr_verifier.cpp:228: trailing whitespace.
++    writer.u64(layer.size_u[0]);
+src/gkr_verifier.cpp:229: trailing whitespace.
++    writer.u64(layer.size_u[1]);
+src/gkr_verifier.cpp:230: trailing whitespace.
++    writer.u64(layer.size_v[0]);
+src/gkr_verifier.cpp:231: trailing whitespace.
++    writer.u64(layer.size_v[1]);
+src/gkr_verifier.cpp:232: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[0]));
+src/gkr_verifier.cpp:233: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.bit_length_u[1]));
+src/gkr_verifier.cpp:234: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[0]));
+src/gkr_verifier.cpp:235: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.bit_length_v[1]));
+src/gkr_verifier.cpp:236: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.bit_length));
+src/gkr_verifier.cpp:237: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.max_bl_u));
+src/gkr_verifier.cpp:238: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.max_bl_v));
+src/gkr_verifier.cpp:239: trailing whitespace.
++    writer.u64(layer.need_phase2 ? 1 : 0);
+src/gkr_verifier.cpp:240: trailing whitespace.
++    writer.u64(layer.zero_start_id);
+src/gkr_verifier.cpp:241: trailing whitespace.
++    writer.u64(static_cast<std::uint8_t>(layer.fft_bit_length));
+src/gkr_verifier.cpp:242: trailing whitespace.
++    writer.u64(layer.uni_interval.size());
+src/gkr_verifier.cpp:243: trailing whitespace.
++    for (const auto &interval : layer.uni_interval) {
+src/gkr_verifier.cpp:244: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(interval.first));
+src/gkr_verifier.cpp:245: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(interval.second));
+src/gkr_verifier.cpp:246: trailing whitespace.
++    }
+src/gkr_verifier.cpp:247: trailing whitespace.
++    writer.u64(layer.bin_interval.size());
+src/gkr_verifier.cpp:248: trailing whitespace.
++    for (const auto &interval : layer.bin_interval) {
+src/gkr_verifier.cpp:249: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(interval.first));
+src/gkr_verifier.cpp:250: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(interval.second));
+src/gkr_verifier.cpp:251: trailing whitespace.
++    }
+src/gkr_verifier.cpp:252: trailing whitespace.
++    writer.u64(layer.uni_gates.size());
+src/gkr_verifier.cpp:253: trailing whitespace.
++    for (const auto &gate : layer.uni_gates) {
+src/gkr_verifier.cpp:254: trailing whitespace.
++        writer.u64(gate.g);
+src/gkr_verifier.cpp:255: trailing whitespace.
++        writer.u64(gate.u);
+src/gkr_verifier.cpp:256: trailing whitespace.
++        writer.u64(gate.lu);
+src/gkr_verifier.cpp:257: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(gate.sc));
+src/gkr_verifier.cpp:258: trailing whitespace.
++    }
+src/gkr_verifier.cpp:259: trailing whitespace.
++    writer.u64(layer.bin_gates.size());
+src/gkr_verifier.cpp:260: trailing whitespace.
++    for (const auto &gate : layer.bin_gates) {
+src/gkr_verifier.cpp:261: trailing whitespace.
++        writer.u64(gate.g);
+src/gkr_verifier.cpp:262: trailing whitespace.
++        writer.u64(gate.u);
+src/gkr_verifier.cpp:263: trailing whitespace.
++        writer.u64(gate.v);
+src/gkr_verifier.cpp:264: trailing whitespace.
++        writer.u64(gate.l);
+src/gkr_verifier.cpp:265: trailing whitespace.
++        writer.u64(static_cast<std::uint64_t>(gate.sc));
+src/gkr_verifier.cpp:266: trailing whitespace.
++    }
+src/gkr_verifier.cpp:267: trailing whitespace.
++    writer.u64(layer.ori_id_u.size());
+src/gkr_verifier.cpp:268: trailing whitespace.
++    for (const auto value : layer.ori_id_u) writer.u64(value);
+src/gkr_verifier.cpp:269: trailing whitespace.
++    writer.u64(layer.ori_id_v.size());
+src/gkr_verifier.cpp:270: trailing whitespace.
++    for (const auto value : layer.ori_id_v) writer.u64(value);
+src/gkr_verifier.cpp:271: trailing whitespace.
++    return writer.finish();
+src/gkr_verifier.cpp:272: trailing whitespace.
++}
+src/gkr_verifier.cpp:273: trailing whitespace.
++
+src/gkr_verifier.cpp:274: trailing whitespace.
++} // namespace
+src/gkr_verifier.cpp:275: trailing whitespace.
++
+src/gkr_verifier.cpp:276: trailing whitespace.
++std::array<std::uint8_t, 32> fingerprintCircuit(
+src/gkr_verifier.cpp:277: trailing whitespace.
++    const layeredCircuit &circuit) {
+src/gkr_verifier.cpp:278: trailing whitespace.
++    // v2: layers are hashed independently (in parallel) and the top-level
+src/gkr_verifier.cpp:279: trailing whitespace.
++    // hash binds the ordered list of layer digests. Hashing the whole
+src/gkr_verifier.cpp:280: trailing whitespace.
++    // multi-GB wiring stream serially dominated verifier time.
+src/gkr_verifier.cpp:281: trailing whitespace.
++    vector<std::array<std::uint8_t, 32>> layer_digests(circuit.circuit.size());
+src/gkr_verifier.cpp:282: trailing whitespace.
++    std::atomic<size_t> next_layer{0};
+src/gkr_verifier.cpp:283: trailing whitespace.
++    std::vector<std::exception_ptr> errors(
+src/gkr_verifier.cpp:284: trailing whitespace.
++        std::min<size_t>(zkgpt::workerThreadCount(),
+src/gkr_verifier.cpp:285: trailing whitespace.
++                         std::max<size_t>(1, circuit.circuit.size())));
+src/gkr_verifier.cpp:286: trailing whitespace.
++    {
+src/gkr_verifier.cpp:287: trailing whitespace.
++        vector<std::thread> workers;
+src/gkr_verifier.cpp:288: trailing whitespace.
++        workers.reserve(errors.size());
+src/gkr_verifier.cpp:289: trailing whitespace.
++        zkgpt::ThreadJoiner joiner(workers);
+src/gkr_verifier.cpp:290: trailing whitespace.
++        for (size_t t = 0; t < errors.size(); ++t)
+src/gkr_verifier.cpp:291: trailing whitespace.
++            workers.emplace_back([&, t] {
+src/gkr_verifier.cpp:292: trailing whitespace.
++                try {
+src/gkr_verifier.cpp:293: trailing whitespace.
++                    for (;;) {
+src/gkr_verifier.cpp:294: trailing whitespace.
++                        const size_t i = next_layer.fetch_add(1);
+src/gkr_verifier.cpp:295: trailing whitespace.
++                        if (i >= circuit.circuit.size()) break;
+src/gkr_verifier.cpp:296: trailing whitespace.
++                        layer_digests[i] = fingerprintLayer(circuit.circuit[i]);
+src/gkr_verifier.cpp:297: trailing whitespace.
++                    }
+src/gkr_verifier.cpp:298: trailing whitespace.
++                } catch (...) {
+src/gkr_verifier.cpp:299: trailing whitespace.
++                    errors[t] = std::current_exception();
+src/gkr_verifier.cpp:300: trailing whitespace.
++                }
+src/gkr_verifier.cpp:301: trailing whitespace.
++            });
+src/gkr_verifier.cpp:302: trailing whitespace.
++        joiner.join();
+src/gkr_verifier.cpp:303: trailing whitespace.
++    }
+src/gkr_verifier.cpp:304: trailing whitespace.
++    for (const auto &error : errors)
+src/gkr_verifier.cpp:305: trailing whitespace.
++        if (error) std::rethrow_exception(error);
+src/gkr_verifier.cpp:306: trailing whitespace.
++    FingerprintWriter writer;
+src/gkr_verifier.cpp:307: trailing whitespace.
++    writer.text("zkGPT-circuit-v2");
+src/gkr_verifier.cpp:308: trailing whitespace.
++    writer.u64(circuit.size);
+src/gkr_verifier.cpp:309: trailing whitespace.
++    writer.u64(circuit.circuit.size());
+src/gkr_verifier.cpp:310: trailing whitespace.
++    for (const auto &digest : layer_digests) writer.digest(digest);
+src/gkr_verifier.cpp:311: trailing whitespace.
++    return writer.finish();
+src/gkr_verifier.cpp:312: trailing whitespace.
++}
+src/gkr_verifier.cpp:313: trailing whitespace.
++
+src/gkr_verifier.cpp:314: trailing whitespace.
++std::string circuitFingerprintHex(
+src/gkr_verifier.cpp:315: trailing whitespace.
++    const std::array<std::uint8_t, 32> &fingerprint) {
+src/gkr_verifier.cpp:316: trailing whitespace.
++    static const char digits[]="0123456789abcdef";
+src/gkr_verifier.cpp:317: trailing whitespace.
++    string result;
+src/gkr_verifier.cpp:318: trailing whitespace.
++    result.reserve(fingerprint.size()*2);
+src/gkr_verifier.cpp:319: trailing whitespace.
++    for (const auto byte : fingerprint) {
+src/gkr_verifier.cpp:320: trailing whitespace.
++        result.push_back(digits[byte>>4]);
+src/gkr_verifier.cpp:321: trailing whitespace.
++        result.push_back(digits[byte&15]);
+src/gkr_verifier.cpp:322: trailing whitespace.
++    }
+src/gkr_verifier.cpp:323: trailing whitespace.
++    return result;
+src/gkr_verifier.cpp:324: trailing whitespace.
++}
+src/gkr_verifier.cpp:325: trailing whitespace.
++
+src/gkr_verifier.cpp:326: trailing whitespace.
++void validateGKRPublicStatement(
+src/gkr_verifier.cpp:327: trailing whitespace.
++    const layeredCircuit &circuit, const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:328: trailing whitespace.
++    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint) {
+src/gkr_verifier.cpp:329: trailing whitespace.
++    validateStatementMetadata(circuit,statement);
+src/gkr_verifier.cpp:330: trailing whitespace.
++    validateStatementFingerprint(statement,trusted_circuit_fingerprint);
+src/gkr_verifier.cpp:331: trailing whitespace.
++}
+src/gkr_verifier.cpp:332: trailing whitespace.
++
+src/gkr_verifier.cpp:333: trailing whitespace.
++Transcript initializeGKRTranscript(
+src/gkr_verifier.cpp:334: trailing whitespace.
++    const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:335: trailing whitespace.
++    const std::array<std::uint8_t, 32> &trusted_circuit_fingerprint,
+src/gkr_verifier.cpp:336: trailing whitespace.
++    ChallengeObserver *observer, const std::string &instance) {
+src/gkr_verifier.cpp:337: trailing whitespace.
++    if (isZeroFingerprint(trusted_circuit_fingerprint) ||
+src/gkr_verifier.cpp:338: trailing whitespace.
++        trusted_circuit_fingerprint!=statement.circuit_fingerprint)
+src/gkr_verifier.cpp:339: trailing whitespace.
++        throw std::invalid_argument("untrusted GKR circuit fingerprint");
+src/gkr_verifier.cpp:340: trailing whitespace.
++    Transcript transcript(kGKRTranscriptDomain,observer,instance);
+src/gkr_verifier.cpp:341: trailing whitespace.
++    transcript.appendU64("protocol.version", statement.protocol_version);
+src/gkr_verifier.cpp:342: trailing whitespace.
++    transcript.appendString("curve.id", "BN254");
+src/gkr_verifier.cpp:343: trailing whitespace.
++    transcript.appendBytes("circuit.fingerprint",
+src/gkr_verifier.cpp:344: trailing whitespace.
++        trusted_circuit_fingerprint.data(),trusted_circuit_fingerprint.size());
+src/gkr_verifier.cpp:345: trailing whitespace.
++    transcript.appendU64("model.sequence_length",
+src/gkr_verifier.cpp:346: trailing whitespace.
++                         statement.model_shape.sequence_length);
+src/gkr_verifier.cpp:347: trailing whitespace.
++    transcript.appendU64("model.layer_count",
+src/gkr_verifier.cpp:348: trailing whitespace.
++                         statement.model_shape.layer_count);
+src/gkr_verifier.cpp:349: trailing whitespace.
++    transcript.appendU64("model.head_count",
+src/gkr_verifier.cpp:350: trailing whitespace.
++                         statement.model_shape.head_count);
+src/gkr_verifier.cpp:351: trailing whitespace.
++    transcript.appendU64("model.head_dimension",
+src/gkr_verifier.cpp:352: trailing whitespace.
++                         statement.model_shape.head_dimension);
+src/gkr_verifier.cpp:353: trailing whitespace.
++    transcript.appendU64("model.hidden_dimension",
+src/gkr_verifier.cpp:354: trailing whitespace.
++                         statement.model_shape.hidden_dimension);
+src/gkr_verifier.cpp:355: trailing whitespace.
++    transcript.appendU64("model.mlp_dimension",
+src/gkr_verifier.cpp:356: trailing whitespace.
++                         statement.model_shape.mlp_dimension);
+src/gkr_verifier.cpp:357: trailing whitespace.
++    transcript.appendU64("input.log_size",statement.val0_log_size);
+src/gkr_verifier.cpp:358: trailing whitespace.
++    transcript.appendString("input.generator.domain",
+src/gkr_verifier.cpp:359: trailing whitespace.
++                            statement.val0_generator_domain.domain);
+src/gkr_verifier.cpp:360: trailing whitespace.
++    transcript.appendU64("input.generator.count",
+src/gkr_verifier.cpp:361: trailing whitespace.
++                         statement.val0_generator_domain.count);
+src/gkr_verifier.cpp:362: trailing whitespace.
++    transcript.appendU64("input.commitment_count",
+src/gkr_verifier.cpp:363: trailing whitespace.
++                         statement.val0_commitment.size());
+src/gkr_verifier.cpp:364: trailing whitespace.
++    for (const auto &commitment : statement.val0_commitment)
+src/gkr_verifier.cpp:365: trailing whitespace.
++        transcript.appendG1("input.commitment",commitment);
+src/gkr_verifier.cpp:366: trailing whitespace.
++    return transcript;
+src/gkr_verifier.cpp:367: trailing whitespace.
++}
+src/gkr_verifier.cpp:368: trailing whitespace.
++
+src/gkr_verifier.cpp:369: trailing whitespace.
++static bool verifyGKRImpl(const layeredCircuit &circuit,
+src/gkr_verifier.cpp:370: trailing whitespace.
++               const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:371: trailing whitespace.
++               const GKRProof &proof, std::string *error,
+src/gkr_verifier.cpp:372: trailing whitespace.
++               ChallengeObserver *observer, std::vector<GKRInputTerminalClaim> *claims) {
+src/gkr_verifier.cpp:373: trailing whitespace.
++    if (claims) claims->clear();
+src/gkr_verifier.cpp:374: trailing whitespace.
++    try {
+src/gkr_verifier.cpp:375: trailing whitespace.
++        validateStatementMetadata(circuit,statement);
+src/gkr_verifier.cpp:376: trailing whitespace.
++        const auto trusted_fingerprint=fingerprintCircuit(circuit);
+src/gkr_verifier.cpp:377: trailing whitespace.
++        validateStatementFingerprint(statement,trusted_fingerprint);
+src/gkr_verifier.cpp:378: trailing whitespace.
++        Transcript transcript=initializeGKRTranscript(
+src/gkr_verifier.cpp:379: trailing whitespace.
++            statement,trusted_fingerprint,observer,"gkr-main");
+src/gkr_verifier.cpp:380: trailing whitespace.
++        const auto &output_layer = circuit.circuit.back();
+src/gkr_verifier.cpp:381: trailing whitespace.
++        vector<vector<Fr>> r_u(circuit.size + 2), r_v(circuit.size + 2);
+src/gkr_verifier.cpp:382: trailing whitespace.
++        r_u[circuit.size].resize(output_layer.bit_length);
+src/gkr_verifier.cpp:383: trailing whitespace.
++        for (auto &coordinate : r_u[circuit.size])
+src/gkr_verifier.cpp:384: trailing whitespace.
++            coordinate = transcript.challenge("gkr.output.point");
+src/gkr_verifier.cpp:385: trailing whitespace.
++
+src/gkr_verifier.cpp:386: trailing whitespace.
++        if (proof.output_evaluation != statement.output_evaluation)
+src/gkr_verifier.cpp:387: trailing whitespace.
++            fail("GKR output evaluation does not match public output claim");
+src/gkr_verifier.cpp:388: trailing whitespace.
++        Fr previous_sum = proof.output_evaluation;
+src/gkr_verifier.cpp:389: trailing whitespace.
++        transcript.appendFr("gkr.output.evaluation", previous_sum);
+src/gkr_verifier.cpp:390: trailing whitespace.
++        if (proof.layers.size() != circuit.size - 1)
+src/gkr_verifier.cpp:391: trailing whitespace.
++            fail("GKR proof layer count does not match public circuit");
+src/gkr_verifier.cpp:392: trailing whitespace.
++
+src/gkr_verifier.cpp:393: trailing whitespace.
++        vector<Fr> final_u0(circuit.size + 2), final_v0(circuit.size + 2);
+src/gkr_verifier.cpp:394: trailing whitespace.
++        vector<vector<Fr>> fconn_v_r_u(circuit.size + 2);
+src/gkr_verifier.cpp:395: trailing whitespace.
++        vector<vector<Fr>> fconn_v_r_v(circuit.size + 2);
+src/gkr_verifier.cpp:396: trailing whitespace.
++        vector<Fr> fconn_v_final_u0(circuit.size + 2);
+src/gkr_verifier.cpp:397: trailing whitespace.
++        vector<Fr> fconn_v_final_v0(circuit.size + 2);
+src/gkr_verifier.cpp:398: trailing whitespace.
++        Fr final_u1 = 0;
+src/gkr_verifier.cpp:399: trailing whitespace.
++        Fr final_v1 = 0;
+src/gkr_verifier.cpp:400: trailing whitespace.
++        Fr alpha = F_ONE;
+src/gkr_verifier.cpp:401: trailing whitespace.
++        Fr beta = F_ZERO;
+src/gkr_verifier.cpp:402: trailing whitespace.
++        vector<Fr> r_g0 = r_u[circuit.size];
+src/gkr_verifier.cpp:403: trailing whitespace.
++        vector<Fr> r_g1;
+src/gkr_verifier.cpp:404: trailing whitespace.
++        const unsigned sequence_bits =
+src/gkr_verifier.cpp:405: trailing whitespace.
++            ceilPow2BitLength(statement.model_shape.sequence_length);
+src/gkr_verifier.cpp:406: trailing whitespace.
++        // The matrix sumcheck length is the padded FC input width, which is
+src/gkr_verifier.cpp:407: trailing whitespace.
++        // fixed by the public model shape (see LLM::LLM): per block the four
+src/gkr_verifier.cpp:408: trailing whitespace.
++        // projections read hidden, hidden, hidden and mlp columns. FCONN
+src/gkr_verifier.cpp:409: trailing whitespace.
++        // layers appear in circuit order and are visited here in reverse.
+src/gkr_verifier.cpp:410: trailing whitespace.
++        if (statement.model_shape.layer_count > circuit.size)
+src/gkr_verifier.cpp:411: trailing whitespace.
++            fail("GKR model shape has more blocks than circuit layers");
+src/gkr_verifier.cpp:412: trailing whitespace.
++        vector<unsigned> expected_matrix_rounds;
+src/gkr_verifier.cpp:413: trailing whitespace.
++        for (std::uint64_t block = 0;
+src/gkr_verifier.cpp:414: trailing whitespace.
++             block < statement.model_shape.layer_count; ++block) {
+src/gkr_verifier.cpp:415: trailing whitespace.
++            const unsigned hidden_bits =
+src/gkr_verifier.cpp:416: trailing whitespace.
++                ceilPow2BitLength(statement.model_shape.hidden_dimension);
+src/gkr_verifier.cpp:417: trailing whitespace.
++            expected_matrix_rounds.push_back(hidden_bits);
+src/gkr_verifier.cpp:418: trailing whitespace.
++            expected_matrix_rounds.push_back(hidden_bits);
+src/gkr_verifier.cpp:419: trailing whitespace.
++            expected_matrix_rounds.push_back(hidden_bits);
+src/gkr_verifier.cpp:420: trailing whitespace.
++            expected_matrix_rounds.push_back(
+src/gkr_verifier.cpp:421: trailing whitespace.
++                ceilPow2BitLength(statement.model_shape.mlp_dimension));
+src/gkr_verifier.cpp:422: trailing whitespace.
++        }
+src/gkr_verifier.cpp:423: trailing whitespace.
++        size_t fc_layers_left = 0;
+src/gkr_verifier.cpp:424: trailing whitespace.
++        for (const auto &layer : circuit.circuit)
+src/gkr_verifier.cpp:425: trailing whitespace.
++            if (layer.ty == layerType::FCONN) ++fc_layers_left;
+src/gkr_verifier.cpp:426: trailing whitespace.
++        if (fc_layers_left != expected_matrix_rounds.size())
+src/gkr_verifier.cpp:427: trailing whitespace.
++            fail("GKR circuit FCONN layer count does not match model shape");
+src/gkr_verifier.cpp:428: trailing whitespace.
++
+src/gkr_verifier.cpp:429: trailing whitespace.
++        for (size_t proof_index = 0; proof_index < proof.layers.size();
+src/gkr_verifier.cpp:430: trailing whitespace.
++             ++proof_index) {
+src/gkr_verifier.cpp:431: trailing whitespace.
++            const std::uint32_t layer_id =
+src/gkr_verifier.cpp:432: trailing whitespace.
++                circuit.size - 1 - static_cast<std::uint32_t>(proof_index);
+src/gkr_verifier.cpp:433: trailing whitespace.
++            const auto &current = circuit.circuit.at(layer_id);
+src/gkr_verifier.cpp:434: trailing whitespace.
++            const auto &layer = proof.layers[proof_index];
+src/gkr_verifier.cpp:435: trailing whitespace.
++            if (layer.layer_index != layer_id ||
+src/gkr_verifier.cpp:436: trailing whitespace.
++                layer.layer_type != static_cast<std::uint32_t>(current.ty))
+src/gkr_verifier.cpp:437: trailing whitespace.
++                fail("GKR proof layer metadata mismatch at layer " +
+src/gkr_verifier.cpp:438: trailing whitespace.
++                     std::to_string(layer_id));
+src/gkr_verifier.cpp:439: trailing whitespace.
++
+src/gkr_verifier.cpp:440: trailing whitespace.
++            const Fr zero_scale = current.zero_start_id < current.size
+src/gkr_verifier.cpp:441: trailing whitespace.
++                ? transcript.challenge("gkr.relu.zero_scale") : F_ONE;
+src/gkr_verifier.cpp:442: trailing whitespace.
++
+src/gkr_verifier.cpp:443: trailing whitespace.
++            if (current.ty == layerType::FCONN) {
+src/gkr_verifier.cpp:444: trailing whitespace.
++                if (!layer.phase1_rounds.empty() ||
+src/gkr_verifier.cpp:445: trailing whitespace.
++                    !layer.phase2_rounds.empty())
+src/gkr_verifier.cpp:446: trailing whitespace.
++                    fail("GKR matrix layer contains normal sumcheck rounds");
+src/gkr_verifier.cpp:447: trailing whitespace.
++                const size_t m = layer.matrix_rounds.size();
+src/gkr_verifier.cpp:448: trailing whitespace.
++                if (fc_layers_left == 0 ||
+src/gkr_verifier.cpp:449: trailing whitespace.
++                    m != expected_matrix_rounds[--fc_layers_left] ||
+src/gkr_verifier.cpp:450: trailing whitespace.
++                    layer.matrix_v_rounds.size()!=m ||
+src/gkr_verifier.cpp:451: trailing whitespace.
++                    current.bit_length < sequence_bits)
+src/gkr_verifier.cpp:452: trailing whitespace.
++                    fail("GKR matrix layer has invalid dimensions at layer " +
+src/gkr_verifier.cpp:453: trailing whitespace.
++                         std::to_string(layer_id));
+src/gkr_verifier.cpp:454: trailing whitespace.
++                // The matrix sumcheck has no zero-check term.
+src/gkr_verifier.cpp:455: trailing whitespace.
++                if (current.zero_start_id < current.size)
+src/gkr_verifier.cpp:456: trailing whitespace.
++                    fail("GKR matrix layer has an unsupported zero region at "
+src/gkr_verifier.cpp:457: trailing whitespace.
++                         "layer " + std::to_string(layer_id));
+src/gkr_verifier.cpp:458: trailing whitespace.
++                const size_t k = current.bit_length - sequence_bits;
+src/gkr_verifier.cpp:459: trailing whitespace.
++                if (r_g0.size() < sequence_bits + k ||
+src/gkr_verifier.cpp:460: trailing whitespace.
++                    r_g1.size() < sequence_bits + k)
+src/gkr_verifier.cpp:461: trailing whitespace.
++                    fail("GKR matrix layer requires two output points at layer " +
+src/gkr_verifier.cpp:462: trailing whitespace.
++                         std::to_string(layer_id));
+src/gkr_verifier.cpp:463: trailing whitespace.
++                const auto verify_matrix=[&](
+src/gkr_verifier.cpp:464: trailing whitespace.
++                    const vector<GKRQuadraticRound> &rounds,
+src/gkr_verifier.cpp:465: trailing whitespace.
++                    const Fr &initial_claim, const vector<Fr> &output_point,
+src/gkr_verifier.cpp:466: trailing whitespace.
++                    const Fr &final_x, const Fr &final_w,
+src/gkr_verifier.cpp:467: trailing whitespace.
++                    vector<Fr> &x_point, vector<Fr> &w_point,
+src/gkr_verifier.cpp:468: trailing whitespace.
++                    const string &point_name) {
+src/gkr_verifier.cpp:469: trailing whitespace.
++                    x_point.resize(m+sequence_bits);
+src/gkr_verifier.cpp:470: trailing whitespace.
++                    w_point.resize(m+k);
+src/gkr_verifier.cpp:471: trailing whitespace.
++                    for (size_t j=0;j<sequence_bits;++j)
+src/gkr_verifier.cpp:472: trailing whitespace.
++                        x_point[m+j]=output_point[k+j];
+src/gkr_verifier.cpp:473: trailing whitespace.
++                    for (size_t j=0;j<k;++j)
+src/gkr_verifier.cpp:474: trailing whitespace.
++                        w_point[m+j]=output_point[j];
+src/gkr_verifier.cpp:475: trailing whitespace.
++                    Fr matrix_claim=initial_claim;
+src/gkr_verifier.cpp:476: trailing whitespace.
++                    const string label="gkr.matrix."+point_name+"."+
+src/gkr_verifier.cpp:477: trailing whitespace.
++                        std::to_string(layer_id);
+src/gkr_verifier.cpp:478: trailing whitespace.
++                    for (size_t round_index=0;round_index<m;++round_index) {
+src/gkr_verifier.cpp:479: trailing whitespace.
++                        const auto &round=rounds[round_index];
+src/gkr_verifier.cpp:480: trailing whitespace.
++                        if (evaluate(round,F_ZERO)+evaluate(round,F_ONE)!=
+src/gkr_verifier.cpp:481: trailing whitespace.
++                            matrix_claim)
+src/gkr_verifier.cpp:482: trailing whitespace.
++                            fail("GKR matrix "+point_name+
+src/gkr_verifier.cpp:483: trailing whitespace.
++                                 " sumcheck claim mismatch at layer "+
+src/gkr_verifier.cpp:484: trailing whitespace.
++                                 std::to_string(layer_id));
+src/gkr_verifier.cpp:485: trailing whitespace.
++                        appendQuadratic(transcript,label,round);
+src/gkr_verifier.cpp:486: trailing whitespace.
++                        const Fr challenge=transcript.challenge(
+src/gkr_verifier.cpp:487: trailing whitespace.
++                            label+".challenge");
+src/gkr_verifier.cpp:488: trailing whitespace.
++                        x_point[round_index]=challenge;
+src/gkr_verifier.cpp:489: trailing whitespace.
++                        w_point[round_index]=challenge;
+src/gkr_verifier.cpp:490: trailing whitespace.
++                        matrix_claim=evaluate(round,challenge);
+src/gkr_verifier.cpp:491: trailing whitespace.
++                    }
+src/gkr_verifier.cpp:492: trailing whitespace.
++                    if (final_x*final_w!=matrix_claim)
+src/gkr_verifier.cpp:493: trailing whitespace.
++                        fail("GKR matrix "+point_name+
+src/gkr_verifier.cpp:494: trailing whitespace.
++                             " final product mismatch at layer "+
+src/gkr_verifier.cpp:495: trailing whitespace.
++                             std::to_string(layer_id));
+src/gkr_verifier.cpp:496: trailing whitespace.
++                    transcript.appendFr(label+".final_f",final_x);
+src/gkr_verifier.cpp:497: trailing whitespace.
++                    transcript.appendFr(label+".final_g",final_w);
+src/gkr_verifier.cpp:498: trailing whitespace.
++                };
+src/gkr_verifier.cpp:499: trailing whitespace.
++                verify_matrix(
+src/gkr_verifier.cpp:500: trailing whitespace.
++                    layer.matrix_rounds,final_u1,r_g0,
+src/gkr_verifier.cpp:501: trailing whitespace.
++                    layer.final_claim_u0,layer.final_claim_v0,
+src/gkr_verifier.cpp:502: trailing whitespace.
++                    r_u[layer_id],r_v[layer_id],"u");
+src/gkr_verifier.cpp:503: trailing whitespace.
++                verify_matrix(
+src/gkr_verifier.cpp:504: trailing whitespace.
++                    layer.matrix_v_rounds,final_v1,r_g1,
+src/gkr_verifier.cpp:505: trailing whitespace.
++                    layer.matrix_v_final_claim_u0,
+src/gkr_verifier.cpp:506: trailing whitespace.
++                    layer.matrix_v_final_claim_v0,
+src/gkr_verifier.cpp:507: trailing whitespace.
++                    fconn_v_r_u[layer_id],fconn_v_r_v[layer_id],"v");
+src/gkr_verifier.cpp:508: trailing whitespace.
++                if (!layer.final_claim_u1.isZero() ||
+src/gkr_verifier.cpp:509: trailing whitespace.
++                    !layer.final_claim_v1.isZero())
+src/gkr_verifier.cpp:510: trailing whitespace.
++                    fail("GKR matrix layer has nonzero secondary claim");
+src/gkr_verifier.cpp:511: trailing whitespace.
++                fconn_v_final_u0[layer_id]=
+src/gkr_verifier.cpp:512: trailing whitespace.
++                    layer.matrix_v_final_claim_u0;
+src/gkr_verifier.cpp:513: trailing whitespace.
++                fconn_v_final_v0[layer_id]=
+src/gkr_verifier.cpp:514: trailing whitespace.
++                    layer.matrix_v_final_claim_v0;
+src/gkr_verifier.cpp:515: trailing whitespace.
++            } else {
+src/gkr_verifier.cpp:516: trailing whitespace.
++                if (!layer.matrix_rounds.empty() ||
+src/gkr_verifier.cpp:517: trailing whitespace.
++                    !layer.matrix_v_rounds.empty() ||
+src/gkr_verifier.cpp:518: trailing whitespace.
++                    !layer.matrix_v_final_claim_u0.isZero() ||
+src/gkr_verifier.cpp:519: trailing whitespace.
++                    !layer.matrix_v_final_claim_v0.isZero())
+src/gkr_verifier.cpp:520: trailing whitespace.
++                    fail("GKR normal layer contains matrix sumcheck rounds");
+src/gkr_verifier.cpp:521: trailing whitespace.
++                if (layer.phase1_rounds.size() !=
+src/gkr_verifier.cpp:522: trailing whitespace.
++                    static_cast<size_t>(current.max_bl_u))
+src/gkr_verifier.cpp:523: trailing whitespace.
++                    fail("GKR phase-1 round count mismatch at layer " +
+src/gkr_verifier.cpp:524: trailing whitespace.
++                         std::to_string(layer_id));
+src/gkr_verifier.cpp:525: trailing whitespace.
++                r_u[layer_id].resize(current.max_bl_u);
+src/gkr_verifier.cpp:526: trailing whitespace.
++                for (size_t round_index = 0;
+src/gkr_verifier.cpp:527: trailing whitespace.
++                     round_index < layer.phase1_rounds.size(); ++round_index) {
+src/gkr_verifier.cpp:528: trailing whitespace.
++                    const auto &round = layer.phase1_rounds[round_index];
+src/gkr_verifier.cpp:529: trailing whitespace.
++                    if (evaluate(round, F_ZERO) + evaluate(round, F_ONE) !=
+src/gkr_verifier.cpp:530: trailing whitespace.
++                        previous_sum)
+src/gkr_verifier.cpp:531: trailing whitespace.
++                        fail("GKR phase-1 claim mismatch at layer " +
+src/gkr_verifier.cpp:532: trailing whitespace.
++                             std::to_string(layer_id));
+src/gkr_verifier.cpp:533: trailing whitespace.
++                    appendQuadratic(transcript, "gkr.phase1", round);
+src/gkr_verifier.cpp:534: trailing whitespace.
++                    const Fr challenge =
+src/gkr_verifier.cpp:535: trailing whitespace.
++                        transcript.challenge("gkr.phase1.challenge");
+src/gkr_verifier.cpp:536: trailing whitespace.
++                    r_u[layer_id][round_index] = challenge;
+src/gkr_verifier.cpp:537: trailing whitespace.
++                    previous_sum = evaluate(round, challenge);
+src/gkr_verifier.cpp:538: trailing whitespace.
++                }
+src/gkr_verifier.cpp:539: trailing whitespace.
++
+src/gkr_verifier.cpp:540: trailing whitespace.
++                if (current.need_phase2) {
+src/gkr_verifier.cpp:541: trailing whitespace.
++                    if (layer.phase2_rounds.size() !=
+src/gkr_verifier.cpp:542: trailing whitespace.
++                        static_cast<size_t>(current.max_bl_v))
+src/gkr_verifier.cpp:543: trailing whitespace.
++                        fail("GKR phase-2 round count mismatch at layer " +
+src/gkr_verifier.cpp:544: trailing whitespace.
++                             std::to_string(layer_id));
+src/gkr_verifier.cpp:545: trailing whitespace.
++                    r_v[layer_id].resize(current.max_bl_v);
+src/gkr_verifier.cpp:546: trailing whitespace.
++                    for (size_t round_index = 0;
+src/gkr_verifier.cpp:547: trailing whitespace.
++                         round_index < layer.phase2_rounds.size();
+src/gkr_verifier.cpp:548: trailing whitespace.
++                         ++round_index) {
+src/gkr_verifier.cpp:549: trailing whitespace.
++                        const auto &round = layer.phase2_rounds[round_index];
+src/gkr_verifier.cpp:550: trailing whitespace.
++                        if (evaluate(round, F_ZERO) + evaluate(round, F_ONE) !=
+src/gkr_verifier.cpp:551: trailing whitespace.
++                            previous_sum)
+src/gkr_verifier.cpp:552: trailing whitespace.
++                            fail("GKR phase-2 claim mismatch at layer " +
+src/gkr_verifier.cpp:553: trailing whitespace.
++                                 std::to_string(layer_id));
+src/gkr_verifier.cpp:554: trailing whitespace.
++                        appendQuadratic(transcript, "gkr.phase2", round);
+src/gkr_verifier.cpp:555: trailing whitespace.
++                        const Fr challenge =
+src/gkr_verifier.cpp:556: trailing whitespace.
++                            transcript.challenge("gkr.phase2.challenge");
+src/gkr_verifier.cpp:557: trailing whitespace.
++                        r_v[layer_id][round_index] = challenge;
+src/gkr_verifier.cpp:558: trailing whitespace.
++                        previous_sum = evaluate(round, challenge);
+src/gkr_verifier.cpp:559: trailing whitespace.
++                    }
+src/gkr_verifier.cpp:560: trailing whitespace.
++                } else {
+src/gkr_verifier.cpp:561: trailing whitespace.
++                    if (!layer.phase2_rounds.empty() ||
+src/gkr_verifier.cpp:562: trailing whitespace.
++                        !layer.final_claim_v1.isZero())
+src/gkr_verifier.cpp:563: trailing whitespace.
++                        fail("GKR one-phase layer contains phase-2 data");
+src/gkr_verifier.cpp:564: trailing whitespace.
++                }
+src/gkr_verifier.cpp:565: trailing whitespace.
++
+src/gkr_verifier.cpp:566: trailing whitespace.
++                Fr uni[2];
+src/gkr_verifier.cpp:567: trailing whitespace.
++                Fr bin[3];
+src/gkr_verifier.cpp:568: trailing whitespace.
++                computePredicates(circuit, layer_id, r_g0, r_g1,
+src/gkr_verifier.cpp:569: trailing whitespace.
++                                  alpha, beta, zero_scale, r_u[layer_id],
+src/gkr_verifier.cpp:570: trailing whitespace.
++                                  current.need_phase2 ? &r_v[layer_id] : nullptr,
+src/gkr_verifier.cpp:571: trailing whitespace.
++                                  uni, bin);
+src/gkr_verifier.cpp:572: trailing whitespace.
++                if (finalPredicateValue(uni, bin, layer) != previous_sum)
+src/gkr_verifier.cpp:573: trailing whitespace.
++                    fail("GKR final wiring predicate mismatch at layer " +
+src/gkr_verifier.cpp:574: trailing whitespace.
++                         std::to_string(layer_id));
+src/gkr_verifier.cpp:575: trailing whitespace.
++            }
+src/gkr_verifier.cpp:576: trailing whitespace.
++
+src/gkr_verifier.cpp:577: trailing whitespace.
++            final_u0[layer_id] = layer.final_claim_u0;
+src/gkr_verifier.cpp:578: trailing whitespace.
++            final_u1 = layer.final_claim_u1;
+src/gkr_verifier.cpp:579: trailing whitespace.
++            final_v0[layer_id] = layer.final_claim_v0;
+src/gkr_verifier.cpp:580: trailing whitespace.
++            final_v1 = layer.final_claim_v1;
+src/gkr_verifier.cpp:581: trailing whitespace.
++            transcript.appendFr("gkr.layer.final_u0", layer.final_claim_u0);
+src/gkr_verifier.cpp:582: trailing whitespace.
++            transcript.appendFr("gkr.layer.final_u1", layer.final_claim_u1);
+src/gkr_verifier.cpp:583: trailing whitespace.
++            transcript.appendFr("gkr.layer.final_v0", layer.final_claim_v0);
+src/gkr_verifier.cpp:584: trailing whitespace.
++            transcript.appendFr("gkr.layer.final_v1", layer.final_claim_v1);
+src/gkr_verifier.cpp:585: trailing whitespace.
++            alpha = current.bit_length_u[1] >= 0
+src/gkr_verifier.cpp:586: trailing whitespace.
++                ? transcript.challenge("gkr.layer.alpha") : F_ZERO;
+src/gkr_verifier.cpp:587: trailing whitespace.
++            beta = (current.bit_length_v[1] >= 0 ||
+src/gkr_verifier.cpp:588: trailing whitespace.
++                    current.ty == layerType::FFT)
+src/gkr_verifier.cpp:589: trailing whitespace.
++                ? transcript.challenge("gkr.layer.beta") : F_ZERO;
+src/gkr_verifier.cpp:590: trailing whitespace.
++            previous_sum = alpha * final_u1 + beta * final_v1;
+src/gkr_verifier.cpp:591: trailing whitespace.
++            r_g0 = r_u[layer_id];
+src/gkr_verifier.cpp:592: trailing whitespace.
++            r_g1 = r_v[layer_id];
+src/gkr_verifier.cpp:593: trailing whitespace.
++        }
+src/gkr_verifier.cpp:594: trailing whitespace.
++
+src/gkr_verifier.cpp:595: trailing whitespace.
++        vector<Fr> sigma_u(circuit.size - 1);
+src/gkr_verifier.cpp:596: trailing whitespace.
++        vector<Fr> sigma_v(circuit.size - 1);
+src/gkr_verifier.cpp:597: trailing whitespace.
++        for (auto &value : sigma_u)
+src/gkr_verifier.cpp:598: trailing whitespace.
++            value = transcript.challenge("lasso.sigma_u");
+src/gkr_verifier.cpp:599: trailing whitespace.
++        for (auto &value : sigma_v)
+src/gkr_verifier.cpp:600: trailing whitespace.
++            value = transcript.challenge("lasso.sigma_v");
+src/gkr_verifier.cpp:601: trailing whitespace.
++        vector<Fr> sigma_fconn_v_u(circuit.size-1,F_ZERO);
+src/gkr_verifier.cpp:602: trailing whitespace.
++        vector<Fr> sigma_fconn_v_v(circuit.size-1,F_ZERO);
+src/gkr_verifier.cpp:603: trailing whitespace.
++        for (std::uint32_t layer_id=1;layer_id<circuit.size;++layer_id) {
+src/gkr_verifier.cpp:604: trailing whitespace.
++            if (circuit.circuit[layer_id].ty!=layerType::FCONN) continue;
+src/gkr_verifier.cpp:605: trailing whitespace.
++            sigma_fconn_v_u[layer_id-1]=
+src/gkr_verifier.cpp:606: trailing whitespace.
++                transcript.challenge("lasso.fconn_v.sigma_u");
+src/gkr_verifier.cpp:607: trailing whitespace.
++            sigma_fconn_v_v[layer_id-1]=
+src/gkr_verifier.cpp:608: trailing whitespace.
++                transcript.challenge("lasso.fconn_v.sigma_v");
+src/gkr_verifier.cpp:609: trailing whitespace.
++        }
+src/gkr_verifier.cpp:610: trailing whitespace.
++        previous_sum.clear();
+src/gkr_verifier.cpp:611: trailing whitespace.
++        for (std::uint32_t layer_id = 1; layer_id < circuit.size;
+src/gkr_verifier.cpp:612: trailing whitespace.
++             ++layer_id) {
+src/gkr_verifier.cpp:613: trailing whitespace.
++            const auto &layer = circuit.circuit[layer_id];
+src/gkr_verifier.cpp:614: trailing whitespace.
++            if (layer.bit_length_u[0] >= 0)
+src/gkr_verifier.cpp:615: trailing whitespace.
++                previous_sum += sigma_u[layer_id - 1] * final_u0[layer_id];
+src/gkr_verifier.cpp:616: trailing whitespace.
++            if (layer.bit_length_v[0] >= 0)
+src/gkr_verifier.cpp:617: trailing whitespace.
++                previous_sum += sigma_v[layer_id - 1] * final_v0[layer_id];
+src/gkr_verifier.cpp:618: trailing whitespace.
++            if (layer.ty==layerType::FCONN) {
+src/gkr_verifier.cpp:619: trailing whitespace.
++                previous_sum+=sigma_fconn_v_u[layer_id-1]*
+src/gkr_verifier.cpp:620: trailing whitespace.
++                    fconn_v_final_u0[layer_id];
+src/gkr_verifier.cpp:621: trailing whitespace.
++                previous_sum+=sigma_fconn_v_v[layer_id-1]*
+src/gkr_verifier.cpp:622: trailing whitespace.
++                    fconn_v_final_v0[layer_id];
+src/gkr_verifier.cpp:623: trailing whitespace.
++            }
+src/gkr_verifier.cpp:624: trailing whitespace.
++        }
+src/gkr_verifier.cpp:625: trailing whitespace.
++
+src/gkr_verifier.cpp:626: trailing whitespace.
++        const auto input_bits = circuit.circuit[0].bit_length;
+src/gkr_verifier.cpp:627: trailing whitespace.
++        if (proof.lasso.rounds.size() != static_cast<size_t>(input_bits))
+src/gkr_verifier.cpp:628: trailing whitespace.
++            fail("GKR Lasso round count does not match input layer");
+src/gkr_verifier.cpp:629: trailing whitespace.
++        r_u[0].resize(input_bits);
+src/gkr_verifier.cpp:630: trailing whitespace.
++        for (size_t round_index = 0;
+src/gkr_verifier.cpp:631: trailing whitespace.
++             round_index < proof.lasso.rounds.size(); ++round_index) {
+src/gkr_verifier.cpp:632: trailing whitespace.
++            const auto &round = proof.lasso.rounds[round_index];
+src/gkr_verifier.cpp:633: trailing whitespace.
++            if (evaluate(round, F_ZERO) + evaluate(round, F_ONE) !=
+src/gkr_verifier.cpp:634: trailing whitespace.
++                previous_sum)
+src/gkr_verifier.cpp:635: trailing whitespace.
++                fail("GKR Lasso sumcheck claim mismatch at round " +
+src/gkr_verifier.cpp:636: trailing whitespace.
++                     std::to_string(round_index));
+src/gkr_verifier.cpp:637: trailing whitespace.
++            appendQuadratic(transcript, "lasso.sumcheck", round);
+src/gkr_verifier.cpp:638: trailing whitespace.
++            const Fr challenge =
+src/gkr_verifier.cpp:639: trailing whitespace.
++                transcript.challenge("lasso.sumcheck.challenge");
+src/gkr_verifier.cpp:640: trailing whitespace.
++            r_u[0][round_index] = challenge;
+src/gkr_verifier.cpp:641: trailing whitespace.
++            previous_sum = evaluate(round, challenge);
+src/gkr_verifier.cpp:642: trailing whitespace.
++        }
+src/gkr_verifier.cpp:643: trailing whitespace.
++        transcript.appendFr("lasso.input_evaluation",
+src/gkr_verifier.cpp:644: trailing whitespace.
++                            proof.lasso.input_evaluation);
+src/gkr_verifier.cpp:645: trailing whitespace.
++
+src/gkr_verifier.cpp:646: trailing whitespace.
++        vector<Fr> beta_g(size_t{1} << input_bits);
+src/gkr_verifier.cpp:647: trailing whitespace.
++        initBetaTable(beta_g, input_bits, r_u[0].begin(), F_ONE);
+src/gkr_verifier.cpp:648: trailing whitespace.
++        Fr mapping_evaluation = F_ZERO;
+src/gkr_verifier.cpp:649: trailing whitespace.
++        // Each term gathers beta_g at a scattered val[0] index; the input
+src/gkr_verifier.cpp:650: trailing whitespace.
++        // table is 2^input_bits entries, so split every layer's gather
+src/gkr_verifier.cpp:651: trailing whitespace.
++        // across threads.
+src/gkr_verifier.cpp:652: trailing whitespace.
++        const auto mappingTerm = [&](const vector<u32> &ori_id,
+src/gkr_verifier.cpp:653: trailing whitespace.
++                                     size_t count, const vector<Fr> &weights,
+src/gkr_verifier.cpp:654: trailing whitespace.
++                                     const char *what) {
+src/gkr_verifier.cpp:655: trailing whitespace.
++            if (count > ori_id.size() || count > weights.size())
+src/gkr_verifier.cpp:656: trailing whitespace.
++                fail(string("GKR public circuit has invalid Lasso ") + what +
+src/gkr_verifier.cpp:657: trailing whitespace.
++                     " mapping");
+src/gkr_verifier.cpp:658: trailing whitespace.
++            const size_t threads = count < 65536 ? 1 :
+src/gkr_verifier.cpp:659: trailing whitespace.
++                std::min<size_t>(zkgpt::workerThreadCount(), count / 4096);
+src/gkr_verifier.cpp:660: trailing whitespace.
++            vector<Fr> partial(threads, F_ZERO);
+src/gkr_verifier.cpp:661: trailing whitespace.
++            std::atomic<bool> invalid{false};
+src/gkr_verifier.cpp:662: trailing whitespace.
++            const auto gather = [&](size_t t) {
+src/gkr_verifier.cpp:663: trailing whitespace.
++                Fr sum = F_ZERO;
+src/gkr_verifier.cpp:664: trailing whitespace.
++                for (size_t j = count * t / threads;
+src/gkr_verifier.cpp:665: trailing whitespace.
++                     j < count * (t + 1) / threads; ++j) {
+src/gkr_verifier.cpp:666: trailing whitespace.
++                    const size_t index = ori_id[j];
+src/gkr_verifier.cpp:667: trailing whitespace.
++                    if (index >= beta_g.size()) {
+src/gkr_verifier.cpp:668: trailing whitespace.
++                        invalid = true;
+src/gkr_verifier.cpp:669: trailing whitespace.
++                        return;
+src/gkr_verifier.cpp:670: trailing whitespace.
++                    }
+src/gkr_verifier.cpp:671: trailing whitespace.
++                    sum += beta_g[index] * weights[j];
+src/gkr_verifier.cpp:672: trailing whitespace.
++                }
+src/gkr_verifier.cpp:673: trailing whitespace.
++                partial[t] = sum;
+src/gkr_verifier.cpp:674: trailing whitespace.
++            };
+src/gkr_verifier.cpp:675: trailing whitespace.
++            if (threads == 1) {
+src/gkr_verifier.cpp:676: trailing whitespace.
++                gather(0);
+src/gkr_verifier.cpp:677: trailing whitespace.
++            } else {
+src/gkr_verifier.cpp:678: trailing whitespace.
++                vector<std::thread> workers;
+src/gkr_verifier.cpp:679: trailing whitespace.
++                workers.reserve(threads);
+src/gkr_verifier.cpp:680: trailing whitespace.
++                zkgpt::ThreadJoiner joiner(workers);
+src/gkr_verifier.cpp:681: trailing whitespace.
++                for (size_t t = 0; t < threads; ++t)
+src/gkr_verifier.cpp:682: trailing whitespace.
++                    workers.emplace_back(gather, t);
+src/gkr_verifier.cpp:683: trailing whitespace.
++                joiner.join();
+src/gkr_verifier.cpp:684: trailing whitespace.
++            }
+src/gkr_verifier.cpp:685: trailing whitespace.
++            if (invalid)
+src/gkr_verifier.cpp:686: trailing whitespace.
++                fail(string("GKR public circuit has invalid Lasso ") + what +
+src/gkr_verifier.cpp:687: trailing whitespace.
++                     " mapping");
+src/gkr_verifier.cpp:688: trailing whitespace.
++            for (const auto &value : partial) mapping_evaluation += value;
+src/gkr_verifier.cpp:689: trailing whitespace.
++        };
+src/gkr_verifier.cpp:690: trailing whitespace.
++        for (std::uint32_t layer_id = 1; layer_id < circuit.size;
+src/gkr_verifier.cpp:691: trailing whitespace.
++             ++layer_id) {
+src/gkr_verifier.cpp:692: trailing whitespace.
++            const auto &layer = circuit.circuit[layer_id];
+src/gkr_verifier.cpp:693: trailing whitespace.
++            if (layer.bit_length_u[0] >= 0) {
+src/gkr_verifier.cpp:694: trailing whitespace.
++                if (r_u[layer_id].size() <
+src/gkr_verifier.cpp:695: trailing whitespace.
++                    static_cast<size_t>(layer.bit_length_u[0]))
+src/gkr_verifier.cpp:696: trailing whitespace.
++                    fail("GKR Lasso u point is shorter than its layer");
+src/gkr_verifier.cpp:697: trailing whitespace.
++                vector<Fr> weights(size_t{1} << layer.bit_length_u[0]);
+src/gkr_verifier.cpp:698: trailing whitespace.
++                initBetaTable(weights, layer.bit_length_u[0],
+src/gkr_verifier.cpp:699: trailing whitespace.
++                              r_u[layer_id].begin(), sigma_u[layer_id - 1]);
+src/gkr_verifier.cpp:700: trailing whitespace.
++                mappingTerm(layer.ori_id_u, layer.size_u[0], weights, "u");
+src/gkr_verifier.cpp:701: trailing whitespace.
++            }
+src/gkr_verifier.cpp:702: trailing whitespace.
++            if (layer.bit_length_v[0] >= 0) {
+src/gkr_verifier.cpp:703: trailing whitespace.
++                if (r_v[layer_id].size() <
+src/gkr_verifier.cpp:704: trailing whitespace.
++                    static_cast<size_t>(layer.bit_length_v[0]))
+src/gkr_verifier.cpp:705: trailing whitespace.
++                    fail("GKR Lasso v point is shorter than its layer");
+src/gkr_verifier.cpp:706: trailing whitespace.
++                vector<Fr> weights(size_t{1} << layer.bit_length_v[0]);
+src/gkr_verifier.cpp:707: trailing whitespace.
++                initBetaTable(weights, layer.bit_length_v[0],
+src/gkr_verifier.cpp:708: trailing whitespace.
++                              r_v[layer_id].begin(), sigma_v[layer_id - 1]);
+src/gkr_verifier.cpp:709: trailing whitespace.
++                mappingTerm(layer.ori_id_v, layer.size_v[0], weights, "v");
+src/gkr_verifier.cpp:710: trailing whitespace.
++            }
+src/gkr_verifier.cpp:711: trailing whitespace.
++            if (layer.ty==layerType::FCONN) {
+src/gkr_verifier.cpp:712: trailing whitespace.
++                if (layer.bit_length_u[0]<0 || layer.bit_length_v[0]<0)
+src/gkr_verifier.cpp:713: trailing whitespace.
++                    fail("GKR FCONN has invalid committed-input metadata");
+src/gkr_verifier.cpp:714: trailing whitespace.
++                vector<Fr> weights(
+src/gkr_verifier.cpp:715: trailing whitespace.
++                    size_t{1}<<layer.bit_length_u[0]);
+src/gkr_verifier.cpp:716: trailing whitespace.
++                initBetaTable(weights,layer.bit_length_u[0],
+src/gkr_verifier.cpp:717: trailing whitespace.
++                              fconn_v_r_u[layer_id].begin(),
+src/gkr_verifier.cpp:718: trailing whitespace.
++                              sigma_fconn_v_u[layer_id-1]);
+src/gkr_verifier.cpp:719: trailing whitespace.
++                mappingTerm(layer.ori_id_u,layer.size_u[0],weights,
+src/gkr_verifier.cpp:720: trailing whitespace.
++                            "FCONN second-point u");
+src/gkr_verifier.cpp:721: trailing whitespace.
++                weights.resize(size_t{1}<<layer.bit_length_v[0]);
+src/gkr_verifier.cpp:722: trailing whitespace.
++                initBetaTable(weights,layer.bit_length_v[0],
+src/gkr_verifier.cpp:723: trailing whitespace.
++                              fconn_v_r_v[layer_id].begin(),
+src/gkr_verifier.cpp:724: trailing whitespace.
++                              sigma_fconn_v_v[layer_id-1]);
+src/gkr_verifier.cpp:725: trailing whitespace.
++                mappingTerm(layer.ori_id_v,layer.size_v[0],weights,
+src/gkr_verifier.cpp:726: trailing whitespace.
++                            "FCONN second-point v");
+src/gkr_verifier.cpp:727: trailing whitespace.
++            }
+src/gkr_verifier.cpp:728: trailing whitespace.
++        }
+src/gkr_verifier.cpp:729: trailing whitespace.
++        if (proof.lasso.mapping_evaluation != mapping_evaluation)
+src/gkr_verifier.cpp:730: trailing whitespace.
++            fail("GKR Lasso mapping evaluation mismatch");
+src/gkr_verifier.cpp:731: trailing whitespace.
++        if (proof.lasso.input_evaluation * mapping_evaluation != previous_sum)
+src/gkr_verifier.cpp:732: trailing whitespace.
++            fail("GKR Lasso final input claim mismatch");
+src/gkr_verifier.cpp:733: trailing whitespace.
++        transcript.appendFr("lasso.mapping_evaluation", mapping_evaluation);
+src/gkr_verifier.cpp:734: trailing whitespace.
++
+src/gkr_verifier.cpp:735: trailing whitespace.
++        const auto &generators =
+src/gkr_verifier.cpp:736: trailing whitespace.
++            getGeneratorSet(statement.val0_generator_domain);
+src/gkr_verifier.cpp:737: trailing whitespace.
++        string opening_error;
+src/gkr_verifier.cpp:738: trailing whitespace.
++        if (!hyraxMleOpenVerifyRowMajor(
+src/gkr_verifier.cpp:739: trailing whitespace.
++                statement.val0_commitment, r_u[0], generators.generators,
+src/gkr_verifier.cpp:740: trailing whitespace.
++                generators.u, proof.lasso.input_evaluation,
+src/gkr_verifier.cpp:741: trailing whitespace.
++                proof.lasso.input_opening, transcript, "gkr.input.opening",
+src/gkr_verifier.cpp:742: trailing whitespace.
++                &opening_error))
+src/gkr_verifier.cpp:743: trailing whitespace.
++            fail("GKR input commitment opening failed: " + opening_error);
+src/gkr_verifier.cpp:744: trailing whitespace.
++        if (transcript.challenge("gkr.proof.final") !=
+src/gkr_verifier.cpp:745: trailing whitespace.
++            proof.transcript_binding)
+src/gkr_verifier.cpp:746: trailing whitespace.
++            fail("GKR final transcript binding mismatch");
+src/gkr_verifier.cpp:747: trailing whitespace.
++        if (claims) {
+src/gkr_verifier.cpp:748: trailing whitespace.
++            std::vector<GKRInputTerminalClaim> authenticated;
+src/gkr_verifier.cpp:749: trailing whitespace.
++            auto add=[&](std::uint32_t layer_id,unsigned port,unsigned matrix_point,
+src/gkr_verifier.cpp:750: trailing whitespace.
++                         const vector<Fr> &r,const Fr &value) {
+src/gkr_verifier.cpp:751: trailing whitespace.
++                const auto &l=circuit.circuit.at(layer_id);
+src/gkr_verifier.cpp:752: trailing whitespace.
++                const int bits=port ? l.bit_length_v[0] : l.bit_length_u[0];
+src/gkr_verifier.cpp:753: trailing whitespace.
++                if (bits<0 || r.size()<static_cast<size_t>(bits))
+src/gkr_verifier.cpp:754: trailing whitespace.
++                    fail("GKR terminal point dimension");
+src/gkr_verifier.cpp:755: trailing whitespace.
++                const auto actual=port ? l.size_v[0] : l.size_u[0];
+src/gkr_verifier.cpp:756: trailing whitespace.
++                GKRInputTerminalClaim q;
+src/gkr_verifier.cpp:757: trailing whitespace.
++                q.layer_index=layer_id; q.port=port; q.matrix_point=matrix_point;
+src/gkr_verifier.cpp:758: trailing whitespace.
++                q.actual_size=actual; q.padded_size=size_t(1)<<bits;
+src/gkr_verifier.cpp:759: trailing whitespace.
++                q.point.assign(r.begin(),r.begin()+bits); q.value=value;
+src/gkr_verifier.cpp:760: trailing whitespace.
++                authenticated.push_back(std::move(q));
+src/gkr_verifier.cpp:761: trailing whitespace.
++            };
+src/gkr_verifier.cpp:762: trailing whitespace.
++            for (std::uint32_t i=1;i<circuit.size;++i) {
+src/gkr_verifier.cpp:763: trailing whitespace.
++                const auto &l=circuit.circuit[i];
+src/gkr_verifier.cpp:764: trailing whitespace.
++                if (l.bit_length_u[0]>=0) add(i,0,0,r_u[i],final_u0[i]);
+src/gkr_verifier.cpp:765: trailing whitespace.
++                if (l.bit_length_v[0]>=0) add(i,1,0,r_v[i],final_v0[i]);
+src/gkr_verifier.cpp:766: trailing whitespace.
++                if (l.ty==layerType::FCONN) {
+src/gkr_verifier.cpp:767: trailing whitespace.
++                    add(i,0,1,fconn_v_r_u[i],fconn_v_final_u0[i]);
+src/gkr_verifier.cpp:768: trailing whitespace.
++                    add(i,1,1,fconn_v_r_v[i],fconn_v_final_v0[i]);
+src/gkr_verifier.cpp:769: trailing whitespace.
++                }
+src/gkr_verifier.cpp:770: trailing whitespace.
++            }
+src/gkr_verifier.cpp:771: trailing whitespace.
++            claims->swap(authenticated);
+src/gkr_verifier.cpp:772: trailing whitespace.
++        }
+src/gkr_verifier.cpp:773: trailing whitespace.
++        return true;
+src/gkr_verifier.cpp:774: trailing whitespace.
++    } catch (const std::exception &exception) {
+src/gkr_verifier.cpp:775: trailing whitespace.
++        if (error) *error = exception.what();
+src/gkr_verifier.cpp:776: trailing whitespace.
++        return false;
+src/gkr_verifier.cpp:777: trailing whitespace.
++    }
+src/gkr_verifier.cpp:778: trailing whitespace.
++}
+src/gkr_verifier.cpp:779: trailing whitespace.
++
+src/gkr_verifier.cpp:780: trailing whitespace.
++bool verifyGKR(const layeredCircuit &circuit,const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:781: trailing whitespace.
++               const GKRProof &proof,std::string *error,ChallengeObserver *observer) {
+src/gkr_verifier.cpp:782: trailing whitespace.
++    return verifyGKRImpl(circuit,statement,proof,error,observer,nullptr);
+src/gkr_verifier.cpp:783: trailing whitespace.
++}
+src/gkr_verifier.cpp:784: trailing whitespace.
++bool verifyGKRWithClaims(const layeredCircuit &circuit,const GKRPublicStatement &statement,
+src/gkr_verifier.cpp:785: trailing whitespace.
++    const GKRProof &proof,std::vector<GKRInputTerminalClaim> &claims,
+src/gkr_verifier.cpp:786: trailing whitespace.
++    std::string *error,ChallengeObserver *observer) {
+src/gkr_verifier.cpp:787: trailing whitespace.
++    return verifyGKRImpl(circuit,statement,proof,error,observer,&claims);
+src/gkr_verifier.cpp:788: trailing whitespace.
++}
+src/gkr_verifier.hpp:1: trailing whitespace.
++#pragma once
+src/gkr_verifier.hpp:2: trailing whitespace.
++
+src/gkr_verifier.hpp:3: trailing whitespace.
++#include "circuit.h"
+src/gkr_verifier.hpp:4: trailing whitespace.
++#include "gkr_protocol.hpp"
+src/gkr_verifier.hpp:5: trailing whitespace.
++
+src/gkr_verifier.hpp:6: trailing whitespace.
++#include <string>
+src/gkr_verifier.hpp:7: trailing whitespace.
++
+src/gkr_verifier.hpp:8: trailing whitespace.
++// Verifies a GKR proof using only public data and the public circuit wiring.
+src/gkr_verifier.hpp:9: trailing whitespace.
++// In particular, this function never receives a prover or witness vectors.
+src/gkr_verifier.hpp:10: trailing whitespace.
++bool verifyGKR(const layeredCircuit &circuit,
+src/gkr_verifier.hpp:11: trailing whitespace.
++               const GKRPublicStatement &statement,
+src/gkr_verifier.hpp:12: trailing whitespace.
++               const GKRProof &proof,
+src/gkr_verifier.hpp:13: trailing whitespace.
++               std::string *error = nullptr,
+src/gkr_verifier.hpp:14: trailing whitespace.
++               ChallengeObserver *observer = nullptr);
+src/gkr_verifier.hpp:15: trailing whitespace.
++
+src/gkr_verifier.hpp:16: trailing whitespace.
++// Same arithmetic, matrix and input verification as verifyGKR. On failure,
+src/gkr_verifier.hpp:17: trailing whitespace.
++// claims is empty, including failures after arithmetic has already passed.
+src/gkr_verifier.hpp:18: trailing whitespace.
++bool verifyGKRWithClaims(const layeredCircuit &circuit,
+src/gkr_verifier.hpp:19: trailing whitespace.
++    const GKRPublicStatement &statement, const GKRProof &proof,
+src/gkr_verifier.hpp:20: trailing whitespace.
++    std::vector<GKRInputTerminalClaim> &claims,
+src/gkr_verifier.hpp:21: trailing whitespace.
++    std::string *error=nullptr, ChallengeObserver *observer=nullptr);
+src/tests/gkr_test_fixture.cpp:1: trailing whitespace.
++#include "tests/gkr_test_fixture.hpp"
+src/tests/gkr_test_fixture.cpp:2: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:3: trailing whitespace.
++#include "hyrax_rp.hpp"
+src/tests/gkr_test_fixture.cpp:4: trailing whitespace.
++#include "utils.hpp"
+src/tests/gkr_test_fixture.cpp:5: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:6: trailing whitespace.
++#include <stdexcept>
+src/tests/gkr_test_fixture.cpp:7: trailing whitespace.
++#include <string>
+src/tests/gkr_test_fixture.cpp:8: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:9: trailing whitespace.
++namespace gkr_test {
+src/tests/gkr_test_fixture.cpp:10: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:11: trailing whitespace.
++SmallFconnFixture::SmallFconnFixture(bool input_ports) {
+src/tests/gkr_test_fixture.cpp:12: trailing whitespace.
++    prover_.mat_val=nullptr;
+src/tests/gkr_test_fixture.cpp:13: trailing whitespace.
++    prover_.cc.comm=nullptr;
+src/tests/gkr_test_fixture.cpp:14: trailing whitespace.
++    prover_.cc.w=nullptr;
+src/tests/gkr_test_fixture.cpp:15: trailing whitespace.
++    try {
+src/tests/gkr_test_fixture.cpp:16: trailing whitespace.
++        constexpr unsigned dimension=4;
+src/tests/gkr_test_fixture.cpp:17: trailing whitespace.
++        prover_.C.init(0,1+2*kFconnCount);
+src/tests/gkr_test_fixture.cpp:18: trailing whitespace.
++        prover_.val.resize(prover_.C.size);
+src/tests/gkr_test_fixture.cpp:19: trailing whitespace.
++        prover_.val[0].assign(32,Fr(0));
+src/tests/gkr_test_fixture.cpp:20: trailing whitespace.
++        prover_.val[0][0]=Fr(3);
+src/tests/gkr_test_fixture.cpp:21: trailing whitespace.
++        for (unsigned output=0;output<dimension;++output)
+src/tests/gkr_test_fixture.cpp:22: trailing whitespace.
++            prover_.val[0][dimension+output*dimension]=Fr(1);
+src/tests/gkr_test_fixture.cpp:23: trailing whitespace.
++        initLayer(
+src/tests/gkr_test_fixture.cpp:24: trailing whitespace.
++            prover_.C.circuit[0],prover_.val[0].size(),layerType::INPUT);
+src/tests/gkr_test_fixture.cpp:25: trailing whitespace.
++        prover_.mat_val=new int *[kFconnCount]{};
+src/tests/gkr_test_fixture.cpp:26: trailing whitespace.
++        for (unsigned fc=0;fc<kFconnCount;++fc) {
+src/tests/gkr_test_fixture.cpp:27: trailing whitespace.
++            const unsigned matrix_layer=1+2*fc;
+src/tests/gkr_test_fixture.cpp:28: trailing whitespace.
++            const unsigned parent_layer=matrix_layer+1;
+src/tests/gkr_test_fixture.cpp:29: trailing whitespace.
++            auto &matrix=prover_.C.circuit[matrix_layer];
+src/tests/gkr_test_fixture.cpp:30: trailing whitespace.
++            initLayer(matrix,dimension,layerType::FCONN);
+src/tests/gkr_test_fixture.cpp:31: trailing whitespace.
++            matrix.need_phase2=true;
+src/tests/gkr_test_fixture.cpp:32: trailing whitespace.
++            for (unsigned i=0;i<dimension;++i)
+src/tests/gkr_test_fixture.cpp:33: trailing whitespace.
++                matrix.ori_id_u.push_back(i);
+src/tests/gkr_test_fixture.cpp:34: trailing whitespace.
++            for (unsigned i=0;i<dimension*dimension;++i)
+src/tests/gkr_test_fixture.cpp:35: trailing whitespace.
++                matrix.ori_id_v.push_back(dimension+i);
+src/tests/gkr_test_fixture.cpp:36: trailing whitespace.
++            matrix.size_u[0]=matrix.ori_id_u.size();
+src/tests/gkr_test_fixture.cpp:37: trailing whitespace.
++            matrix.size_v[0]=matrix.ori_id_v.size();
+src/tests/gkr_test_fixture.cpp:38: trailing whitespace.
++            prover_.val[matrix_layer].assign(dimension,Fr(3));
+src/tests/gkr_test_fixture.cpp:39: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:40: trailing whitespace.
++            auto &parent=prover_.C.circuit[parent_layer];
+src/tests/gkr_test_fixture.cpp:41: trailing whitespace.
++            initLayer(parent,dimension,layerType::Sqr);
+src/tests/gkr_test_fixture.cpp:42: trailing whitespace.
++            parent.need_phase2=true;
+src/tests/gkr_test_fixture.cpp:43: trailing whitespace.
++            for (unsigned i=0;i<dimension;++i)
+src/tests/gkr_test_fixture.cpp:44: trailing whitespace.
++                parent.bin_gates.emplace_back(i,i,i,1,1);
+src/tests/gkr_test_fixture.cpp:45: trailing whitespace.
++            if(input_ports) {
+src/tests/gkr_test_fixture.cpp:46: trailing whitespace.
++                parent.uni_gates.emplace_back(0,1,0,1);
+src/tests/gkr_test_fixture.cpp:47: trailing whitespace.
++                parent.uni_gates.emplace_back(1,2,0,1);
+src/tests/gkr_test_fixture.cpp:48: trailing whitespace.
++            }
+src/tests/gkr_test_fixture.cpp:49: trailing whitespace.
++            prover_.val[parent_layer].assign(dimension,Fr(9));
+src/tests/gkr_test_fixture.cpp:50: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:51: trailing whitespace.
++            prover_.fc_input_row[fc]=1;
+src/tests/gkr_test_fixture.cpp:52: trailing whitespace.
++            prover_.fc_input_col[fc]=dimension;
+src/tests/gkr_test_fixture.cpp:53: trailing whitespace.
++            prover_.fc_row[fc]=dimension;
+src/tests/gkr_test_fixture.cpp:54: trailing whitespace.
++            prover_.fc_col[fc]=dimension;
+src/tests/gkr_test_fixture.cpp:55: trailing whitespace.
++            prover_.fc_input_id[fc]=0;
+src/tests/gkr_test_fixture.cpp:56: trailing whitespace.
++            prover_.mat_val[fc]=new int[dimension*dimension]{};
+src/tests/gkr_test_fixture.cpp:57: trailing whitespace.
++            for (unsigned output=0;output<dimension;++output)
+src/tests/gkr_test_fixture.cpp:58: trailing whitespace.
++                prover_.mat_val[fc][output*dimension]=1;
+src/tests/gkr_test_fixture.cpp:59: trailing whitespace.
++        }
+src/tests/gkr_test_fixture.cpp:60: trailing whitespace.
++        prover_.C.initSubset();
+src/tests/gkr_test_fixture.cpp:61: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:62: trailing whitespace.
++        const int input_bits=prover_.C.circuit[0].bit_length;
+src/tests/gkr_test_fixture.cpp:63: trailing whitespace.
++        const std::size_t generator_count=std::size_t{1}<<
+src/tests/gkr_test_fixture.cpp:64: trailing whitespace.
++            (input_bits-input_bits/2);
+src/tests/gkr_test_fixture.cpp:65: trailing whitespace.
++        prover_.gens.resize(generator_count);
+src/tests/gkr_test_fixture.cpp:66: trailing whitespace.
++        const G1 u=gen_gi(prover_.gens.data(),generator_count);
+src/tests/gkr_test_fixture.cpp:67: trailing whitespace.
++        prover_.gens.push_back(u);
+src/tests/gkr_test_fixture.cpp:68: trailing whitespace.
++        prover_.commitInput(prover_.gens,1);
+src/tests/gkr_test_fixture.cpp:69: trailing whitespace.
++        const GeneratorDomain domain{
+src/tests/gkr_test_fixture.cpp:70: trailing whitespace.
++            "zkGPT/main",static_cast<std::uint32_t>(generator_count)};
+src/tests/gkr_test_fixture.cpp:71: trailing whitespace.
++        const WitnessShape shape{1,1,1,4,4,4};
+src/tests/gkr_test_fixture.cpp:72: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:73: trailing whitespace.
++        GKRProofBuilder unobserved(
+src/tests/gkr_test_fixture.cpp:74: trailing whitespace.
++            &prover_,prover_.C,shape,domain);
+src/tests/gkr_test_fixture.cpp:75: trailing whitespace.
++        unobserved.build();
+src/tests/gkr_test_fixture.cpp:76: trailing whitespace.
++        const auto unobserved_bytes=serializeGKRProof(unobserved.proof());
+src/tests/gkr_test_fixture.cpp:77: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:78: trailing whitespace.
++        GKRProofBuilder observed(
+src/tests/gkr_test_fixture.cpp:79: trailing whitespace.
++            &prover_,prover_.C,shape,domain,&prover_trace_);
+src/tests/gkr_test_fixture.cpp:80: trailing whitespace.
++        observed.build();
+src/tests/gkr_test_fixture.cpp:81: trailing whitespace.
++        proof_bytes_=serializeGKRProof(observed.proof());
+src/tests/gkr_test_fixture.cpp:82: trailing whitespace.
++        if (proof_bytes_!=unobserved_bytes)
+src/tests/gkr_test_fixture.cpp:83: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:84: trailing whitespace.
++                "observer changed canonical small GKR proof bytes");
+src/tests/gkr_test_fixture.cpp:85: trailing whitespace.
++        if (observed.transcriptStateDigest()!=
+src/tests/gkr_test_fixture.cpp:86: trailing whitespace.
++                unobserved.transcriptStateDigest() ||
+src/tests/gkr_test_fixture.cpp:87: trailing whitespace.
++            observed.transcriptChallengeCounter()!=
+src/tests/gkr_test_fixture.cpp:88: trailing whitespace.
++                unobserved.transcriptChallengeCounter())
+src/tests/gkr_test_fixture.cpp:89: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:90: trailing whitespace.
++                "observer changed final small GKR Transcript state");
+src/tests/gkr_test_fixture.cpp:91: trailing whitespace.
++        statement_=observed.publicStatement();
+src/tests/gkr_test_fixture.cpp:92: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:93: trailing whitespace.
++        std::string error;
+src/tests/gkr_test_fixture.cpp:94: trailing whitespace.
++        if (!deserializeGKRProof(proof_bytes_,proof_,&error))
+src/tests/gkr_test_fixture.cpp:95: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:96: trailing whitespace.
++                "small GKR proof deserialization failed: "+error);
+src/tests/gkr_test_fixture.cpp:97: trailing whitespace.
++        if (serializeGKRProof(proof_)!=proof_bytes_)
+src/tests/gkr_test_fixture.cpp:98: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:99: trailing whitespace.
++                "small GKR proof canonical round-trip changed bytes");
+src/tests/gkr_test_fixture.cpp:100: trailing whitespace.
++        if (!verifyGKR(
+src/tests/gkr_test_fixture.cpp:101: trailing whitespace.
++                prover_.C,statement_,proof_,&error,&verifier_trace_))
+src/tests/gkr_test_fixture.cpp:102: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:103: trailing whitespace.
++                "small GKR baseline verification failed: "+error);
+src/tests/gkr_test_fixture.cpp:104: trailing whitespace.
++        if (!compareChallengeTraces(
+src/tests/gkr_test_fixture.cpp:105: trailing whitespace.
++                prover_trace_.entries,verifier_trace_.entries,&error))
+src/tests/gkr_test_fixture.cpp:106: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:107: trailing whitespace.
++                "small GKR baseline trace mismatch: "+error);
+src/tests/gkr_test_fixture.cpp:108: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:109: trailing whitespace.
++        matrix_index_=proof_.layers.size();
+src/tests/gkr_test_fixture.cpp:110: trailing whitespace.
++        parent_index_=proof_.layers.size();
+src/tests/gkr_test_fixture.cpp:111: trailing whitespace.
++        for (std::size_t i=0;i<proof_.layers.size();++i) {
+src/tests/gkr_test_fixture.cpp:112: trailing whitespace.
++            if (proof_.layers[i].layer_type==
+src/tests/gkr_test_fixture.cpp:113: trailing whitespace.
++                static_cast<std::uint32_t>(layerType::FCONN)) {
+src/tests/gkr_test_fixture.cpp:114: trailing whitespace.
++                matrix_index_=i;
+src/tests/gkr_test_fixture.cpp:115: trailing whitespace.
++                if (i>0) parent_index_=i-1;
+src/tests/gkr_test_fixture.cpp:116: trailing whitespace.
++                break;
+src/tests/gkr_test_fixture.cpp:117: trailing whitespace.
++            }
+src/tests/gkr_test_fixture.cpp:118: trailing whitespace.
++        }
+src/tests/gkr_test_fixture.cpp:119: trailing whitespace.
++        if (matrix_index_>=proof_.layers.size() ||
+src/tests/gkr_test_fixture.cpp:120: trailing whitespace.
++            parent_index_>=proof_.layers.size())
+src/tests/gkr_test_fixture.cpp:121: trailing whitespace.
++            throw std::runtime_error(
+src/tests/gkr_test_fixture.cpp:122: trailing whitespace.
++                "small GKR fixture has no FCONN/parent proof pair");
+src/tests/gkr_test_fixture.cpp:123: trailing whitespace.
++    } catch (...) {
+src/tests/gkr_test_fixture.cpp:124: trailing whitespace.
++        cleanup();
+src/tests/gkr_test_fixture.cpp:125: trailing whitespace.
++        throw;
+src/tests/gkr_test_fixture.cpp:126: trailing whitespace.
++    }
+src/tests/gkr_test_fixture.cpp:127: trailing whitespace.
++}
+src/tests/gkr_test_fixture.cpp:128: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:129: trailing whitespace.
++SmallFconnFixture::~SmallFconnFixture() {
+src/tests/gkr_test_fixture.cpp:130: trailing whitespace.
++    cleanup();
+src/tests/gkr_test_fixture.cpp:131: trailing whitespace.
++}
+src/tests/gkr_test_fixture.cpp:132: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:133: trailing whitespace.
++void SmallFconnFixture::cleanup() noexcept {
+src/tests/gkr_test_fixture.cpp:134: trailing whitespace.
++    if (prover_.mat_val) {
+src/tests/gkr_test_fixture.cpp:135: trailing whitespace.
++        for (unsigned fc=0;fc<kFconnCount;++fc)
+src/tests/gkr_test_fixture.cpp:136: trailing whitespace.
++            delete[] prover_.mat_val[fc];
+src/tests/gkr_test_fixture.cpp:137: trailing whitespace.
++        delete[] prover_.mat_val;
+src/tests/gkr_test_fixture.cpp:138: trailing whitespace.
++        prover_.mat_val=nullptr;
+src/tests/gkr_test_fixture.cpp:139: trailing whitespace.
++    }
+src/tests/gkr_test_fixture.cpp:140: trailing whitespace.
++}
+src/tests/gkr_test_fixture.cpp:141: trailing whitespace.
++
+src/tests/gkr_test_fixture.cpp:142: trailing whitespace.
++}  // namespace gkr_test
+src/tests/gkr_test_fixture.hpp:1: trailing whitespace.
++#pragma once
+src/tests/gkr_test_fixture.hpp:2: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:3: trailing whitespace.
++#include "gkr_proof_builder.hpp"
+src/tests/gkr_test_fixture.hpp:4: trailing whitespace.
++#include "gkr_serialization.hpp"
+src/tests/gkr_test_fixture.hpp:5: trailing whitespace.
++#include "gkr_verifier.hpp"
+src/tests/gkr_test_fixture.hpp:6: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:7: trailing whitespace.
++#include <cstddef>
+src/tests/gkr_test_fixture.hpp:8: trailing whitespace.
++#include <cstdint>
+src/tests/gkr_test_fixture.hpp:9: trailing whitespace.
++#include <vector>
+src/tests/gkr_test_fixture.hpp:10: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:11: trailing whitespace.
++namespace gkr_test {
+src/tests/gkr_test_fixture.hpp:12: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:13: trailing whitespace.
++// Test-only owner for the deterministic four-FCONN circuit used by the
+src/tests/gkr_test_fixture.hpp:14: trailing whitespace.
++// challenge-trace and proof-mutation suites.  It builds one observer-off and
+src/tests/gkr_test_fixture.hpp:15: trailing whitespace.
++// one observer-on proof, checks their equality, round-trips proof v3, and
+src/tests/gkr_test_fixture.hpp:16: trailing whitespace.
++// verifies the baseline with the production verifyGKR implementation.
+src/tests/gkr_test_fixture.hpp:17: trailing whitespace.
++class SmallFconnFixture {
+src/tests/gkr_test_fixture.hpp:18: trailing whitespace.
++public:
+src/tests/gkr_test_fixture.hpp:19: trailing whitespace.
++    explicit SmallFconnFixture(bool input_ports=false);
+src/tests/gkr_test_fixture.hpp:20: trailing whitespace.
++    ~SmallFconnFixture();
+src/tests/gkr_test_fixture.hpp:21: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:22: trailing whitespace.
++    SmallFconnFixture(const SmallFconnFixture &) = delete;
+src/tests/gkr_test_fixture.hpp:23: trailing whitespace.
++    SmallFconnFixture &operator=(const SmallFconnFixture &) = delete;
+src/tests/gkr_test_fixture.hpp:24: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:25: trailing whitespace.
++    prover &proverInstance() { return prover_; }
+src/tests/gkr_test_fixture.hpp:26: trailing whitespace.
++    const layeredCircuit &circuit() const { return prover_.C; }
+src/tests/gkr_test_fixture.hpp:27: trailing whitespace.
++    const GKRPublicStatement &statement() const { return statement_; }
+src/tests/gkr_test_fixture.hpp:28: trailing whitespace.
++    const GKRProof &proof() const { return proof_; }
+src/tests/gkr_test_fixture.hpp:29: trailing whitespace.
++    const std::vector<std::uint8_t> &proofBytes() const { return proof_bytes_; }
+src/tests/gkr_test_fixture.hpp:30: trailing whitespace.
++    const ChallengeTraceRecorder &proverTrace() const { return prover_trace_; }
+src/tests/gkr_test_fixture.hpp:31: trailing whitespace.
++    const ChallengeTraceRecorder &verifierTrace() const {
+src/tests/gkr_test_fixture.hpp:32: trailing whitespace.
++        return verifier_trace_;
+src/tests/gkr_test_fixture.hpp:33: trailing whitespace.
++    }
+src/tests/gkr_test_fixture.hpp:34: trailing whitespace.
++    std::size_t matrixLayerProofIndex() const { return matrix_index_; }
+src/tests/gkr_test_fixture.hpp:35: trailing whitespace.
++    std::size_t parentLayerProofIndex() const { return parent_index_; }
+src/tests/gkr_test_fixture.hpp:36: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:37: trailing whitespace.
++private:
+src/tests/gkr_test_fixture.hpp:38: trailing whitespace.
++    void cleanup() noexcept;
+src/tests/gkr_test_fixture.hpp:39: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:40: trailing whitespace.
++    static constexpr unsigned kFconnCount=4;
+src/tests/gkr_test_fixture.hpp:41: trailing whitespace.
++    prover prover_;
+src/tests/gkr_test_fixture.hpp:42: trailing whitespace.
++    GKRPublicStatement statement_;
+src/tests/gkr_test_fixture.hpp:43: trailing whitespace.
++    GKRProof proof_;
+src/tests/gkr_test_fixture.hpp:44: trailing whitespace.
++    std::vector<std::uint8_t> proof_bytes_;
+src/tests/gkr_test_fixture.hpp:45: trailing whitespace.
++    ChallengeTraceRecorder prover_trace_;
+src/tests/gkr_test_fixture.hpp:46: trailing whitespace.
++    ChallengeTraceRecorder verifier_trace_;
+src/tests/gkr_test_fixture.hpp:47: trailing whitespace.
++    std::size_t matrix_index_=0;
+src/tests/gkr_test_fixture.hpp:48: trailing whitespace.
++    std::size_t parent_index_=0;
+src/tests/gkr_test_fixture.hpp:49: trailing whitespace.
++};
+src/tests/gkr_test_fixture.hpp:50: trailing whitespace.
++
+src/tests/gkr_test_fixture.hpp:51: trailing whitespace.
++}  // namespace gkr_test

@@ -1,0 +1,63 @@
+[ 10%] Built target mcl
+[ 15%] Built target mclbn256
+[ 86%] Built target gpt_lib
+[ 94%] Built target gkr_test_support
+[ 97%] Building CXX object src/CMakeFiles/r2_gkr_terminal_tests.dir/main_r2_gkr_terminal_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:9:21: error: ‘GKRInputTerminalClaim’ was not declared in this scope
+    9 |         std::vector<GKRInputTerminalClaim> claims;
+      |                     ^~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:9:42: error: template argument 1 is invalid
+    9 |         std::vector<GKRInputTerminalClaim> claims;
+      |                                          ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:9:42: error: template argument 2 is invalid
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:11:14: error: ‘verifyGKRWithClaims’ was not declared in this scope
+   11 |         if (!verifyGKRWithClaims(f.circuit(), f.statement(), f.proof(), claims, &error))
+      |              ^~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:15:28: error: ‘begin’ was not declared in this scope
+   15 |         for (const auto &q:claims) {
+      |                            ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:15:28: note: suggested alternatives:
+In file included from /usr/include/x86_64-linux-gnu/c++/12/bits/stdc++.h:95,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/global_var.hpp:5,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/prover.hpp:4,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_proof_builder.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/tests/gkr_test_fixture.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:1:
+/usr/include/c++/12/valarray:1228:5: note:   ‘std::begin’
+ 1228 |     begin(const valarray<_Tp>& __va) noexcept
+      |     ^~~~~
+In file included from /usr/include/c++/12/filesystem:46,
+                 from /usr/include/x86_64-linux-gnu/c++/12/bits/stdc++.h:129:
+/usr/include/c++/12/bits/fs_dir.h:576:3: note:   ‘std::filesystem::__cxx11::begin’
+  576 |   begin(recursive_directory_iterator __iter) noexcept
+      |   ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:15:28: error: ‘end’ was not declared in this scope
+   15 |         for (const auto &q:claims) {
+      |                            ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:15:28: note: suggested alternatives:
+/usr/include/c++/12/valarray:1255:5: note:   ‘std::end’
+ 1255 |     end(const valarray<_Tp>& __va) noexcept
+      |     ^~~
+/usr/include/c++/12/bits/fs_dir.h:581:3: note:   ‘std::filesystem::__cxx11::end’
+  581 |   end(recursive_directory_iterator) noexcept
+      |   ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:40:20: error: request for member ‘size’ in ‘claims’, which is of non-class type ‘int’
+   40 |         if (claims.size()!=expected) throw std::runtime_error("incomplete terminal inventory");
+      |                    ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:42:13: error: ‘verifyGKRWithClaims’ was not declared in this scope
+   42 |         if (verifyGKRWithClaims(f.circuit(),f.statement(),bad,claims,&error) || !claims.empty())
+      |             ^~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:42:89: error: request for member ‘empty’ in ‘claims’, which is of non-class type ‘int’
+   42 |         if (verifyGKRWithClaims(f.circuit(),f.statement(),bad,claims,&error) || !claims.empty())
+      |                                                                                         ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:45:13: error: ‘verifyGKRWithClaims’ was not declared in this scope
+   45 |         if (verifyGKRWithClaims(f.circuit(),f.statement(),bad,claims,&error) || !claims.empty())
+      |             ^~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/main_r2_gkr_terminal_tests.cpp:45:89: error: request for member ‘empty’ in ‘claims’, which is of non-class type ‘int’
+   45 |         if (verifyGKRWithClaims(f.circuit(),f.statement(),bad,claims,&error) || !claims.empty())
+      |                                                                                         ^~~~~
+gmake[3]: *** [src/CMakeFiles/r2_gkr_terminal_tests.dir/build.make:79: src/CMakeFiles/r2_gkr_terminal_tests.dir/main_r2_gkr_terminal_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:937: src/CMakeFiles/r2_gkr_terminal_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:944: src/CMakeFiles/r2_gkr_terminal_tests.dir/rule] Error 2
+gmake: *** [Makefile:465: r2_gkr_terminal_tests] Error 2

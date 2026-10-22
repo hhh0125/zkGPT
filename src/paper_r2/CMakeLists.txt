@@ -1,0 +1,37 @@
+add_library(paper_r2 STATIC protocol.cpp wire.cpp model_queries.cpp)
+target_include_directories(paper_r2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(paper_r2 PUBLIC gpt_lib paper_r1)
+target_compile_options(paper_r2 PRIVATE -Wall -Wextra -Wpedantic)
+add_executable(r2_integration_tests tests_integration.cpp)
+target_link_libraries(r2_integration_tests PRIVATE paper_r2 gkr_test_support)
+add_test(NAME r2_integration COMMAND r2_integration_tests)
+
+add_executable(r2_model_probe model_probe.cpp)
+target_link_libraries(r2_model_probe PRIVATE paper_r2)
+
+add_library(paper_r2_verifier STATIC protocol.cpp wire.cpp model_queries.cpp)
+target_compile_definitions(paper_r2_verifier PRIVATE R1_VERIFY_ONLY=1)
+target_link_libraries(paper_r2_verifier PUBLIC gpt_lib paper_r1_verifier)
+target_include_directories(paper_r2_verifier PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable(r2_verify verify_main.cpp)
+target_link_libraries(r2_verify PRIVATE paper_r2_verifier)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME r2_independent COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/independent.py $<TARGET_FILE:r2_integration_tests> $<TARGET_FILE:r2_verify>)
+set_tests_properties(r2_independent PROPERTIES TIMEOUT 240 ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
+
+add_executable(r2_model_queries_tests tests_model_queries.cpp)
+target_link_libraries(r2_model_queries_tests PRIVATE paper_r2)
+add_test(NAME r2_model_queries COMMAND r2_model_queries_tests)
+
+add_executable(r2_model_source_probe model_source_probe.cpp)
+target_link_libraries(r2_model_source_probe PRIVATE paper_r2)
+add_executable(r2_model_source_verify model_source_verify.cpp)
+target_link_libraries(r2_model_source_verify PRIVATE paper_r2_verifier)
+
+add_executable(r2_model_integrated model_integrated.cpp)
+target_link_libraries(r2_model_integrated PRIVATE paper_r2)
+add_executable(r2_model_verify model_verify.cpp)
+target_link_libraries(r2_model_verify PRIVATE paper_r2_verifier)
+
+add_executable(r2_model_attack_artifacts model_attack_artifacts.cpp)
+target_link_libraries(r2_model_attack_artifacts PRIVATE paper_r2)

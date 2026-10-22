@@ -1,0 +1,65 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+    "exit": 0,
+    "seconds": 0.9409001176245511,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-0.log",
+    "log_sha256": "3c44a1fbe24bfd6b7f1511230ca94942fab2a3d5f9d0550a0d2c523440993ead"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3",
+      "--target",
+      "r2_model_integrated",
+      "r2_model_verify",
+      "-j",
+      "8"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+    "exit": 0,
+    "seconds": 0.40796935791149735,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-1.log",
+    "log_sha256": "46cd0b6a6803d3de9831cad60eb09d7bb30df5c4e0aa95e446e60e2a1fcb4db4"
+  },
+  {
+    "command": [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-prove.time",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_integrated",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+    "exit": 0,
+    "seconds": 652.3544966666959,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-2.log",
+    "log_sha256": "171321811842781ce580901df44aabe7f6b5333b610782dfad1ac3829346fcb0"
+  },
+  {
+    "command": [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-verify.time",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build-v3/src/paper_r2/r2_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-artifacts/model.proof"
+    ],
+    "cwd": "/tmp/r2-real-model-independent-zlw1k83z",
+    "exit": 0,
+    "seconds": 270.9264615899883,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-integrated-v3-3.log",
+    "log_sha256": "23bc51fc6ff8eee179308a1a373e50622323f50059bf17167dae933298ddaf08"
+  }
+]

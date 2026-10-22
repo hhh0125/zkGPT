@@ -1,0 +1,30 @@
+[
+  {
+    "cmd": [
+      "/usr/bin/c++",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include",
+      "-O3",
+      "-DNDEBUG",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/u64_probe.cpp",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/u64_probe",
+      "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-opt/lib",
+      "libpaper_r1.a",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-opt/lib/libmcl.so",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/cmake-build-opt/lib/libmclbn256.so",
+      "-lpthread"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cmd": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/u64_probe"
+    ],
+    "exit": 0,
+    "stdout": "direct=16798108731015832284940804142231733909759579603404752749028378864165570215948\nexact=18446744073709551615\n",
+    "stderr": ""
+  }
+]

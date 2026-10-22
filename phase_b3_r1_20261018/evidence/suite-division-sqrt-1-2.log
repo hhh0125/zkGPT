@@ -1,0 +1,278 @@
+["ctest", "--test-dir", "phase_b3_r1_20261018/build", "-V", "--output-on-failure"]
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+UpdateCTestConfiguration  from :/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/DartConfiguration.tcl
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+      Start  1: r1_core
+
+1: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_core_tests
+1: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+1: Test timeout computed to be: 10000000
+1: PASS core 185 checks
+ 1/13 Test  #1: r1_core ..........................   Passed    0.42 sec
+test 2
+      Start  2: r1_memory
+
+2: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_memory_tests
+2: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+2: Test timeout computed to be: 10000000
+2: PASS memory 32 checks
+ 2/13 Test  #2: r1_memory ........................   Passed    0.38 sec
+test 3
+      Start  3: r1_range
+
+3: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_range_tests
+3: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+3: Test timeout computed to be: 10000000
+3: PASS range 32 checks
+ 3/13 Test  #3: r1_range .........................   Passed    1.22 sec
+test 4
+      Start  4: r1_input
+
+4: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_input_tests
+4: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+4: Test timeout computed to be: 10000000
+4: PASS input 26 checks
+ 4/13 Test  #4: r1_input .........................   Passed    0.39 sec
+test 5
+      Start  5: r1_gkr
+
+5: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_gkr_tests
+5: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+5: Test timeout computed to be: 10000000
+5: PASS gkr 29 checks
+ 5/13 Test  #5: r1_gkr ...........................   Passed    0.10 sec
+test 6
+      Start  6: r1_independent
+
+6: Test command: /usr/local/bin/python3.10 "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/independent.py" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_fixtures" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_verify"
+6: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+6: Environment variables: 
+6:  PYTHONDONTWRITEBYTECODE=1
+6: Test timeout computed to be: 180
+6: [
+6:   {
+6:     "case": "valid",
+6:     "expected": 0,
+6:     "exit": 0,
+6:     "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+6:     "stderr": ""
+6:   },
+6:   {
+6:     "case": "other-model",
+6:     "expected": 0,
+6:     "exit": 0,
+6:     "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+6:     "stderr": ""
+6:   },
+6:   {
+6:     "case": "model-substitution",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "query",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "memory-root",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT memory multiset equation"
+6:   },
+6:   {
+6:     "case": "read-counter",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "gkr",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT GKR gate endpoint"
+6:   },
+6:   {
+6:     "case": "final-L",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "indexed-value",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "transcript",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT sumcheck recurrence"
+6:   },
+6:   {
+6:     "case": "public-X",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "public-Y",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "model-commitment",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "table",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT IPA final equation"
+6:   },
+6:   {
+6:     "case": "trailing",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT trailing artifact bytes"
+6:   },
+6:   {
+6:     "case": "truncated",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT truncated artifact"
+6:   },
+6:   {
+6:     "case": "noncanonical-Fr",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT noncanonical Fr"
+6:   },
+6:   {
+6:     "case": "invalid-G1",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT noncanonical G1"
+6:   },
+6:   {
+6:     "case": "oversized",
+6:     "expected": 2,
+6:     "exit": 2,
+6:     "stdout": "",
+6:     "stderr": "REJECT wire count limit"
+6:   }
+6: ]
+6: {"case": "exp-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT exact unclamped Exp relation (not full zkGPT)", "stderr": ""}
+6: {"case": "exp-branch", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+6: {"case": "exp-memory", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT memory multiset equation"}
+6: Artifacts retained: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/independent_runs/d7f94c3f85aa4adf8134d1c3d2257e1e
+6: PASS independent 22 cases; no prover entry points; no witness/model files in verifier working directory
+ 6/13 Test  #6: r1_independent ...................   Passed    3.34 sec
+test 7
+      Start  7: r1_integer
+
+7: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_integer_tests
+7: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+7: Test timeout computed to be: 10000000
+7: PASS integer relations 12 checks
+ 7/13 Test  #7: r1_integer .......................   Passed    2.24 sec
+test 8
+      Start  8: r1_matrix
+
+8: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_matrix_tests
+8: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+8: Test timeout computed to be: 10000000
+8: PASS matrix 7 checks
+ 8/13 Test  #8: r1_matrix ........................   Passed    0.07 sec
+test 9
+      Start  9: r1_exp
+
+9: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_exp_tests
+9: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+9: Test timeout computed to be: 10000000
+9: PASS Exp 5 checks
+ 9/13 Test  #9: r1_exp ...........................   Passed    1.13 sec
+test 10
+      Start 10: r1_exp_table_certificate
+
+10: Test command: /usr/local/bin/python3.10 "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/tools/generate_exp_table.py" "--check" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/exp_table.inc"
+10: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+10: Environment variables: 
+10:  PYTHONDONTWRITEBYTECODE=1
+10: Test timeout computed to be: 10000000
+10: {"entries": 8192, "first": 1048576, "last": 0, "first_zero": 7453, "sha256_u32_le": "1512c3a6be872285a1f51dea8d5356e5a345072692bb316b3dd7a8fb05c1e8b1", "certificate": "exact-positive-P33-P32-power32-intervals"}
+10/13 Test #10: r1_exp_table_certificate .........   Passed    3.49 sec
+test 11
+      Start 11: r1_exp_certificate_optimized
+
+11: Test command: /usr/local/bin/python3.10 "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/tools/test_exp_table.py"
+11: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+11: Environment variables: 
+11:  PYTHONDONTWRITEBYTECODE=1
+11: Test timeout computed to be: 10000000
+11: ...
+11: ----------------------------------------------------------------------
+11: Ran 3 tests in 6.940s
+11: 
+11: OK
+11/13 Test #11: r1_exp_certificate_optimized .....   Passed    6.99 sec
+test 12
+      Start 12: r1_division
+
+12: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_division_tests
+12: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+12: Test timeout computed to be: 10000000
+12: PASS variable division 12 checks
+12/13 Test #12: r1_division ......................   Passed    7.36 sec
+test 13
+      Start 13: r1_positive_sqrt
+
+13: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_positive_sqrt_tests
+13: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+13: Test timeout computed to be: 10000000
+13: FAIL Range witness outside bitwidth
+13/13 Test #13: r1_positive_sqrt .................***Failed    2.72 sec
+FAIL Range witness outside bitwidth
+
+
+92% tests passed, 1 tests failed out of 13
+
+Total Test time (real) =  29.85 sec
+
+The following tests FAILED:
+	 13 - r1_positive_sqrt (Failed)
+
+STDERR
+Errors while running CTest
+
+exit=8 elapsed=29.942136737983674

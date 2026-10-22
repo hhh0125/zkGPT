@@ -1,0 +1,38 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build",
+      "--target",
+      "r2_model_probe",
+      "r2_lookup_batch_tests",
+      "r2_lookup_verify",
+      "-j",
+      "8"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build",
+      "-R",
+      "r2_lookup_independent",
+      "--output-on-failure"
+    ],
+    "exit": 0
+  }
+]

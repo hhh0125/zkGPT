@@ -1,0 +1,46 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      "src/paper_r1",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+      "-DCMAKE_BUILD_TYPE=Debug",
+      "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer",
+      "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"
+    ],
+    "exit": 0,
+    "seconds": 0.5984341851435602,
+    "log": "asan-0.log"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+      "--target",
+      "r2_mapped_input_tests",
+      "r2_lookup_batch_tests",
+      "r2_lookup_verify",
+      "-j",
+      "8"
+    ],
+    "exit": 0,
+    "seconds": 16.904485100880265,
+    "log": "asan-1.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/asan",
+      "-R",
+      "r2_mapped_input|r2_lookup_batch",
+      "--output-on-failure"
+    ],
+    "exit": 0,
+    "seconds": 5.639132029842585,
+    "log": "asan-2.log"
+  }
+]

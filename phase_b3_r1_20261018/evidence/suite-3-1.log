@@ -1,0 +1,46 @@
+["cmake", "--build", "phase_b3_r1_20261018/build", "-j4"]
+[  6%] Building CXX object CMakeFiles/paper_r1.dir/core.cpp.o
+[ 13%] Building CXX object CMakeFiles/paper_r1.dir/pc.cpp.o
+[ 20%] Building CXX object CMakeFiles/paper_r1.dir/sumcheck.cpp.o
+[ 26%] Building CXX object CMakeFiles/paper_r1.dir/memory.cpp.o
+[ 33%] Building CXX object CMakeFiles/paper_r1.dir/range.cpp.o
+[ 40%] Building CXX object CMakeFiles/paper_r1.dir/input.cpp.o
+[ 46%] Linking CXX static library libpaper_r1.a
+[ 46%] Built target paper_r1
+[ 53%] Building CXX object CMakeFiles/r1_memory_tests.dir/tests_memory.cpp.o
+[ 60%] Building CXX object CMakeFiles/r1_input_tests.dir/tests_input.cpp.o
+[ 66%] Building CXX object CMakeFiles/r1_core_tests.dir/tests_core.cpp.o
+[ 73%] Building CXX object CMakeFiles/r1_range_tests.dir/tests_range.cpp.o
+[ 80%] Linking CXX executable r1_core_tests
+[ 80%] Built target r1_core_tests
+[ 86%] Linking CXX executable r1_memory_tests
+[ 93%] Linking CXX executable r1_input_tests
+[ 93%] Built target r1_input_tests
+[ 93%] Built target r1_memory_tests
+[100%] Linking CXX executable r1_range_tests
+[100%] Built target r1_range_tests
+
+STDERR
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘zkgpt::r1::RangeProof zkgpt::r1::proveRange(const RangeSpec&, const Commitment&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:17:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   17 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:17:129: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   17 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |                                                                                                                                 ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘void zkgpt::r1::verifyRange(const RangeSpec&, const Commitment&, const RangeProof&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:20:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   20 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:20:102: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   20 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |                                                                                                      ^~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp: In function ‘zkgpt::r1::InputProof zkgpt::r1::proveInput(const InputSpec&, const std::array<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >, 3>&, const std::vector<InputClaim>&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp:11:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   11 |  for(unsigned b=0;b<3;++b)p.opening[b]=open(s.spec[b],s.commitment[b],w[b],end.point,t,"input.final/"+std::to_string(b));return p;}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp:11:122: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   11 |  for(unsigned b=0;b<3;++b)p.opening[b]=open(s.spec[b],s.commitment[b],w[b],end.point,t,"input.final/"+std::to_string(b));return p;}
+      |                                                                                                                          ^~~~~~
+
+exit=0 elapsed=7.580813128966838

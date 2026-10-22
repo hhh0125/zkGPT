@@ -12,3 +12,10 @@ bool verifyGKR(const layeredCircuit &circuit,
                const GKRProof &proof,
                std::string *error = nullptr,
                ChallengeObserver *observer = nullptr);
+
+// Same arithmetic, matrix and input verification as verifyGKR. On failure,
+// claims is empty, including failures after arithmetic has already passed.
+bool verifyGKRWithClaims(const layeredCircuit &circuit,
+    const GKRPublicStatement &statement, const GKRProof &proof,
+    std::vector<GKRInputTerminalClaim> &claims,
+    std::string *error=nullptr, ChallengeObserver *observer=nullptr);

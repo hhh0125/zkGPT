@@ -8,7 +8,7 @@
 
 namespace gkr_test {
 
-SmallFconnFixture::SmallFconnFixture() {
+SmallFconnFixture::SmallFconnFixture(bool input_ports) {
     prover_.mat_val=nullptr;
     prover_.cc.comm=nullptr;
     prover_.cc.w=nullptr;
@@ -42,6 +42,10 @@ SmallFconnFixture::SmallFconnFixture() {
             parent.need_phase2=true;
             for (unsigned i=0;i<dimension;++i)
                 parent.bin_gates.emplace_back(i,i,i,1,1);
+            if(input_ports) {
+                parent.uni_gates.emplace_back(0,1,0,1);
+                parent.uni_gates.emplace_back(1,2,0,1);
+            }
             prover_.val[parent_layer].assign(dimension,Fr(9));
 
             prover_.fc_input_row[fc]=1;

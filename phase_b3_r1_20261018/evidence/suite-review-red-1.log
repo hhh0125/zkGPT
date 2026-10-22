@@ -1,0 +1,88 @@
+["cmake", "--build", "phase_b3_r1_20261018/build", "-j4"]
+[  2%] Building CXX object CMakeFiles/paper_r1.dir/core.cpp.o
+[  5%] Building CXX object CMakeFiles/paper_r1.dir/pc.cpp.o
+[  8%] Building CXX object CMakeFiles/paper_r1.dir/sumcheck.cpp.o
+[ 11%] Building CXX object CMakeFiles/paper_r1_verifier.dir/core.cpp.o
+[ 14%] Building CXX object CMakeFiles/paper_r1.dir/memory.cpp.o
+[ 17%] Building CXX object CMakeFiles/paper_r1.dir/range.cpp.o
+[ 20%] Building CXX object CMakeFiles/paper_r1.dir/input.cpp.o
+[ 23%] Building CXX object CMakeFiles/paper_r1.dir/gkr.cpp.o
+[ 26%] Building CXX object CMakeFiles/paper_r1_verifier.dir/pc.cpp.o
+[ 29%] Building CXX object CMakeFiles/paper_r1.dir/bundle.cpp.o
+[ 32%] Building CXX object CMakeFiles/paper_r1.dir/wire.cpp.o
+[ 35%] Building CXX object CMakeFiles/paper_r1_verifier.dir/sumcheck.cpp.o
+[ 38%] Building CXX object CMakeFiles/paper_r1_verifier.dir/memory.cpp.o
+[ 41%] Building CXX object CMakeFiles/paper_r1_verifier.dir/range.cpp.o
+[ 44%] Building CXX object CMakeFiles/paper_r1_verifier.dir/input.cpp.o
+[ 47%] Building CXX object CMakeFiles/paper_r1_verifier.dir/gkr.cpp.o
+[ 50%] Linking CXX static library libpaper_r1.a
+[ 50%] Built target paper_r1
+[ 52%] Building CXX object CMakeFiles/r1_core_tests.dir/tests_core.cpp.o
+[ 55%] Building CXX object CMakeFiles/paper_r1_verifier.dir/bundle.cpp.o
+[ 58%] Building CXX object CMakeFiles/paper_r1_verifier.dir/wire.cpp.o
+[ 61%] Building CXX object CMakeFiles/r1_memory_tests.dir/tests_memory.cpp.o
+[ 64%] Building CXX object CMakeFiles/r1_range_tests.dir/tests_range.cpp.o
+[ 67%] Linking CXX executable r1_core_tests
+[ 67%] Built target r1_core_tests
+[ 70%] Building CXX object CMakeFiles/r1_input_tests.dir/tests_input.cpp.o
+[ 73%] Linking CXX executable r1_memory_tests
+[ 73%] Built target r1_memory_tests
+[ 76%] Building CXX object CMakeFiles/r1_gkr_tests.dir/tests_gkr.cpp.o
+[ 79%] Linking CXX executable r1_range_tests
+[ 79%] Built target r1_range_tests
+[ 82%] Building CXX object CMakeFiles/r1_fixtures.dir/fixtures_main.cpp.o
+[ 85%] Linking CXX static library libpaper_r1_verifier.a
+[ 88%] Linking CXX executable r1_input_tests
+[ 88%] Built target paper_r1_verifier
+[ 91%] Building CXX object CMakeFiles/r1_verify.dir/verify_main.cpp.o
+[ 91%] Built target r1_input_tests
+[ 94%] Linking CXX executable r1_verify
+[ 94%] Built target r1_verify
+[ 97%] Linking CXX executable r1_gkr_tests
+[ 97%] Built target r1_gkr_tests
+[100%] Linking CXX executable r1_fixtures
+[100%] Built target r1_fixtures
+
+STDERR
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘zkgpt::r1::RangeProof zkgpt::r1::proveRange(const RangeSpec&, const Commitment&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:24:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   24 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:24:129: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   24 |  for(unsigned h=0;h<count;++h)p.memories.push_back(proveMemory(digitMemory(s,h),p.digits[h],p.digits[h],digits[h],digits[h],t));p.tail=proveZeroTail(s.query,c,w,t);return p;}
+      |                                                                                                                                 ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘void zkgpt::r1::verifyRange(const RangeSpec&, const Commitment&, const RangeProof&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:29:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   29 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:29:102: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   29 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |                                                                                                      ^~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp: In function ‘zkgpt::r1::InputProof zkgpt::r1::proveInput(const InputSpec&, const std::array<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >, 3>&, const std::vector<InputClaim>&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp:13:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   13 |  for(unsigned b=0;b<3;++b)p.opening[b]=open(s.spec[b],s.commitment[b],w[b],end.point,t,"input.final/"+std::to_string(b));return p;}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/input.cpp:13:122: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   13 |  for(unsigned b=0;b<3;++b)p.opening[b]=open(s.spec[b],s.commitment[b],w[b],end.point,t,"input.final/"+std::to_string(b));return p;}
+      |                                                                                                                          ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/pc.cpp:16:20: warning: ‘std::size_t zkgpt::r1::index(const PCSpec&, std::size_t, std::size_t)’ defined but not used [-Wunused-function]
+   16 | static std::size_t index(const PCSpec& s,std::size_t r,std::size_t c){return s.layout==Layout::ColumnMajor?r+c*s.rows:r*s.columns+c;}
+      |                    ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/memory.cpp:8:20: warning: ‘std::size_t zkgpt::r1::asIndex(const mcl::bn::Fr&, std::size_t)’ defined but not used [-Wunused-function]
+    8 | static std::size_t asIndex(const Fr& a,std::size_t bound){auto b=encode(a);std::uint64_t n=0;for(unsigned i=0;i<8;++i)n|=std::uint64_t(b[i])<<(8*i);for(unsigned i=8;i<32;++i)require(!b[i],"address not canonical integer index");require(n<bound,"address outside complete table");return std::size_t(n);}
+      |                    ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp: In function ‘void zkgpt::r1::verifyRange(const RangeSpec&, const Commitment&, const RangeProof&, Fs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:29:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   29 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/range.cpp:29:102: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   29 |  for(unsigned h=0;h<count;++h)verifyMemory(digitMemory(s,h),p.digits[h],p.digits[h],p.memories[h],t);verifyZeroTail(s.query,c,p.tail,t);}
+      |                                                                                                      ^~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/gkr.cpp:11:11: warning: ‘mcl::bn::Fr zkgpt::r1::eqBit(const mcl::bn::Fr&, bool)’ defined but not used [-Wunused-function]
+   11 | static Fr eqBit(const Fr& r,bool bit){return bit?r:Fr(1)-r;}
+      |           ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/gkr.cpp:10:13: warning: ‘void zkgpt::r1::fold(std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const mcl::bn::Fr&)’ defined but not used [-Wunused-function]
+   10 | static void fold(std::vector<Fr>& w,const Fr& r){for(std::size_t i=0;i<w.size()/2;++i)w[i]=w[2*i]+r*(w[2*i+1]-w[2*i]);w.resize(w.size()/2);}
+      |             ^~~~
+
+exit=0 elapsed=13.81033008499071

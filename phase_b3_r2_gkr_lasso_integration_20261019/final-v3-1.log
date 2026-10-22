@@ -1,0 +1,444 @@
+[  1%] Building CXX object 3rd/mcl/CMakeFiles/mcl.dir/src/fp.cpp.o
+[  1%] Building CXX object 3rd/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[  1%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/bint-x64-amd64.S.o
+[  3%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/bint-x64-amd64.S.o
+[  3%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/x86-64.S.o
+[  3%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/x86-64.S.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+[  4%] Linking CXX static library ../../lib/libmcl.a
+[  5%] Linking CXX shared library ../../lib/libmcl.so
+[  5%] Built target mcl_st
+[  5%] Built target mcl
+[  6%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384_256.dir/src/bn_c384_256.cpp.o
+[  7%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384.dir/src/bn_c384.cpp.o
+[  8%] Building CXX object 3rd/mcl/CMakeFiles/mclbn256.dir/src/bn_c256.cpp.o
+[  8%] Linking CXX shared library ../../lib/libmclbn384_256.so
+[  8%] Built target mclbn384_256
+[  8%] Linking CXX shared library ../../lib/libmclbn384.so
+[  8%] Built target mclbn384
+[  8%] Linking CXX shared library ../../lib/libmclbn256.so
+[  8%] Built target mclbn256
+[  8%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/lookup_batch.cpp.o
+[  9%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/mapped_input.cpp.o
+[ 10%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/core.cpp.o
+[ 10%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/pc.cpp.o
+[ 11%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/sumcheck.cpp.o
+[ 11%] Building CXX object src/CMakeFiles/gpt_lib.dir/exp_lookup.cpp.o
+[ 12%] Building CXX object src/CMakeFiles/gpt_lib.dir/circuit.cpp.o
+[ 12%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/lookup_batch.cpp.o
+[ 12%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/memory.cpp.o
+[ 13%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/range.cpp.o
+[ 14%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/input.cpp.o
+[ 14%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/gkr.cpp.o
+[ 15%] Building CXX object src/CMakeFiles/gpt_lib.dir/generator_cache.cpp.o
+[ 16%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/mapped_input.cpp.o
+[ 17%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/core.cpp.o
+[ 18%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/bundle.cpp.o
+[ 18%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/wire.cpp.o
+[ 19%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/integer_relations.cpp.o
+[ 19%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/matrix.cpp.o
+[ 19%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/pc.cpp.o
+[ 20%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/exp.cpp.o
+[ 20%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_proof_builder.cpp.o
+[ 21%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/division.cpp.o
+[ 21%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/positive_sqrt.cpp.o
+[ 22%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_serialization.cpp.o
+[ 23%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_verifier.cpp.o
+[ 23%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax.cpp.o
+[ 24%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax_opening.cpp.o
+[ 25%] Linking CXX static library libpaper_r1_verifier.a
+[ 25%] Built target paper_r1_verifier
+[ 26%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/sumcheck.cpp.o
+[ 26%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax_rp.cpp.o
+[ 26%] Building CXX object src/paper_r1/CMakeFiles/r1_verify.dir/verify_main.cpp.o
+[ 26%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/memory.cpp.o
+[ 27%] Building CXX object src/CMakeFiles/gpt_lib.dir/memory_diagnostics.cpp.o
+[ 27%] Building CXX object src/CMakeFiles/gpt_lib.dir/model_binding.cpp.o
+[ 28%] Building CXX object src/CMakeFiles/gpt_lib.dir/models.cpp.o
+[ 29%] Linking CXX executable r1_verify
+[ 29%] Built target r1_verify
+[ 29%] Building CXX object src/paper_r1/CMakeFiles/r2_lookup_verify.dir/lookup_verify_main.cpp.o
+[ 30%] Building CXX object src/paper_r1/CMakeFiles/r2_sparse_verifier_tests.dir/tests_sparse_verifier.cpp.o
+[ 31%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/range.cpp.o
+[ 32%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/input.cpp.o
+[ 32%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/gkr.cpp.o
+[ 33%] Linking CXX executable r2_lookup_verify
+[ 33%] Built target r2_lookup_verify
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/bundle.cpp.o
+[ 35%] Building CXX object src/CMakeFiles/gpt_lib.dir/neuralNetwork.cpp.o
+[ 35%] Linking CXX executable r2_sparse_verifier_tests
+[ 35%] Built target r2_sparse_verifier_tests
+[ 35%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/wire.cpp.o
+[ 36%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/integer_relations.cpp.o
+[ 36%] Building CXX object src/CMakeFiles/gpt_lib.dir/polynomial.cpp.o
+[ 36%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/matrix.cpp.o
+[ 37%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/exp.cpp.o
+[ 38%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/division.cpp.o
+[ 39%] Building CXX object src/CMakeFiles/gpt_lib.dir/prover.cpp.o
+[ 39%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_logup.cpp.o
+[ 39%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/positive_sqrt.cpp.o
+[ 40%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_protocol.cpp.o
+[ 41%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_prover.cpp.o
+[ 42%] Linking CXX static library libpaper_r1.a
+[ 42%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_serialization.cpp.o
+[ 42%] Built target paper_r1
+[ 43%] Building CXX object src/CMakeFiles/gpt_lib.dir/range_sumcheck.cpp.o
+[ 43%] Building CXX object src/CMakeFiles/gpt_lib.dir/sparse_opening.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/gpt_lib.dir/timer.cpp.o
+[ 45%] Building CXX object src/CMakeFiles/gpt_lib.dir/utils.cpp.o
+[ 45%] Building CXX object src/CMakeFiles/gpt_lib.dir/zkgpt_artifact_io.cpp.o
+[ 45%] Building CXX object src/paper_r1/CMakeFiles/r1_core_tests.dir/tests_core.cpp.o
+[ 46%] Building CXX object src/CMakeFiles/gpt_lib.dir/zkgpt_protocol.cpp.o
+[ 46%] Building CXX object src/CMakeFiles/gpt_lib.dir/zkgpt_serialization.cpp.o
+[ 47%] Building CXX object src/paper_r1/CMakeFiles/r1_memory_tests.dir/tests_memory.cpp.o
+[ 48%] Linking CXX executable r1_core_tests
+[ 48%] Built target r1_core_tests
+[ 49%] Building CXX object src/paper_r1/CMakeFiles/r1_range_tests.dir/tests_range.cpp.o
+[ 49%] Building CXX object src/paper_r1/CMakeFiles/r1_input_tests.dir/tests_input.cpp.o
+[ 50%] Building CXX object src/paper_r1/CMakeFiles/r1_gkr_tests.dir/tests_gkr.cpp.o
+[ 51%] Building CXX object src/paper_r1/CMakeFiles/r1_fixtures.dir/fixtures_main.cpp.o
+[ 51%] Linking CXX executable r1_memory_tests
+[ 51%] Built target r1_memory_tests
+[ 51%] Building CXX object src/paper_r1/CMakeFiles/r1_integer_tests.dir/tests_integer.cpp.o
+[ 52%] Building CXX object src/paper_r1/CMakeFiles/r1_matrix_tests.dir/tests_matrix.cpp.o
+[ 53%] Building CXX object src/paper_r1/CMakeFiles/r1_exp_tests.dir/tests_exp.cpp.o
+[ 54%] Linking CXX executable r1_range_tests
+[ 55%] Linking CXX static library libgpt_lib.a
+[ 55%] Built target r1_range_tests
+[ 55%] Building CXX object src/paper_r1/CMakeFiles/r1_division_tests.dir/tests_division.cpp.o
+[ 55%] Built target gpt_lib
+[ 56%] Building CXX object src/paper_r1/CMakeFiles/r1_positive_sqrt_tests.dir/tests_positive_sqrt.cpp.o
+[ 57%] Linking CXX executable r1_input_tests
+[ 57%] Built target r1_input_tests
+[ 58%] Linking CXX executable r1_gkr_tests
+[ 58%] Building CXX object src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/tests_mapped_input.cpp.o
+[ 58%] Built target r1_gkr_tests
+[ 59%] Building CXX object src/paper_r1/CMakeFiles/r2_lookup_batch_tests.dir/tests_lookup_batch.cpp.o
+[ 59%] Linking CXX executable r1_matrix_tests
+[ 59%] Built target r1_matrix_tests
+[ 60%] Building CXX object src/paper_r1/CMakeFiles/r2_scale_bench.dir/scale_bench.cpp.o
+[ 60%] Linking CXX executable r1_exp_tests
+[ 60%] Built target r1_exp_tests
+[ 60%] Building CXX object src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/tests_exp_profile.cpp.o
+[ 61%] Linking CXX executable r1_integer_tests
+[ 61%] Built target r1_integer_tests
+[ 61%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/protocol.cpp.o
+[ 62%] Linking CXX executable r2_exp_profile_tests
+[ 62%] Built target r2_exp_profile_tests
+[ 63%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/protocol.cpp.o
+[ 63%] Linking CXX executable r2_scale_bench
+[ 63%] Built target r2_scale_bench
+[ 63%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/wire.cpp.o
+[ 63%] Linking CXX executable r1_positive_sqrt_tests
+[ 63%] Built target r1_positive_sqrt_tests
+[ 63%] Building CXX object src/CMakeFiles/demo_llm_run.dir/main_demo_llm.cpp.o
+[ 64%] Linking CXX executable r1_division_tests
+[ 65%] Linking CXX executable r2_mapped_input_tests
+[ 65%] Built target r1_division_tests
+[ 66%] Building CXX object src/CMakeFiles/gkr_test_support.dir/tests/gkr_test_fixture.cpp.o
+[ 66%] Linking CXX executable r1_fixtures
+[ 66%] Built target r2_mapped_input_tests
+[ 67%] Building CXX object src/CMakeFiles/zkgpt_decoder_resource_tests.dir/main_zkgpt_decoder_resource_tests.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_verifier.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/protocol.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/protocol.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/range_protocol.hpp:5,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_protocol.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_verifier.hpp:4:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+[ 67%] Built target r1_fixtures
+[ 68%] Building CXX object src/CMakeFiles/range_artifact_verify.dir/main_range_artifact_verify.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_proof_builder.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/protocol.cpp:6:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/prover.hpp:100:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  100 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+[ 69%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/model_queries.cpp.o
+[ 70%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/wire.cpp.o
+[ 71%] Linking CXX executable r2_lookup_batch_tests
+[ 71%] Built target r2_lookup_batch_tests
+[ 72%] Building CXX object src/CMakeFiles/zkgpt_artifact_verify.dir/main_zkgpt_artifact_verify.cpp.o
+[ 72%] Building CXX object src/CMakeFiles/gkr_test_support.dir/tests/zkgpt_artifact_test_fixture.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_verifier.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/protocol.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/wire.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/wire.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/range_protocol.hpp:5,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_protocol.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/gkr_verifier.hpp:4:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+[ 73%] Building CXX object src/CMakeFiles/lasso_folding_tests.dir/main_lasso_folding_tests.cpp.o
+[ 74%] Linking CXX static library libpaper_r2_verifier.a
+[ 74%] Built target paper_r2_verifier
+[ 74%] Building CXX object src/CMakeFiles/hyrax_opening_tests.dir/main_hyrax_opening_tests.cpp.o
+[ 75%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/model_queries.cpp.o
+[ 76%] Linking CXX static library libgkr_test_support.a
+[ 76%] Built target gkr_test_support
+[ 76%] Building CXX object src/CMakeFiles/circuit_storage_tests.dir/main_circuit_storage_tests.cpp.o
+[ 77%] Linking CXX executable range_artifact_verify
+[ 77%] Built target range_artifact_verify
+[ 78%] Building CXX object src/CMakeFiles/model_binding.dir/main_model_binding.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r2/model_queries.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/prover.hpp:100:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  100 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp:222:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  222 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/neuralNetwork.hpp:223:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  223 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+[ 79%] Linking CXX executable zkgpt_decoder_resource_tests
+[ 79%] Built target zkgpt_decoder_resource_tests
+[ 79%] Building CXX object src/CMakeFiles/model_binding_tests.dir/main_model_binding_tests.cpp.o
+[ 79%] Linking CXX executable zkgpt_artifact_verify
+[ 79%] Built target zkgpt_artifact_verify
+[ 79%] Building CXX object src/CMakeFiles/exp_lookup_tests.dir/main_exp_lookup_tests.cpp.o
+[ 79%] Linking CXX static library libpaper_r2.a
+[ 79%] Built target paper_r2
+[ 80%] Building CXX object src/CMakeFiles/r2_gkr_terminal_tests.dir/main_r2_gkr_terminal_tests.cpp.o
+[ 81%] Linking CXX executable demo_llm_run
+[ 81%] Built target demo_llm_run
+[ 82%] Building CXX object src/paper_r2/CMakeFiles/r2_integration_tests.dir/tests_integration.cpp.o
+[ 82%] Linking CXX executable lasso_folding_tests
+[ 82%] Built target lasso_folding_tests
+[ 83%] Building CXX object src/paper_r2/CMakeFiles/r2_model_probe.dir/model_probe.cpp.o
+[ 84%] Linking CXX executable circuit_storage_tests
+[ 84%] Built target circuit_storage_tests
+[ 85%] Building CXX object src/paper_r2/CMakeFiles/r2_verify.dir/verify_main.cpp.o
+[ 86%] Linking CXX executable model_binding
+[ 87%] Linking CXX executable hyrax_opening_tests
+[ 87%] Linking CXX executable r2_model_probe
+[ 87%] Built target model_binding
+[ 88%] Building CXX object src/paper_r2/CMakeFiles/r2_model_queries_tests.dir/tests_model_queries.cpp.o
+[ 88%] Built target hyrax_opening_tests
+[ 89%] Building CXX object src/paper_r2/CMakeFiles/r2_model_source_probe.dir/model_source_probe.cpp.o
+[ 89%] Built target r2_model_probe
+[ 89%] Building CXX object src/paper_r2/CMakeFiles/r2_model_source_verify.dir/model_source_verify.cpp.o
+[ 89%] Linking CXX executable r2_verify
+[ 89%] Built target r2_verify
+[ 89%] Building CXX object src/paper_r2/CMakeFiles/r2_model_integrated.dir/model_integrated.cpp.o
+[ 90%] Linking CXX executable r2_model_source_verify
+[ 90%] Linking CXX executable r2_integration_tests
+[ 90%] Built target r2_model_source_verify
+[ 90%] Building CXX object src/paper_r2/CMakeFiles/r2_model_verify.dir/model_verify.cpp.o
+[ 90%] Built target r2_integration_tests
+[ 90%] Building CXX object src/CMakeFiles/range_tests.dir/main_range_tests.cpp.o
+[ 91%] Linking CXX executable r2_model_source_probe
+[ 91%] Built target r2_model_source_probe
+[ 91%] Building CXX object src/CMakeFiles/range_protocol_tests.dir/main_range_tests.cpp.o
+[ 91%] Linking CXX executable r2_gkr_terminal_tests
+[ 91%] Built target r2_gkr_terminal_tests
+[ 92%] Building CXX object src/CMakeFiles/gkr_mutation_tests.dir/main_gkr_mutation_tests.cpp.o
+[ 92%] Linking CXX executable r2_model_queries_tests
+[ 92%] Built target r2_model_queries_tests
+[ 93%] Building CXX object src/CMakeFiles/zkgpt_artifact_mutation_tests.dir/main_zkgpt_artifact_mutation_tests.cpp.o
+[ 94%] Linking CXX executable model_binding_tests
+[ 94%] Built target model_binding_tests
+[ 94%] Building CXX object src/CMakeFiles/prover_lifecycle_tests.dir/main_prover_lifecycle_tests.cpp.o
+[ 95%] Linking CXX executable exp_lookup_tests
+[ 95%] Built target exp_lookup_tests
+[ 96%] Linking CXX executable r2_model_verify
+[ 96%] Built target r2_model_verify
+[ 97%] Linking CXX executable r2_model_integrated
+[ 97%] Built target r2_model_integrated
+[ 97%] Linking CXX executable gkr_mutation_tests
+[ 97%] Built target gkr_mutation_tests
+[ 98%] Linking CXX executable prover_lifecycle_tests
+[ 98%] Built target prover_lifecycle_tests
+[ 98%] Linking CXX executable zkgpt_artifact_mutation_tests
+[ 98%] Built target zkgpt_artifact_mutation_tests
+[ 99%] Linking CXX executable range_tests
+[ 99%] Built target range_tests
+[100%] Linking CXX executable range_protocol_tests
+[100%] Built target range_protocol_tests

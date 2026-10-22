@@ -26,6 +26,8 @@ struct GKRPublicStatement {
     std::vector<G1> val0_commitment;
     GeneratorDomain val0_generator_domain;
     std::array<std::uint8_t, 32> circuit_fingerprint{};
+    // Nonzero only for the new composition; fixes all preceding local proofs.
+    std::array<std::uint8_t,32> integration_context{};
     Fr output_evaluation;
 };
 
@@ -80,4 +82,14 @@ struct GKRProof {
     std::vector<GKRLayerProof> layers;
     GKRLassoProof lasso;
     Fr transcript_binding;
+};
+
+// Values are authenticated only when verifyGKRWithClaims returns success.
+// The verifier-owned circuit selects ori_id_u/ori_id_v; no prover source list.
+struct GKRInputTerminalClaim {
+    std::uint32_t layer_index=0;
+    unsigned port=0, matrix_point=0;
+    std::size_t actual_size=0, padded_size=0;
+    std::vector<Fr> point;
+    Fr value=0;
 };

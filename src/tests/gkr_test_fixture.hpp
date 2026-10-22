@@ -16,7 +16,7 @@ namespace gkr_test {
 // verifies the baseline with the production verifyGKR implementation.
 class SmallFconnFixture {
 public:
-    SmallFconnFixture();
+    explicit SmallFconnFixture(bool input_ports=false);
     ~SmallFconnFixture();
 
     SmallFconnFixture(const SmallFconnFixture &) = delete;

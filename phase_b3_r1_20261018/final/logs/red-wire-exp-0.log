@@ -1,0 +1,22 @@
+["g++", "-std=c++17", "-I3rd/mcl/include", "-Isrc/paper_r1", "-fsyntax-only", "src/paper_r1/fixtures_main.cpp"]
+
+STDERR
+src/paper_r1/fixtures_main.cpp: In function ‘int main(int, char**)’:
+src/paper_r1/fixtures_main.cpp:106:9: error: ‘ExpStatement’ was not declared in this scope
+  106 |         ExpStatement es{{"fixture/exp",PCSpec::make("fixture/exp-t",6,8,Layout::ColumnMajor),PCSpec::make("fixture/exp-E",6,8,Layout::RowMajor)},{},{}};
+      |         ^~~~~~~~~~~~
+src/paper_r1/fixtures_main.cpp:109:60: error: ‘expValue’ was not declared in this scope
+  109 |         for(unsigned i=0;i<6;++i){tx[i]=Fr(ti[i]);ex[i]=Fr(expValue(ti[i]));}
+      |                                                            ^~~~~~~~
+src/paper_r1/fixtures_main.cpp:110:9: error: ‘es’ was not declared in this scope; did you mean ‘ex’?
+  110 |         es.index=commit(es.spec.index,tx);es.value=commit(es.spec.value,ex);
+      |         ^~
+      |         ex
+src/paper_r1/fixtures_main.cpp:111:57: error: ‘proveExp’ was not declared in this scope
+  111 |         Fs et("zkGPT.paper-r1.exp.artifact.v1");auto ep=proveExp(es.spec,es.index,es.value,tx,ex,et);
+      |                                                         ^~~~~~~~
+src/paper_r1/fixtures_main.cpp:112:56: error: ‘serializeExp’ was not declared in this scope
+  112 |         writeFile((dir/"exp-valid.statement").string(),serializeExp(es));
+      |                                                        ^~~~~~~~~~~~
+
+exit=1 elapsed=1.039203468710184

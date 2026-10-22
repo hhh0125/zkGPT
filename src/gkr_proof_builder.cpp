@@ -22,7 +22,8 @@ static vector<F> beta_u, beta_gs;
 
 GKRProofBuilder::GKRProofBuilder(
     prover *pr, const layeredCircuit &cir, const WitnessShape &model_shape,
-    const GeneratorDomain &generator_domain, ChallengeObserver *observer):
+    const GeneratorDomain &generator_domain, ChallengeObserver *observer,
+    const std::array<std::uint8_t,32> *integration_context):
     p(pr), C(cir), transcript_(kGKRTranscriptDomain,observer,"gkr-main")
 {
     if (!p) throw std::invalid_argument("GKR proof builder requires a prover");
@@ -42,6 +43,7 @@ GKRProofBuilder::GKRProofBuilder(
     if (comm.l<0 || comm.l>30)
         throw std::invalid_argument("invalid GKR input log size");
     const std::size_t commitment_count=static_cast<std::size_t>(1)<<(comm.l/2);
+    if (integration_context) public_statement_.integration_context=*integration_context;
     public_statement_.model_shape=model_shape;
     public_statement_.val0_log_size=comm.l;
     public_statement_.val0_commitment.assign(

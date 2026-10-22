@@ -1,0 +1,149 @@
+["ctest", "--test-dir", "phase_b3_r1_20261018/build", "--output-on-failure"]
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+    Start 1: r1_core
+1/6 Test #1: r1_core ..........................   Passed    0.52 sec
+    Start 2: r1_memory
+2/6 Test #2: r1_memory ........................   Passed    0.51 sec
+    Start 3: r1_range
+3/6 Test #3: r1_range .........................   Passed    1.22 sec
+    Start 4: r1_input
+4/6 Test #4: r1_input .........................***Failed    0.41 sec
+FAIL nonzero W tail
+
+    Start 5: r1_gkr
+5/6 Test #5: r1_gkr ...........................   Passed    0.07 sec
+    Start 6: r1_independent
+6/6 Test #6: r1_independent ...................***Failed    1.08 sec
+[
+  {
+    "case": "valid",
+    "expected": 0,
+    "exit": 0,
+    "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+    "stderr": ""
+  },
+  {
+    "case": "query",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "memory-root",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT memory multiset equation"
+  },
+  {
+    "case": "read-counter",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "gkr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT GKR gate endpoint"
+  },
+  {
+    "case": "final-L",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "indexed-value",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "transcript",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT sumcheck recurrence"
+  },
+  {
+    "case": "public-X",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "public-Y",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "model-commitment",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "table",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "trailing",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT trailing artifact bytes"
+  },
+  {
+    "case": "truncated",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT truncated artifact"
+  },
+  {
+    "case": "noncanonical-Fr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT noncanonical Fr"
+  },
+  {
+    "case": "oversized",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT artifact magic/version/kind"
+  }
+]
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/independent.py", line 17, in <module>
+    assert 'wire count limit' in rows[-1]['stderr'],'oversized fixture must exercise count bound'
+AssertionError: oversized fixture must exercise count bound
+
+
+67% tests passed, 2 tests failed out of 6
+
+Total Test time (real) =   3.81 sec
+
+The following tests FAILED:
+	  4 - r1_input (Failed)
+	  6 - r1_independent (Failed)
+
+STDERR
+Errors while running CTest
+
+exit=8 elapsed=3.908980678766966

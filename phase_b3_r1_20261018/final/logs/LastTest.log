@@ -1,0 +1,364 @@
+Start testing: Oct 18 15:58 UTC
+----------------------------------------------------------
+1/13 Testing: r1_core
+1/13 Test: r1_core
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_core_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_core" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS core 185 checks
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"r1_core" end time: Oct 18 15:58 UTC
+"r1_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/13 Testing: r1_memory
+2/13 Test: r1_memory
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_memory_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_memory" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS memory 32 checks
+<end of output>
+Test time =   0.52 sec
+----------------------------------------------------------
+Test Passed.
+"r1_memory" end time: Oct 18 15:58 UTC
+"r1_memory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/13 Testing: r1_range
+3/13 Test: r1_range
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_range_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_range" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS range 32 checks
+<end of output>
+Test time =   1.22 sec
+----------------------------------------------------------
+Test Passed.
+"r1_range" end time: Oct 18 15:58 UTC
+"r1_range" time elapsed: 00:00:01
+----------------------------------------------------------
+
+4/13 Testing: r1_input
+4/13 Test: r1_input
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_input_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_input" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS input 26 checks
+<end of output>
+Test time =   0.39 sec
+----------------------------------------------------------
+Test Passed.
+"r1_input" end time: Oct 18 15:58 UTC
+"r1_input" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/13 Testing: r1_gkr
+5/13 Test: r1_gkr
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_gkr_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_gkr" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS gkr 29 checks
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"r1_gkr" end time: Oct 18 15:58 UTC
+"r1_gkr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/13 Testing: r1_independent
+6/13 Test: r1_independent
+Command: "/usr/local/bin/python3.10" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/independent.py" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_fixtures" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_verify"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_independent" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+[
+  {
+    "case": "valid",
+    "expected": 0,
+    "exit": 0,
+    "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+    "stderr": ""
+  },
+  {
+    "case": "other-model",
+    "expected": 0,
+    "exit": 0,
+    "stdout": "ACCEPT foundation arithmetic/lookup relation (not full zkGPT)",
+    "stderr": ""
+  },
+  {
+    "case": "model-substitution",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "query",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "memory-root",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT memory multiset equation"
+  },
+  {
+    "case": "read-counter",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "gkr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT GKR gate endpoint"
+  },
+  {
+    "case": "final-L",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "indexed-value",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "transcript",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT sumcheck recurrence"
+  },
+  {
+    "case": "public-X",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "public-Y",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "model-commitment",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "table",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT IPA final equation"
+  },
+  {
+    "case": "trailing",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT trailing artifact bytes"
+  },
+  {
+    "case": "truncated",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT truncated artifact"
+  },
+  {
+    "case": "noncanonical-Fr",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT noncanonical Fr"
+  },
+  {
+    "case": "invalid-G1",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT noncanonical G1"
+  },
+  {
+    "case": "oversized",
+    "expected": 2,
+    "exit": 2,
+    "stdout": "",
+    "stderr": "REJECT wire count limit"
+  }
+]
+{"case": "exp-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT exact unclamped Exp relation (not full zkGPT)", "stderr": ""}
+{"case": "exp-branch", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "exp-memory", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT memory multiset equation"}
+{"case": "div-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT committed positive division relation (not full zkGPT)", "stderr": ""}
+{"case": "div-relation", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "div-positivity", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "div-source", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "div-trailing", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT trailing artifact bytes"}
+{"case": "sqrt-valid", "expected": 0, "exit": 0, "stdout": "ACCEPT positive integer sqrt relation (not full zkGPT)", "stderr": ""}
+{"case": "sqrt-relation", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT sumcheck recurrence"}
+{"case": "sqrt-positivity", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "sqrt-source", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT IPA final equation"}
+{"case": "sqrt-truncated", "expected": 2, "exit": 2, "stdout": "", "stderr": "REJECT truncated artifact"}
+Artifacts retained: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/independent_runs/5a23f3106574461f9f84c5cfd693fc93
+PASS independent 32 cases; no prover entry points; no witness/model files in verifier working directory
+<end of output>
+Test time =   5.13 sec
+----------------------------------------------------------
+Test Passed.
+"r1_independent" end time: Oct 18 15:58 UTC
+"r1_independent" time elapsed: 00:00:05
+----------------------------------------------------------
+
+7/13 Testing: r1_integer
+7/13 Test: r1_integer
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_integer_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_integer" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS integer relations 12 checks
+<end of output>
+Test time =   2.23 sec
+----------------------------------------------------------
+Test Passed.
+"r1_integer" end time: Oct 18 15:58 UTC
+"r1_integer" time elapsed: 00:00:02
+----------------------------------------------------------
+
+8/13 Testing: r1_matrix
+8/13 Test: r1_matrix
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_matrix_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_matrix" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS matrix 7 checks
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"r1_matrix" end time: Oct 18 15:58 UTC
+"r1_matrix" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/13 Testing: r1_exp
+9/13 Test: r1_exp
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_exp_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_exp" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS Exp 5 checks
+<end of output>
+Test time =   1.15 sec
+----------------------------------------------------------
+Test Passed.
+"r1_exp" end time: Oct 18 15:58 UTC
+"r1_exp" time elapsed: 00:00:01
+----------------------------------------------------------
+
+10/13 Testing: r1_exp_table_certificate
+10/13 Test: r1_exp_table_certificate
+Command: "/usr/local/bin/python3.10" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/tools/generate_exp_table.py" "--check" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/exp_table.inc"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_exp_table_certificate" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+{"entries": 8192, "first": 1048576, "last": 0, "first_zero": 7453, "sha256_u32_le": "1512c3a6be872285a1f51dea8d5356e5a345072692bb316b3dd7a8fb05c1e8b1", "certificate": "exact-positive-P33-P32-power32-intervals"}
+<end of output>
+Test time =   3.76 sec
+----------------------------------------------------------
+Test Passed.
+"r1_exp_table_certificate" end time: Oct 18 15:58 UTC
+"r1_exp_table_certificate" time elapsed: 00:00:03
+----------------------------------------------------------
+
+11/13 Testing: r1_exp_certificate_optimized
+11/13 Test: r1_exp_certificate_optimized
+Command: "/usr/local/bin/python3.10" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/src/paper_r1/tools/test_exp_table.py"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_exp_certificate_optimized" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+...
+----------------------------------------------------------------------
+Ran 3 tests in 7.012s
+
+OK
+<end of output>
+Test time =   7.07 sec
+----------------------------------------------------------
+Test Passed.
+"r1_exp_certificate_optimized" end time: Oct 18 15:58 UTC
+"r1_exp_certificate_optimized" time elapsed: 00:00:07
+----------------------------------------------------------
+
+12/13 Testing: r1_division
+12/13 Test: r1_division
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_division_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_division" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS variable division 12 checks
+<end of output>
+Test time =   7.30 sec
+----------------------------------------------------------
+Test Passed.
+"r1_division" end time: Oct 18 15:58 UTC
+"r1_division" time elapsed: 00:00:07
+----------------------------------------------------------
+
+13/13 Testing: r1_positive_sqrt
+13/13 Test: r1_positive_sqrt
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build/r1_positive_sqrt_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r1_20261018/build
+"r1_positive_sqrt" start time: Oct 18 15:58 UTC
+Output:
+----------------------------------------------------------
+PASS positive sqrt 11 checks
+<end of output>
+Test time =   2.96 sec
+----------------------------------------------------------
+Test Passed.
+"r1_positive_sqrt" end time: Oct 18 15:58 UTC
+"r1_positive_sqrt" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Oct 18 15:58 UTC

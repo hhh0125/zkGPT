@@ -23,7 +23,8 @@ public:
     GKRProofBuilder(prover *pr, const layeredCircuit &cir,
                     const WitnessShape &model_shape,
                     const GeneratorDomain &generator_domain,
-                    ChallengeObserver *observer = nullptr);
+                    ChallengeObserver *observer = nullptr,
+                    const std::array<std::uint8_t,32> *integration_context = nullptr);
 
     void build();
     const GKRProof &proof() const { return gkr_proof_; }

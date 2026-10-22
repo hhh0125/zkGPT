@@ -1,0 +1,54 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build",
+      "--target",
+      "r2_model_integrated",
+      "r2_model_verify",
+      "-j",
+      "8"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+    "expected": 0,
+    "exit": 0,
+    "seconds": 4.375341447070241,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-0.log",
+    "log_sha256": "90ab2e8e1e5b326588f8dfd8f0e7418fba94c11ab922e1e9bab808beced57741"
+  },
+  {
+    "command": [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-prove.time",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build/src/paper_r2/r2_model_integrated",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-artifacts",
+      "--hostile-range"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT",
+    "expected": 0,
+    "exit": 0,
+    "seconds": 633.8818527432159,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-1.log",
+    "log_sha256": "e283467c27b5a3e9acd9aa47dce31e50334399e79b44bccf3fb11441e9b9adf8"
+  },
+  {
+    "command": [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-verify.time",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/build/src/paper_r2/r2_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-artifacts/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-artifacts/model.proof"
+    ],
+    "cwd": "/tmp/r2-real-hostile-independent-omdmfllz",
+    "expected": 2,
+    "exit": 2,
+    "seconds": 157.86584184784442,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT/phase_b3_r2_gkr_lasso_integration_20261019/real-hostile-2.log",
+    "log_sha256": "0147bfc6a1118eb2c86a1b5cec3a57e4244174682e1c83ac989132ea0657d577"
+  }
+]
