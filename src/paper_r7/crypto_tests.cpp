@@ -1,4 +1,5 @@
 #include "crypto.hpp"
+#include "sigma.hpp"
 #include "r6_adapter.hpp"
 #include "wire.hpp"
 #include <iostream>
@@ -12,6 +13,9 @@ int main(){try{
  rejects([&]{auto s=PCSpec::make("unit/W",3,4);commit(s,std::vector<Fr>(2,Fr(0)),rng);},"wrong witness length");
  rejects([&]{auto p=pp;p.suite="old-R6-PC";validate(p);},"wrong suite");
  rejects([&]{auto p=pp;p.columns[0]=p.scalar;validate(p);},"wrong generator");
+ need(mcl::bn::setMapToMode(MCL_MAP_TO_MODE_TRY_AND_INC),"test map mode setup");
+ rejects([&]{parameters(4);},"wrong generator derivation map mode");
+ need(mcl::bn::setMapToMode(MCL_MAP_TO_MODE_ORIGINAL),"restore pinned map mode");
  rejects([&]{auto p=PCSpec::make("unit/W",16,16);p.layout="row-major";validate(p);},"wrong layout");
  rejects([&]{auto p=PCSpec::make("unit/W",16,16);p.rows=8;validate(p);},"wrong rows/columns");
  rejects([&]{PCSpec::make("Master-disabled",16642424,16777216);},"full Master cryptography remains resource gated");
@@ -23,6 +27,13 @@ int main(){try{
  auto hidden=hide(std::string(64,'a'),"batch-a/secret",Fr(0),rng);
  rejects([&]{validate(hidden.handle,std::string(64,'b'),"batch-a/secret");},"cross-session hidden handle");
  rejects([&]{validate(hidden.handle,std::string(64,'a'),"batch-b/secret");},"cross-batch hidden handle");
+ struct NoWire:IO{bool prover()const override{return false;}std::string session()const override{return std::string(64,'a');}Bytes message(const std::string&,const Bytes&)override{throw std::runtime_error("unexpected wire operation");}Fr coin(const std::string&)override{throw std::runtime_error("unexpected coin");}Digest prefix()const override{return {};}}noWire;
+ Relations vacuous;vacuous.role="vacuous";vacuous.handles={hidden.handle};vacuous.linear={{Fr(0)}};bool emptyRejected=false;
+ try{sigma(noWire,vacuous,nullptr,nullptr);}catch(const std::exception&e){emptyRejected=std::string(e.what())=="R7 Sigma vacuous relation rejected";}
+ check(emptyRejected,"vacuous linear relation rejected before interaction");
+ std::vector<Query>overfull(5,Query{std::vector<Fr>(4,Fr(0)),hidden.handle});
+ rejects([&]{opening(noWire,zero.public_pc,overfull,nullptr,nullptr,nullptr);},"H-PC K greater than4 rejected");
+ check(decodePoint(Bytes(32,0)).isZero(),"canonical identity point is valid");
  auto context=zkgpt::r7::buildR6Context(std::string(64,'a'));
  auto statement=zkgpt::r7::makeStatement(context,std::vector<Fr>(32768,Fr(0)),std::vector<Fr>(32768,Fr(0)));
  zkgpt::r7::R7Proof offline;offline.statement_digest=r1::hash(zkgpt::r7::R7Wire::encodeStatement(statement));

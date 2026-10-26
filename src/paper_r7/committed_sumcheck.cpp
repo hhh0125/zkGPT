@@ -8,11 +8,15 @@ Hidden exchangeHandle(IO&io,const std::string&role,const Fr&value,Random*rng,con
 std::vector<Fr> selector(std::size_t index,std::size_t n){std::vector<Fr>r;for(unsigned i=0;i<r1::log2exact(n);++i)r.push_back(Fr((index>>i)&1));return r;}
 std::vector<Fr> polynomial(const std::vector<std::vector<Fr>>&f){std::vector<Fr>out(f.size()+1,Fr(0));for(std::size_t j=0;j<f[0].size()/2;++j){std::vector<Fr>p{Fr(1)};for(auto&v:f){std::vector<Fr>q(p.size()+1,Fr(0));for(std::size_t k=0;k<p.size();++k){q[k]+=p[k]*v[2*j];q[k+1]+=p[k]*(v[2*j+1]-v[2*j]);}p=std::move(q);}for(std::size_t k=0;k<p.size();++k)out[k]+=p[k];}return out;}
 }
-void openingExample(IO&io,std::size_t n,const PCSecret*secret,Random*rng,bool wrong){
+void openingExample(IO&io,std::size_t n,const PCSecret*secret,Random*rng,bool wrong,std::size_t count){
  PC pc;Bytes b;if(io.prover())b=encode(secret->public_pc);b=io.message("local-opening/PC",b);pc=decodePC(b);auto expected=PCSpec::make("local-opening/W",n,n);need(pc.spec.role==expected.role && pc.spec.actual==n && pc.spec.padded==n,"R7 opening expected PC shape");
- std::vector<Fr>point;for(unsigned i=0;i<r1::log2exact(n);++i)point.push_back(io.coin("local-opening/query/"+std::to_string(i)));
- auto h=exchangeHandle(io,"local-opening/hidden-evaluation",io.prover()?r1::mle(secret->values,point)+Fr(wrong?1:0):Fr(0),rng);
- std::vector<Query>queries{{point,h.handle}};std::vector<Hidden>w{h};opening(io,pc,queries,secret,io.prover()?&w:nullptr,rng);
+ std::vector<Query>queries;std::vector<Hidden>w;need(count>=1 && count<=4,"R7 opening example K bound");
+ for(std::size_t k=0;k<count;++k){
+  std::vector<Fr>point;for(unsigned i=0;i<r1::log2exact(n);++i)point.push_back(io.coin("local-opening/query/"+std::to_string(k)+"/"+std::to_string(i)));
+  auto h=exchangeHandle(io,"local-opening/hidden-evaluation/"+std::to_string(k),io.prover()?r1::mle(secret->values,point)+Fr(wrong?1:0):Fr(0),rng);
+  queries.push_back({point,h.handle});w.push_back(h);
+ }
+ opening(io,pc,queries,secret,io.prover()?&w:nullptr,rng);
 }
 void committedSumcheck(IO&io,const SumcheckInput&s,const PCSecret*secret,Random*rng,const std::string&attack){
  need((s.degree==2 || s.degree==3) && s.n && !(s.n&(s.n-1)) && s.n<=1024 && s.target<s.pc.spec.actual,"R7 committed Sumcheck dimensions");

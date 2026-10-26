@@ -12,7 +12,7 @@ R7Statement makeStatement(const R7Context&c,std::vector<Fr>x,std::vector<Fr>y){
 namespace {
 bool digestString(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
 bool signed64(const Fr&x){Fr limit=Fr(1);for(unsigned i=0;i<63;++i)limit*=Fr(2);return x<limit || -x<=limit;}
-Result unavailable(Component c){return {Code::Unimplemented,c,std::string(name(c))+" cryptographic backend not connected"};}
+Result unavailable(Component c){return {Code::Unimplemented,c,std::string(name(c))+" offline verification unavailable; local research requires live independent verifier state"};}
 // A single explicit unavailable backend implements the reserved interfaces.
 // There is no caller-controlled 'verified' bit and no success fallback.
 class PendingCrypto final:public R7Commitment,public R7HiddenScalar,public R7Opening,public R7CommittedSumcheck,public R7GKR,public R7Memory,public R7MappedInput {

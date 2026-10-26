@@ -17,12 +17,13 @@ Result research(c::IO&io,const std::string&mode,std::size_t n,const std::string&
   if(attack=="bad-linear")v[2]+=Fr(1);
   if(attack=="bad-mul")v[3]+=Fr(1);
   std::vector<c::Hidden>w;for(unsigned k=0;k<4;++k)w.push_back(scalarMessage(io,"linear-product/h/"+std::to_string(k),v[k],random));
+  if(io.prover() && attack=="swap-sigma-identities")std::swap(w[0],w[1]);
   c::Relations rel;rel.role="local-linear-product";for(auto&h:w)rel.handles.push_back(h.handle);rel.linear={{Fr(1),Fr(1),Fr(-1),Fr(0)}};rel.products={{0,1,3}};c::sigma(io,rel,io.prover()?&w:nullptr,random);
- }else if(mode=="opening" || mode=="opening-zero"){
+ }else if(mode=="opening" || mode=="opening-zero" || mode=="opening2"){
   c::need(n>=16 && n<=1024,"R7 bounded opening size");c::PCSecret secret;
   if(io.prover()){std::vector<Fr>w(n,Fr(0));if(mode!="opening-zero")for(std::size_t j=0;j<n;++j)w[j]=Fr(j%19)-Fr(9);secret=c::commit(c::PCSpec::make("local-opening/W",n,n),w,rng);}
   if(io.prover() && attack=="wrong-pc")secret.public_pc.rows[0]+=c::parameters(1).scalar;
-  c::openingExample(io,n,io.prover()?&secret:nullptr,random,attack=="bad-opening");
+  c::openingExample(io,n,io.prover()?&secret:nullptr,random,attack=="bad-opening",mode=="opening2"?2:1);
  }else{
   c::need(mode=="sumcheck2" || mode=="sumcheck3" || mode=="sumcheck-zero" || mode=="real-FC0","R7 unsupported local interactive mode");
   bool real=mode=="real-FC0";std::size_t degree=mode=="sumcheck3"?3:2;if(real)n=1024;else c::need(n && n<=256 && !(n&(n-1)),"R7 bounded Sumcheck size");

@@ -6,9 +6,9 @@
 namespace zkgpt::r7::crypto {
 void need(bool ok,const char*m){if(!ok)throw std::runtime_error(m);}
 namespace {
-void curve(){need(mcl::bn::BN::param.cp.curveType==MCL_BN254 && Fr::getModulo()==r1::kModulus && mcl::bn::Fp::getModulo()=="16798108731015832284940804142231733909889187121439069848933715426072753864723" && G1::a_.isZero() && G1::b_==G1::Fp(2) && !G1::Fp::isETHserialization() && G1::getSerializedByteSize()==32,"R7 exact MCL BN254 curve/encoding required");}
+void curve(){need(mcl::bn::BN::param.cp.curveType==MCL_BN254 && Fr::getModulo()==r1::kModulus && mcl::bn::Fp::getModulo()=="16798108731015832284940804142231733909889187121439069848933715426072753864723" && G1::order_==Fr::getOp().mp && G1::a_.isZero() && G1::b_==G1::Fp(2) && !G1::Fp::isETHserialization() && G1::getSerializedByteSize()==32 && mcl::bn::getMapToMode()==MCL_MAP_TO_MODE_ORIGINAL,"R7 exact MCL BN254 curve/encoding/map mode required");}
 void group(const G1&p){curve();need(p.isValid() && p.isValidOrder(),"R7 invalid curve/subgroup point");}
-G1 derive(const std::string&role){G1 p;mcl::bn::hashAndMapToG1(p,std::string(suite)+"/mcl-hashAndMapToG1/"+role);group(p);need(!p.isZero(),"R7 identity generator");return p;}
+G1 derive(const std::string&role){G1 p;mcl::bn::hashAndMapToG1(p,std::string(suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/"+role);group(p);need(!p.isZero(),"R7 identity generator");return p;}
 const Parameters& trusted(std::size_t n){curve();need(n && n<=64 && !(n&(n-1)),"R7 generator dimension bound");static std::map<std::size_t,Parameters>cache;auto it=cache.find(n);if(it!=cache.end())return it->second;Parameters p;p.scalar=derive("output/G");p.hiding=derive("blind/H");for(std::size_t i=0;i<n;++i)p.columns.push_back(derive("column/"+std::to_string(i)));auto all=p.columns;all.push_back(p.scalar);all.push_back(p.hiding);for(std::size_t i=0;i<all.size();++i)for(std::size_t j=0;j<i;++j)need(all[i]!=all[j] && all[i]!=-all[j],"R7 generator collision");return cache.emplace(n,std::move(p)).first->second;}
 void spec(Writer&w,const PCSpec&s){w.text(s.suite);w.text(s.role);w.text(s.layout);for(auto n:{s.actual,s.padded,s.rows,s.columns})w.number(n,8);}
 }

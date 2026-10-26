@@ -3,6 +3,9 @@
 namespace zkgpt::r7::crypto {
 void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  need(!s.handles.empty() && s.handles.size()<=64 && s.linear.size()<=32 && s.products.size()<=4,"R7 Sigma relation bound");
+ bool effective=!s.products.empty();
+ for(const auto&line:s.linear){need(line.size()==s.handles.size(),"R7 linear relation dimension");for(const auto&a:line){need(a.isValid(),"R7 invalid relation scalar");effective=effective || !a.isZero();}}
+ need(effective,"R7 Sigma vacuous relation rejected");
  Writer statement;statement.text(s.role);auto parent=io.prefix();statement.raw(Bytes(parent.begin(),parent.end()));statement.number(s.handles.size());std::set<std::string>roles;
  for(auto&h:s.handles){validate(h,io.session(),h.role);need(roles.insert(h.role).second,"R7 Sigma duplicate handle role");auto b=encode(h);statement.number(b.size());statement.raw(b);}
  statement.number(s.linear.size());for(auto&line:s.linear){need(line.size()==s.handles.size(),"R7 linear relation dimension");for(auto&a:line)statement.scalar(a);}

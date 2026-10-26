@@ -8,5 +8,5 @@ void sigma(IO&,const Relations&,const std::vector<Hidden>*,Random*);
 struct SumcheckInput{PC pc;std::size_t n=0,degree=0,target=0;std::string role;};
 // Complete reduction + independent endpoint/product batch + same-handle openings.
 void committedSumcheck(IO&,const SumcheckInput&,const PCSecret*,Random*,const std::string&attack="");
-void openingExample(IO&,std::size_t n,const PCSecret*,Random*,bool wrong_evaluation=false);
+void openingExample(IO&,std::size_t n,const PCSecret*,Random*,bool wrong_evaluation=false,std::size_t queries=1);
 }

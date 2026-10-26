@@ -66,9 +66,13 @@ finally:
  result['binary_sha256']={name:hashlib.sha256((ROOT/'build/release/src/paper_r7'/name).read_bytes()).hexdigest() for name in ['r7_framework_tests','r7_crypto_tests','r7_local_prover','r7_local_verifier','r7_oneblock_prove','r7_oneblock_verify'] if (ROOT/'build/release/src/paper_r7'/name).exists()}
  cache=ROOT/'build/release/CMakeCache.txt'
  result['cmake_cache_sha256']=hashlib.sha256(cache.read_bytes()).hexdigest() if cache.exists() else None
- dependencies=[ROOT/'deps/cnpy/lib/libcnpy.a',ROOT/'deps/cnpy/include/cnpy.h',*list((ROOT/'build/release/lib').glob('*mcl*.a'))]
+ dependencies=[ROOT/'deps/cnpy/lib/libcnpy.a',ROOT/'deps/cnpy/include/cnpy.h',ROOT/'3rd/mcl/include/mcl/bn.hpp',*list((ROOT/'build/release/lib').glob('*mcl*'))]
  result['dependency_sha256']={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in dependencies if p.is_file()}
  result['mcl_submodule_commit']=subprocess.run(['git','-C','3rd/mcl','rev-parse','HEAD'],capture_output=True,text=True).stdout.strip()
+ for name in ['r7_local_prover','r7_local_verifier']:
+  binary=ROOT/'build/release/src/paper_r7'/name
+  if binary.exists():
+   (stage/(name+'-ldd.log')).write_text(subprocess.run(['ldd',str(binary)],capture_output=True,text=True).stdout)
  (stage/'RESULT.json').write_text(json.dumps(result,indent=2))
  print('RESULT',result['status'],flush=True)
 sys.exit(0 if result['status'] in ['LOCAL_CRYPTO_TESTED','BUILD_ONLY'] else 1)

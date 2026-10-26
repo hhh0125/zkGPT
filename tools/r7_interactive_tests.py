@@ -32,12 +32,16 @@ def run(mode,n,attack='',reason=None):
  if not ok:raise RuntimeError(name+' '+text+' '+ppath.read_text())
 for n in [16,64,256,1024]:run('opening',n)
 run('opening-zero',64);run('sigma',16);run('sigma-zero',16)
+run('opening2',64)
 run('sumcheck2',16);run('sumcheck3',16);run('sumcheck-zero',16)
+run('sumcheck2',1);run('sumcheck3',1)
 for mode,attack,reason in [
  ('opening','bad-opening','opening masked evaluation equation failed'),
  ('opening','wrong-pc','response IPA terminal equation failed'),
  ('sigma','bad-mul','product Sigma multiplication equation failed'),
  ('sigma','bad-linear','compressed linear relation failed'),
+ ('sigma','sigma-challenge','Sigma representation equation failed'),
+ ('sigma','swap-sigma-identities','public statement/parent binding mismatch'),
  ('sigma','blind-response','product Sigma multiplication equation failed'),
  ('sumcheck2','bad-recursion','compressed linear relation failed'),
  ('sumcheck2','bad-mul','compressed linear relation failed'),
