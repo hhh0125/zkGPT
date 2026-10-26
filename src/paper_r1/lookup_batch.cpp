@@ -44,14 +44,16 @@ std::size_t mul(std::size_t a,std::size_t b) {
     require(!a || b<=std::numeric_limits<std::size_t>::max()/a,"lookup resource overflow");return a*b;
 }
 }
-LookupResources planLookupBatch(const LookupBatchSpec &s) {
+LookupResources planLookupBatch(const LookupBatchSpec &s,std::size_t checked_input_padded) {
+    if(checked_input_padded)log2exact(checked_input_padded); // validates power of two and field-domain cap
     s.validate();LookupResources p;
     p.max_generators=s.input.master.spec.columns;
     p.max_sumcheck_rounds=log2exact(s.input.master.spec.padded);
-    std::size_t retained=0,lookup_peak=0;
+    std::size_t retained=0,lookup_peak=0,max_child=0;
     for (const auto &c:s.input.children) {
         const auto &pc=c.commitment.spec;p.query_elements=add(p.query_elements,pc.padded);
         retained=add(retained,mul(pc.padded,sizeof(Fr)));
+        max_child=std::max(max_child,mul(pc.padded,sizeof(Fr)));
         p.max_generators=std::max(p.max_generators,pc.columns);
         p.max_sumcheck_rounds=std::max(p.max_sumcheck_rounds,std::size_t(log2exact(pc.padded)));
     }
@@ -72,9 +74,15 @@ LookupResources planLookupBatch(const LookupBatchSpec &s) {
         p.max_generators=std::max(p.max_generators,std::size_t(128));
         p.max_sumcheck_rounds=std::max(p.max_sumcheck_rounds,std::size_t(13));
     }
-    // Master witness + kernel + sumcheck copies, accounting for initializers
-    // and vector capacity retained during folds. No arbitrary size increase.
-    const auto master_peak=mul(mul(s.input.master.spec.padded,8),sizeof(Fr));
+    // Mapped input: immutable master, moved kernel and one folding-witness
+    // copy = three master buffers. Budget four, keeping a full extra master
+    // for allocator/lifetime slack. Kernel construction has one temporary
+    // child or checked-input equality vector; include unusually large domains.
+    // No initializer_list copies and no gathered-child validation temporary.
+    const auto master_bytes=mul(s.input.master.spec.padded,sizeof(Fr));
+    const auto master_peak=std::max(mul(master_bytes,4),add(mul(master_bytes,2),std::max(max_child,mul(checked_input_padded,sizeof(Fr)))));
+    p.retained_query_bytes=retained;p.local_lookup_workspace_bytes=lookup_peak;
+    p.mapped_input_workspace_bytes=master_peak;
     p.estimated_prover_bytes=add(retained,std::max(lookup_peak,master_peak));
     return p;
 }
@@ -83,17 +91,21 @@ void requireLookupBudget(const LookupBatchSpec &s,std::size_t bytes) {
 }
 #ifndef R1_VERIFY_ONLY
 LookupBatchProof proveLookupLocals(const LookupBatchSpec &s,
-    const std::vector<std::vector<Fr>> &children,Fs &t) {
+    const std::vector<std::vector<Fr>> &children,Fs &t,const LookupProgress &progress) {
     appendLookupBatch(s,t);require(children.size()==s.input.children.size(),"lookup witness shape");
     LookupBatchProof p;
     for (std::size_t j=0;j<s.ranges.size();++j) {
+        if(progress)progress("range/"+std::to_string(j)+"/begin");
         auto r=rangeSpec(s,j);auto k=s.ranges[j].child;
         p.ranges.push_back(proveRange(r,s.input.children[k].commitment,children[k],t));
+        if(progress)progress("range/"+std::to_string(j)+"/end");
     }
     for (std::size_t j=0;j<s.exps.size();++j) {
+        if(progress)progress("exp/"+std::to_string(j)+"/begin");
         const auto &e=s.exps[j];
         p.exps.push_back(proveExp(expSpec(s,j),s.input.children[e.index_child].commitment,
             s.input.children[e.value_child].commitment,children[e.index_child],children[e.value_child],t));
+        if(progress)progress("exp/"+std::to_string(j)+"/end");
     }
     return p;
 }
@@ -103,14 +115,19 @@ LookupBatchProof proveLookupBatch(const LookupBatchSpec &s,const std::vector<Fr>
     p.input=proveMappedInput(s.input,w,children,t);return p;
 }
 #endif
-void verifyLookupLocals(const LookupBatchSpec &s,const LookupBatchProof &p,Fs &t) {
+void verifyLookupLocals(const LookupBatchSpec &s,const LookupBatchProof &p,Fs &t,const LookupProgress &progress) {
     appendLookupBatch(s,t);
     require(p.ranges.size()==s.ranges.size() && p.exps.size()==s.exps.size(),"lookup proof obligation count");
-    for (std::size_t j=0;j<s.ranges.size();++j)
+    for (std::size_t j=0;j<s.ranges.size();++j) {
+        if(progress)progress("range/"+std::to_string(j)+"/begin");
         verifyRange(rangeSpec(s,j),s.input.children[s.ranges[j].child].commitment,p.ranges[j],t);
+        if(progress)progress("range/"+std::to_string(j)+"/end");
+    }
     for (std::size_t j=0;j<s.exps.size();++j) {
+        if(progress)progress("exp/"+std::to_string(j)+"/begin");
         const auto &e=s.exps[j];verifyExp(expSpec(s,j),s.input.children[e.index_child].commitment,
             s.input.children[e.value_child].commitment,p.exps[j],t);
+        if(progress)progress("exp/"+std::to_string(j)+"/end");
     }
 }
 void verifyLookupBatch(const LookupBatchSpec &s,const LookupBatchProof &p,Fs &t) {

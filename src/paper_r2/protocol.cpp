@@ -1,3 +1,4 @@
+#include "memory_diagnostics.hpp"
 #include "protocol.hpp"
 #include "gkr_serialization.hpp"
 #include "hyrax_opening.hpp"
@@ -52,43 +53,52 @@ std::vector<r1::CheckedInputClaim> mappedClaims(const layeredCircuit &c,const st
 }
 #ifndef R1_VERIFY_ONLY
 Proof proveR2(::prover &pr,GKRPublicStatement &g,
-    const r1::LookupBatchSpec &s,const std::vector<Fr> &w,const std::vector<std::vector<Fr>> &children) {
+    const r1::LookupBatchSpec &s,const std::vector<Fr> &w,const std::vector<std::vector<Fr>> &children,const r1::LookupProgress &progress) {
     r1::Fs t("zkGPT.paper-r2.GKR-Lasso-consistency.v3");context(pr.C,g,s,t);
-    Proof p;p.lookup=r1::proveLookupLocals(s,children,t);
+    Proof p;p.lookup=r1::proveLookupLocals(s,children,t,progress);
     g.integration_context=t.digest();
     r1::require(g.integration_context!=std::array<std::uint8_t,32>{},"R2 zero GKR context");
+    if(progress)progress("gkr/begin");
     GKRProofBuilder builder(&pr,pr.C,g.model_shape,g.val0_generator_domain,nullptr,&g.integration_context);
+    r1::require(&builder.C==&pr.C,"GKR builder must borrow actual circuit");
+    zkgpt::memory_diagnostics::logAddress("gkr/builder-created","builder_C_ref",&builder.C,0,"borrowed-prover.C");
+    zkgpt::memory_diagnostics::logAddress("gkr/builder-created","master_readonly",w.data(),w.capacity()*sizeof(Fr),"caller-const-ref");
     builder.build();p.gkr=builder.proof();
     const auto &actual=builder.publicStatement();
     r1::require(initializeGKRTranscript(g,g.circuit_fingerprint).stateDigest()==
         initializeGKRTranscript(actual,actual.circuit_fingerprint).stateDigest() &&
         g.output_evaluation==actual.output_evaluation,"R2 GKR prover statement mismatch");
     const auto claims=checkedGkr(pr.C,g,p.gkr);
+    if(progress)progress("gkr/end");
     const auto digest=r1::hash(serializeGKRProof(p.gkr));
     t.bytes("R2.gkr.verified-proof",r1::Bytes(digest.begin(),digest.end()));
+    if(progress)progress("bridge/begin");
     const auto r=r1::point(t,g.val0_log_size,"R2.common-master.point");
     p.master_binding=r1::open(s.input.master.spec,s.input.master,w,r,t,"R2.new-master");
     auto old=openingTranscript(t);const auto &gens=getGeneratorSet(g.val0_generator_domain);
     p.gkr_input_binding=hyraxMleOpenProveFrRowMajor(w,g.val0_commitment,r,gens.generators,gens.u,
         p.master_binding.value,old,"R2.GKR-master");
-    finishOpening(t,old);p.lookup.input=r1::proveMappedInput(s.input,w,children,t,mappedClaims(pr.C,claims));return p;
+    finishOpening(t,old);if(progress){progress("bridge/end");progress("input/begin");}p.lookup.input=r1::proveMappedInput(s.input,w,children,t,mappedClaims(pr.C,claims));if(progress)progress("input/end");return p;
 }
 #endif
 std::vector<GKRInputTerminalClaim> verifyR2(const layeredCircuit &circuit,const GKRPublicStatement &g,
-    const r1::LookupBatchSpec &s,const Proof &p) {
+    const r1::LookupBatchSpec &s,const Proof &p,const r1::LookupProgress &progress) {
     r1::Fs t("zkGPT.paper-r2.GKR-Lasso-consistency.v3");context(circuit,g,s,t);
-    r1::verifyLookupLocals(s,p.lookup,t);
+    r1::verifyLookupLocals(s,p.lookup,t,progress);
     r1::require(g.integration_context==t.digest() &&
         g.integration_context!=std::array<std::uint8_t,32>{},"R2 GKR challenge context");
+    if(progress)progress("gkr/begin");
     auto claims=checkedGkr(circuit,g,p.gkr);
+    if(progress)progress("gkr/end");
     const auto digest=r1::hash(serializeGKRProof(p.gkr));
     t.bytes("R2.gkr.verified-proof",r1::Bytes(digest.begin(),digest.end()));
+    if(progress)progress("bridge/begin");
     const auto r=r1::point(t,g.val0_log_size,"R2.common-master.point");
     r1::verify(s.input.master.spec,s.input.master,r,p.master_binding,t,"R2.new-master");
     auto old=openingTranscript(t);const auto &gens=getGeneratorSet(g.val0_generator_domain);std::string error;
     const bool valid=hyraxMleOpenVerifyRowMajor(g.val0_commitment,r,gens.generators,gens.u,
         p.master_binding.value,p.gkr_input_binding,old,"R2.GKR-master",&error);
     r1::require(valid,"R2 GKR master bridge: "+error);
-    finishOpening(t,old);r1::verifyMappedInput(s.input,p.lookup.input,t,mappedClaims(circuit,claims));return claims;
+    finishOpening(t,old);if(progress){progress("bridge/end");progress("input/begin");}r1::verifyMappedInput(s.input,p.lookup.input,t,mappedClaims(circuit,claims));if(progress)progress("input/end");return claims;
 }
 } // namespace zkgpt::r2

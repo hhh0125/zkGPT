@@ -2,29 +2,31 @@
 #include "utils.hpp"
 #include <stdexcept>
 
-void layeredCircuit::initSubset() 
+void layeredCircuit::initSubset(bool sparse) 
 {
-    vector<int> visited_uidx(circuit[0].size);  // whether the i-th layer, j-th gate has been visited in the current layer
-    vector<u64> subset_uidx(circuit[0].size);   // the subset index of the i-th layer, j-th gate
-    vector<int> visited_vidx(circuit[0].size);  // whether the i-th layer, j-th gate has been visited in the current layer
-    vector<u64> subset_vidx(circuit[0].size);   // the subset index of the i-th layer, j-th gate
+    vector<int> visited_uidx(sparse?0:circuit[0].size);  // whether the i-th layer, j-th gate has been visited in the current layer
+    vector<u64> subset_uidx(sparse?0:circuit[0].size);   // the subset index of the i-th layer, j-th gate
+    vector<int> visited_vidx(sparse?0:circuit[0].size);  // whether the i-th layer, j-th gate has been visited in the current layer
+    vector<u64> subset_vidx(sparse?0:circuit[0].size);   // the subset index of the i-th layer, j-th gate
     for (u32 i = 1; i < size; ++i) 
     {
         auto &cur = circuit[i], &lst = circuit[i - 1];
         bool has_pre_layer_u = circuit[i].ty == layerType::FFT || circuit[i].ty == layerType::IFFT;
         bool has_pre_layer_v = false;
+        std::unordered_map<u32,u64> sparse_u,sparse_v;
+        auto mapped=[&](u32 index,bool v){
+            if(index>=circuit[0].size)throw std::out_of_range("subset master coordinate");
+            auto &ids=v?cur.ori_id_v:cur.ori_id_u;auto &count=v?cur.size_v[0]:cur.size_u[0];
+            if(sparse){auto &m=v?sparse_v:sparse_u;auto it=m.find(index);if(it!=m.end())return it->second;
+                auto value=u64(count++);ids.push_back(index);m.emplace(index,value);return value;}
+            auto &visited=v?visited_vidx:visited_uidx;auto &subset=v?subset_vidx:subset_uidx;
+            if(visited[index]!=i){visited[index]=i;subset[index]=count++;ids.push_back(index);}return subset[index];
+        };
         for (auto &gate: cur.uni_gates) 
         {
             if (!gate.lu) 
             {
-                if (visited_uidx[gate.u] != i) 
-                {
-                    visited_uidx[gate.u] = i;
-                    subset_uidx[gate.u] = cur.size_u[0];
-                    cur.ori_id_u.push_back(gate.u);
-                    ++cur.size_u[0];
-                }
-                gate.u = subset_uidx[gate.u];
+                gate.u = mapped(gate.u,false);
             }
             has_pre_layer_u |= (gate.lu != 0);
         }
@@ -32,22 +34,10 @@ void layeredCircuit::initSubset()
         {
             if (!gate.getLayerIdU(i)) 
             {
-                if (visited_uidx[gate.u] != i) {
-                    visited_uidx[gate.u] = i;
-                    subset_uidx[gate.u] = cur.size_u[0];
-                    cur.ori_id_u.push_back(gate.u);
-                    ++cur.size_u[0];
-                }
-                gate.u = subset_uidx[gate.u];
+                gate.u = mapped(gate.u,false);
             }
             if (!gate.getLayerIdV(i)) {
-                if (visited_vidx[gate.v] != i) {
-                    visited_vidx[gate.v] = i;
-                    subset_vidx[gate.v] = cur.size_v[0];
-                    cur.ori_id_v.push_back(gate.v);
-                    ++cur.size_v[0];
-                }
-                gate.v = subset_vidx[gate.v];
+                gate.v = mapped(gate.v,true);
             }
             has_pre_layer_u |= (gate.getLayerIdU(i) != 0);
             has_pre_layer_v |= (gate.getLayerIdV(i) != 0);

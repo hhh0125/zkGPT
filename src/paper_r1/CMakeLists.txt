@@ -90,3 +90,19 @@ set_tests_properties(r2_sparse_verifier PROPERTIES TIMEOUT 40 ENVIRONMENT "PYTHO
 add_executable(r2_exp_profile_tests tests_exp_profile.cpp)
 target_link_libraries(r2_exp_profile_tests PRIVATE paper_r1)
 add_test(NAME r2_exp_profile COMMAND r2_exp_profile_tests)
+
+add_executable(r6b_memory_ownership_tests tests_memory_ownership.cpp)
+target_link_libraries(r6b_memory_ownership_tests PRIVATE paper_r1)
+add_test(NAME r6b_memory_ownership COMMAND r6b_memory_ownership_tests 16 enforce enforce-calls check-plan)
+
+add_executable(opt2_span_bounds_tests tests_opt2_span_bounds.cpp)
+target_link_libraries(opt2_span_bounds_tests PRIVATE paper_r1)
+add_test(NAME opt2_span_bounds COMMAND opt2_span_bounds_tests)
+
+add_executable(p0a_g1_validation_tests tests_g1_validation.cpp)
+target_link_libraries(p0a_g1_validation_tests PRIVATE paper_r1)
+add_test(NAME p0a_g1_validation COMMAND p0a_g1_validation_tests)
+
+add_executable(p0b_kernel_tests tests_mapped_kernel.cpp)
+target_link_libraries(p0b_kernel_tests PRIVATE paper_r1)
+add_test(NAME p0b_mapped_kernel COMMAND p0b_kernel_tests)

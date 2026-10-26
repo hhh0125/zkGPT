@@ -1,0 +1,8 @@
+#include "r6_trust.hpp"
+#include "paper_r1/wire.hpp"
+#include <iostream>
+using namespace zkgpt;
+template<class F>void reject(F f){bool rejected=false;try{f();}catch(...){rejected=true;}r1::require(rejected,"R6 trust accepted invalid metadata");}
+int main(){try{r1::init();const std::string manifest="reports/R6A/full12-model-manifest-v1.txt",anchor="reports/R6A/full12-operator-trust-v1.anchor",pin="754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306";auto b=r1::readFile(manifest);auto m=r6::parseManifest(b,12);r1::require(m.parameters.size()==120,"full12 manifest coverage");
+ r2::ModelQueryPlan p;p.r5b_candidate=true;p.r6_engineering=true;p.shape.layer_count=12;p.circuit_id="ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7";p.sources.push_back({r1::PCSpec::make("r2/model/W",163749888,268435456,r1::Layout::ColumnMajor),{}});auto a=r6::loadAnchor(anchor,pin,manifest,p);r1::require(a.w.rows.size()==16384,"full12 deterministic W rows");
+ reject([&]{r6::loadAnchor(anchor,std::string(64,'0'),manifest,p);});reject([&]{r6::loadAnchor(anchor,"",manifest,p);});reject([&]{r6::parseManifest(b,1);});auto truncated=b;truncated.resize(70);reject([&]{r6::parseManifest(truncated,12);});auto ab=r1::readFile(anchor);r1::require(ab.size()>1024*1024 && ab.size()<2*1024*1024,"full12 anchor realistic size");reject([&]{r5b::decodeAnchor(ab);});ab.resize(ab.size()-70);reject([&]{r5b::decodeAnchor(ab,"ZKGPT-R6-OPERATOR-ANCHOR-v1",2*1024*1024);});std::cout<<"PASS R6 version/profile/block/pin/truncation bounds and16384-row anchor, no W field allocation\n";return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

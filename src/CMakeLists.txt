@@ -151,3 +151,32 @@ add_test(NAME r2_gkr_terminals COMMAND r2_gkr_terminal_tests)
 # R2 reuses existing production GKR and R1 lookup primitives.
 add_subdirectory(paper_r1)
 add_subdirectory(paper_r2)
+
+add_executable(r5a_host_tests main_r5a_host_tests.cpp)
+target_link_libraries(r5a_host_tests PRIVATE paper_r2)
+foreach(mode counter round wide-gelu minimum missing codec arithmetic construct-boundaries wide-ln search-boundary input-config)
+ add_test(NAME r5a_host_${mode} COMMAND r5a_host_tests ${mode})
+endforeach()
+
+add_executable(r5b_tests main_r5b_tests.cpp)
+target_link_libraries(r5b_tests PRIVATE paper_r2)
+
+foreach(mode round round-boundaries attention attention-boundaries ln ln-boundaries gelu gelu-boundaries arithmetic)
+ add_test(NAME r5b_${mode} COMMAND r5b_tests ${mode})
+endforeach()
+
+add_test(NAME r5b_public_layout COMMAND r5b_tests public-layout)
+
+add_executable(r5b_gkr_tests main_r5b_gkr_tests.cpp)
+target_link_libraries(r5b_gkr_tests PRIVATE paper_r2)
+add_test(NAME r5b_FC_GKR_coupling COMMAND r5b_gkr_tests)
+
+add_executable(opt2_ownership_tests main_opt2_ownership_tests.cpp)
+target_link_libraries(opt2_ownership_tests PRIVATE gpt_lib gkr_test_support)
+add_test(NAME opt2_shared_ownership COMMAND opt2_ownership_tests)
+
+add_executable(opt2_allocation_tests main_opt2_allocation_tests.cpp)
+target_link_libraries(opt2_allocation_tests PRIVATE gpt_lib gkr_test_support)
+add_test(NAME opt2_master_allocation COMMAND opt2_allocation_tests)
+
+add_test(NAME opt2_postpublication_diagnostic_failure COMMAND opt2_allocation_tests --postpublish)

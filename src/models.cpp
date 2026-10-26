@@ -3,6 +3,7 @@
 //
 
 #include <tuple>
+#include <stdexcept>
 #include <iostream>
 #include "models.hpp"
 #include "utils.hpp"
@@ -14,6 +15,8 @@
 LLM::LLM(int depth, int headnum, int headdim, int attn_dim, int linear_dim):
     neuralNetwork(0,0,0,0, "./data/vgg11/vgg11.cifar.relu-1-images-weights-qint8.csv", "", "", true, headnum, headdim, attn_dim, linear_dim)
 {
+    if(depth<1 || depth>12 || headnum<=0 || headdim<=0 || attn_dim<=0 || attn_dim>1024 || linear_dim<=0 || linear_dim>4096 || static_cast<i64>(headnum)*headdim!=attn_dim)
+        throw std::invalid_argument("LLM shape exceeds host storage/resource bounds");
     // The circuit operates on the protocol's power-of-two padded sequence.
     len=32;
     pic_parallel=1;

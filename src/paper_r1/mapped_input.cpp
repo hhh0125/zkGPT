@@ -1,4 +1,5 @@
 #include "mapped_input.hpp"
+#include <algorithm>
 namespace zkgpt::r1 {
 void MappedInputSpec::validate() const {
     master.spec.validate();
@@ -73,7 +74,7 @@ Fr prefixWeight(const std::vector<Fr> &r,std::size_t end) {
 // Binary addition carries and comparison with count give a constant-size
 // digit DP. Complexity depends on dimensions/spans, not their scalar count,
 // including odd offsets where dyadic common-alignment splitting degenerates.
-Fr spanKernel(const std::vector<Fr> &child,std::size_t child_start,
+Fr spanKernelDP(const std::vector<Fr> &child,std::size_t child_start,
     const std::vector<Fr> &master,std::size_t source_start,std::size_t count) {
     const unsigned d=std::max(child.size(),master.size());
     std::array<std::array<std::array<Fr,3>,2>,2> state{};
@@ -100,6 +101,102 @@ Fr spanKernel(const std::vector<Fr> &child,std::size_t child_start,
     }
     return state[0][0][0];
 }
+// Diagnostic hooks are absent from normal builds; no mutable cache is global.
+#ifndef P0B_KERNEL_HIT
+#define P0B_KERNEL_HIT(kind) ((void)0)
+#endif
+#ifndef P0B_KERNEL_CACHE
+#define P0B_KERNEL_CACHE(bytes) ((void)0)
+#endif
+class EqWeights {
+    std::vector<Fr> point_,low_,high_;
+    unsigned split_=0;
+public:
+    explicit EqWeights(const std::vector<Fr> &p) {
+        require(p.size()<=28,"mapped equality dimension");
+        point_=p; // Own exact coordinates: no address key, alias, or stale view.
+        split_=unsigned(point_.size()/2);
+        low_=weights(std::vector<Fr>(point_.begin(),point_.begin()+split_));
+        high_=weights(std::vector<Fr>(point_.begin()+split_,point_.end()));
+    }
+    const std::vector<Fr> &point() const {return point_;}
+    std::size_t domain() const {return std::size_t(1)<<point_.size();}
+    std::size_t storageBytes() const {return (low_.capacity()+high_.capacity())*sizeof(Fr);}
+    Fr at(std::size_t index) const {
+        if(index>=domain())require(false,"mapped equality index");
+        return low_[index&(low_.size()-1)]*high_[index>>split_];
+    }
+    Fr above(std::size_t index,unsigned first_bit) const {
+        if(first_bit==0)return eqIndex(point_,index);
+        Fr out=1;
+        for(unsigned bit=first_bit;bit<point_.size();++bit)
+            out*=((index>>bit)&1)?point_[bit]:Fr(1)-point_[bit];
+        return out;
+    }
+};
+class SpanEvaluator {
+    const EqWeights child_;
+    const EqWeights &master_;
+    std::vector<Fr> low_pair_;
+public:
+    SpanEvaluator(const std::vector<Fr>&child,const EqWeights &master)
+        :child_(child),master_(master) {
+        const auto n=std::min(child_.point().size(),master_.point().size());
+        low_pair_.assign(n+1,Fr(1));
+        for(unsigned bit=0;bit<n;++bit) {
+            const auto &a=child_.point()[bit],&b=master_.point()[bit];
+            low_pair_[bit+1]=low_pair_[bit]*((Fr(1)-a)*(Fr(1)-b)+a*b);
+        }
+        P0B_KERNEL_CACHE(child_.storageBytes()+master_.storageBytes());
+    }
+    Fr value(std::size_t child_start,std::size_t source_start,std::size_t count) const {
+        if(count==0){P0B_KERNEL_HIT(contiguous);return Fr(0);}
+        const auto fallback=[&] {
+            P0B_KERNEL_HIT(fallback);
+            return spanKernelDP(child_.point(),child_start,master_.point(),source_start,count);
+        };
+        // Public append/validation already enforces these bounds. Keep the
+        // original DP behavior for unsupported private test ranges as well.
+        if(child_start>=child_.domain() || source_start>=master_.domain() ||
+           count>child_.domain()-child_start || count>master_.domain()-source_start)
+            return fallback();
+        if(count==1) {
+            P0B_KERNEL_HIT(singleton);
+            return child_.at(child_start)*master_.at(source_start);
+        }
+        constexpr std::size_t direct_limit=16,block_limit=32;
+        if(count<=direct_limit) {
+            P0B_KERNEL_HIT(contiguous);Fr out=0;
+            for(std::size_t z=0;z<count;++z)out+=child_.at(child_start+z)*master_.at(source_start+z);
+            return out;
+        }
+        if((child_start^source_start)&1)return fallback();
+        struct Block {std::size_t child,master;unsigned bits;};
+        std::array<Block,block_limit>blocks{};
+        std::size_t used=0,left=count,a=child_start,b=source_start;
+        while(left && used<block_limit) {
+            unsigned bits=0;for(auto v=left;v>1;v>>=1)++bits;
+            std::size_t step=std::size_t(1)<<bits;
+            while(step>1 && ((a|b)&(step-1))){step>>=1;--bits;}
+            blocks[used++]={a,b,bits};a+=step;b+=step;left-=step;
+        }
+        if(left)return fallback(); // Work is bounded even for bad common alignment.
+        P0B_KERNEL_HIT(contiguous);Fr out=0;
+        for(std::size_t j=0;j<used;++j) {
+            const auto &block=blocks[j];
+            out+=low_pair_[block.bits]*child_.above(block.child,block.bits)*master_.above(block.master,block.bits);
+        }
+        return out;
+    }
+};
+#ifdef P0B_KERNEL_TEST_API
+#define P0B_KERNEL_PREPARED_TESTS 1
+Fr spanKernel(const std::vector<Fr>&child,std::size_t child_start,
+    const std::vector<Fr>&master,std::size_t source_start,std::size_t count) {
+    const EqWeights cache(master);return SpanEvaluator(child,cache).value(child_start,source_start,count);
+}
+#endif
+
 struct Batch {
     std::vector<std::vector<Fr>> points;
     std::vector<Fr> lambda,public_lambda,checked_lambda,tail;
@@ -159,18 +256,21 @@ std::vector<Fr> kernel(const MappedInputSpec &s,const Batch &b,const std::vector
 #endif
 Fr kernelValue(const MappedInputSpec &s,const Batch &b,const std::vector<Fr> &r,const std::vector<CheckedInputClaim> &checked) {
     Fr out=0;
+    const EqWeights master(r); // One immutable point snapshot for this invocation.
     for (std::size_t j=0;j<s.children.size();++j) {
+        const SpanEvaluator evaluator(b.points[j],master);
         std::size_t i=0;Fr v=0;
         for (const auto &span:s.children[j].spans) {
-            v+=spanKernel(b.points[j],i,r,span.offset,span.count);
+            v+=evaluator.value(i,span.offset,span.count);
             i+=span.count;
         }
         out+=b.lambda[j]*v;
     }
     for (std::size_t j=0;j<s.public_values.size();++j)
-        out+=b.public_lambda[j]*eqIndex(r,s.public_values[j].index);
+        out+=b.public_lambda[j]*master.at(s.public_values[j].index);
     for(std::size_t j=0;j<checked.size();++j){
-        std::size_t i=0;Fr v=0;for(const auto &span:checked[j].spans){v+=spanKernel(checked[j].point,i,r,span.offset,span.count);i+=span.count;}
+        const SpanEvaluator evaluator(checked[j].point,master);
+        std::size_t i=0;Fr v=0;for(const auto &span:checked[j].spans){v+=evaluator.value(i,span.offset,span.count);i+=span.count;}
         out+=b.checked_lambda[j]*v;
     }
     // Product of two eq polynomials: sum on tail, not eq at one point.
@@ -207,13 +307,29 @@ MappedInputProof proveMappedInput(const MappedInputSpec &s,const std::vector<Fr>
         "mapped witness shape");
     MappedInputProof p;auto points=childPoints(s,t);
     for (std::size_t j=0;j<children.size();++j) {
-        require(children[j]==gatherInput(s,j,w),"mapped witness child mismatch/padding");
+        // Validate the identical affine gather and zero tail without allocating
+        // a second full child (in particular, the padded full-model W).
+        const auto &child=children[j];const auto &mapping=s.children[j];
+        require(child.size()==mapping.commitment.spec.padded,"mapped witness child mismatch/padding");
+        const std::string mismatch="mapped witness child mismatch/padding";
+        std::size_t at=0;
+        for(const auto &span:mapping.spans)
+            for(std::size_t z=0;z<span.count;++z)
+                require(child[at++]==w[span.offset+z]+span.bias,mismatch);
+        for(;at<child.size();++at)
+            require(child[at].isZero(),mismatch);
         const auto &c=s.children[j].commitment;
         p.children.push_back(open(c.spec,c,children[j],points[j],t,"mapped.child/"+std::to_string(j)));
     }
     auto b=batch(s,p,points,t,checked);auto k=kernel(s,b,checked);
     require(dot(k,w)==b.claim,"mapped witness public values/master padding");
-    auto end=proveSumcheck({k,w},2,[](const auto &v){return v[0]*v[1];},p.sumcheck,t,"mapped.input");
+    // An initializer_list owns const vectors and copies both factors again.
+    // Transfer the kernel and retain only the one immutable-witness working
+    // copy required by the existing in-place Sumcheck folds. The factor order,
+    // polynomial messages and transcript are unchanged.
+    std::vector<std::vector<Fr>> factors;factors.reserve(2);
+    factors.emplace_back(std::move(k));factors.emplace_back(w);
+    auto end=proveSumcheck(std::move(factors),2,[](const auto &v){return v[0]*v[1];},p.sumcheck,t,"mapped.input");
     p.master=open(s.master.spec,s.master,w,end.point,t,"mapped.master");
     return p;
 }

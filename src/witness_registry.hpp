@@ -76,6 +76,12 @@ struct RegisteredExpQuery { std::size_t operator_id, query_id, t_witness_index, 
 
 class WitnessRegistry {
 public:
+    void setR4NumericalCandidate(bool enabled) { r4_candidate_=enabled; }
+    bool r4NumericalCandidate() const { return r4_candidate_; }
+    void setR5BEngineeringCandidate(bool enabled) { r5b_candidate_=enabled; }
+    void setR6Engineering(bool enabled) { r6_engineering_=enabled; }
+    bool r6Engineering() const { return r6_engineering_; }
+    bool r5bEngineeringCandidate() const { return r5b_candidate_; }
     void addExpQueries(std::size_t op,std::size_t to,std::size_t eo,std::size_t count) {
         if (!exp_queries_.empty() && exp_queries_.back().operator_id>=op)
             throw std::logic_error("duplicate or unordered exp operator");
@@ -155,9 +161,14 @@ public:
         constraints_.clear();
         exp_queries_.clear();
         shape_ = WitnessShape{};
+        r4_candidate_ = false;
+        r5b_candidate_ = false;
     }
 
 private:
+    bool r4_candidate_ = false;
+    bool r6_engineering_=false;
+    bool r5b_candidate_ = false;
     WitnessShape shape_;
     std::vector<RangeConstraint> constraints_;
     std::vector<RegisteredExpQuery> exp_queries_;

@@ -14,7 +14,7 @@ namespace stats {
     inline std::vector<std::string> search_calls;
 
     inline __uint128_t abs_u128(__int128 v) {
-        return v < 0 ? (__uint128_t)(-v) : (__uint128_t)v;
+        return v < 0 ? __uint128_t(-(v+1))+1 : __uint128_t(v);
     }
 
     inline int bit_width_u128(__uint128_t v) {

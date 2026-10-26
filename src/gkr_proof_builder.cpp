@@ -1,3 +1,4 @@
+#include "host_safety.hpp"
 //
 // Created by 69029 on 3/9/2021.
 //
@@ -113,7 +114,7 @@ void pred1_worker(const vector<uniGate> &beg, vector<F>& uni_value,vector<F>& be
         for (auto gate=beg.begin()+l;gate!=beg.begin()+r;gate++) 
         {
             bool idx = gate->lu;
-            uni_value[idx]+= beta_g[gate->g] * beta_u[gate->u] * gate->sc;
+            uni_value[idx]+= beta_g[gate->g] * beta_u[gate->u] * host_safety::field(gate->sc);
         }
         endq.Push(idx);
     }
@@ -129,7 +130,7 @@ void pred2_worker(const vector<binGate> &beg, vector<F>& bin_value,vector<F>& be
         int l=L[idx],r=R[idx];
         for (auto gate=beg.begin()+l;gate!=beg.begin()+r;gate++) 
         {
-            bin_value[gate->l] += beta_g[gate->g] * beta_u[gate->u] * beta_v[gate->v] * gate->sc;
+            bin_value[gate->l] += beta_g[gate->g] * beta_u[gate->u] * beta_v[gate->v] * host_safety::field(gate->sc);
         }
         endq.Push(idx);
     }
@@ -175,7 +176,7 @@ void GKRProofBuilder::predicatePhase1(u32 layer_id)
     else for (auto &gate: cur_layer.uni_gates) 
     {
         bool idx = gate.lu;
-        uni_value[idx]+= beta_g[gate.g] * beta_u[gate.u] * gate.sc;
+        uni_value[idx]+= beta_g[gate.g] * beta_u[gate.u] * host_safety::field(gate.sc);
     }
     bin_value[0] = bin_value[1] = bin_value[2] = F_ZERO;
 }
@@ -221,7 +222,7 @@ void GKRProofBuilder::predicatePhase2(u32 layer_id)
             }
     }
     else for (auto &gate: cur_layer.bin_gates)
-        bin_value[gate.l] += beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * gate.sc;
+        bin_value[gate.l] += beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * host_safety::field(gate.sc);
 }
 
 void GKRProofBuilder::build()

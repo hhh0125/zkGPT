@@ -40,11 +40,11 @@ const Generators &generators(const PCSpec &s) {
         "zkGPT.paper-r1.pc.v1/role/" + std::to_string(s.role.size()) + "/" + s.role;
     for (std::size_t i = 0; i < s.columns; ++i) {
         mcl::bn::hashAndMapToG1(out.g[i], domain + "/g/" + std::to_string(i));
-        require(out.g[i].isValid() && out.g[i].isValidOrder() && !out.g[i].isZero(),
+        require(isValidG1(out.g[i]) && !out.g[i].isZero(),
                 "PC generator");
     }
     mcl::bn::hashAndMapToG1(out.u, domain + "/u");
-    require(out.u.isValid() && out.u.isValidOrder() && !out.u.isZero(), "PC U");
+    require(isValidG1(out.u) && !out.u.isZero(), "PC U");
     return cache.emplace(key, std::move(out)).first->second;
 }
 void append(Fs &t, const PCSpec &s) {
@@ -62,7 +62,7 @@ static void shape(const PCSpec &s, const Commitment &c) {
     s.validate();
     require(s == c.spec && c.rows.size() == s.rows, "unexpected PC identity/shape");
     for (auto &g : c.rows)
-        require(g.isValid() && g.isValidOrder(), "invalid PC group");
+        require(isValidG1(g), "invalid PC group");
 }
 void append(Fs &t, const Commitment &c) {
     shape(c.spec, c);

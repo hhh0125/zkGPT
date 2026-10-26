@@ -71,7 +71,19 @@ public:
     neuralNetwork(i64 psize, i64 pchannel, i64 pparallel, i64 kernel_size, i64 sec_size, i64 fc_size,
                   i64 start_channel, poolType pool_ty);
 
+    void setWitnessCapacityHint(std::size_t expected){
+        if(!expected || expected>(std::size_t(1)<<28))throw std::invalid_argument("witness capacity hint outside supported domain");
+        witness_capacity_hint_=expected;
+    }
     void create(prover &pr, bool merge);
+    void createFiniteWitness(prover &pr);
+    // Opt-in partial engineering relation; unresolved paper semantics stay explicit.
+    void setR4NumericalCandidate(bool enabled=true) { r4_numerical_candidate_=enabled; }
+    void setR5BEngineeringCandidate(bool enabled=true) { r5b_numerical_candidate_=enabled; }
+    void setR6EngineeringCandidate(bool enabled=true) { r6_engineering_=enabled; r5b_numerical_candidate_=enabled; }
+    struct BlockConnection { std::size_t block,input,attention_residual,output,first_layer,last_layer; };
+    const std::vector<BlockConnection>& blockConnections() const { return r6_connections_; }
+    std::size_t metadataWitnessElements() const { return r6_metadata_witness_elements_; }
     void logPrivateMemory(const std::string &stage) const;
     layeredCircuit buildPublicCircuit();
     void validateCurrentWitness(const prover &pr) const;
@@ -90,6 +102,7 @@ public:
     int* mat_values[300]{}; // Borrowed views; never delete these entries.
 protected:
     std::vector<ParameterRegion> parameter_regions_;
+    std::size_t witness_capacity_hint_=0;
     struct Input0Segment {
         string name;
         size_t original_scalar_count;
@@ -141,7 +154,7 @@ protected:
     i64 pic_size_x, pic_size_y, pic_channel, pic_parallel;
     i64 SIZE;
     const i64 NCONV_FAST_SIZE, NCONV_SIZE, FFT_SIZE, AVE_POOL_SIZE, FC_SIZE, RELU_SIZE;
-    i64 T;
+    i64 T = 0; // Diagnostic only; checked before increment in Softmax.
     const i64 Q = 9;
     i64 Q_MAX;
     const i64 Q_BIT_SIZE = 220;
@@ -154,6 +167,20 @@ protected:
 
     bool is_llm;
     bool structure_only = false;
+    bool r4_numerical_candidate_ = false;
+    bool r5b_numerical_candidate_ = false;
+    bool r6_engineering_ = false;
+    bool r6_skip_commit_ = false;
+    std::size_t r6_master_size_=0, r6_metadata_witness_elements_=0;
+    std::vector<BlockConnection> r6_connections_;
+    bool r6Metadata() const { return r6_engineering_ && structure_only; }
+    std::size_t r5bMasterSize() const { return r6Metadata()?r6_master_size_:val[0].size(); }
+    int r5bAllocate(int count);
+    void r5bFinish(layer &c,i64 &id);
+    void r5bRound(layer &c,i64 &id,int bias_offset);
+    void r5bAttention(layer *c,i64 &id);
+    void r5bLayerNorm(layer *c,i64 &id,int ln_id,int real_width);
+    void r5bGelu(layer *c,i64 &id,int real_width);
 
     int input_e,input_c;
     int q_offset;

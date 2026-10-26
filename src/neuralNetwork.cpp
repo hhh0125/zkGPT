@@ -4,6 +4,8 @@
 #include "neuralNetwork.hpp"
 #include "memory_diagnostics.hpp"
 #include "stats.hpp"
+#include "host_safety.hpp"
+#include "r5b_numeric.hpp"
 #include "utils.hpp"
 #include "global_var.hpp"
 #include "cnpy.h"
@@ -11,6 +13,7 @@
 #include <circuit.h>
 #include <algorithm>
 #include <cstdint>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
@@ -540,13 +543,19 @@ void neuralNetwork::create(prover &pr, bool merge)
     // 计算指数表格
     compute_e_table();
 
+    if(layer_num<1 || layer_num>12 || len!=32 || headnum<=0 || headdim<=0 ||
+       attn_dim<=0 || attn_dim>1024 || linear_dim<=0 || linear_dim>4096 ||
+       static_cast<i64>(headnum)*headdim!=attn_dim || full_conn.size()!=std::size_t(4*layer_num))
+        throw std::invalid_argument("LLM shape exceeds host storage/resource bounds");
     initParam(pr,layer_num);
-    if (headnum <= 0 || headdim <= 0 || attn_dim <= 0 || linear_dim <= 0 ||
-        headnum * headdim != attn_dim) {
-        throw std::invalid_argument("inconsistent LLM dimensions");
-    }
+    r6_master_size_=total_in_size; r6_connections_.clear();
     parameter_regions_.clear();
     witness_registry.clear();
+    if(r4_numerical_candidate_ && r5b_numerical_candidate_)throw std::invalid_argument("conflicting numerical profiles");
+    if(r5b_numerical_candidate_ && layer_num!=1 && !r6_engineering_)throw std::invalid_argument("R5B candidate blocks=1 only");
+    witness_registry.setR4NumericalCandidate(r4_numerical_candidate_);
+    witness_registry.setR5BEngineeringCandidate(r5b_numerical_candidate_);
+    witness_registry.setR6Engineering(r6_engineering_);
     witness_registry.setShape({static_cast<size_t>(len),
                                static_cast<size_t>(layer_num),
                                static_cast<size_t>(headnum),
@@ -563,10 +572,18 @@ void neuralNetwork::create(prover &pr, bool merge)
     // 初始化电路
     pr.C.init(Q_BIT_SIZE, SIZE);
     pr.val.resize(SIZE);
+    if(!structure_only && witness_capacity_hint_){
+        if(!r5b_numerical_candidate_)throw std::invalid_argument("capacity hint requires engineering candidate");
+        pr.val[0].reserve(witness_capacity_hint_);
+        if(pr.val[0].capacity()!=witness_capacity_hint_)throw std::logic_error("planned witness capacity not exact");
+        zkgpt::memory_diagnostics::logVector("val0/planned-reserve","val0",pr.val[0]);
+        zkgpt::memory_diagnostics::logAddress("val0/planned-reserve","val0",pr.val[0].data(),pr.val[0].capacity()*sizeof(Fr),"prover.val0");
+    }
     val = pr.val.begin();
     i64 layer_id = 0;
     // 存储模型的输入数据
     inputLayer(pr.C.circuit[layer_id++]);
+    if(r5b_numerical_candidate_)witness_registry.addRange(WitnessKind::ROUNDING,"r5b_input",0,32768,64,true);
     for (int i = 0; i < full_conn.size(); ++i) 
     {
         auto &fc = full_conn[i];
@@ -603,12 +620,14 @@ void neuralNetwork::create(prover &pr, bool merge)
         }
         // GPT-2 has two independent LayerNorms per transformer block.
         const int block_id = i / 4;
+        if(r6_engineering_ && i%4==0)r6_connections_.push_back({std::size_t(block_id),std::size_t(q_offset),0,0,std::size_t(layer_id),0});
         const int ln_id = 2 * block_id + ((i % 4 == 2) ? 1 : 0);
         if (i % 4 == 0 || i % 4 == 2)
             read_layer_norm(ln_id);
-        bool * sparsity=new bool[pr.fc_input_row[i]*pr.fc_input_col[i]];
+        auto sparsity_storage=std::make_unique<bool[]>(pr.fc_input_row[i]*pr.fc_input_col[i]);
+        bool *sparsity=sparsity_storage.get();
         memset(sparsity,0,sizeof(bool)*pr.fc_input_row[i]*pr.fc_input_col[i]);
-        int cnt=0;
+        std::uint64_t cnt=0;
         for(int j=0;j<pr.fc_real_input_row[i];j++)
         for(int k=0;k<pr.fc_real_input_col[i];k++)
         {
@@ -620,9 +639,12 @@ void neuralNetwork::create(prover &pr, bool merge)
         {
             if (i % 4 == 0) block_residual_offset = q_offset;
             else attention_residual_offset = q_offset;
+            if(r5b_numerical_candidate_)r5bLayerNorm(&pr.C.circuit[layer_id],layer_id,ln_id,pr.fc_real_input_col[0]);
+            else {
             ln_checker_layer1(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,pr.fc_real_input_col[0],sparsity);
             ln_checker_layer2(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,sparsity);
             ln_checker_layer3(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,pr.fc_real_input_col[0],sparsity);
+            }
         }
         pr.fc_input_id[i]=q_offset;
         // 
@@ -646,21 +668,29 @@ void neuralNetwork::create(prover &pr, bool merge)
             residualLayer(pr.C.circuit[layer_id], layer_id, attention_residual_offset,
                           len * channel_out, "mlp_residual");
         }
+        if(r6_engineering_ && i%4==1)r6_connections_.back().attention_residual=q_offset;
+        if(r6_engineering_ && i%4==3){r6_connections_.back().output=q_offset;r6_connections_.back().last_layer=layer_id-1;}
         // 注意力机制
         if(i%4==0)
         {
             multi_head_matrix_QK(pr.C.circuit[layer_id], layer_id);
             const float activation_scale = pow(2,e_C)*c_C;
+            if(r5b_numerical_candidate_)r5bAttention(&pr.C.circuit[layer_id],layer_id);
+            else {
             softmax_layer_1(pr.C.circuit[layer_id], layer_id,activation_scale,activation_scale,activation_scale,activation_scale);
             softmax_layer_2(pr.C.circuit[layer_id], layer_id,activation_scale,activation_scale,activation_scale,activation_scale);
             softmax_layer_3(pr.C.circuit[layer_id], layer_id,activation_scale,activation_scale,activation_scale,activation_scale);
+            }
         }
         // GELU激活函数，前馈网络层
         if(i%4==2)
         {
+            if(r5b_numerical_candidate_)r5bGelu(&pr.C.circuit[layer_id],layer_id,pr.fc_real_col[i]);
+            else {
             gelu_checker_layer1(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
             gelu_checker_layer2(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
             gelu_checker_layer3(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
+            }
         }
     }
    
@@ -678,7 +708,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     if (!pr.C.circuit[0].releaseEmptyUnaryStorage())
         throw std::logic_error("input unary storage must be empty after reset");
     zkgpt::memory_diagnostics::logCircuitStorage("circuit_after_empty_input_release",pr.C);
-    if (static_cast<size_t>(total_in_size) != pr.val[0].size())
+    if (static_cast<size_t>(total_in_size) != r5bMasterSize())
         throw std::logic_error("input witness size accounting mismatch");
     if (!structure_only)
         validateWitnessRegistry(pr.val[0]);
@@ -687,7 +717,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     // writeInput0SegmentMap();
     // writeScalarDumpFiles();
     
-    pr.C.initSubset();
+    pr.C.initSubset(r6Metadata());
     if (!structure_only)
         validateMappedCircuitWitness(pr);
 
@@ -704,6 +734,11 @@ void neuralNetwork::create(prover &pr, bool merge)
     zkgpt::memory_diagnostics::logVector(
         "after_circuit_build","val[0]",pr.val[0]);
 
+    if(!structure_only && witness_capacity_hint_ && pr.val[0].size()!=witness_capacity_hint_)
+        throw std::logic_error("actual witness differs from planned capacity domain");
+    zkgpt::memory_diagnostics::logAddress("private_graph/ready","graph_object",&pr.C,0,"prover.C");
+    zkgpt::memory_diagnostics::logAddress("private_graph/ready","graph_layers",pr.C.circuit.data(),pr.C.circuit.capacity()*sizeof(layer),"prover.C");
+    if(r6_skip_commit_){pr.mat_val=mat_values;return;}
     timer T;
     int logn = pr.C.circuit[0].bit_length;
     u64 n_sqrt = 1ULL << (logn - (logn >> 1));
@@ -714,7 +749,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     T.start();
     // This commitment covers the complete mixed val[0] witness: parameters,
     // activations, and nonlinear auxiliary values.
-    pr.commitInput(pr.gens,32);
+    pr.commitInput(pr.gens,32,witness_capacity_hint_!=0);
     T.stop();
     zkgpt::memory_diagnostics::logProcess("after_val0_commitment");
     zkgpt::memory_diagnostics::logVector(
@@ -727,11 +762,11 @@ void neuralNetwork::create(prover &pr, bool merge)
     pr.proof_size+= 1<<(pr.cc.l/2);
     cout<<"Full val[0] witness commit time: "<<T.elapse_sec()<<"s"<<endl;
 
-    int cnt=0;
+    std::uint64_t cnt=0;
     for(u32 i=0;i<pr.C.size;i++)
         cnt+=pr.val[i].size();
     //printf("Total values size in circuit: %d\n", cnt);
-    int bin=0,uni=0;
+    std::uint64_t bin=0,uni=0;
     // 统计门数量
     for(u32 i=0;i<pr.C.size;i++)
     {
@@ -751,7 +786,11 @@ layeredCircuit neuralNetwork::buildPublicCircuit()
     structure_only=true;
     try {
         create(public_builder, false);
+        r6_metadata_witness_elements_=0;
+        for(const auto &v:public_builder.val)r6_metadata_witness_elements_+=v.size();
+        if(r6Metadata() && r6_metadata_witness_elements_)throw std::logic_error("R6 metadata allocated field witness");
         structure_only=false;
+        zkgpt::memory_diagnostics::logAddress("public_graph/move-out","graph_layers",public_builder.C.circuit.data(),public_builder.C.circuit.capacity()*sizeof(layer),"moved-to-preflight");
         return std::move(public_builder.C);
     } catch (...) {
         structure_only=false;
@@ -763,7 +802,7 @@ void neuralNetwork::inputLayer(layer &circuit)
 {
     initLayer(circuit, total_in_size, layerType::INPUT);
     printf("input size: 2^%d\n", circuit.bit_length);
-    for (i64 i = 0; i < total_in_size; ++i) 
+    if(!r6_engineering_)for (i64 i = 0; i < total_in_size; ++i) 
         circuit.uni_gates.emplace_back(i, 0, 0, 1);
 
     calcInputLayer(circuit);
@@ -772,8 +811,9 @@ void neuralNetwork::inputLayer(layer &circuit)
 
 pair<int,int> search(double scale)
 {
-    double mindiff=1e9;
-    int best_e,best_c;
+    if(!std::isfinite(scale) || scale<=0)throw std::invalid_argument("nonpositive or nonfinite quantization scale");
+    double mindiff=std::numeric_limits<double>::infinity();
+    int best_e=-10,best_c=1;
     for(int e=-10;e<=10;e++)
     for(int c=1;c<=800;c++)
     {
@@ -795,8 +835,9 @@ void neuralNetwork::read_layer_norm(int ln_id)
     //int layer_norm_w_q_start[30],layer_norm_b_q_start[30];
     const int padded_width = channel_in;
     const int real_width = attn_dim;
-    int orgsize=val[0].size() ;
-    val[0].resize(orgsize+2*padded_width);
+    int orgsize=host_safety::checkedSize(r5bMasterSize());
+    if(r6Metadata())r6_master_size_=host_safety::checkedSize(orgsize,2*padded_width);
+    else val[0].resize(host_safety::checkedSize(0,host_safety::add(orgsize,host_safety::mul(2,padded_width))));
     total_in_size +=2*padded_width;
     int32_t width=real_width, wc=1, we=-10, bc=1, be=-10;
     std::vector<int32_t> weights(width), biases(width);
@@ -826,6 +867,7 @@ void neuralNetwork::read_layer_norm(int ln_id)
     layer_norm_b_e[ln_id]=be;
     layer_norm_w_q_start[ln_id]=orgsize;
     layer_norm_b_q_start[ln_id]=orgsize+padded_width;
+    if(r6Metadata())return;
 
     for(int i=0;i<padded_width;i++)
     {
@@ -850,19 +892,13 @@ void neuralNetwork::read_layer_norm(int ln_id)
 
 }   
 std::ostream& operator<<(std::ostream& os, __int128_t value) {
-    if (value < 0) {
-        os << '-';
-        value = -value;
-    }
-    if (value == 0) {
-        os << '0';
-        return os;
-    }
-
+    if (value < 0) os << '-';
+    auto magnitude=host_safety::magnitude(value);
+    if(magnitude==0)return os << '0';
     std::string digits;
-    while (value > 0) {
-        digits.push_back(char('0' + (value % 10)));
-        value /= 10;
+    while (magnitude > 0) {
+        digits.push_back(char('0' + (magnitude % 10)));
+        magnitude /= 10;
     }
     std::reverse(digits.begin(), digits.end());
     os << digits;
@@ -898,19 +934,21 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
     int m=multi_max::max(1,-e1,-e2);
     i64 block_len = len* channel_in;
     const i64 real_count = static_cast<i64>(len) * real_cn_in;
-    int output_size=block_len+3*len;
+    const i64 sqrt_helpers = r4_numerical_candidate_ ? 2*len : 0;
+    int output_size=block_len+3*len+sqrt_helpers;
     initLayer(circuit, output_size, layerType::LAYER_NORM_1);  //TODO: the output dim of the layer
     circuit.need_phase2=true;
     circuit.zero_start_id=block_len+2*len;
-    int orgsize=val[0].size() ;
+    int orgsize=host_safety::checkedSize(val[0].size()) ;
     // 重新构建输入层，添加中间计算的数据
-    val[0].resize(orgsize + 10 + block_len * 2 + 4 * len + real_count * 2);
+    const i64 sqrt_helper_base=orgsize+10+block_len*2+4*len+real_count*2;
+    val[0].resize(host_safety::checkedSize(0,host_safety::add(sqrt_helper_base,sqrt_helpers)));
     // y, sum/B/sigma/delta1, delta2, then the two positive rounding slacks.
     for(int i=orgsize;i<val[0].size();i++)
         val[0][i]=0;
     ln_aux_start=orgsize; 
     val[0][orgsize]=1; 
-    total_relu_in_size += 10 + block_len * 2 + 4 * len + real_count * 2;
+    total_relu_in_size += 10 + block_len * 2 + 4 * len + real_count * 2 + sqrt_helpers;
     ll qx[1024]={0},a[1024]={0};
     ll qw[1024],qb[1024];
     for (i64 co = 0; co < channel_in; ++co) 
@@ -931,7 +969,7 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         {
             i64 g = matIdx(i, co, channel_in);
             qx[co]=convert(val[0][q_offset+g]);
-            sum+=qx[co];
+            sum=host_safety::add(sum,qx[co]);
         }
         // a[co]=xi*n-sum
         // B=1+\sum(a[co]^2)
@@ -939,22 +977,26 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         {
             if(!sparsity_map[i*channel_in+co])
                 continue;
-            a[co]=qx[co]*real_cn_in-sum;  //TODO here has to change   
-            B+=a[co]*a[co];
+            a[co]=host_safety::sub(host_safety::mul(qx[co],real_cn_in),sum);  //TODO here has to change   
+            B=host_safety::add(B,host_safety::mul(a[co],a[co]));
         }
         if (B<=0)
             throw std::range_error("LayerNorm variance accumulator must be positive");
 
-        sigma=round(sqrt(static_cast<long double>(B)));
+        sigma=host_safety::rounded(sqrt(static_cast<long double>(B)));
         if (sigma<=0)
             throw std::range_error("LayerNorm sigma must be positive");
-        const ll sigma_upper=sigma*sigma+sigma+1-B;
-        const ll sigma_lower=B-sigma*sigma+sigma;
+        const ll sigma_upper=host_safety::sub(host_safety::add(host_safety::add(host_safety::mul(sigma,sigma),sigma),1),B);
+        const ll sigma_lower=host_safety::add(host_safety::sub(B,host_safety::mul(sigma,sigma)),sigma);
         if (sigma_upper<=0 || sigma_upper>=(1ll<<32) ||
             sigma_lower<=0 || sigma_lower>=(1ll<<32))
             throw std::range_error("LayerNorm sigma slack exceeds 32-bit bound");
+        if(r4_numerical_candidate_){
+            val[0][sqrt_helper_base+i]=host_safety::field(sigma_upper);
+            val[0][sqrt_helper_base+len+i]=host_safety::field(sigma_lower);
+        }
         // 为了证明sigma的正确性
-        Fr delta1= Fr(sigma*sigma+sigma+1-B)*Fr(B-sigma*sigma+sigma);
+        Fr delta1= host_safety::field(host_safety::sub(host_safety::add(host_safety::add(host_safety::mul(sigma,sigma),sigma),1),B))*host_safety::field(host_safety::add(host_safety::sub(B,host_safety::mul(sigma,sigma)),sigma));
         // 计算y=round(w*a/sigma+b) 
         for (i64 co = 0; co < channel_in; ++co) 
         {
@@ -963,27 +1005,27 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
             {
                 continue;
             }
-            ll qy = round(pow(2,e1)*c1*qw[co]*a[co]/sigma+pow(2,e2)*c2*qb[co]); // Qbit？
+            ll qy = host_safety::rounded(pow(2,e1)*c1*qw[co]*a[co]/sigma+pow(2,e2)*c2*qb[co]); // Qbit？
             
             int y_off=orgsize+10+g;
             int d2_off=orgsize+10+block_len+len*4+matIdx(i, co, real_cn_in);
             const int p=matIdx(i, co, real_cn_in);
             int term1_off=orgsize+10+block_len*2+len*4+p;
             int term2_off=orgsize+10+block_len*2+len*4+real_count+p;
-            val[0][y_off]=qy; // 保存归一化的输出值qy
+            val[0][y_off]=host_safety::field(qy); // 保存归一化的输出值qy
             track_val0_bits("ln_y", qy);
             ll term1,term2;
-            term1=(2*qy+1)*(1ll<<(m-1))*sigma+1-(1ll<<(e1+m))*c1*qw[co]*a[co]-(1ll<<(e2+m))*c2*qb[co]*sigma;
-            term2=(1ll<<(e1+m))*c1*qw[co]*a[co]+(1ll<<(e2+m))*c2*qb[co]*sigma-(2*qy-1)*(1ll<<(m-1))*sigma+1;
+            term1=host_safety::sub(host_safety::sub(host_safety::add(host_safety::mul(host_safety::mul(host_safety::add(host_safety::mul(2,qy),1),host_safety::mul(1,host_safety::power2(m - 1))),sigma),1),host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(1,host_safety::power2(e1 + m)),c1),qw[co]),a[co])),host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(1,host_safety::power2(e2 + m)),c2),qb[co]),sigma));
+            term2=host_safety::add(host_safety::sub(host_safety::add(host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(1,host_safety::power2(e1 + m)),c1),qw[co]),a[co]),host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(1,host_safety::power2(e2 + m)),c2),qb[co]),sigma)),host_safety::mul(host_safety::mul(host_safety::sub(host_safety::mul(2,qy),1),host_safety::mul(1,host_safety::power2(m - 1))),sigma)),1);
             if (term1 <= 0 || term2 <= 0)
                 throw std::range_error("LayerNorm rounding slack is not positive");
             // stats::update_max("ln_term1", term1);
             // stats::update_max("ln_term2", term2);
             // stats::update_max("ln_y", qy);
-            val[0][d2_off]=Fr(term1)*Fr(term2); // 保存约束条件delta2
-            val[0][term1_off]=term1;
-            val[0][term2_off]=term2;
-            track_val0_bits("ln_delta2", (__int128)term1 * (__int128)term2);
+            val[0][d2_off]=host_safety::field(term1)*host_safety::field(term2); // 保存约束条件delta2
+            val[0][term1_off]=host_safety::field(term1);
+            val[0][term2_off]=host_safety::field(term2);
+            track_val0_bits("ln_delta2", host_safety::mul(term1,term2));
             track_val0_bits("ln_term1", term1);
             track_val0_bits("ln_term2", term2);
 
@@ -991,13 +1033,13 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         }
         // 保存中间计算的结果 sum、B、sigma、delta1
         int sum_off=orgsize+10+block_len+i;
-        val[0][sum_off]=sum;
+        val[0][sum_off]=host_safety::field(sum);
         track_val0_bits("ln_sum", sum);
         int b_off=orgsize+10+block_len+len+i;
-        val[0][b_off]=B;  
+        val[0][b_off]=host_safety::field(B);  
         track_val0_bits("ln_B", B);
         int sig_off=orgsize+10+block_len+len*2+i;
-        val[0][sig_off]=sigma;
+        val[0][sig_off]=host_safety::field(sigma);
         track_val0_bits("ln_sigma", sigma);
         int d1_off=orgsize+10+block_len+len*3+i;
         val[0][d1_off]=delta1;
@@ -1034,6 +1076,12 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         witness_name("layer_norm", witness_instance, "term2"),
         orgsize + 10 + block_len * 2 + len * 4 + real_count, real_count,
         kUnsignedIntegerBits, false);
+    if(r4_numerical_candidate_){
+        witness_registry.addRange(WitnessKind::LAYER_NORM,
+            witness_name("layer_norm",witness_instance,"sqrt_upper"),sqrt_helper_base,len,32,false);
+        witness_registry.addRange(WitnessKind::LAYER_NORM,
+            witness_name("layer_norm",witness_instance,"sqrt_lower"),sqrt_helper_base+len,len,32,false);
+    }
     // recordInput0Segment("ln_checker_layer1_aux",
     //                     static_cast<size_t>(10 + 2 * len * real_cn_in + 4 * len),
     //                     static_cast<size_t>(10 + block_len * 2 + 4 * len),
@@ -1074,6 +1122,19 @@ void neuralNetwork::ln_checker_layer1(layer &circuit, i64 &layer_id, int ln_id, 
         circuit.uni_gates.emplace_back(block_len+len+i, sig_off, 0, 1);  //sigma
         circuit.uni_gates.emplace_back(block_len+len+i, b_off, 0, 1); //+B
         circuit.uni_gates.emplace_back(block_len+len*2+i, sum_off, 0, -1);  //-SUM
+        if(r4_numerical_candidate_){
+            const i64 upper_check=block_len+3*len+i;
+            const i64 lower_check=upper_check+len;
+            circuit.bin_gates.emplace_back(upper_check,sig_off,sig_off,1,0);
+            circuit.uni_gates.emplace_back(upper_check,sig_off,0,1);
+            circuit.uni_gates.emplace_back(upper_check,orgsize,0,1);
+            circuit.uni_gates.emplace_back(upper_check,b_off,0,-1);
+            circuit.uni_gates.emplace_back(upper_check,sqrt_helper_base+i,0,-1);
+            circuit.bin_gates.emplace_back(lower_check,sig_off,sig_off,-1,0);
+            circuit.uni_gates.emplace_back(lower_check,sig_off,0,1);
+            circuit.uni_gates.emplace_back(lower_check,b_off,0,1);
+            circuit.uni_gates.emplace_back(lower_check,sqrt_helper_base+len+i,0,-1);
+        }
     }
     // 根据电路进行计算
     calcNormalLayer(circuit, layer_id);
@@ -1164,7 +1225,7 @@ void neuralNetwork::ln_checker_layer2(layer &circuit, i64 &layer_id, int ln_id, 
 
             circuit.bin_gates.emplace_back(2*block_len+len+i, g, g ,1,1 );
             cir=convert(val[layer_id-1][g]);
-            SUM+=cir*cir;
+            SUM=host_safety::add(SUM,host_safety::mul(cir,cir));
         }
         if(!sparsity_map[i*channel_in])
         {
@@ -1276,9 +1337,9 @@ void neuralNetwork::gelu_checker_layer1(layer &circuit, i64 &layer_id, int real_
     initLayer(circuit, output_size, layerType::GELU_1);  //TODO: the output dim of the layer
     circuit.need_phase2=true;
     circuit.zero_start_id=block_len*2;
-    int orgsize=val[0].size() ;
+    int orgsize=host_safety::checkedSize(val[0].size()) ;
     const i64 real_count = static_cast<i64>(len) * real_cn_out;
-    val[0].resize(orgsize + 10 + block_len * 3 + real_count * 5);
+    val[0].resize(host_safety::checkedSize(0,host_safety::add(host_safety::add(host_safety::add(orgsize,10),host_safety::mul(block_len,3)),host_safety::mul(real_count,5))));
     // Const; y; abs; t; d1; d2; d3; term1; term2.
     for(int i=orgsize;i<val[0].size();i++)
         val[0][i]=0;
@@ -1304,15 +1365,15 @@ void neuralNetwork::gelu_checker_layer1(layer &circuit, i64 &layer_id, int real_
         // 求qx的绝对值
         if(qx<0)
         {
-            val[0][abs_off+g]=abs=-qx;
+            abs=host_safety::neg(qx);val[0][abs_off+g]=host_safety::field(abs);
         }
         else
         {
-            val[0][abs_off+g]=abs=qx;
+            abs=qx;val[0][abs_off+g]=host_safety::field(abs);
         }
         track_val0_bits("gelu_abs", abs);
         // 计算t值
-        if(C6>=C7*abs)
+        if(C6>=host_safety::mul(C7,abs))
         {
             val[0][t_off+g]=t=1;
         }
@@ -1324,35 +1385,35 @@ void neuralNetwork::gelu_checker_layer1(layer &circuit, i64 &layer_id, int real_
 
         int gp=g/channel_out* real_cn_out+g%channel_out;
         // delta1证明绝对值正确性
-        val[0][d1_off+gp]=abs+1;
-        track_val0_bits("gelu_delta1", abs + 1);
+        val[0][d1_off+gp]=host_safety::field(host_safety::add(abs,1));
+        track_val0_bits("gelu_delta1", host_safety::add(abs,1));
         // delta2证明t值正确性
-        val[0][d2_off+gp]=t+(1-2*t)*(C7*abs-C6);
-        track_val0_bits("gelu_delta2", t + (1 - 2 * t) * (C7 * abs - C6));
+        val[0][d2_off+gp]=host_safety::field(host_safety::add(t,host_safety::mul(host_safety::sub(1,host_safety::mul(2,t)),host_safety::sub(host_safety::mul(C7,abs),C6))));
+        track_val0_bits("gelu_delta2", host_safety::add(t,host_safety::mul(host_safety::sub(1,host_safety::mul(2,t)),host_safety::sub(host_safety::mul(C7,abs),C6))));
 
         assert(!val[0][d1_off+gp].isNegative());
         assert(!val[0][d2_off+gp].isNegative());
         // 关键计算GELU的式子
-        double inner=(double)ca*cx*cx*qx*qx*pow(2,ea+2*ex)-cb*cx*abs*pow(2,eb+ex)+cc*pow(2,ec);
+        double inner=(double)ca*cx*cx*qx*qx*pow(2,ea+2*ex)-host_safety::mul(host_safety::mul(cb,cx),abs)*pow(2,eb+ex)+cc*pow(2,ec);
         double middle=(double)qx+abs-abs*t*inner;
         double final=(double)cx*pow(2,ex-1-ey)*middle/cy;
-        ll y=round(final);
-        val[0][y_off+g]=(ll)y;
+        ll y=host_safety::rounded(final);
+        val[0][y_off+g]=host_safety::field((ll)y);
         track_val0_bits("gelu_y", y);
 
         // delta3证明y=round（）的正确性，delta3=term1*term2
-        ll term1=(2*y + 1)*C5 + 1 - C1 * qx - C1 * abs + C2 *t*abs*abs*abs-C3 *t* abs*abs+C4 *t* abs;
-        ll term2= C1 * qx + C1 * abs - C2 *t*abs*abs*abs+C3 *t* abs*abs-C4 *t* abs-(2*y-1)*C5+1;
+        ll term1=host_safety::add(host_safety::sub(host_safety::add(host_safety::sub(host_safety::sub(host_safety::add(host_safety::mul(host_safety::add(host_safety::mul(2,y),1),C5),1),host_safety::mul(C1,qx)),host_safety::mul(C1,abs)),host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(C2,t),abs),abs),abs)),host_safety::mul(host_safety::mul(host_safety::mul(C3,t),abs),abs)),host_safety::mul(host_safety::mul(C4,t),abs));
+        ll term2= host_safety::add(host_safety::sub(host_safety::sub(host_safety::add(host_safety::sub(host_safety::add(host_safety::mul(C1,qx),host_safety::mul(C1,abs)),host_safety::mul(host_safety::mul(host_safety::mul(host_safety::mul(C2,t),abs),abs),abs)),host_safety::mul(host_safety::mul(host_safety::mul(C3,t),abs),abs)),host_safety::mul(host_safety::mul(C4,t),abs)),host_safety::mul(host_safety::sub(host_safety::mul(2,y),1),C5)),1);
         if (term1 <= 0 || term2 <= 0)
             throw std::range_error("GELU rounding slack is not positive");
         // stats::update_max("gelu_term1", term1);
         // stats::update_max("gelu_term2", term2);
         // stats::update_max("gelu_y", y);
         // stats::update_max("gelu_abs", abs);
-        __int128 gelu_delta3 = (__int128)term1 * (__int128)term2;
-        val[0][d3_off+gp]= Fr(term1)*Fr(term2);
-        val[0][term1_off+gp]=term1;
-        val[0][term2_off+gp]=term2;
+        __int128 gelu_delta3 = host_safety::mul(term1,term2);
+        val[0][d3_off+gp]= host_safety::field(term1)*host_safety::field(term2);
+        val[0][term1_off+gp]=host_safety::field(term1);
+        val[0][term2_off+gp]=host_safety::field(term2);
         track_val0_bits("gelu_delta3", gelu_delta3);
         track_val0_bits("gelu_term1", term1);
         track_val0_bits("gelu_term2", term2);
@@ -1571,6 +1632,10 @@ void neuralNetwork::gelu_checker_layer3(layer &circuit, i64 &layer_id,int real_c
 void neuralNetwork::roundLayer(layer &circuit, i64 &layer_id, float scale,
                                bool* sparsity_map, int bias_offset)
 {
+    if(r5b_numerical_candidate_){
+        if(scale!=1.0f/1024)throw std::invalid_argument("R5B FC scale must be exactly 1/1024");
+        r5bRound(circuit,layer_id,bias_offset);return;
+    }
     i64 block_len = len* channel_out;
     int c,m;
     pair<int,int> pm=search(scale);
@@ -1582,8 +1647,9 @@ void neuralNetwork::roundLayer(layer &circuit, i64 &layer_id, float scale,
     initLayer(circuit, size, layerType::RELU);  //TODO: the output dim of the layer
     circuit.need_phase2=true;
     circuit.zero_start_id=0;
-    int orgsize=val[0].size() ;
-    val[0].resize(orgsize + 20 + block_len * 4); // Const; Q; delta; term1; term2
+    int orgsize=host_safety::checkedSize(val[0].size()) ;
+    val[0].resize(host_safety::checkedSize(0,host_safety::add(host_safety::add(orgsize,20),host_safety::mul(block_len,4)))); // Const; Q; delta; term1; term2
+    for(int i=orgsize;i<orgsize+20;++i)val[0][i].clear();
     
     q_offset=orgsize + 20 ;  //TODO set the input offset of the next matrix
     total_relu_in_size += 20 + block_len * 4;
@@ -1598,24 +1664,24 @@ void neuralNetwork::roundLayer(layer &circuit, i64 &layer_id, float scale,
         ll p=convert(val[layer_id-1][g]);
         ll bias = bias_offset >= 0
             ? convert(val[0][bias_offset + (g % channel_out)]) : 0;
-        ll affine_p = p + bias;
+        ll affine_p = host_safety::add(p,bias);
         // q是round量化后的结果
-        ll q=round(affine_p*c*pow(2,m));
-        val[0][qq]=q;  // compute non-linear round
+        ll q=host_safety::rounded(host_safety::mul(affine_p,c)*pow(2,m));
+        val[0][qq]=host_safety::field(q);  // compute non-linear round
         track_val0_bits("round_q", q);
         // stats::update_max("round_q", q);
         int s=qq+block_len;
         int term1_offset = qq + block_len * 2;
         int term2_offset = qq + block_len * 3;
         // 保存delta的值来证明round的正确性
-        long long term1 = affine_p*c*(1ll<<(m+M+1)) + (1ll<<M) - q*(1ll<<(M+1));
-        long long term2 = q*(1ll<<(M+1)) + (1ll<<M) - c*(1ll<<(m+M+1))*affine_p;
+        ll term1 = host_safety::sub(host_safety::add(host_safety::mul(host_safety::mul(affine_p,c),host_safety::mul(1,host_safety::power2(m + M + 1))),host_safety::mul(1,host_safety::power2(M))),host_safety::mul(q,host_safety::mul(1,host_safety::power2(M + 1))));
+        ll term2 = host_safety::sub(host_safety::add(host_safety::mul(q,host_safety::mul(1,host_safety::power2(M + 1))),host_safety::mul(1,host_safety::power2(M))),host_safety::mul(host_safety::mul(c,host_safety::mul(1,host_safety::power2(m + M + 1))),affine_p));
         // stats::update_max("round_term1", term1);
         // stats::update_max("round_term2", term2);
-        __int128 round_delta = (__int128)term1 * (__int128)term2;
-        val[0][s]=Fr(term1) * Fr(term2);
-        val[0][term1_offset] = term1;
-        val[0][term2_offset] = term2;
+        __int128 round_delta = host_safety::mul(term1,term2);
+        val[0][s]=host_safety::field(term1) * host_safety::field(term2);
+        val[0][term1_offset] = host_safety::field(term1);
+        val[0][term2_offset] = host_safety::field(term2);
         track_val0_bits("round_delta", round_delta);
         track_val0_bits("round_term1", term1);
         track_val0_bits("round_term2", term2);
@@ -1711,8 +1777,9 @@ void neuralNetwork::residualLayer(layer &circuit, i64 &layer_id,
         throw std::runtime_error("Invalid offsets for " + name);
 
     const int input_offset = q_offset;
-    const int output_offset = static_cast<int>(val[0].size());
-    val[0].resize(output_offset + element_count);
+    const int output_offset = host_safety::checkedSize(r5bMasterSize());
+    if(r6Metadata())r6_master_size_=host_safety::checkedSize(output_offset,element_count);
+    else val[0].resize(host_safety::checkedSize(0,host_safety::add(output_offset,element_count)));
     total_relu_in_size += element_count;
 
     initLayer(circuit, element_count, layerType::RELU);
@@ -1720,7 +1787,7 @@ void neuralNetwork::residualLayer(layer &circuit, i64 &layer_id,
     circuit.zero_start_id = 0;
 
     for (int g = 0; g < element_count; ++g) {
-        val[0][output_offset + g] =
+        if(!r6Metadata())val[0][output_offset + g] =
             val[0][input_offset + g] + val[0][residual_offset + g];
         // The circuit output is identically zero iff the public quantized
         // residual equation y = x + residual is satisfied.
@@ -1729,8 +1796,9 @@ void neuralNetwork::residualLayer(layer &circuit, i64 &layer_id,
         circuit.uni_gates.emplace_back(g, residual_offset + g, 0, -1);
     }
 
+    if(r5b_numerical_candidate_)witness_registry.addRange(WitnessKind::ROUNDING,"r5b_"+name,output_offset,element_count,64,true);
     calcNormalLayer(circuit, layer_id);
-    for (int g = 0; g < element_count; ++g)
+    if(!r6Metadata())for (int g = 0; g < element_count; ++g)
         assert(val[layer_id][g].isZero());
     ++layer_id;
     q_offset = output_offset;
@@ -1761,8 +1829,8 @@ void neuralNetwork::multi_head_matrix_QK(layer &circuit, i64 &layer_id)
                 int gate_i=q_offset+idi;
                 int gate_j=q_offset+idj;
                 // record actual input values for statistics (safe: use convert)
-                ll vi = convert(val[0][gate_i]);
-                ll vj = convert(val[0][gate_j]);
+                ll vi = r6Metadata()?0:convert(val[0][gate_i]);
+                ll vj = r6Metadata()?0:convert(val[0][gate_j]);
                 // stats::update_max("input_val_i", vi);
                 // stats::update_max("input_val_j", vj);
                 circuit.bin_gates.emplace_back(targ_gate, gate_i,gate_j, 1,0 );
@@ -1781,7 +1849,9 @@ void neuralNetwork::compute_e_table()
     table.resize(EXP_TABLE_SIZE);
     for(int i=0;i<EXP_TABLE_SIZE;i++)
     {
-        int t=round(exp(-St*i)/Se);
+        const auto exact_t=host_safety::rounded(exp(-St*i)/Se);
+        if(exact_t<0 || exact_t>std::numeric_limits<int>::max())throw std::range_error("Exp producer value outside int domain");
+        int t=static_cast<int>(exact_t);
         table[i]=max(t,1);  //TODO: avoid sum_Ei=0, occasionally happens
     }
 }
@@ -1793,16 +1863,18 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
 {
     const int HEAD=headnum;
     const int HSIZE=headdim;
-    ll max_abs_score = 0;
+    __int128 max_abs_score = 0;
     ll max_pj = 0;
     ll max_tj = 0;
-    int orgsize=val[0].size();
+    int orgsize=host_safety::checkedSize(val[0].size());
     const i64 head_len=static_cast<i64>(HEAD)*len;
     const i64 triangular=head_len*(len+1)/2;
     const i64 head_hidden=head_len*HSIZE;
     const i64 output_values=static_cast<i64>(len)*channel_in;
     const i64 old_aux_size=10+2*head_len+4*triangular+head_hidden+output_values;
-    val[0].resize(orgsize+old_aux_size+2*triangular+2*head_hidden);
+    const i64 candidate_base=orgsize+old_aux_size+2*triangular+2*head_hidden;
+    const i64 candidate_aux=r4_numerical_candidate_?2*triangular:0;
+    val[0].resize(host_safety::checkedSize(0,host_safety::add(candidate_base,candidate_aux)));
     // Existing sumE/pmax/delta/t/E/delta3/Y, followed by lookup and division slacks.
     for(int i=orgsize;i<val[0].size();i++)
         val[0][i].clear();
@@ -1810,8 +1882,9 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
     softmax_aux_start=orgsize;
     positive_check+=2*HEAD*len*(len+1)/2+HEAD*len*HSIZE; //add positive check for delta1,delta2,delta3、正性检查
     exp_check+=HEAD*len*(len+1)/2;  //exp check for (t,E) pair、指数检查
-    total_relu_in_size += old_aux_size+2*triangular+2*head_hidden;
-    int output_size=head_hidden+3*triangular+head_len+2*triangular;
+    total_relu_in_size += old_aux_size+2*triangular+2*head_hidden+candidate_aux;
+    const i64 candidate_checks=head_hidden+5*triangular+head_len;
+    int output_size=candidate_checks+(r4_numerical_candidate_?2*head_len+triangular:0);
     initLayer(circuit, output_size, layerType::SOFTMAX_1);
     circuit.need_phase2 = true;
     circuit.zero_start_id=2*HEAD*len*(len+1)/2+HEAD*len*HSIZE;
@@ -1835,15 +1908,35 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
             //    val[0][sum_E_offset]+=val[layer_id-1][offset];
             //}
             ll mx=0;
+            if(r4_numerical_candidate_){
+                const auto &first=val[layer_id-1][head*len*(len+1)/2+i*(i-1)/2];
+                const auto exact=convert(first);
+                if(host_safety::field(exact)!=first || !fitsSignedBits(exact,64))
+                    throw std::range_error("R4 QK score exceeds signed64 domain");
+                mx=static_cast<ll>(exact);
+            }
             // 找到每个head,每个位置i的最大分数pmax
             for(int j=0;j<i;j++)
             {
                 int offset=head*len*(len+1)/2+i*(i-1)/2+j;
-                ll S=convert(val[layer_id-1][offset]);
-                max_abs_score = max(max_abs_score, S >= 0 ? S : -S);
+                const auto &raw_score=val[layer_id-1][offset];
+                const auto exact_score=convert(raw_score);
+                if(r4_numerical_candidate_ && (host_safety::field(exact_score)!=raw_score || !fitsSignedBits(exact_score,64)))
+                    throw std::range_error("R4 QK score exceeds signed64 domain");
+                ll S=exact_score;
+                if(r4_numerical_candidate_)val[0][candidate_base+triangular+offset]=raw_score;
+                max_abs_score = max(max_abs_score, S >= 0 ? static_cast<__int128>(S) : host_safety::neg(S));
                 mx=max(mx,S);
             }
-            val[0][pmax_offset]=Fr(mx);
+            val[0][pmax_offset]=host_safety::field(mx);
+            if(r4_numerical_candidate_){
+                for(int j=0;j<i;++j){
+                    const i64 at=head*len*(len+1)/2+i*(i-1)/2+j;
+                    if(val[0][candidate_base+triangular+at]==host_safety::field(mx)){
+                        val[0][candidate_base+at]=1;break;
+                    }
+                }
+            }
             track_val0_bits("softmax_pmax", mx);
             for(int j=0;j<i;j++) // i is length, j is id
             {
@@ -1860,9 +1953,9 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
                 max_pj = max(max_pj, pj_);
                 track_val0_bits("softmax_delta1", pj_);
                 // 把pj_=pmax-pj放缩成整数索引tj
-                ll tj=round(c1*pow(2,e1+eprime+1)*pj_/pow(2,eprime+1));
+                ll tj=host_safety::rounded(c1*pow(2,e1+eprime+1)*pj_/pow(2,eprime+1));
                 max_tj = max(max_tj, tj);
-                val[0][t_off]=tj;
+                val[0][t_off]=host_safety::field(tj);
                 track_val0_bits("softmax_t", tj);
                 if (tj < 0) {
                     throw std::range_error("Softmax lookup index is negative");
@@ -1873,19 +1966,20 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
                 val[0][E_off]=exp_value;
                 track_val0_bits("softmax_E", exp_value);
                 // delta2 判断 tj=round（pmax-pj）
-                ll sm_t1 = c1 * (1 << (e1 + eprime + 1)) * pj_ + (1 << eprime) - tj * (1 << (eprime + 1));
-                ll sm_t2 = -c1 * (1 << (e1 + eprime + 1)) * pj_ + (1 << eprime) + tj * (1 << (eprime + 1));
+                ll sm_t1 = host_safety::sub(host_safety::add(host_safety::mul(host_safety::mul(c1,host_safety::mul(1,host_safety::power2(e1 + eprime + 1))),pj_),host_safety::mul(1,host_safety::power2(eprime))),host_safety::mul(tj,host_safety::mul(1,host_safety::power2(eprime + 1))));
+                ll sm_t2 = host_safety::add(host_safety::add(host_safety::mul(host_safety::mul(host_safety::neg(c1),host_safety::mul(1,host_safety::power2(e1 + eprime + 1))),pj_),host_safety::mul(1,host_safety::power2(eprime))),host_safety::mul(tj,host_safety::mul(1,host_safety::power2(eprime + 1))));
                 if (sm_t1 < 0 || sm_t2 < 0)
                     throw std::range_error("Softmax lookup rounding slack is negative");
-                val[0][dt2_off]=Fr(sm_t1) * Fr(sm_t2);
-                val[0][lookup_term1_off]=sm_t1;
-                val[0][lookup_term2_off]=sm_t2;
-                track_val0_bits("softmax_delta2", (__int128)sm_t1 * (__int128)sm_t2);
+                val[0][dt2_off]=host_safety::field(sm_t1) * host_safety::field(sm_t2);
+                val[0][lookup_term1_off]=host_safety::field(sm_t1);
+                val[0][lookup_term2_off]=host_safety::field(sm_t2);
+                track_val0_bits("softmax_delta2", host_safety::mul(sm_t1,sm_t2));
                 track_val0_bits("softmax_lookup_term1", sm_t1);
                 track_val0_bits("softmax_lookup_term2", sm_t2);
 
                 // sumE
                 val[0][sum_E_offset]+=exp_value;
+                if(T==std::numeric_limits<i64>::max())throw std::overflow_error("Softmax diagnostic count overflow");
                 ++T;
             }
             track_val0_bits("softmax_sumE", convert(val[0][sum_E_offset]));
@@ -1953,7 +2047,16 @@ void neuralNetwork::softmax_layer_1(layer &circuit, i64 &layer_id,float SQ,float
                 circuit.uni_gates.emplace_back(term2_equality, t_off, 0,
                                                1<<(eprime+1));
                 circuit.uni_gates.emplace_back(term2_equality, lookup_term2_input, 0, -1);
+                if(r4_numerical_candidate_){
+                    const i64 row=head*len+i-1;
+                    const i64 selector=candidate_base+offset;
+                    zkgpt::r5b::attained(circuit,candidate_checks+row,candidate_checks+head_len+row,selector,dt1_off);
+                    circuit.uni_gates.emplace_back(candidate_checks+2*head_len+offset,candidate_base+triangular+offset,0,1);
+                    circuit.uni_gates.emplace_back(candidate_checks+2*head_len+offset,offset,layer_id-1,-1);
+                }
             }
+            if(r4_numerical_candidate_)
+                circuit.uni_gates.emplace_back(candidate_checks+head*len+i-1,orgsize,0,-1);
             // 检查sumE的正确性
             int sum_e_check=3*HEAD*len*(len+1)/2+HEAD*len*HSIZE+head*len+i-1;
             circuit.uni_gates.emplace_back(sum_e_check, sum_E_offset,0,-1); //-2^(e'+1)*ti
@@ -2024,23 +2127,23 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
                 int division_term2_input=division_term2_base+out_ij;
                 ll Qij=convert(val[layer_id-1][out_ij]);
                 // 计算 S=Qij/sumE
-                ll S=(ll)round(Qij*c1*pow(2,e1)/sumE);
-                val[0][s_ij]=S;
+                ll S=host_safety::rounded(host_safety::mul(Qij,c1)*pow(2,e1)/sumE);
+                val[0][s_ij]=host_safety::field(S);
                 // track_val0_bits("softmax_S", S);
                 // stats::update_max("softmax_S", S);
                 // stats::update_max("softmax_sumE", sumE);
                 // stats::update_max("softmax_Qij", Qij);
                 // delta3=d1*d2
-                ll d1=(sumE*(1<<(eprime-1))+Qij*c1*(1<<(eprime+e1))-S*sumE*(1<<eprime));
-                ll d2=(sumE*(1<<(eprime-1))-Qij*c1*(1<<(eprime+e1))+S*sumE*(1<<eprime));
+                ll d1=(host_safety::sub(host_safety::add(host_safety::mul(sumE,host_safety::mul(1,host_safety::power2(eprime - 1))),host_safety::mul(host_safety::mul(Qij,c1),host_safety::mul(1,host_safety::power2(eprime + e1)))),host_safety::mul(host_safety::mul(S,sumE),host_safety::mul(1,host_safety::power2(eprime)))));
+                ll d2=(host_safety::add(host_safety::sub(host_safety::mul(sumE,host_safety::mul(1,host_safety::power2(eprime - 1))),host_safety::mul(host_safety::mul(Qij,c1),host_safety::mul(1,host_safety::power2(eprime + e1)))),host_safety::mul(host_safety::mul(S,sumE),host_safety::mul(1,host_safety::power2(eprime)))));
                 if (d1 < 0 || d2 < 0)
                     throw std::range_error("Softmax division rounding slack is negative");
                 // stats::update_max("softmax_d1", d1);
                 // stats::update_max("softmax_d2", d2);
-                val[0][d3_off]=Fr(d1)*Fr(d2);
-                val[0][division_term1_input]=d1;
-                val[0][division_term2_input]=d2;
-                track_val0_bits("softmax_delta3", (__int128)d1 * (__int128)d2);
+                val[0][d3_off]=host_safety::field(d1)*host_safety::field(d2);
+                val[0][division_term1_input]=host_safety::field(d1);
+                val[0][division_term2_input]=host_safety::field(d2);
+                track_val0_bits("softmax_delta3", host_safety::mul(d1,d2));
                 track_val0_bits("softmax_division_term1", d1);
                 track_val0_bits("softmax_division_term2", d2);
                 f2=min(f2,S);
@@ -2083,7 +2186,7 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
         head_len, kIndexBits, false);
     witness_registry.addRange(WitnessKind::SOFTMAX,
         witness_name("softmax", witness_instance, "pmax"),
-        orgsize + 10 + head_len, head_len, kUnsignedIntegerBits, false);
+        orgsize + 10 + head_len, head_len, kUnsignedIntegerBits, r4_numerical_candidate_);
     witness_registry.addRange(WitnessKind::SOFTMAX,
         witness_name("softmax", witness_instance, "delta1"),
         orgsize + 10 + 2*head_len, triangular, kUnsignedIntegerBits, false);
@@ -2120,6 +2223,13 @@ void neuralNetwork::softmax_layer_2(layer &circuit, i64 &layer_id,float SQ,float
     witness_registry.addRange(WitnessKind::SOFTMAX,
         witness_name("softmax", witness_instance, "division_term2"),
         division_term2_base, head_hidden, kUnsignedIntegerBits, false);
+    if(r4_numerical_candidate_){
+        const i64 candidate_base=orgsize+old_aux_size+2*triangular+2*head_hidden;
+        witness_registry.addRange(WitnessKind::SOFTMAX,
+            witness_name("softmax",witness_instance,"maximum_selector"),candidate_base,triangular,1,false);
+        witness_registry.addRange(WitnessKind::SOFTMAX,
+            witness_name("softmax",witness_instance,"maximum_score"),candidate_base+triangular,triangular,64,true);
+    }
 
     calcNormalLayer(circuit, layer_id);
     for(int i=circuit.zero_start_id;i<val[layer_id].size();i++)
@@ -2214,6 +2324,7 @@ void neuralNetwork::fullyConnLayer(layer &circuit, i64 &layer_id, i64 first_fc_i
         circuit.ori_id_v.push_back(static_cast<u32>(first_fc_id+i));
     circuit.size_u[0]=static_cast<u32>(activation_count);
     circuit.size_v[0]=static_cast<u32>(weight_count);
+    if(r6Metadata()){++layer_id;return;}
     val[layer_id].resize(circuit.size);
     if (structure_only) {
         for (auto &value : val[layer_id]) value.clear();
@@ -2259,6 +2370,7 @@ void neuralNetwork::calcSizeAfterPool(const poolKernel &p) {
 // 将输入的浮点数据转换为有限域元素，为后续的零知识证明计算做准备。
 void neuralNetwork::calcInputLayer(layer &circuit) 
 {
+    if(r6Metadata()){const auto scale=search(0.01);input_e=scale.first;input_c=scale.second;return;}
     val[0].resize(circuit.size);
 
     if (val[0].size()!=static_cast<size_t>(total_in_size))
@@ -2290,10 +2402,12 @@ void neuralNetwork::calcInputLayer(layer &circuit)
     int hidden=768;
     double random_input_abs = 350.0;
     if (const char *env = std::getenv("ZKGPT_RANDOM_INPUT_ABS")) {
-        double configured = std::atof(env);
-        if (configured > 0) {
-            random_input_abs = configured;
-        }
+        char *end=nullptr;errno=0;
+        const double configured=std::strtod(env,&end);
+        if(end==env || *end || errno==ERANGE || !std::isfinite(configured) ||
+           configured<=0 || configured>std::numeric_limits<double>::max()/2)
+            throw std::invalid_argument("invalid ZKGPT_RANDOM_INPUT_ABS");
+        random_input_abs=configured;
     }
     for (i64 i=0;i<len;i++)
     {
@@ -2319,8 +2433,8 @@ void neuralNetwork::calcInputLayer(layer &circuit)
     {
         for(i64 j=0;j<hidden;j++)
         {
-            ll s=input_dat[k++]/sc;
-            val[0][i*1024+j] = F(s); // Q bit？
+            ll s=host_safety::truncated(input_dat[k++]/sc);
+            val[0][i*1024+j] = host_safety::field(s); // Q bit？
             track_val0_bits("input_x", s);
             if(i==j)
                 std::cout << "input " << (k - 1) << ": " << input_dat[k - 1]
@@ -2362,6 +2476,7 @@ void neuralNetwork::readBias(i64 first_bias_id) {
 void neuralNetwork::readFconBias(i64 first_bias_id, int real_count, int id)
 {
     parameter_regions_.push_back({"fc_"+std::to_string(id)+".bias", static_cast<size_t>(first_bias_id), static_cast<size_t>(channel_out), static_cast<size_t>(real_count), 1});
+    if(r6Metadata())return;
     if (structure_only) {
         for (int i=0;i<channel_out;++i)
             val[0][first_bias_id+i].clear();
@@ -2390,17 +2505,18 @@ std::string get_fc_weight_path(int id) {
     return path.str();
 }
 
-bool allow_random_fc_weights() {
-    const char *flag = std::getenv("ZKGPT_ALLOW_RANDOM_FC_WEIGHTS");
-    return flag && std::string(flag) == "1";
-}
 } // namespace
 
 // 读取量化后的 GPT-2 全连接权重。文件格式：
 // int32 rows(out_dim), int32 cols(in_dim), int32 data[rows * cols]，row-major。
 void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
 {
+    if(id<0 || id>=100 || first_fc_id<0 || channel_in<=0 || channel_out<=0 ||
+       real_r<=0 || real_c<=0 || real_r>channel_in || real_c>channel_out ||
+       host_safety::add(first_fc_id,host_safety::mul(channel_in,channel_out))>r5bMasterSize())
+        throw std::range_error("FC weight index/shape outside allocated region");
     parameter_regions_.push_back({"fc_"+std::to_string(id)+".weight", static_cast<size_t>(first_fc_id), static_cast<size_t>(channel_out)*channel_in, static_cast<size_t>(real_c), static_cast<size_t>(real_r)});
+    if(r6Metadata())return;
     auto val_0 = val[0].begin() + first_fc_id;
     if (structure_only) {
         for (i64 i=0;i<static_cast<i64>(channel_out)*channel_in;++i)
@@ -2443,11 +2559,11 @@ void neuralNetwork::readFconWeight(i64 first_fc_id,int real_r,int real_c,int id)
         if (!weight_file) {
             throw std::runtime_error("Failed to read full weight payload from " + weight_path);
         }
-    } else if (!allow_random_fc_weights()) {
+    } else {
         throw std::runtime_error(
             "Cannot open GPT-2 FC weight file " + weight_path +
             ". Run scripts/export_gpt2_fc_weights.py first, set ZKGPT_FC_WEIGHT_DIR, "
-            "or set ZKGPT_ALLOW_RANDOM_FC_WEIGHTS=1 for old random-weight debugging."
+            "debug fallback is disabled: missing parameters have no approved model identity."
         );
     }
 
@@ -2500,6 +2616,7 @@ void neuralNetwork::calcNormalLayer(const layer &circuit, i64 layer_id,bool outp
     const u32 current_layer = static_cast<u32>(layer_id);
     if (current_layer >= static_cast<u32>(SIZE))
         throw std::out_of_range("calcNormalLayer: layer_id exceeds value table");
+    if(r6Metadata())return;
     auto &current_values = val[current_layer];
     current_values.resize(circuit.size);
     for (auto &x: current_values) 
@@ -2509,7 +2626,7 @@ void neuralNetwork::calcNormalLayer(const layer &circuit, i64 layer_id,bool outp
     {
         if (gate.lu >= static_cast<u32>(SIZE))
             throw std::out_of_range("calcNormalLayer: uni gate source layer exceeds value table");
-        current_values.at(gate.g) += val[gate.lu].at(gate.u) * gate.sc;
+        current_values.at(gate.g) += val[gate.lu].at(gate.u) * host_safety::field(gate.sc);
     }
 
     for (auto &gate: circuit.bin_gates) 
@@ -2520,7 +2637,7 @@ void neuralNetwork::calcNormalLayer(const layer &circuit, i64 layer_id,bool outp
             bin_lv >= static_cast<u32>(SIZE))
             throw std::out_of_range("calcNormalLayer: bin gate source layer exceeds value table");
         current_values.at(gate.g) +=
-            val[bin_lu].at(gate.u) * val[bin_lv].at(gate.v) * gate.sc;
+            val[bin_lu].at(gate.u) * val[bin_lv].at(gate.v) * host_safety::field(gate.sc);
     }
 }
 
@@ -2534,7 +2651,7 @@ void neuralNetwork::validateMappedCircuitWitness(const prover &pr) const {
             const F &source=gate.lu==0
                 ? pr.val.at(0).at(mapped.ori_id_u.at(gate.u))
                 : pr.val.at(gate.lu).at(gate.u);
-            recomputed.at(gate.g)+=source*gate.sc;
+            recomputed.at(gate.g)+=source*host_safety::field(gate.sc);
         }
         for (const auto &gate : mapped.bin_gates) {
             const u32 source_u_layer=gate.getLayerIdU(current_layer);
@@ -2545,7 +2662,7 @@ void neuralNetwork::validateMappedCircuitWitness(const prover &pr) const {
             const F &source_v=source_v_layer==0
                 ? pr.val.at(0).at(mapped.ori_id_v.at(gate.v))
                 : pr.val.at(source_v_layer).at(gate.v);
-            recomputed.at(gate.g)+=source_u*source_v*gate.sc;
+            recomputed.at(gate.g)+=source_u*source_v*host_safety::field(gate.sc);
         }
         for (u32 gate=0; gate<mapped.size; ++gate) {
             if (recomputed.at(gate)!=pr.val.at(current_layer).at(gate)) {
@@ -2623,14 +2740,14 @@ void neuralNetwork::checkNormalLayer(const layer &circuit, i64 layer_id,const ve
         x.clear();
     for (auto &gate: circuit.uni_gates) 
     {
-        valp.at(gate.g) += val.at(gate.lu).at(gate.u) * gate.sc;
+        valp.at(gate.g) += val.at(gate.lu).at(gate.u) * host_safety::field(gate.sc);
     }
     for (auto &gate: circuit.bin_gates) 
     {
         const u32 bin_lu = gate.getLayerIdU(current_layer);
         const u32 bin_lv = gate.getLayerIdV(current_layer);
         valp.at(gate.g) +=
-            val.at(bin_lu).at(gate.u) * val.at(bin_lv).at(gate.v) * gate.sc;
+            val.at(bin_lu).at(gate.u) * val.at(bin_lv).at(gate.v) * host_safety::field(gate.sc);
     }
     for (u32 i = 0; i < circuit.size; ++i)
         assert(valp.at(i) == current_values.at(i));
@@ -2708,4 +2825,10 @@ void neuralNetwork::logPrivateMemory(const std::string &stage) const {
     logVector(stage,"network_table",table);
     logVector(stage,"gelu_scalar_dump",gelu_delta3_limbs);
     logVector(stage,"round_scalar_dump",round_delta_limbs);
+}
+
+void neuralNetwork::createFiniteWitness(prover &pr){
+ if(!r6_engineering_ || layer_num>3 || structure_only || pr.cc.w)throw std::invalid_argument("finite R6 witness supports at most3 blocks and no existing commitment");
+ r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
+ if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
 }

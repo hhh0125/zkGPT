@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include <cybozu/sha2.hpp>
 #include <limits>
+#include <algorithm>
 namespace zkgpt::r1 {
 void require(bool ok, const std::string &why) {
     if (!ok)
@@ -24,8 +25,41 @@ Bytes encode(const Fr &x) {
     require(x.serialize(b.data(), b.size()) == 32, "Fr encoding");
     return b;
 }
+namespace {
+// MCL's BN254 is y^2=x^3+2 over the pinned p, not BN_SNARK1/alt_bn128.
+// Its full E(Fp) order equals r (cofactor 1). Inspect live parameters on
+// every call: a previous init() or a cached object address is not authority.
+bool exactBn254G1() {
+    static const mpz_class p = [] {
+        mpz_class v;
+        mcl::gmp::setStr(v, "16798108731015832284940804142231733909889187121439069848933715426072753864723");
+        return v;
+    }();
+    static const mpz_class r = [] {
+        mpz_class v;
+        mcl::gmp::setStr(v, kModulus);
+        return v;
+    }();
+    return mcl::bn::BN::param.cp.curveType == MCL_BN254 &&
+           G1::Fp::getOp().mp == p && Fr::getOp().mp == r && G1::order_ == r &&
+           G1::a_.isZero() && G1::b_ == G1::Fp(2) &&
+           G1::specialA_ == mcl::ec::local::Zero &&
+           G1::specialB_ == mcl::ec::local::GenericB &&
+           G1::getMode() == mcl::ec::Jacobi &&
+           !G1::Fp::isETHserialization() && G1::getSerializedByteSize() == 32;
+}
+} // namespace
+bool isValidG1(const G1 &x) {
+    if (!exactBn254G1())
+        return x.isValid() && x.isValidOrder();
+    // isValid() itself invokes an order multiplication in this MCL version.
+    // Retain its exact Jacobi equation check, including identity handling,
+    // and reject non-field internal coordinates before arithmetic.
+    return x.x.isValid() && x.y.isValid() && x.z.isValid() &&
+           mcl::ec::isValidJacobi(x);
+}
 Bytes encode(const G1 &x) {
-    require(x.isValid() && x.isValidOrder(), "invalid G1");
+    require(isValidG1(x), "invalid G1");
     Bytes b(G1::getSerializedByteSize());
     require(x.serialize(b.data(), b.size()) == b.size(), "G1 encoding");
     return b;
@@ -40,8 +74,27 @@ Fr decodeFr(const Bytes &b) {
 G1 decodeG1(const Bytes &b) {
     require(b.size() == G1::getSerializedByteSize(), "G1 size");
     G1 g;
-    require(g.deserialize(b.data(), b.size()) == b.size() && g.isValid() && g.isValidOrder(),
-            "noncanonical G1");
+    if (exactBn254G1()) {
+        // The same MCL non-ETH compressed representation: 32 little-endian
+        // x bytes, high bit = y parity, all-zero bytes = infinity. Use MCL's
+        // strict field decoder and square root/parity routine, without the
+        // mathematically redundant order check in EcT::deserialize().
+        if (std::all_of(b.begin(), b.end(), [](std::uint8_t v) { return v == 0; })) {
+            g.clear();
+        } else {
+            auto x = b;
+            const bool odd = (x.back() & 0x80) != 0;
+            x.back() &= 0x7f;
+            require(g.x.deserialize(x.data(), x.size()) == x.size() &&
+                        G1::getYfromX(g.y, g.x, odd),
+                    "noncanonical G1");
+            g.z = 1;
+        }
+        require(isValidG1(g), "noncanonical G1");
+    } else {
+        require(g.deserialize(b.data(), b.size()) == b.size() && isValidG1(g),
+                "noncanonical G1");
+    }
     require(encode(g) == b, "noncanonical G1 roundtrip");
     return g;
 }

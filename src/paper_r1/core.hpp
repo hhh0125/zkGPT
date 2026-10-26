@@ -17,6 +17,8 @@ void require(bool ok, const std::string &why);
 void init();
 unsigned log2exact(std::size_t n);
 Bytes encode(const Fr &x);
+// Rechecks the actual object; no validation cache or mutable validated state.
+bool isValidG1(const G1 &x);
 Bytes encode(const G1 &x);
 Fr decodeFr(const Bytes &b);
 G1 decodeG1(const Bytes &b);

@@ -1,3 +1,5 @@
+#include "host_safety.hpp"
+#include <algorithm>
 #include "prover.hpp"
 #include "memory_diagnostics.hpp"
 #include "thread_joiner.hpp"
@@ -141,7 +143,7 @@ void sc_phase1_uni_worker(vector<uniGate> &beg, std::vector<linear_poly> (&mult_
         {
             auto &gate = beg[i];
             bool idx = gate.lu != 0;
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * gate.sc;
+            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * host_safety::field(gate.sc);
         }
         endq.Push(idx);
     }
@@ -162,7 +164,7 @@ void sc_phase1_bin_worker(layer& cur, vector<binGate> &beg, std::vector<linear_p
             auto &gate = beg[i];
             bool idx = gate.getLayerIdU(sumcheck_id) != 0;
             auto val_lv =  !gate.getLayerIdV(sumcheck_id) ? val[0][cur.ori_id_v[gate.v]] : val[gate.getLayerIdV(sumcheck_id)][gate.v];
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * gate.sc;  // Ahg for phase 1
+            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * host_safety::field(gate.sc);  // Ahg for phase 1
         }
         endq.Push(idx);
     }
@@ -253,7 +255,7 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
     else for (auto &gate: cur.uni_gates) 
         {
             bool idx = gate.lu != 0;
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * gate.sc;
+            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * host_safety::field(gate.sc);
         }
     if(cur.bin_interval.size()>=2)
     {
@@ -285,7 +287,7 @@ void prover::sumcheckInitPhase1(const F &relu_rou_0)
         {
             bool idx = gate.getLayerIdU(sumcheck_id) != 0;
             auto val_lv = getCirValue(gate.getLayerIdV(sumcheck_id), cur.ori_id_v, gate.v);
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * gate.sc;  // Ahg for phase 1
+            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * host_safety::field(gate.sc);  // Ahg for phase 1
         }
     round = 0;
     prove_timer.stop();
@@ -308,7 +310,7 @@ void sc_phase2_uni_worker( vector<uniGate> &beg, F& sum_value,F& V_u0,F&V_u1,vec
         {
             auto &gate = beg[i];
             auto V_u = !gate.lu ? V_u0 : V_u1;                  //V_u0 is claim 0, V_u1 is claim 1
-            ss +=beta_g[gate.g] * beta_u[gate.u] * V_u * gate.sc;
+            ss +=beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
         }
         sum_value+=ss;
         endq.Push(idx);
@@ -330,7 +332,7 @@ void sc_phase2_bin_worker( vector<binGate> &beg, std::vector<linear_poly> (&mult
             auto &gate = beg[i];
             bool idx = gate.getLayerIdV(sumcheck_id);
             auto V_u = !gate.getLayerIdU(sumcheck_id) ? V_u0 : V_u1;
-            mult_array[idx][gate.v] =mult_array[idx][gate.v]+beta_g[gate.g] * beta_u[gate.u] * V_u * gate.sc;
+            mult_array[idx][gate.v] =mult_array[idx][gate.v]+beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
         }
         endq.Push(idx);
     }
@@ -417,7 +419,7 @@ void prover::sumcheckInitPhase2()
     else for (auto &gate: cur.uni_gates) 
     {
         auto V_u = !gate.lu ? V_u0 : V_u1;                  //V_u0 is claim 0, V_u1 is claim 1
-        add_term = add_term + beta_g[gate.g] * beta_u[gate.u] * V_u * gate.sc;
+        add_term = add_term + beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
     }
     if(cur.bin_interval.size()>=2)
     {
@@ -449,7 +451,7 @@ void prover::sumcheckInitPhase2()
     {
         bool idx = gate.getLayerIdV(sumcheck_id);
         auto V_u = !gate.getLayerIdU(sumcheck_id) ? V_u0 : V_u1;
-        mult_array[idx][gate.v] = mult_array[idx][gate.v] + beta_g[gate.g] * beta_u[gate.u] * V_u * gate.sc;
+        mult_array[idx][gate.v] = mult_array[idx][gate.v] + beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
     }
 
     round = 0;
@@ -1013,12 +1015,43 @@ bool write_ec_data_to_npy(
     return true;
 }
 
-void prover::commitInput(const vector<G1> &gens,int thr) 
+void prover::commitInput(const vector<G1> &gens,int thr,bool shared_vector) 
 {
+    if(shared_vector && (val.empty() || C.circuit.empty() ||
+        C.circuit[0].bit_length<0 || C.circuit[0].bit_length>28))
+        throw std::invalid_argument("shared commitment input domain");
+    if(shared_vector && gens.size()<(std::size_t(1)<<(C.circuit[0].bit_length-C.circuit[0].bit_length/2))+1)
+        throw std::invalid_argument("shared commitment generators incomplete");
     const size_t len=val[0].size();
     const size_t padded_len=1ULL << C.circuit[0].bit_length;
     if (len>C.circuit[0].size || C.circuit[0].size>padded_len)
         throw std::length_error("commitInput: invalid input witness shape");
+    if(shared_vector){
+        // Exact logical witness only. No temporary padding/compaction of val0.
+        if(len!=C.circuit[0].size)throw std::length_error("shared commitment requires complete logical witness");
+        std::vector<Fr> owner(padded_len,Fr(0));
+        std::copy(val[0].begin(),val[0].end(),owner.begin());
+        const int bits=C.circuit[0].bit_length;
+        std::unique_ptr<G1[]> rows(prover_commit(owner.data(),(G1*)gens.data(),bits,thr));
+        // All workers joined. Publish only after success; failure leaves the
+        // previous commitment owner and borrowed views intact.
+        committed_witness_vector_=std::move(owner);committed_witness_.reset();
+        committed_rows_=std::move(rows);
+        cc.comm=committed_rows_.get();cc.G=gens.back();cc.g=(G1*)gens.data();
+        cc.l=bits;cc.w=committed_witness_vector_.data();cc.ww=nullptr;
+        // Publication is complete. Optional diagnostics must never turn a
+        // successful commit into an exception after replacing borrowed views.
+        try {
+            using namespace zkgpt::memory_diagnostics;
+            if(enabled()) {
+                logAddress("shared_commit/published","cc.w",cc.w,padded_len*sizeof(Fr),"prover.vector");
+                logAddress("shared_commit/published","val0",val[0].data(),val[0].capacity()*sizeof(Fr),"prover.val0");
+                logVector("shared_commit/published","committed_vector",committed_witness_vector_);
+                logProcess("shared_commit/published");
+            }
+        } catch (...) { /* A diagnostic allocation cannot invalidate commit success. */ }
+        return;
+    }
     if (zkgpt::memory_diagnostics::enabled()) {
         zkgpt::memory_diagnostics::logProcess("commit_input_before_padding");
         zkgpt::memory_diagnostics::logVector(
@@ -1067,6 +1100,7 @@ void prover::commitInput(const vector<G1> &gens,int thr)
         prover_commit(dat,(G1*)gens.data(),l,thr));
     G1* ret=rows_owner.get();
     // Publish borrowed views only after all commitment workers joined.
+    std::vector<Fr>().swap(committed_witness_vector_);
     committed_witness_=std::move(witness_owner);
     committed_rows_=std::move(rows_owner);
     
@@ -1098,6 +1132,13 @@ void prover::commitInput(const vector<G1> &gens,int thr)
         zkgpt::memory_diagnostics::logScalar(
             "commit_input_val0_compacted","padded_witness_buffers",1);
     }
+}
+
+const std::vector<Fr>& prover::sharedInputWitness() const {
+    if(cc.l<0 || cc.l>28 || committed_witness_vector_.empty() ||
+       committed_witness_vector_.size()!=(std::size_t(1)<<cc.l) || cc.w!=committed_witness_vector_.data())
+        throw std::logic_error("no shared vector-owned commitment");
+    return committed_witness_vector_;
 }
 
 __int128 convert(Fr x)	
@@ -1141,7 +1182,10 @@ void prover::logPrivateMemory(const std::string &stage) const {
     logVectorMetadata(stage,"all_layer_witness",size,capacity,sizeof(F));
     if (!val.empty()) logVector(stage,"val0",val[0]);
     logVector(stage,"generators",gens);
-    logScalar(stage,"committed_witness_alive",bool(committed_witness_));
+    logScalar(stage,"committed_witness_alive",bool(committed_witness_) || !committed_witness_vector_.empty());
+    logScalar(stage,"committed_legacy_array_alive",bool(committed_witness_));
+    logScalar(stage,"committed_shared_vector_alive",!committed_witness_vector_.empty());
+    logVector(stage,"committed_shared_vector",committed_witness_vector_);
     logScalar(stage,"committed_rows_alive",bool(committed_rows_));
     if (committed_witness_) logAllocation(stage,"committed_witness",1ULL<<cc.l,sizeof(Fr));
     if (committed_rows_) logAllocation(stage,"committed_rows",1ULL<<(cc.l/2),sizeof(G1));

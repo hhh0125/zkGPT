@@ -122,6 +122,6 @@ public:
 	vector<layer> circuit;  // 数组，i表示层数，circuit[i]:存储该层数据？
     u32 size;
     void init(u32 q_bit_size, u32 _layer_sz);
-	void initSubset();
+	void initSubset(bool sparse=false);
 };
 

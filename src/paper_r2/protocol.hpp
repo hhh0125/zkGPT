@@ -13,7 +13,8 @@ struct Proof {
 };
 Proof proveR2(::prover &prover,GKRPublicStatement &gkr_statement,
     const r1::LookupBatchSpec &lookup,
-    const std::vector<Fr> &master,const std::vector<std::vector<Fr>> &children);
+    const std::vector<Fr> &master,const std::vector<std::vector<Fr>> &children,
+    const r1::LookupProgress &progress={});
 std::vector<GKRInputTerminalClaim> verifyR2(const layeredCircuit &circuit,
-    const GKRPublicStatement &gkr_statement,const r1::LookupBatchSpec &lookup,const Proof &p);
+    const GKRPublicStatement &gkr_statement,const r1::LookupBatchSpec &lookup,const Proof &p,const r1::LookupProgress &progress={});
 } // namespace zkgpt::r2

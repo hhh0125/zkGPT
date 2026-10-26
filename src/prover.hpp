@@ -56,7 +56,8 @@ public:
     void sumcheckLassoInit(const vector<F> &s_u, const vector<F> &s_v,const vector<vector<F>>& r_uu, const vector<vector<F>>& r_vv);
     quadratic_poly sumcheckLassoUpdate(const F &previous_random);
     quadratic_poly sumcheckUpdateEach_Lasso(const F &previous_random, bool idx) ;
-    void commitInput(const vector<G1> &gens,int thread_n=1);
+    void commitInput(const vector<G1> &gens,int thread_n=1,bool shared_vector=false);
+    const std::vector<Fr>& sharedInputWitness() const;
 
     timer prove_timer;
     vector<double> throw_time[500];
@@ -74,6 +75,7 @@ public:
     
 private:
     std::unique_ptr<Fr[]> committed_witness_;
+    std::vector<Fr> committed_witness_vector_;
     std::unique_ptr<G1[]> committed_rows_;
     void prepareSumcheckWorkspace();
     quadratic_poly sumcheckUpdateEach(const F &previous_random, bool idx);

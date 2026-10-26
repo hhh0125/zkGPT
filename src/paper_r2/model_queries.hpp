@@ -6,6 +6,9 @@ struct ModelQuerySource {r1::PCSpec spec;std::vector<r1::InputSpan> spans;};
 // Construct only from the verifier's own public model builder/registry.
 // This adapter is a legacy numerical-profile source plan, not its approval.
 struct ModelQueryPlan {
+    bool r4_candidate=false;
+    bool r5b_candidate=false;
+    bool r6_engineering=false;
     std::string circuit_id;
     WitnessShape shape;
     r1::PCSpec master;

@@ -1,3 +1,4 @@
+#include "host_safety.hpp"
 #include "gkr_verifier.hpp"
 
 #include "generator_cache.hpp"
@@ -160,7 +161,7 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
                 }
                 const unsigned source_class = gate.lu == 0 ? 0U : 1U;
                 unary_partial[thread_id][source_class] +=
-                    beta_g[gate.g] * beta_u[gate.u] * gate.sc;
+                    beta_g[gate.g] * beta_u[gate.u] * host_safety::field(gate.sc);
             }
         });
     }
@@ -196,7 +197,7 @@ void computePredicates(const layeredCircuit &circuit, std::uint32_t layer_id,
                     return;
                 }
                 binary_partial[thread_id][gate.l] +=
-                    beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * gate.sc;
+                    beta_g[gate.g] * beta_u[gate.u] * beta_v[gate.v] * host_safety::field(gate.sc);
             }
         });
     }
@@ -254,6 +255,7 @@ std::array<std::uint8_t, 32> fingerprintLayer(const layer &layer) {
         writer.u64(gate.g);
         writer.u64(gate.u);
         writer.u64(gate.lu);
+        if(gate.sc<std::numeric_limits<std::int64_t>::min() || gate.sc>std::numeric_limits<std::int64_t>::max())throw std::range_error("circuit coefficient outside fingerprint int64 domain");
         writer.u64(static_cast<std::uint64_t>(gate.sc));
     }
     writer.u64(layer.bin_gates.size());
@@ -262,6 +264,7 @@ std::array<std::uint8_t, 32> fingerprintLayer(const layer &layer) {
         writer.u64(gate.u);
         writer.u64(gate.v);
         writer.u64(gate.l);
+        if(gate.sc<std::numeric_limits<std::int64_t>::min() || gate.sc>std::numeric_limits<std::int64_t>::max())throw std::range_error("circuit coefficient outside fingerprint int64 domain");
         writer.u64(static_cast<std::uint64_t>(gate.sc));
     }
     writer.u64(layer.ori_id_u.size());

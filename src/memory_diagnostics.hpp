@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,11 @@ namespace zkgpt::memory_diagnostics {
 // Diagnostics are deliberately opt-in. They only inspect process memory and
 // container metadata; none of the values are fed into a proof or transcript.
 bool enabled();
+inline void logAddress(const std::string&stage,const std::string&name,const void*data,
+                       std::size_t bytes,const char*owner){
+ if(enabled())std::fprintf(stderr,"[ZKGPT_ADDR] stage=%s object=%s address=%p bytes=%zu owner=%s\n",stage.c_str(),name.c_str(),const_cast<void*>(data),bytes,owner);
+}
+
 void logProcess(const std::string &stage);
 void logAllocation(const std::string &stage, const std::string &name,
                    std::size_t count, std::size_t element_size);

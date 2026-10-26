@@ -18,7 +18,7 @@ std::size_t addSource(ModelQueryPlan &p,const std::string &role,const std::vecto
 }
 ModelQueryPlan planModelQueries(const layeredCircuit &c,const WitnessRegistry &registry,
     const std::vector<neuralNetwork::ParameterRegion> &parameters,r1::ExpProfile exp_profile){
-    ModelQueryPlan p;p.shape=registry.shape();
+    ModelQueryPlan p;p.shape=registry.shape();p.r4_candidate=registry.r4NumericalCandidate();p.r5b_candidate=registry.r5bEngineeringCandidate();p.r6_engineering=registry.r6Engineering();
     r1::require(p.shape.sequence_length==32 && p.shape.hidden_dimension==768 && p.shape.head_dimension==64 && p.shape.head_count==12,"unsupported model query profile");
     registry.validateLayout(c.circuit.at(0).size);
     p.circuit_id=circuitFingerprintHex(fingerprintCircuit(c));
@@ -28,6 +28,20 @@ ModelQueryPlan planModelQueries(const layeredCircuit &c,const WitnessRegistry &r
     for(const auto &r:registry.constraints()){
         Fr bias=0;if(r.is_signed){bias=Fr(1);for(unsigned bit=1;bit<r.bits;++bit)bias*=Fr(2);}
         push(groups[{r.bits,r.is_signed}],r.val0_offset,r.count,bias);
+        if(p.r5b_candidate && r.kind==WitnessKind::LAYER_NORM && ends(r.name,"_sigma"))
+            push(groups[{r.bits,false}],r.val0_offset,r.count,Fr(-1));
+        if(p.r4_candidate){
+            const bool ln=r.kind==WitnessKind::LAYER_NORM;
+            const bool gelu=r.kind==WitnessKind::GELU;
+            const bool root=ln && (ends(r.name,"_sqrt_upper") || ends(r.name,"_sqrt_lower"));
+            const bool positive=root || (ln && (ends(r.name,"_sigma") || ends(r.name,"_delta1") || ends(r.name,"_term1") || ends(r.name,"_term2"))) ||
+                (gelu && (ends(r.name,"_delta2") || ends(r.name,"_term1") || ends(r.name,"_term2")));
+            // Additional query; the original unsigned upper bound remains above.
+            if(positive)push(groups[{r.bits,false}],r.val0_offset,r.count,Fr(-1));
+            // Together with the two u32 sqrt factors this bounds all square
+            // expressions/products far below the field modulus (not just delta).
+            if(ln && ends(r.name,"_sigma"))push(groups[{32,false}],r.val0_offset,r.count,Fr(0));
+        }
         unsigned reserve=0;
         if(r.name.rfind("round_",0)==0 && ends(r.name,"_q"))reserve=20;
         if(((r.name.rfind("layer_norm_",0)==0 || r.name.rfind("gelu_",0)==0) && ends(r.name,"_y")) ||
@@ -62,7 +76,7 @@ r1::LookupBatchSpec makeModelQueryStatement(const ModelQueryPlan &p,const r1::Co
     r1::require(children.back().spec==approved_w.spec && children.back().rows==approved_w.rows,"publisher W commitment mismatch");
     r1::require(x.size()==32768 && y.size()==p.output.size(),"complete public X/Y required");
     for(std::size_t i=0;i<x.size();++i)if(i%1024>=p.shape.hidden_dimension)r1::require(x[i].isZero() && y[i].isZero(),"public activation padding must be zero");
-    r1::LookupBatchSpec s;s.input.context="R2-legacy-source-adapter-NOT-PAPER-APPROVED/"+model+"/"+p.circuit_id;s.input.master=master;
+    r1::LookupBatchSpec s;s.input.context=(p.r6_engineering?"R6-R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r5b_candidate?"R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r4_candidate?"R4-partial-numerical-NOT-PAPER-APPROVED/":"R2-legacy-source-adapter-NOT-PAPER-APPROVED/")+model+"/"+p.circuit_id;s.input.master=master;
     for(std::size_t j=0;j<p.sources.size();++j){r1::require(children[j].spec==p.sources[j].spec,"model child identity");s.input.children.push_back({children[j],p.sources[j].spans});}
     for(std::size_t i=0;i<x.size();++i)s.input.public_values.push_back({i,x[i]});
     for(std::size_t i=0;i<y.size();++i)s.input.public_values.push_back({p.output[i],y[i]});
