@@ -152,6 +152,12 @@ add_test(NAME r2_gkr_terminals COMMAND r2_gkr_terminal_tests)
 add_subdirectory(paper_r1)
 add_subdirectory(paper_r2)
 
+# R7 framework is additive; R6 computation/proof targets remain unchanged.
+option(ZKGPT_BUILD_R7_FRAMEWORK "Build fail-closed R7 Oneblock framework" OFF)
+if(ZKGPT_BUILD_R7_FRAMEWORK)
+    add_subdirectory(paper_r7)
+endif()
+
 add_executable(r5a_host_tests main_r5a_host_tests.cpp)
 target_link_libraries(r5a_host_tests PRIVATE paper_r2)
 foreach(mode counter round wide-gelu minimum missing codec arithmetic construct-boundaries wide-ln search-boundary input-config)
