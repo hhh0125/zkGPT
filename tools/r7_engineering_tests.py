@@ -38,4 +38,13 @@ class EngineeringTests(unittest.TestCase):
    with (Path(d)/'process.log').open('wb') as log:
     code=run_process_group([sys.executable,'-c',parent],log,timeout=.3)
    self.assertEqual(code,124);time.sleep(1.1);self.assertFalse(marker.exists())
+ @unittest.skipUnless(sys.platform=='linux','real interactive descendant timeout test')
+ def test_outer_timeout_stops_interactive_child(self):
+  with tempfile.TemporaryDirectory() as d:
+   marker=Path(d)/'escaped-interactive-child';started=Path(d)/'started'
+   child="import time,signal,pathlib;signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(1);pathlib.Path("+repr(str(marker))+").write_text('orphan')"
+   parent="import sys,time,pathlib;sys.path.insert(0,"+repr(str(Path(__file__).resolve().parent))+");from r7_process import start_interactive_child;start_interactive_child([sys.executable,'-c',"+repr(child)+"]);pathlib.Path("+repr(str(started))+").write_text('ready');time.sleep(10)"
+   with (Path(d)/'process.log').open('wb') as log:
+    code=run_process_group([sys.executable,'-c',parent],log,timeout=.4)
+   self.assertEqual(code,124);self.assertTrue(started.exists());time.sleep(1.1);self.assertFalse(marker.exists())
 if __name__=='__main__':unittest.main(verbosity=2)

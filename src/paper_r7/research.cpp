@@ -34,6 +34,7 @@ Result research(c::IO&io,const std::string&mode,std::size_t n,const std::string&
    for(std::size_t k=0;k<degree;++k)for(std::size_t j=0;j<n;++j)w[k*n+j]=mode=="sumcheck-zero"?Fr(0):Fr((j+3*k)%13)-Fr(6);
    for(std::size_t j=0;j<n;++j){Fr product=1;for(std::size_t k=0;k<degree;++k)product*=w[k*n+j];w[degree*n]+=product;}
   }
+  if(io.prover() && real && attack=="wrong-real-output")w[2*n]+=Fr(1);
   c::PCSecret secret;Bytes bytes;if(io.prover()){secret=c::commit(c::PCSpec::make(role,w.size(),4*n),w,rng);bytes=c::encode(secret.public_pc);}
   bytes=io.message(role+"/PC",bytes);auto pc=c::decodePC(bytes);c::need(pc.spec.role==role && pc.spec.actual==degree*n+1 && pc.spec.padded==4*n,"R7 contraction PC identity/layout mismatch");
   c::committedSumcheck(io,{pc,n,degree,degree*n,role},io.prover()?&secret:nullptr,random,attack);

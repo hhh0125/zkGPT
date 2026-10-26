@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <chrono>
+#include <cstdlib>
+#include <sys/stat.h>
 using namespace zkgpt::r7;
 int main(int argc,char**argv){try{
  crypto::need(argc>=3 && argc<=4,"usage: R7_LOCAL MODE N [P_ATTACK]");
@@ -18,5 +20,7 @@ int main(int argc,char**argv){try{
  auto start=std::chrono::steady_clock::now();crypto::PipeIO io(prover,mode+"/"+number,attack);Result result;
  if(prover)result=R7OneblockProver{}.runLocalInteractive(io,mode,n,attack);else result=R7OneblockVerifier{}.verifyLocalInteractive(io,mode,n);
  crypto::need(result.code==Code::Ok,"R7 local protocol incomplete");struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=crypto::metrics();
- std::cerr<<"{\"status\":\"LOCAL_CRYPTO_TESTED\",\"role\":\""<<(prover?"P":"V")<<"\",\"mode\":\""<<mode<<"\",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"proof_bytes_sent\":"<<io.proofBytes()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"vector_msm_calls\":"<<m.msm_calls<<",\"vector_msm_terms\":"<<m.msm_terms<<",\"max_vector_msm\":"<<m.max_msm<<",\"honest_interactive_only\":true,\"joint_extraction\":\"PARTIAL\",\"oneblock_status\":\"INCOMPLETE\",\"may_enter_stage2\":false}\n";return 0;
+ // Only public protocol bytes are written. This audit is never a verifier input.
+ if(!prover){if(const char*raw=std::getenv("R7_PUBLIC_AUDIT_FD")){std::string value=raw;crypto::need(!value.empty() && value.size()<=4 && value.find_first_not_of("0123456789")==std::string::npos,"R7 public audit FD");int fd=std::stoi(value);struct stat st{};crypto::need(fd>2 && fstat(fd,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid(),"R7 audit requires launcher-owned regular file");const auto&b=io.publicTranscript();std::size_t at=0;while(at<b.size()){auto count=write(fd,b.data()+at,b.size()-at);crypto::need(count>0,"R7 public audit write failed");at+=std::size_t(count);}}}
+ std::cerr<<"{\"status\":\"LOCAL_CRYPTO_TESTED\",\"role\":\""<<(prover?"P":"V")<<"\",\"mode\":\""<<mode<<"\",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"cpu_user_seconds\":"<<usage.ru_utime.tv_sec+usage.ru_utime.tv_usec/1e6<<",\"cpu_system_seconds\":"<<usage.ru_stime.tv_sec+usage.ru_stime.tv_usec/1e6<<",\"proof_bytes_sent\":"<<io.proofBytes()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"vector_msm_calls\":"<<m.msm_calls<<",\"vector_msm_terms\":"<<m.msm_terms<<",\"max_vector_msm\":"<<m.max_msm<<",\"honest_interactive_only\":true,\"joint_extraction\":\"PARTIAL\",\"oneblock_status\":\"INCOMPLETE\",\"may_enter_stage2\":false}\n";return 0;
 }catch(const std::exception&e){std::cerr<<"REJECT "<<e.what()<<'\n';return 2;}}
