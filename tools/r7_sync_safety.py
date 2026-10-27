@@ -1,6 +1,6 @@
 from pathlib import Path,PurePosixPath
 import io,tarfile
-REMOTE_TOOLS={'tools/oneblock_tests.py','tools/r7_oneblock_runner.py','tools/stage3b1_transport_tests.py','tools/stage3b1_tests.py','tools/stage3a_tests.py','tools/r7_round1_runner.py','tools/r7_round2_runner.py','tools/r7_interactive_tests.py','tools/r7_sync_safety.py','tools/r7_process.py','tools/r7_engineering_tests.py','tools/r7_hyrax_a3_runner.py','tools/hyrax_a3_tests.py','tools/r7_hyrax_a3_stage2_runner.py','tools/hyrax_a3_stage2_tests.py','tools/hyrax_a3_stage2_setup.py'}
+REMOTE_TOOLS={'tools/oneblock_guard_tests.py','tools/oneblock_regressions.py','tools/oneblock_tests.py','tools/r7_oneblock_runner.py','tools/stage3b1_transport_tests.py','tools/stage3b1_tests.py','tools/stage3a_tests.py','tools/r7_round1_runner.py','tools/r7_round2_runner.py','tools/r7_interactive_tests.py','tools/r7_sync_safety.py','tools/r7_process.py','tools/r7_engineering_tests.py','tools/r7_hyrax_a3_runner.py','tools/hyrax_a3_tests.py','tools/r7_hyrax_a3_stage2_runner.py','tools/hyrax_a3_stage2_tests.py','tools/hyrax_a3_stage2_setup.py'}
 
 def sync_state_target(root):
  return no_links(Path(root),Path(root)/'reports/HYRAX_A3_LAST_SYNC.json')

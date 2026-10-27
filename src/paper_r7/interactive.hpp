@@ -3,7 +3,7 @@
 #include "wire.hpp"
 namespace zkgpt::r7::crypto {
 class PipeIO final:public IO{
- bool prover_;std::string sid_,attack_;std::uint64_t seq_=0,total_=0,sent_=0,max_frame_=0,limit_=16*1024*1024,frame_limit_=4096;int audit_fd_=-1;bool attacked_=false;OSRandom coins_;R7Transcript transcript_{"zkGPT.R7.independent-interactive.v1"};Bytes public_transcript_;
+ bool prover_;std::string sid_,attack_;std::uint64_t seq_=0,total_=0,sent_=0,max_frame_=0,limit_=16*1024*1024,frame_limit_=4096;int audit_fd_=-1;bool attacked_=false;OSRandom coins_;std::unique_ptr<Random>live_coins_;R7Transcript transcript_{"zkGPT.R7.independent-interactive.v1"};Bytes public_transcript_;
  void send(const std::string&,const Bytes&);Bytes receive(const std::string&);
  void audit(const Bytes&);
  public:

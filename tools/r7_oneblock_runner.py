@@ -34,18 +34,27 @@ try:
  run('bindings-unit',['build/release/src/paper_r7/r7_oneblock_bindings_tests'],180)
  run('public-unit',['build/release/src/paper_r7/r7_oneblock_public_tests'],180)
  run('vectors-unit',['build/release/src/paper_r7/r7_oneblock_vectors_tests'],180)
- if '--build-only' not in sys.argv:
-  run('complete-independent',['python3','-B','tools/oneblock_tests.py',str(stage)],24000)
+ if '--build-only' not in sys.argv and '--regression-only' not in sys.argv:
+  run('complete-independent',['python3','-B','tools/oneblock_tests.py',str(stage)]+(['--negative-supplement'] if '--negative-supplement' in sys.argv else []),24000)
   cases=json.loads((stage/'full-sessions/CASES.json').read_text());assert all(c['passed'] for c in cases)
-  good=next(c for c in cases if c['case']=='correct-full')
-  result.update(full_prover_success=True,full_verifier_accept=True,oneblock_status='ONEBLOCK_INTERACTIVE_ACCEPT',positive_case=good)
+  if '--negative-supplement' in sys.argv:result['scope']='NEGATIVE_SUPPLEMENT_ONLY_NO_NEW_POSITIVE_ACCEPTANCE'
+  else:
+   good=next(c for c in cases if c['case']=='correct-full')
+   result.update(full_prover_success=True,full_verifier_accept=True,oneblock_status='ONEBLOCK_INTERACTIVE_ACCEPT',positive_case=good)
 
+ if '--regression-only' in sys.argv:run('retained-regressions',['python3','-B','tools/oneblock_regressions.py',str(stage)],3600)
  after=preservation();(stage/'PRESERVATION_AFTER.json').write_text(json.dumps(after,indent=2));assert before==after
  for n,h in identity['files'].items():assert hashlib.sha256((ROOT/n).read_bytes()).hexdigest()==h,n
- result.update(status='COVERAGE_DISCOVERED',r6_preservation=True)
+ result.update(status='RETAINED_REGRESSIONS_PASSED' if '--regression-only' in sys.argv else 'ONEBLOCK_INTERACTIVE_TESTED' if result['full_verifier_accept'] else 'NEGATIVE_SUPPLEMENT_TESTED' if '--negative-supplement' in sys.argv else 'COMPONENTS_TESTED',r6_preservation=True)
 except Exception as e:result['error']=str(e);traceback.print_exc()
 finally:
  result['events']=events;result['toolchain']={n:subprocess.run([n,'--version'],capture_output=True,text=True).stdout.splitlines()[0] for n in ['cmake','c++','python3']}
+ result['binary_sha256']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'build/release/src/paper_r7').glob('r7_*') if p.is_file()}
+ result['openssl_version']=subprocess.run(['openssl','version'],capture_output=True,text=True).stdout.strip()
+ (stage/'CMakeCache.txt').write_bytes((ROOT/'build/release/CMakeCache.txt').read_bytes())
+ for n in ['r7_complete_prover','r7_complete_verifier']:
+  p=ROOT/'build/release/src/paper_r7'/n
+  if p.exists():(stage/(n+'-ldd.log')).write_text(subprocess.run(['ldd',str(p)],capture_output=True,text=True).stdout)
  result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
  (stage/'RESULT.json').write_text(json.dumps(result,indent=2));print('RESULT',result['status'],flush=True)
 sys.exit(0 if result['status']!='FAILED' else 1)

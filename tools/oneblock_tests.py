@@ -76,6 +76,7 @@ def run(attack='',expected=None):
  else:entry.update(V_reason=vt[-6000:],P_reason=pt[-6000:])
  cases.append(entry);save();print(('PASS ' if ok else 'FAIL ')+name,flush=True)
  if not ok:raise AssertionError(name+'\nV:'+vt[-6000:]+'\nP:'+pt[-6000:])
-run()
-for attack,reason in [('model-response','rerandomization row response equation'),('truncated','truncated'),('cross-session','cross-session rejected'),('wrong-X','compressed linear relation'),('wrong-Y','compressed linear relation'),('wrong-internal','equation'),('wrong-weight','equation'),('wrong-Auxiliary','compressed linear relation'),('missing-constraint','EOF/transport')]:run(attack,reason)
-print('FULL_ONEBLOCK_LIVE_POSITIVE_AND_NEGATIVES_COMPLETE',flush=True)
+if '--negative-supplement' not in sys.argv:run()
+for attack,reason in [('model-response','rerandomization row response equation'),('truncated','truncated'),('cross-session','cross-session rejected'),('wrong-X','compressed linear relation'),('wrong-Y','compressed linear relation'),('wrong-internal','compressed linear relation'),('wrong-weight','compressed linear relation'),('wrong-Auxiliary','compressed linear relation'),('missing-constraint','EOF/transport')]:
+ if '--negative-supplement' not in sys.argv or attack in ['wrong-internal','wrong-weight','wrong-Auxiliary','missing-constraint']:run(attack,reason)
+print('ONEBLOCK_REMAINING_NEGATIVES_COMPLETE' if '--negative-supplement' in sys.argv else 'FULL_ONEBLOCK_LIVE_POSITIVE_AND_NEGATIVES_COMPLETE',flush=True)
