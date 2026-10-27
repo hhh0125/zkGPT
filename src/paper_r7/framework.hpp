@@ -61,6 +61,7 @@ class R7WitnessStore {
     std::vector<Fr> publicX() const;
     std::vector<Fr> publicY(const R7Context&) const;
     bool legacyCommitmentAbsent() const;
+    ::prover& executionForR7();
     struct FCContraction { std::vector<Fr> activation,weight;Fr output=0;std::size_t layer=0; };
     FCContraction firstFCContraction(const R7Context&) const;
     const std::vector<WitnessObject>& objects() const { return objects_; }

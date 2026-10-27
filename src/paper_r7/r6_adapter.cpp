@@ -67,6 +67,7 @@ const std::vector<Fr>& R7WitnessStore::baseMaster()const{r1::require(execution_ 
 std::vector<Fr> R7WitnessStore::publicX()const{const auto&w=baseMaster();r1::require(w.size()>=32768,"R7 X bounds");return {w.begin(),w.begin()+32768};}
 std::vector<Fr> R7WitnessStore::publicY(const R7Context&c)const{const auto&w=baseMaster();std::vector<Fr> y;y.reserve(c.plan.output.size());for(auto i:c.plan.output)y.push_back(w.at(i));return y;}
 bool R7WitnessStore::legacyCommitmentAbsent()const{return execution_ && execution_->cc.w==nullptr && execution_->cc.comm==nullptr && execution_->gens.empty();}
+::prover& R7WitnessStore::executionForR7(){r1::require(legacyCommitmentAbsent(),"R7 execution unavailable or legacy commitment present");return *execution_;}
 R7WitnessStore::FCContraction R7WitnessStore::firstFCContraction(const R7Context&context)const{
  FCContraction out;out.layer=4;const auto&w=baseMaster();
  r1::require(execution_ && legacyCommitmentAbsent() && context.plan.circuit_id=="1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a","R7 actual frozen oneblock required");
