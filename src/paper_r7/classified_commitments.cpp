@@ -29,11 +29,11 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
    else for(auto&[id,view]:layout.views)if(!view.mapped && view.start.root==k){auto it=prepared->find(id);need(it!=prepared->end() && it->second->size()==view.padded,"classified prepared object/shape");std::copy(it->second->begin(),it->second->end(),packed->begin()+view.start.index);prepared->erase(it);}
    root.secret=commitVectorOwned(root.spec.id,root.spec.actual,root.spec.padded,std::move(packed),*rng);root.pc=root.secret->pc;
   }
-  auto bytes=io.message("Classified/root/"+std::to_string(k)+"/PC",io.prover()?encodeVector(root.pc):Bytes{});root.pc=decodeVector(bytes);need(root.pc.id==root.spec.id && root.pc.actual==root.spec.actual && root.pc.padded==root.spec.padded,"classified wrong commitment identity/shape");root.basis=hyrax_a3::generators(root.pc.columns);
+  auto bytes=io.message("Classified/root/"+std::to_string(k)+"/PC",io.prover()?encodeVector(root.pc):Bytes{});root.pc=decodeVector(bytes);need(root.pc.id==root.spec.id && root.pc.actual==root.spec.actual && root.pc.padded==root.spec.padded && root.pc.layout==r1::Layout::RowMajor,"classified wrong commitment identity/shape");root.basis=hyrax_a3::generators(root.pc.columns);
   if(io.prover()){auto values=root.secret->values;root.value=[values](std::size_t i){return values->at(i);};root.blinds=root.secret->blinds;}
   rootTiming("pack-and-commit",root.spec.id,rootStarted);
  }
- for(std::size_t k=0;k<roots_.size();++k)if(roots_[k].spec.model){need(trust,"classified missing model authority");auto pub=model::registerModel(io,*trust,modelSecret,rng);auto&root=roots_[k];need(root.spec.actual==pub.spec.actual && root.spec.padded==pub.spec.padded,"classified W trusted dimensions");root.pc={root.spec.id,pub.spec.actual,pub.spec.padded,pub.spec.rows,pub.spec.columns,pub.rows};root.basis=r1::generators(trust->anchor.w.spec).g;
+ for(std::size_t k=0;k<roots_.size();++k)if(roots_[k].spec.model){need(trust,"classified missing model authority");auto pub=model::registerModel(io,*trust,modelSecret,rng);auto&root=roots_[k];need(root.spec.actual==pub.spec.actual && root.spec.padded==pub.spec.padded,"classified W trusted dimensions");root.pc={root.spec.id,pub.spec.actual,pub.spec.padded,pub.spec.rows,pub.spec.columns,pub.rows,r1::Layout::RowMajor};root.basis=r1::generators(trust->anchor.w.spec).g;
   if(io.prover()){root.value=[modelSecret](std::size_t i){return modelSecret->value(i);};root.blinds=modelSecret->blinds;}
   root.open=[trust,pub,modelSecret](IO&live,const Query&q,const Hidden*h,Random*r,const std::string&id){model::opening(live,*trust,pub,q,modelSecret,h,r,id);};
  }
@@ -41,19 +41,19 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
  sealed_=true;
 }
 void Commitments::registerBase(){
- need(sealed_ && !base_registered_,"classified registration lifecycle");std::set<std::string>seen;
+ need(sealed_ && !base_registered_,"classified registration lifecycle");for(auto&r:roots_)need(r.pc.layout==r1::Layout::RowMajor,"classified root must be RowMajor");std::set<std::string>seen;
  for(std::size_t k=0;k<roots_.size();++k){auto&r=roots_[k];if(!r.spec.registered)continue;auto chunk=std::min<std::size_t>(64,65536/r.pc.columns);
   for(std::size_t start=0;start<r.pc.rows;start+=chunk){auto count=std::min(chunk,r.pc.rows-start);auto name="Classified/register/"+std::to_string(k)+"/"+std::to_string(start);Writer header;header.text(suite);header.text(identity_);header.text(session_);header.text(r.spec.id);header.number(start);header.number(count);header.number(r.pc.columns);for(std::size_t i=0;i<count;++i)header.point(r.pc.points[start+i]);bindPublic(io_,name+"/header",header.b);std::vector<std::vector<Fr>>masks;std::vector<Fr>blinds;Writer first;
-   auto active=[&](std::size_t row){return row>=r.spec.actual?std::size_t(0):std::min(r.pc.columns,1+(r.spec.actual-1-row)/r.pc.rows);};
-   if(io_.prover())for(std::size_t i=0;i<count;++i){std::vector<Fr>d(active(start+i));for(auto&x:d)x=rng_->scalar();auto rho=rng_->scalar();first.point(master3::masterMSM(r.basis.data(),d.data(),d.size())+parameters(1).hiding*rho);masks.push_back(std::move(d));blinds.push_back(rho);}
+   auto active=[&](std::size_t row){const auto begin=row*r.pc.columns;return begin>=r.spec.actual?std::size_t(0):std::min(r.pc.columns,r.spec.actual-begin);};
+   if(io_.prover())for(std::size_t i=0;i<count;++i){std::vector<Fr>d(active(start+i));for(auto&x:d)x=rng_->scalar();auto rho=rng_->scalar();G1 mask;mask.clear();if(!d.empty())mask=master3::masterMSM(r.basis.data(),d.data(),d.size());first.point(mask+parameters(1).hiding*rho);masks.push_back(std::move(d));blinds.push_back(rho);}
    auto b=io_.message(name+"/masks",first.b);Reader mr{b};std::vector<G1>D;for(std::size_t i=0;i<count;++i){auto d=mr.point();need(seen.insert(hex(r1::hash(r1::encode(d)))).second,"classified reused row mask");D.push_back(d);}mr.end();auto c=io_.coin(name+"/challenge");need(!c.isZero(),"classified zero registration challenge");Writer response;
-   if(io_.prover())for(std::size_t i=0;i<count;++i){for(std::size_t j=0;j<masks[i].size();++j)response.scalar(masks[i][j]+c*r.value(start+i+r.pc.rows*j));response.scalar(blinds[i]+c*r.blinds[start+i]);}
-   b=io_.message(name+"/responses",response.b);registration_bytes+=b.size();Reader rr{b};for(std::size_t i=0;i<count;++i){auto n=active(start+i);need(n>0,"classified empty row");std::vector<Fr>z(n);for(auto&x:z)x=rr.scalar();auto rho=rr.scalar();if(!io_.prover())need(master3::masterMSM(r.basis.data(),z.data(),n)+parameters(1).hiding*rho==D[i]+r.pc.points[start+i]*c,"classified row knowledge/zero-tail equation failed");++registered_rows;}rr.end();
+   if(io_.prover())for(std::size_t i=0;i<count;++i){for(std::size_t j=0;j<masks[i].size();++j)response.scalar(masks[i][j]+c*r.value((start+i)*r.pc.columns+j));response.scalar(blinds[i]+c*r.blinds[start+i]);}
+   b=io_.message(name+"/responses",response.b);registration_bytes+=b.size();Reader rr{b};for(std::size_t i=0;i<count;++i){auto n=active(start+i);std::vector<Fr>z(n);for(auto&x:z)x=rr.scalar();auto rho=rr.scalar();if(!io_.prover()){G1 nonblind;nonblind.clear();if(n)nonblind=master3::masterMSM(r.basis.data(),z.data(),n);need(nonblind+parameters(1).hiding*rho==D[i]+r.pc.points[start+i]*c,"classified row knowledge/zero-tail equation failed");}++registered_rows;}rr.end();
   }
  }
  Writer end;end.text(identity_);end.number(registered_rows,8);end.number(registration_bytes,8);bindPublic(io_,"Classified/base-registered",end.b);base_registered_=true;
 }
-void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const std::string&id){auto&r=roots_.at(k);if(r.spec.model)r.open(io_,q,h,rng_,id);else openVector(io_,r.pc,q,io_.prover()?&*r.secret:nullptr,h,rng_,id);}
+void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const std::string&id){auto started=Clock::now();auto&r=roots_.at(k);if(r.spec.model)r.open(io_,q,h,rng_,id);else openVector(io_,r.pc,q,io_.prover()?&*r.secret:nullptr,h,rng_,id);rootTiming("opening",r.spec.id,started);}
 VectorOracle Commitments::view(const std::string&id){
  need(sealed_ && !authenticated_,"classified view lifecycle");const auto&v=layout_.views.at(id);VectorOracle out;out.id=id;out.actual=v.actual;out.padded=v.padded;
  if(io_.prover())out.value=[this,&v](std::size_t j){auto l=locate(layout_,v,j);return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};

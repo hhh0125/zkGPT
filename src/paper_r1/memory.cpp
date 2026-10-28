@@ -7,13 +7,13 @@ void MemorySpec::validate() const {
     log2exact(table.size());
     require(table.size() <= (std::size_t(1) << 20), "complete table bound");
     require(!id.empty() && id.size() <= 80, "memory ID");
-    PCSpec::make(id + "/read", address.padded, address.padded, Layout::ColumnMajor);
+    PCSpec::make(id + "/read", address.padded, address.padded, address.layout);
 }
 PCSpec readSpec(const MemorySpec &s) {
-    return PCSpec::make(s.id + "/read", s.address.padded, s.address.padded, Layout::ColumnMajor);
+    return PCSpec::make(s.id + "/read", s.address.padded, s.address.padded, s.address.layout);
 }
 PCSpec finalSpec(const MemorySpec &s) {
-    return PCSpec::make(s.id + "/final", s.table.size(), s.table.size(), Layout::ColumnMajor);
+    return PCSpec::make(s.id + "/final", s.table.size(), s.table.size(), s.address.layout);
 }
 static void identity(const MemorySpec &s, const Commitment &ca, const Commitment &cv,
                      const MemoryProof &p, Fs &t) {

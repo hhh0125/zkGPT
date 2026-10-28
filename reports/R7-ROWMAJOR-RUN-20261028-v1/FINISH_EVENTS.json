@@ -1,0 +1,67 @@
+[
+  {
+    "name": "coverage-negative",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_protocol_tests.py",
+      "coverage-negative"
+    ],
+    "exit_code": 0,
+    "seconds": 634.1973015321419
+  },
+  {
+    "name": "perf",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_protocol_tests.py",
+      "perf"
+    ],
+    "exit_code": 0,
+    "seconds": 25.354670643806458
+  },
+  {
+    "name": "regressions",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_run.py",
+      "regressions"
+    ],
+    "exit_code": 0,
+    "seconds": 92.50633289525285
+  },
+  {
+    "name": "performance-report",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_performance_report.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.16563727520406246
+  },
+  {
+    "name": "identity",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_evidence.py",
+      "identity"
+    ],
+    "exit_code": 0,
+    "seconds": 1.3199349930509925
+  },
+  {
+    "name": "archive",
+    "command": [
+      "python3",
+      "-B",
+      "tools/rowmajor_evidence.py",
+      "archive"
+    ],
+    "exit_code": 0,
+    "seconds": 32.03048782935366
+  }
+]

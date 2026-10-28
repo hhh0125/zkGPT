@@ -23,7 +23,7 @@ struct R7Statement {
     std::uint32_t version=1, blocks=1;
     std::string profile_sha256, circuit_id, layout_id, layout_sha256, model_manifest_sha256;
     std::string output_semantics="r6-final-hidden-state-signed64-padded-32x1024";
-    std::string commitment_suite="r7-hiding-pc-UNIMPLEMENTED";
+    std::string commitment_suite="r7-hiding-pc-rowmajor-v2";
     std::uint64_t master_actual=0, master_padded=0;
     std::vector<Fr> x,y;
 };

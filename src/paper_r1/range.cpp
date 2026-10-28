@@ -55,13 +55,13 @@ void RangeSpec::validate() const {
     query.validate();
     require(bits >= 1 && bits <= 126, "Range bitwidth");
     require(!id.empty() && id.size() <= 55, "Range ID");
-    PCSpec::make(id + "/digit/0", query.actual, query.padded, Layout::ColumnMajor);
+    PCSpec::make(id + "/digit/0", query.actual, query.padded, query.layout);
 }
 PCSpec digitSpec(const RangeSpec &s, unsigned h) {
     s.validate();
     require(h < (s.bits + 8) / 9, "Range digit index");
     return PCSpec::make(s.id + "/digit/" + std::to_string(h), s.query.actual, s.query.padded,
-                        Layout::ColumnMajor);
+                        s.query.layout);
 }
 MemorySpec digitMemory(const RangeSpec &s, unsigned h) {
     auto ds = digitSpec(s, h);

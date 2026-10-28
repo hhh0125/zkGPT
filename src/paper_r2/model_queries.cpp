@@ -13,7 +13,7 @@ void push(std::vector<r1::InputSpan> &spans,std::size_t offset,std::size_t count
 }
 std::size_t addSource(ModelQueryPlan &p,const std::string &role,const std::vector<r1::InputSpan> &spans){
     std::size_t n=0;for(const auto &s:spans){r1::require(s.offset<p.master.actual && s.count<=p.master.actual-s.offset,"model source bounds");r1::require(s.count<=r1::kMaxVector-n,"model source length overflow");n+=s.count;}
-    auto index=p.sources.size();p.sources.push_back({r1::PCSpec::make(role,n,padded(n),r1::Layout::ColumnMajor),spans});return index;
+    auto index=p.sources.size();p.sources.push_back({r1::PCSpec::make(role,n,padded(n),r1::Layout::RowMajor),spans});return index;
 }
 }
 ModelQueryPlan planModelQueries(const layeredCircuit &c,const WitnessRegistry &registry,
@@ -76,7 +76,7 @@ r1::LookupBatchSpec makeModelQueryStatement(const ModelQueryPlan &p,const r1::Co
     r1::require(children.back().spec==approved_w.spec && children.back().rows==approved_w.rows,"publisher W commitment mismatch");
     r1::require(x.size()==32768 && y.size()==p.output.size(),"complete public X/Y required");
     for(std::size_t i=0;i<x.size();++i)if(i%1024>=p.shape.hidden_dimension)r1::require(x[i].isZero() && y[i].isZero(),"public activation padding must be zero");
-    r1::LookupBatchSpec s;s.input.context=(p.r6_engineering?"R6-R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r5b_candidate?"R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r4_candidate?"R4-partial-numerical-NOT-PAPER-APPROVED/":"R2-legacy-source-adapter-NOT-PAPER-APPROVED/")+model+"/"+p.circuit_id;s.input.master=master;
+    r1::LookupBatchSpec s;s.input.context=(p.r6_engineering?"R6-ROWMAJOR-v2-R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r5b_candidate?"R5B-engineering-candidate-NOT-PAPER-APPROVED/":p.r4_candidate?"R4-partial-numerical-NOT-PAPER-APPROVED/":"R2-legacy-source-adapter-NOT-PAPER-APPROVED/")+model+"/"+p.circuit_id;s.input.master=master;
     for(std::size_t j=0;j<p.sources.size();++j){r1::require(children[j].spec==p.sources[j].spec,"model child identity");s.input.children.push_back({children[j],p.sources[j].spans});}
     for(std::size_t i=0;i<x.size();++i)s.input.public_values.push_back({i,x[i]});
     for(std::size_t i=0;i<y.size();++i)s.input.public_values.push_back({p.output[i],y[i]});

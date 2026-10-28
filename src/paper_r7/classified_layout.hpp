@@ -3,7 +3,7 @@
 #include "oneblock_sumcheck.hpp"
 #include <map>
 namespace zkgpt::r7::oneblock::classified {
-inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-v2";
+inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v3";
 struct Coordinate {std::uint32_t root=0,index=0;bool operator==(const Coordinate&o)const{return root==o.root&&index==o.index;}};
 struct RootSpec {std::string id;std::size_t actual=0,padded=0;bool registered=false,model=false;};
 struct View {std::string id;std::size_t actual=0,padded=0;bool mapped=false;std::vector<r1::InputSpan>spans;Coordinate start;ObjectKind kind;};

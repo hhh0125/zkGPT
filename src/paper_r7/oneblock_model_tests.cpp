@@ -19,10 +19,10 @@ void check(bool ok,const char*why){++checks;need(ok,why);}
 void reject(const std::function<void()>&f,const char*why){++checks;try{f();}catch(const std::exception&e){need(std::string(e.what()).find(why)!=std::string::npos,e.what());return;}throw std::runtime_error("expected rejection");}
 model::Trust trust(){
  model::Trust t;t.anchor.profile="test-operator";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="test-r6-operator";
- t.anchor.w.spec=r1::PCSpec::make("test/R6/W",4,8,r1::Layout::ColumnMajor);
+ t.anchor.w.spec=r1::PCSpec::make("test/R6/W",4,8,r1::Layout::RowMajor);
  const auto&g=r1::generators(t.anchor.w.spec).g;
- // Independent column-major rows for W=(2,3,5,7), no legacy commit/open call.
- t.anchor.w.rows={g[0]*Fr(2)+g[1]*Fr(5),g[0]*Fr(3)+g[1]*Fr(7)};
+ // Independent row-major rows for W=(2,3,5,7), no legacy commit/open call.
+ G1 zero;zero.clear();t.anchor.w.rows={g[0]*Fr(2)+g[1]*Fr(3)+g[2]*Fr(5)+g[3]*Fr(7),zero};
  t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;return t;
 }
 }
@@ -51,7 +51,7 @@ int main(){try{
  reject([&]{model::rerandomize(t,p.session(),{Fr(2),Fr(3),Fr(5),Fr(7),Fr(1),Fr(0),Fr(0),Fr(0)},rng);},"nonzero padded W tail");
  check(s.value(4).isZero(),"model zero padding oracle");
  // The second 64-row chunk must be verified too, including zero-padded rows.
- auto chunks=t;chunks.anchor.w.spec=r1::PCSpec::make("test/R6/chunks",4,16384,r1::Layout::ColumnMajor);G1 identity;identity.clear();chunks.anchor.w.rows.assign(128,identity);auto cg=r1::generators(chunks.anchor.w.spec).g[0];chunks.anchor.w.rows[0]=cg*Fr(2);chunks.anchor.w.rows[1]=cg*Fr(3);chunks.anchor.w.rows[2]=cg*Fr(5);chunks.anchor.w.rows[3]=cg*Fr(7);chunks.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(chunks.anchor));
+ auto chunks=t;chunks.anchor.w.spec=r1::PCSpec::make("test/R6/chunks",4,16384,r1::Layout::RowMajor);G1 identity;identity.clear();chunks.anchor.w.rows.assign(128,identity);const auto&cg=r1::generators(chunks.anchor.w.spec).g;chunks.anchor.w.rows[0]=cg[0]*Fr(2)+cg[1]*Fr(3)+cg[2]*Fr(5)+cg[3]*Fr(7);chunks.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(chunks.anchor));
  Tape cp(true);auto cs=model::rerandomize(chunks,cp.session(),{Fr(2),Fr(3),Fr(5),Fr(7)},rng);model::registerModel(cp,chunks,&cs,&rng);check(cp.records.size()==8,"two 64-row registration chunks");Tape cv(false);cv.records=cp.records;model::registerModel(cv,chunks,nullptr,nullptr);check(cv.at==cv.records.size(),"all rows of both chunks verified");
  auto last=cp.records;Reader lastResponse{last[6].second};Writer badResponse;for(unsigned i=0;i<64;++i){auto z=lastResponse.scalar();badResponse.scalar(i==63?z+Fr(1):z);}lastResponse.end();last[6].second=badResponse.b;Tape lastV(false);lastV.records=last;reject([&]{model::registerModel(lastV,chunks,nullptr,nullptr);},"row response equation");
  std::cout<<"ONEBLOCK_MODEL_UNIT_PASSED "<<checks<<"\n";return 0;

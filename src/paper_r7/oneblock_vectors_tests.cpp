@@ -81,10 +81,26 @@ void msmSpan(){
  bool rejected=false;try{master3::masterMSM(g.data(),x.data(),0);}catch(...){rejected=true;}
  need(rejected,"MSM empty span accepted");
 }
+void rowMajorPhysical(){
+ SessionRandom rng;
+ for(auto n:{8u,16u,64u,256u,1024u,2048u,8192u}){
+  auto values=std::make_shared<std::vector<Fr>>(n);for(auto&x:*values)x=rng.scalar();auto address=values->data();
+  auto s=commitVectorOwned("vectors/row-major",n-3,n,std::move(values),rng);
+  need(s.pc.layout==r1::Layout::RowMajor,"physical layout must be explicit RowMajor");need(s.values->data()==address,"row-major copied owned slab");
+  auto g=hyrax_a3::generators(s.pc.columns);
+  for(std::size_t i=0;i<s.pc.rows;++i){auto hand=parameters(1).hiding*s.blinds[i];for(std::size_t j=0;j<s.pc.columns;++j)hand+=g[j]*s.values->at(i*s.pc.columns+j);need(hand==s.pc.points[i],"row-major physical row indexing wrong");}
+  std::vector<Fr>q;for(unsigned j=0;j<r1::log2exact(n);++j)q.push_back(rng.scalar());
+  Tape p(true);auto h=exchangeHidden(p,"row-major/value",r1::mle(*s.values,q),&rng);openVector(p,s.pc,{q,h.handle},&s,&h,&rng,"row-major/open");
+  Tape v(false);v.records=p.records;auto vh=exchangeHidden(v,"row-major/value",Fr(0),nullptr);openVector(v,s.pc,{q,vh.handle},nullptr,nullptr,nullptr,"row-major/open");need(v.at==v.records.size(),"row-major replay incomplete");
+  auto wrong=s.pc;wrong.layout=r1::Layout::ColumnMajor;bool rejected=false;try{encodeVector(wrong);}catch(...){rejected=true;}need(rejected,"new descriptor accepted old layout");
+  auto bytes=encodeVector(s.pc);Reader descriptor{bytes};descriptor.text();descriptor.text();descriptor.text();const auto layout_at=descriptor.at;for(unsigned j=0;j<4;++j)bytes[layout_at+j]=0;
+  rejected=false;try{decodeVector(bytes);}catch(const std::exception&e){need(std::string(e.what()).find("RowMajor")!=std::string::npos,e.what());rejected=true;}need(rejected,"decoder dispatched prover-selected ColumnMajor layout");
+ }
+}
 void rejects(const std::function<void()>&f,const char*name,const char*why){try{f();}catch(const std::exception&e){need(std::string(e.what()).find(why)!=std::string::npos,e.what());std::cout<<"REJECT "<<name<<": "<<e.what()<<'\n';return;}throw std::runtime_error(std::string("expected vector rejection: ")+name);}
 }
 int main(){try{
- r1::init();msmSpan();ownedBuffer();for(auto n:{std::size_t(1),std::size_t(16),std::size_t(4096)})replay(n,"");
+ r1::init();msmSpan();rowMajorPhysical();ownedBuffer();for(auto n:{std::size_t(1),std::size_t(16),std::size_t(4096)})replay(n,"");
  rejects([]{replay(16,"identity");},"wrong PC identity","wrong object identity");
  rejects([]{inconsistentRow();},"wrong committed row","vector knowledge equation");
  rejects([]{replay(16,"claim");},"wrong hidden evaluation","Schnorr equation");

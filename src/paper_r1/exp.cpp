@@ -6,7 +6,7 @@ constexpr std::uint32_t K = 8191, Scale = 1048576;
 PCSpec helperSpec(const ExpSpec &s, unsigned k) {
     const std::array<std::string, 4> name{"x", "selector", "delta", "native-E"};
     require(k < 4, "Exp helper index");
-    return PCSpec::make(s.id + "/" + name[k], s.index.actual, s.index.padded, Layout::ColumnMajor);
+    return PCSpec::make(s.id + "/" + name[k], s.index.actual, s.index.padded, s.index.layout);
 }
 RangeSpec rangeSpec(const ExpSpec &s, unsigned k) {
     const std::array<std::string, 4> name{"t", "x", "selector", "delta"};

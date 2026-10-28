@@ -86,10 +86,10 @@ void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const
  auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
- approved.validate();need(approved.layout==r1::Layout::ColumnMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 dimension/layout");
+ approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");
  validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
- publicBinding(io,"A3/R6/statement",binding.b);
+ publicBinding(io,"A3/R6-ROWMAJOR/statement",binding.b);
  // No generator bytes are accepted from the prover. The anchor spec is supplied
  // by the trusted-model verifier, and R1's role-specific derivation is exact.
  const auto&g=r1::generators(approved).g;

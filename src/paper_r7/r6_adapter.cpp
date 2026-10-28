@@ -28,7 +28,7 @@ R7Context buildR6Context(const std::string&pin){
  {Quiet quiet(std::cout);LLM nn(1,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();c.plan=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,c.plan);r6::validateRegions(c.plan,nn.parameterRegions());}
  r1::require(c.plan.circuit_id=="1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a","frozen oneblock circuit changed");
  add(c.objects,c.plan.master,ObjectKind::BaseMaster,"");
- r1::Fs layout("zkGPT.R7.R6-layout.split-aux.v1");dimensions(layout,c.plan.master);
+ r1::Fs layout("zkGPT.R7.R6-layout.split-aux.rowmajor.v2");dimensions(layout,c.plan.master);
  for(std::size_t i=0;i<c.plan.sources.size();++i){const auto&s=c.plan.sources[i];add(c.objects,s.spec,i+1==c.plan.sources.size()?ObjectKind::ModelW:ObjectKind::MappedChild,c.objects.front().id);c.objects.back().spans=s.spans;dimensions(layout,s.spec);layout.integer("spans",s.spans.size());for(auto&span:s.spans){layout.integer("span/offset",span.offset);layout.integer("span/count",span.count);layout.scalar("span/bias",span.bias);}}
  for(auto&r:c.plan.ranges){layout.integer("range/child",r.child);layout.integer("range/bits",r.bits);rangeObjects(c.objects,{r.id,c.plan.sources.at(r.child).spec,r.bits},"r7/"+c.plan.sources.at(r.child).spec.role);}
  for(auto&e:c.plan.exps){

@@ -1,0 +1,102 @@
+{
+  "samples": [
+    {
+      "repeat": 0,
+      "layout": "column",
+      "units": 1048576,
+      "gather_seconds": 0.0559613,
+      "commit_seconds": 1.44834,
+      "fold_seconds": 0.0903312,
+      "peak_rss_kib": 72148,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    },
+    {
+      "repeat": 0,
+      "layout": "row",
+      "units": 1048576,
+      "gather_seconds": 6.1868e-05,
+      "commit_seconds": 1.398,
+      "fold_seconds": 0.0412084,
+      "peak_rss_kib": 71952,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    },
+    {
+      "repeat": 1,
+      "layout": "row",
+      "units": 1048576,
+      "gather_seconds": 5.3605e-05,
+      "commit_seconds": 1.43773,
+      "fold_seconds": 0.0438569,
+      "peak_rss_kib": 71944,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    },
+    {
+      "repeat": 1,
+      "layout": "column",
+      "units": 1048576,
+      "gather_seconds": 0.0582771,
+      "commit_seconds": 1.46165,
+      "fold_seconds": 0.0927489,
+      "peak_rss_kib": 71936,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    },
+    {
+      "repeat": 2,
+      "layout": "column",
+      "units": 1048576,
+      "gather_seconds": 0.0560424,
+      "commit_seconds": 1.50755,
+      "fold_seconds": 0.0822822,
+      "peak_rss_kib": 72028,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    },
+    {
+      "repeat": 2,
+      "layout": "row",
+      "units": 1048576,
+      "gather_seconds": 0.000106266,
+      "commit_seconds": 1.39878,
+      "fold_seconds": 0.0417467,
+      "peak_rss_kib": 72256,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576,
+      "valid": true
+    }
+  ],
+  "medians": {
+    "column": {
+      "gather_seconds": 0.0560424,
+      "commit_seconds": 1.46165,
+      "fold_seconds": 0.0903312,
+      "peak_rss_kib": 72028,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576
+    },
+    "row": {
+      "gather_seconds": 6.1868e-05,
+      "commit_seconds": 1.39878,
+      "fold_seconds": 0.0417467,
+      "peak_rss_kib": 71952,
+      "MSM_calls": 1024,
+      "MSM_terms": 1048576
+    }
+  },
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "threads": 4,
+  "note": "Same binary and math except indexing/gather; owned-path pairs use preserved OPT1 binary and current binary. Shared host observations."
+}
