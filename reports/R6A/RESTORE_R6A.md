@@ -1,0 +1,7 @@
+# Restore R6A
+
+Verify final archive SHA, every member SHA/size and gzip EOF/CRC against the external LOCAL_RESTORE_RECEIPT.json. Source/3rd/deps/root bytes, patch, Release/SAN binaries and project shared libraries, exact anchors/manifests, full real plans, toolchain/config identities, all new raw logs and reports are carried by the stage payload. No Git metadata or SSH config/keys are included. The original R5B accepted proof/evidence remains in the separately SHA-pinned verified R5B archive described by REUSED_R5B_EVIDENCE.json. Do not discard either archive.
+
+Restore unchanged120data/gpt2_int files using PARAMETER_RESTORE_MAP.json and the already verified Windows migration CAS; rehash all mapped bytes. No checkpoint/export/table regeneration. Recreate on compatible Linux in a NEW empty recovery directory only, never overwrite protected main/active work. Build with source CMake, GNU C++17 and archived deps/cnpy; caches/log absolute paths are provenance, not new deployment dependencies. Rebuild binaries against a compatible OS/GMP/zlib/libstdc++ runtime; this is not an OS image.
+
+Reproduce64Release and29directed ASan/UBSan checks from preserved commands. ASan uses finite directed inputs and a physical RSS watchdog instead of an incompatible virtual address cap. Actual metadata/anchor/report hashes are recoverable without any full12 proof. Original fixed remote work remains intact. Any deletion or running full12 requires separate authorization.

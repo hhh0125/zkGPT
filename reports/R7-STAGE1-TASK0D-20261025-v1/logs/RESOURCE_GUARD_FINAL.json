@@ -1,0 +1,52 @@
+{
+  "classification": "TOY_TESTED",
+  "cases": [
+    {
+      "name": "D_final_guard_positive",
+      "N": 4,
+      "table": 4,
+      "attack": null,
+      "status": "ACCEPT",
+      "reason": "complete verified interactive session",
+      "wall_seconds": 4.748276724014431,
+      "wire_bytes": 360946,
+      "proof_bytes": 98166,
+      "prover_rss_kib": 19732,
+      "terminal": {
+        "challenges": 244,
+        "components": 47,
+        "proof_digest": "77917392c121168825e4497d5251a03fd7fd5eff690002b59c25652b44a075c7",
+        "reason": "complete verified interactive session",
+        "sid": "506f2ea55c5eca2349d602e5d2131a8f7c4c7d8f0bb4b1c1d526e41ba49fe881",
+        "statement_digest": "5da0d54616f8ee074e3d124df58eabe9b952e0a5a97e993331ddc8cbf678b008",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 3.0441380000000002,
+        "verifier_rss_kib": 21092
+      },
+      "verifier_pid": 225772,
+      "verifier_exit": 0
+    },
+    {
+      "name": "D_final_guard_wrong_value",
+      "N": 4,
+      "table": 4,
+      "attack": "wrong_value",
+      "status": "REJECTED",
+      "reason": "Rejected: component mathematical verification",
+      "wall_seconds": 0.3901796410791576,
+      "wire_bytes": 24141,
+      "proof_bytes": null,
+      "prover_rss_kib": 19732,
+      "terminal": {
+        "challenges": 19,
+        "components": 4,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "a9a9d5b5863ed687a621ffaca47180b6b5b5fc5b5b4195895bc075ffba933db8",
+        "status": "REJECTED"
+      },
+      "verifier_pid": 225864,
+      "verifier_exit": 2
+    }
+  ],
+  "caps_enforced": true
+}

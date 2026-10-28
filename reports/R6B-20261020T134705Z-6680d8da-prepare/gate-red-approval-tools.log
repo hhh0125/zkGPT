@@ -1,0 +1,27 @@
+test_generation_never_creates_execution_approval_and_same_path_refuses (__main__.ApprovalTools) ... FAIL
+test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit (__main__.ApprovalTools) ... FAIL
+
+======================================================================
+FAIL: test_generation_never_creates_execution_approval_and_same_path_refuses (__main__.ApprovalTools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_approval_tools.py", line 9, in test_generation_never_creates_execution_approval_and_same_path_refuses
+    a=self.load();root,p,pm,pn,j,af,ah=setup_case();p['permit_paths']={m:str(root/'generated'/ (m+'.simulation-permit')) for m in pm}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_approval_tools.py", line 7, in load
+    self.assertTrue((HERE/'r6b_approval_tools.py').exists(),'Missing separated scope/permit/draft workflow');return importlib.import_module('r6b_approval_tools')
+AssertionError: False is not true : Missing separated scope/permit/draft workflow
+
+======================================================================
+FAIL: test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit (__main__.ApprovalTools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_approval_tools.py", line 20, in test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit
+    a=self.load();root,p,*_=setup_case();p['permit_paths']={m:str(root/'never'/ (m+'.simulation-permit')) for m in ['prover','verifier']}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_approval_tools.py", line 7, in load
+    self.assertTrue((HERE/'r6b_approval_tools.py').exists(),'Missing separated scope/permit/draft workflow');return importlib.import_module('r6b_approval_tools')
+AssertionError: False is not true : Missing separated scope/permit/draft workflow
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+FAILED (failures=2)

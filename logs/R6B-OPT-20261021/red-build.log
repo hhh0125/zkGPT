@@ -1,0 +1,88 @@
+CMake Deprecation Warning at 3rd/mcl/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Configuring done (0.8s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+[ 18%] Built target mcl
+[ 27%] Built target mclbn256
+[ 90%] Built target paper_r1
+[100%] Building CXX object src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/tests_memory_ownership.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:8:21: error: ‘max_align_t’ is not a member of ‘std’; did you mean ‘max_align_t’?
+    8 | struct alignas(std::max_align_t) Header{std::size_t n;bool counted;};
+      |                     ^~~~~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/config.hpp:32,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp_tower.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn256.hpp:10,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/pc.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/memory.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/range.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/mapped_input.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:1:
+/usr/lib/gcc/x86_64-linux-gnu/12/include/stddef.h:435:3: note: ‘max_align_t’ declared here
+  435 | } max_align_t;
+      |   ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:8:21: error: ‘max_align_t’ is not a member of ‘std’; did you mean ‘max_align_t’?
+    8 | struct alignas(std::max_align_t) Header{std::size_t n;bool counted;};
+      |                     ^~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/12/include/stddef.h:435:3: note: ‘max_align_t’ declared here
+  435 | } max_align_t;
+      |   ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:8:69: error: expected identifier before ‘;’ token
+    8 | struct alignas(std::max_align_t) Header{std::size_t n;bool counted;};
+      |                                                                     ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp: In function ‘void* operator new(std::size_t)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:54: error: ‘Header’ does not name a type
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                      ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:60: error: expected ‘>’ before ‘*’ token
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                            ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:60: error: expected ‘(’ before ‘*’ token
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                            ^
+      |                                                            (
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:61: error: expected primary-expression before ‘>’ token
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                             ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:82: error: ‘Header’ was not declared in this scope
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                                                  ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:11:93: error: expected ‘)’ before ‘;’ token
+   11 | void* operator new(std::size_t n){auto h=static_cast<Header*>(std::malloc(sizeof(Header)+n));if(!h)throw std::bad_alloc();h->n=n;h->counted=counting;if(counting){live+=n;peak=std::max(peak,live);}return h+1;}
+      |                                                                                             ^
+      |                                                                                             )
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp: In function ‘void operator delete(void*)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:71: error: ‘Header’ does not name a type
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                       ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:77: error: expected ‘>’ before ‘*’ token
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                             ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:77: error: expected ‘(’ before ‘*’ token
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                             ^
+      |                                                                             (
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:78: error: expected primary-expression before ‘>’ token
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                              ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:82: warning: pointer of type ‘void *’ used in arithmetic [-Wpointer-arith]
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                               ~~~^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_memory_ownership.cpp:12:84: error: expected ‘)’ before ‘;’ token
+   12 | void operator delete(void*p) noexcept{if(!p)return;auto h=static_cast<Header*>(p)-1;if(h->counted)live-=h->n;std::free(h);}
+      |                                                                                    ^
+      |                                                                                    )
+gmake[3]: *** [src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/build.make:79: src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/tests_memory_ownership.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1961: src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1968: src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/rule] Error 2
+gmake: *** [Makefile:777: r6b_memory_ownership_tests] Error 2

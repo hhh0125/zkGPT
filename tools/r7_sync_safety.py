@@ -1,9 +1,11 @@
 from pathlib import Path,PurePosixPath
 import io,tarfile
-REMOTE_TOOLS={'tools/oneblock_guard_tests.py','tools/oneblock_regressions.py','tools/oneblock_tests.py','tools/r7_oneblock_runner.py','tools/stage3b1_transport_tests.py','tools/stage3b1_tests.py','tools/stage3a_tests.py','tools/r7_round1_runner.py','tools/r7_round2_runner.py','tools/r7_interactive_tests.py','tools/r7_sync_safety.py','tools/r7_process.py','tools/r7_engineering_tests.py','tools/r7_hyrax_a3_runner.py','tools/hyrax_a3_tests.py','tools/r7_hyrax_a3_stage2_runner.py','tools/hyrax_a3_stage2_tests.py','tools/hyrax_a3_stage2_setup.py'}
+REMOTE_TOOLS={'tools/classified_test_policy.py','tools/classified_policy_tests.py','tools/remote_classified.py','tools/classified_tests.py','tools/oneblock_guard_tests.py','tools/oneblock_regressions.py','tools/oneblock_tests.py','tools/r7_oneblock_runner.py','tools/stage3b1_transport_tests.py','tools/stage3b1_tests.py','tools/stage3a_tests.py','tools/r7_round1_runner.py','tools/r7_round2_runner.py','tools/r7_interactive_tests.py','tools/r7_sync_safety.py','tools/r7_process.py','tools/r7_engineering_tests.py','tools/r7_hyrax_a3_runner.py','tools/hyrax_a3_tests.py','tools/r7_hyrax_a3_stage2_runner.py','tools/hyrax_a3_stage2_tests.py','tools/hyrax_a3_stage2_setup.py'}
 
 def sync_state_target(root):
  return no_links(Path(root),Path(root)/'reports/HYRAX_A3_LAST_SYNC.json')
+
+REMOTE_TOOLS.update({'tools/remote_fs.py','tools/fs_tests.py','tools/fs_reference.py'})
 def no_links(root,target):
  root=Path(root);target=Path(target)
  if root.resolve()!=root:raise ValueError('root must be canonical')
@@ -43,7 +45,7 @@ def extract_stage(data,destination):
 
 def extract_stage3b1_file(archive,destination):
  destination=Path(destination)
- if not destination.name.startswith(('R7-STAGE3B1-RUN-','R7-ONEBLOCK-RUN-')):raise ValueError('unexpected large-stage name')
+ if not destination.name.startswith(('R7-FS-RUN-','R7-CLASSIFIED-RUN-','R7-STAGE3B1-RUN-','R7-ONEBLOCK-RUN-')):raise ValueError('unexpected large-stage name')
  prefix=('reports',destination.name);seen=set();total=0
  with tarfile.open(archive,mode='r:gz') as t:
   pending=[]
@@ -54,7 +56,7 @@ def extract_stage3b1_file(archive,destination):
    target=destination.joinpath(*parts[2:]);no_links(destination,target)
    if target in seen:raise ValueError('duplicate archive member')
    seen.add(target);total+=m.size
-   if m.size>8*1024*1024 or total>(8 if destination.name.startswith('R7-ONEBLOCK-RUN-') else 2)*1024**3:raise ValueError('Stage3B1 public archive budget')
+   if m.size>8*1024*1024 or total>(8 if destination.name.startswith(('R7-FS-RUN-','R7-CLASSIFIED-RUN-','R7-ONEBLOCK-RUN-')) else 2)*1024**3:raise ValueError('Stage3B1 public archive budget')
    pending.append((m,target))
   for m,target in pending:
    if m.isdir():target.mkdir(parents=True,exist_ok=True)

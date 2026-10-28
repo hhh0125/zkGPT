@@ -1,0 +1,16 @@
+test_each_resource_deficit_refuses_before_dispatch (__main__.Resources) ... ok
+test_process_names_containing_spaces_are_parsed_without_losing_resource_fields (__main__.Resources) ... ok
+test_visible_parallel_proof_cannot_be_waived_by_generic_competing_PID_acknowledgement (__main__.Resources) ... FAIL
+
+======================================================================
+FAIL: test_visible_parallel_proof_cannot_be_waived_by_generic_competing_PID_acknowledgement (__main__.Resources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_resources.py", line 8, in test_visible_parallel_proof_cannot_be_waived_by_generic_competing_PID_acknowledgement
+    with self.assertRaises(r.GateError):r.resource_check(row,192,[123])
+AssertionError: GateError not raised
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.011s
+
+FAILED (failures=1)

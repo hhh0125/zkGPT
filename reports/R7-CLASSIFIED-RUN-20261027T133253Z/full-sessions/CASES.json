@@ -1,0 +1,128 @@
+[
+  {
+    "case": "legacy-v1",
+    "P_exit": 2,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": false,
+    "actual_P_exit": 2,
+    "actual_V_exit": 2,
+    "seconds": 4.223488600924611,
+    "passed": true,
+    "wire": {
+      "bytes": 175,
+      "parts": 1,
+      "sha256": "b71d84c1e7909029d2e62888fa731b9db50353930df26838e42364d489d1a6b3"
+    },
+    "expected_reasons": [
+      "EOF/transport"
+    ],
+    "P_reason": "REJECT_OR_INCOMPLETE R7 trusted verifier READY mismatch\n",
+    "V_reason": "REJECT_OR_INCOMPLETE R7 interactive EOF/transport failure\n"
+  },
+  {
+    "case": "wrong-model-witness",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 121.72255647880957,
+    "passed": true,
+    "wire": {
+      "bytes": 6226633,
+      "parts": 2,
+      "sha256": "71b41fc413616cd4d8bab1350f8a72bb22140b0f3ad8a941fc95667c42c4881e"
+    },
+    "expected_reasons": [
+      "row knowledge/zero-tail equation failed"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nREJECT_OR_INCOMPLETE classified row knowledge/zero-tail equation failed\n"
+  },
+  {
+    "case": "model-response",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 119.43978087464347,
+    "passed": true,
+    "wire": {
+      "bytes": 3943953,
+      "parts": 1,
+      "sha256": "83717552d03c4a129b2b27b120faf1565a0e1aa73cc98ba036b22a5ec459db8a"
+    },
+    "expected_reasons": [
+      "rerandomization row response equation"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nREJECT_OR_INCOMPLETE oneblock model rerandomization row response equation\n"
+  },
+  {
+    "case": "truncated",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 118.75280926609412,
+    "passed": true,
+    "wire": {
+      "bytes": 3943952,
+      "parts": 1,
+      "sha256": "acbbfabdd80e2f6167907d5d38ffa8e5dd52867004c86b5d5f7f96495b7570d2"
+    },
+    "expected_reasons": [
+      "truncated"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nREJECT_OR_INCOMPLETE R7 crypto truncated wire\n"
+  },
+  {
+    "case": "cross-session",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 4.6397788929753006,
+    "passed": true,
+    "wire": {
+      "bytes": 175,
+      "parts": 1,
+      "sha256": "57e78cc64a7cc85f6721cdc105c19ea7ae7717734a838a5cacc30d0ba2bd800c"
+    },
+    "expected_reasons": [
+      "cross-session rejected"
+    ],
+    "P_reason": "",
+    "V_reason": "REJECT_OR_INCOMPLETE R7 interactive cross-session rejected\n"
+  },
+  {
+    "case": "wrong-mapping",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 41.1704639387317,
+    "passed": true,
+    "wire": {
+      "bytes": 2098330,
+      "parts": 1,
+      "sha256": "b4c8d4464e18f5768f1581a2ace0ca1ca34b52e4aecf875d07376163d19913be"
+    },
+    "expected_reasons": [
+      "binding mismatch"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nREJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch\n"
+  }
+]

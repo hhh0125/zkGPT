@@ -1,0 +1,132 @@
+{
+  "approval_sha256": "76d945c81ce6e34be6a28790996991e94b748824c590a891cd7859160fd5ed6f",
+  "binding": {
+    "allowed_competing_PIDs": [],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "frozen": {
+      "simulation": "no-real-model"
+    },
+    "gate_code_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "input_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "input_shape": [
+      32,
+      768,
+      1024
+    ],
+    "jobs": {
+      "prover": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/prover.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/output",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/prover.simulation-permit",
+          "--run-permit-sha256",
+          "3021fb49c14d4b01150ba087317e3277f924032a52abfcf53c126b2225f737fd"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": false,
+        "id": "SIMULATION-ONLY-prover",
+        "memory_gib": 1,
+        "seconds": 61
+      },
+      "verifier": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/verifier.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/output/model.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/output/model.proof",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/verifier.simulation-permit",
+          "--run-permit-sha256",
+          "f90a3b12ba047435ea1509d7a80849c4a41ba85222cba015e9036ef6c54a8787"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/independent",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": true,
+        "id": "SIMULATION-ONLY-verifier",
+        "memory_gib": 1,
+        "seconds": 61
+      }
+    },
+    "output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/output",
+    "permit_files": {
+      "prover": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/prover.simulation-permit",
+        "sha256": "3021fb49c14d4b01150ba087317e3277f924032a52abfcf53c126b2225f737fd"
+      },
+      "verifier": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/verifier.simulation-permit",
+        "sha256": "f90a3b12ba047435ea1509d7a80849c4a41ba85222cba015e9036ef6c54a8787"
+      }
+    },
+    "records": {
+      "claim": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/execution-claims/SIMULATION-ONLY",
+      "stage": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9",
+      "supervisor_directory": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9"
+    },
+    "root": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9",
+    "run_id": "SIMULATION-ONLY",
+    "scope_approval": null,
+    "simulation": true,
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test-runs/serial-cm1iv5a9/independent"
+  },
+  "checks": [],
+  "failed_after": "AUTHORIZED",
+  "failure": "GateError: selected memory plus32GiB unavailable",
+  "full12_verified": false,
+  "run_id": "SIMULATION-ONLY",
+  "scope": "SIMULATION_ONLY",
+  "state": "ABORTED",
+  "states": [
+    "PREPARED",
+    "AUTHORIZED",
+    "ABORTED"
+  ]
+}

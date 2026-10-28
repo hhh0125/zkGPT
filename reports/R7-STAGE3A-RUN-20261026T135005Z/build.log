@@ -1,0 +1,50 @@
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 29%] Built target paper_r1
+[ 66%] Built target gpt_lib
+[ 77%] Built target paper_r2
+[ 77%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o
+[ 77%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/streaming_master.cpp.o
+[ 81%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_bridge.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.cpp: In function ‘zkgpt::r7::master3::Layout zkgpt::r7::master3::trustedLayout(const zkgpt::r7::R7Context&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.cpp:25:42: error: missing initializer for member ‘zkgpt::r7::master3::Region::alias’ [-Werror=missing-field-initializers]
+   25 |  std::vector<Region>known;known.push_back({"R6/public-X","X","row-major-32x1024",0,32768,32,1024,1});
+      |                           ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.cpp:28:234: error: missing initializer for member ‘zkgpt::r7::master3::Region::alias’ [-Werror=missing-field-initializers]
+   28 |  std::size_t affine=0;for(auto&r:nn.getWitnessRegistry().constraints()){if(r.name=="r5b_input"){need(r.val0_offset==0 && r.count==32768,"M3 X/range alias mismatch");known.front().alias="R6/witness/r5b_input";continue;}known.push_back({"R6/witness/"+r.name,witnessKindName(r.kind),"original-R6-val0",r.val0_offset,r.count,1,r.count,1});if(r.name=="round_0_affine")affine=r.val0_offset;}
+      |                                                                                                                                                                                                                           ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.cpp:29:204: error: missing initializer for member ‘zkgpt::r7::master3::Region::alias’ [-Werror=missing-field-initializers]
+   29 |  std::sort(known.begin(),known.end(),[](auto&a,auto&b){return a.offset<b.offset;});std::size_t end=0;for(auto&r:known){need(r.offset>=end,"M3 trusted regions overlap");if(r.offset>end)l.regions.push_back({"R6/base-gap/"+std::to_string(end),"R6-base-unclassified","original-R6-val0",end,r.offset-end,1,r.offset-end,1});l.regions.push_back(r);end=r.offset+r.count;}if(end<l.actual)l.regions.push_back({"R6/base-gap/"+std::to_string(end),"R6-base-unclassified","original-R6-val0",end,l.actual-end,1,l.actual-end,1});
+      |                                                                                                                                                                                         ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.cpp:29:399: error: missing initializer for member ‘zkgpt::r7::master3::Region::alias’ [-Werror=missing-field-initializers]
+   29 |  std::sort(known.begin(),known.end(),[](auto&a,auto&b){return a.offset<b.offset;});std::size_t end=0;for(auto&r:known){need(r.offset>=end,"M3 trusted regions overlap");if(r.offset>end)l.regions.push_back({"R6/base-gap/"+std::to_string(end),"R6-base-unclassified","original-R6-val0",end,r.offset-end,1,r.offset-end,1});l.regions.push_back(r);end=r.offset+r.count;}if(end<l.actual)l.regions.push_back({"R6/base-gap/"+std::to_string(end),"R6-base-unclassified","original-R6-val0",end,l.actual-end,1,l.actual-end,1});
+      |                                                                                                                                                                                                                                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:275: src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3374: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:3640: src/paper_r7/CMakeFiles/r7_a3_tests.dir/rule] Error 2
+gmake: *** [Makefile:1349: r7_a3_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_a3_tests r7_a3_prover r7_a3_verifier r7_crypto_tests r7_local_prover r7_local_verifier r7_framework_tests r7_oneblock_prove r7_oneblock_verify r6_builder_tests r6_model_prove r6_model_verify r6_model_plan r5b_gkr_tests r6_resources_tests r7_s2_fixture r7_s2_prover r7_s2_verifier r7_s2_tests r7_m3_tests r7_m3_fixture r7_m3_prover r7_m3_verifier -j4"
+	User time (seconds): 10.48
+	System time (seconds): 0.68
+	Percent of CPU this job got: 273%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 337808
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 17
+	Minor (reclaiming a frame) page faults: 251547
+	Voluntary context switches: 179
+	Involuntary context switches: 62
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 9512
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

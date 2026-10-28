@@ -1,0 +1,189 @@
+{
+  "status": "FAILED",
+  "oneblock_status": "INCOMPLETE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "full_prover_success": false,
+  "full_verifier_accept": false,
+  "payload_sha256": "59947d7f5192d07d47e4b6347a7661425207565a547fa41721c098e662261406",
+  "execution_commit": "a7680ab1f7cd6deba039be0feb6d4fb0d5883528",
+  "execution_git_status": "M src/paper_r7/CMakeLists.txt\n M src/paper_r7/framework.hpp\n M src/paper_r7/hyrax_a3.cpp\n M src/paper_r7/hyrax_a3.hpp\n M src/paper_r7/interactive.cpp\n M src/paper_r7/interactive.hpp\n M src/paper_r7/r6_adapter.cpp\n M tools/r7_sync_safety.py\n M tools/run_remote.py\n?? R7_ONEBLOCK_PLAN.md\n?? src/paper_r7/oneblock_bindings.cpp\n?? src/paper_r7/oneblock_bindings.hpp\n?? src/paper_r7/oneblock_bindings_tests.cpp\n?? src/paper_r7/oneblock_gkr.cpp\n?? src/paper_r7/oneblock_gkr.hpp\n?? src/paper_r7/oneblock_gkr_tests.cpp\n?? src/paper_r7/oneblock_lookup.cpp\n?? src/paper_r7/oneblock_lookup.hpp\n?? src/paper_r7/oneblock_lookup_tests.cpp\n?? src/paper_r7/oneblock_main.cpp\n?? src/paper_r7/oneblock_model.cpp\n?? src/paper_r7/oneblock_model.hpp\n?? src/paper_r7/oneblock_model_tests.cpp\n?? src/paper_r7/oneblock_plan.cpp\n?? src/paper_r7/oneblock_plan.hpp\n?? src/paper_r7/oneblock_plan_main.cpp\n?? src/paper_r7/oneblock_plan_tests.cpp\n?? src/paper_r7/oneblock_public.cpp\n?? src/paper_r7/oneblock_public.hpp\n?? src/paper_r7/oneblock_public_tests.cpp\n?? src/paper_r7/oneblock_sumcheck.cpp\n?? src/paper_r7/oneblock_sumcheck.hpp\n?? src/paper_r7/oneblock_vectors.cpp\n?? src/paper_r7/oneblock_vectors.hpp\n?? src/paper_r7/oneblock_vectors_tests.cpp\n?? tools/oneblock_tests.py\n?? tools/remote_oneblock.py",
+  "error": "complete-independent failed",
+  "events": [
+    {
+      "label": "engineering",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4248304972425103,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/engineering.log"
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.0695749749429524,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/configure.log"
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_oneblock_plan",
+        "r7_oneblock_plan_tests",
+        "r7_oneblock_model_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_oneblock_gkr_tests",
+        "r7_oneblock_bindings_tests",
+        "r7_oneblock_public_tests",
+        "r7_oneblock_vectors_tests",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 12.544648136943579,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/build.log"
+    },
+    {
+      "label": "native-coverage",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_plan",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ONEBLOCK-RUN-20261027T020612Z/native"
+      ],
+      "exit_code": 0,
+      "seconds": 3.575314115267247,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/native-coverage.log"
+    },
+    {
+      "label": "coverage-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_plan_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 3.374990440439433,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/coverage-unit.log"
+    },
+    {
+      "label": "model-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_model_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.31720602000132203,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/model-unit.log"
+    },
+    {
+      "label": "lookup-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 22.42167705995962,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/lookup-unit.log"
+    },
+    {
+      "label": "gkr-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_gkr_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.6179849868640304,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/gkr-unit.log"
+    },
+    {
+      "label": "bindings-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_bindings_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4751266702078283,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/bindings-unit.log"
+    },
+    {
+      "label": "public-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_public_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 1.820869730785489,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/public-unit.log"
+    },
+    {
+      "label": "vectors-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_vectors_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4681237917393446,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/vectors-unit.log"
+    },
+    {
+      "label": "complete-independent",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/oneblock_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ONEBLOCK-RUN-20261027T020612Z"
+      ],
+      "exit_code": 1,
+      "seconds": 24.978550961241126,
+      "passed": false,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T020612Z/complete-independent.log"
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

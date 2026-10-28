@@ -1,0 +1,1104 @@
+[
+  {
+    "case": "s3b-run-4096",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "seconds": 4.973772682715207,
+    "wire": {
+      "frames": 306,
+      "bytes": 567763,
+      "max_frame_bytes": 131349
+    },
+    "P": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 4096,
+      "actual": 4096,
+      "master_id": "aae6d7fd9282acd569c8c77748031c8e00e8d60ce2d7077828168a141dcfc7a5",
+      "projection_id": "0893373f8820e745b67c93e58e81612ee967513a25ed54a2f38450ba44047cff",
+      "registered_rows": 4,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 131200,
+      "mask_seconds": 0.0729133,
+      "response_seconds": 0.00145106,
+      "registration_verify_seconds": 0.000500772,
+      "seconds": 4.90574,
+      "P_wire_bytes": 544386,
+      "wire_bytes": 567593,
+      "frames": 306,
+      "max_frame_bytes": 131349,
+      "peak_rss_kib": 483532,
+      "MSM_calls": 240,
+      "MSM_terms": 18730,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 0.0793635,
+          "P_wire_bytes": 133262,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.243906,
+          "P_wire_bytes": 70473,
+          "MSM_calls": 24
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.214207,
+          "P_wire_bytes": 70473,
+          "MSM_calls": 24
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.0387935,
+          "P_wire_bytes": 67828,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.560667,
+          "P_wire_bytes": 201621,
+          "MSM_calls": 184
+        }
+      ]
+    },
+    "V": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 4096,
+      "actual": 4096,
+      "master_id": "aae6d7fd9282acd569c8c77748031c8e00e8d60ce2d7077828168a141dcfc7a5",
+      "projection_id": "0893373f8820e745b67c93e58e81612ee967513a25ed54a2f38450ba44047cff",
+      "registered_rows": 4,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 131200,
+      "mask_seconds": 1.85e-07,
+      "response_seconds": 0.00311239,
+      "registration_verify_seconds": 0.0612108,
+      "seconds": 4.90771,
+      "P_wire_bytes": 0,
+      "wire_bytes": 567763,
+      "frames": 306,
+      "max_frame_bytes": 131349,
+      "peak_rss_kib": 482108,
+      "MSM_calls": 74,
+      "MSM_terms": 14462,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 0.141734,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.182169,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.214294,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.101381,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.497956,
+          "P_wire_bytes": 0,
+          "MSM_calls": 58
+        }
+      ]
+    }
+  },
+  {
+    "case": "s3b-run-4096-chunk-order",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "chunk-order",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "sequence/label",
+    "seconds": 3.7529700752347708,
+    "wire": {
+      "frames": 3,
+      "bytes": 1334,
+      "max_frame_bytes": 585
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-chunk-length",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "chunk-length",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.786096560303122,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-active-set",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "active-set",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.8345341156236827,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-timing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "timing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label",
+    "seconds": 3.8751272708177567,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-response",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "response",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.8253579870797694,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-mask-reuse",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "mask-reuse",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "reused public row mask",
+    "seconds": 3.821337847970426,
+    "wire": {
+      "frames": 5,
+      "bytes": 2304,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT B1 reused public row mask",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-challenge",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "challenge",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.822369795292616,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-master",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-master",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.835965775884688,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-layout",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "layout",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.7842918504029512,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-actual-length",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "actual-length",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.784491087310016,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-row-column",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "row-column",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.7848909171298146,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-column-major",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "column-major",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.8220345550216734,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-old-suite",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "old-suite",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.7849672688171268,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-truncated",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "truncated",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "crypto truncated",
+    "seconds": 3.871924773324281,
+    "wire": {
+      "frames": 5,
+      "bytes": 2303,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 crypto truncated wire",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-bad-point",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "bad-point",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "canonical",
+    "seconds": 3.821146053262055,
+    "wire": {
+      "frames": 5,
+      "bytes": 2304,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT noncanonical G1",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-bad-scalar",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "bad-scalar",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "canonical",
+    "seconds": 3.8255869592539966,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT noncanonical Fr",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-trailing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "trailing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "trailing bytes",
+    "seconds": 4.023026595823467,
+    "wire": {
+      "frames": 7,
+      "bytes": 133840,
+      "max_frame_bytes": 131350
+    },
+    "V_reason": "REJECT R7 crypto trailing bytes",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-missing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "missing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "EOF/transport",
+    "seconds": 3.8205765252932906,
+    "wire": {
+      "frames": 6,
+      "bytes": 2490,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 interactive EOF/transport failure",
+    "P_reason": "REJECT B1 deliberate missing chunk"
+  },
+  {
+    "case": "s3b-run-4096-early-complete",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "early-complete",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label",
+    "seconds": 3.8715030010789633,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-gather-index",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "gather-index",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent",
+    "seconds": 4.372604859992862,
+    "wire": {
+      "frames": 97,
+      "bytes": 368459,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 public statement/parent binding mismatch",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-kernel",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-kernel",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation",
+    "seconds": 4.573945100884885,
+    "wire": {
+      "frames": 147,
+      "bytes": 447056,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s3b-run-4096-wrong-claim",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-claim",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 Schnorr equation",
+    "seconds": 4.037299712188542,
+    "wire": {
+      "frames": 49,
+      "bytes": 208930,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT A3 Schnorr equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-handle",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-handle",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "HiddenScalar session/role",
+    "seconds": 3.8727147560566664,
+    "wire": {
+      "frames": 21,
+      "bytes": 136548,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 HiddenScalar session/role identity mismatch",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-65536",
+    "mode": "s3b-run",
+    "N": 65536,
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "seconds": 6.6770368241705,
+    "wire": {
+      "frames": 358,
+      "bytes": 2561912,
+      "max_frame_bytes": 2099349
+    },
+    "P": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 65536,
+      "actual": 65536,
+      "master_id": "3f7b432cc66ff89b338ddcd2b7ac4d0ea9902a250b4c94b4dd31dee59a07c6b3",
+      "projection_id": "967d83418567b8e57d077090cbfa5170c46f3c76aa73b1a55fc301796b4e0c92",
+      "registered_rows": 64,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 2099200,
+      "mask_seconds": 0.990212,
+      "response_seconds": 0.023946,
+      "registration_verify_seconds": 0.00799277,
+      "seconds": 6.5986,
+      "P_wire_bytes": 2534786,
+      "wire_bytes": 2561741,
+      "frames": 358,
+      "max_frame_bytes": 2099349,
+      "peak_rss_kib": 482288,
+      "MSM_calls": 344,
+      "MSM_terms": 80438,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 1.05909,
+          "P_wire_bytes": 2107262,
+          "MSM_calls": 64
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.847744,
+          "P_wire_bytes": 70601,
+          "MSM_calls": 24
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.231787,
+          "P_wire_bytes": 70601,
+          "MSM_calls": 24
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.0382474,
+          "P_wire_bytes": 67828,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.631262,
+          "P_wire_bytes": 215845,
+          "MSM_calls": 228
+        }
+      ]
+    },
+    "V": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 65536,
+      "actual": 65536,
+      "master_id": "3f7b432cc66ff89b338ddcd2b7ac4d0ea9902a250b4c94b4dd31dee59a07c6b3",
+      "projection_id": "967d83418567b8e57d077090cbfa5170c46f3c76aa73b1a55fc301796b4e0c92",
+      "registered_rows": 64,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 2099200,
+      "mask_seconds": 8.2e-08,
+      "response_seconds": 0.0283254,
+      "registration_verify_seconds": 0.655254,
+      "seconds": 6.61005,
+      "P_wire_bytes": 0,
+      "wire_bytes": 2561912,
+      "frames": 358,
+      "max_frame_bytes": 2099349,
+      "peak_rss_kib": 483668,
+      "MSM_calls": 150,
+      "MSM_terms": 76114,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 1.71052,
+          "P_wire_bytes": 0,
+          "MSM_calls": 64
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.196687,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.231993,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.102014,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.567478,
+          "P_wire_bytes": 0,
+          "MSM_calls": 74
+        }
+      ]
+    }
+  },
+  {
+    "case": "s3b-run-1048576",
+    "mode": "s3b-run",
+    "N": 1048576,
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "seconds": 24.664712701458484,
+    "wire": {
+      "frames": 470,
+      "bytes": 34210381,
+      "max_frame_bytes": 2099350
+    },
+    "P": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 1048576,
+      "actual": 1048576,
+      "master_id": "42ef23e28b8563f9e104bdeea975c1f0f4d576bfef26acba4f10160fae7069a5",
+      "projection_id": "e27fe56afb91803859a317096e7f270686432c0c206d78179fe41ccb82d2983c",
+      "registered_rows": 1024,
+      "zero_tail_coordinates": 0,
+      "chunks": 16,
+      "response_payload_bytes": 33587200,
+      "mask_seconds": 15.898,
+      "response_seconds": 0.368725,
+      "registration_verify_seconds": 0.128281,
+      "seconds": 24.592,
+      "P_wire_bytes": 34176709,
+      "wire_bytes": 34210208,
+      "frames": 470,
+      "max_frame_bytes": 2099350,
+      "peak_rss_kib": 481712,
+      "MSM_calls": 1348,
+      "MSM_terms": 1066446,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 16.9611,
+          "P_wire_bytes": 33703985,
+          "MSM_calls": 1024
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 1.32083,
+          "P_wire_bytes": 70729,
+          "MSM_calls": 24
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.665224,
+          "P_wire_bytes": 70729,
+          "MSM_calls": 24
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.0384014,
+          "P_wire_bytes": 67828,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 1.22879,
+          "P_wire_bytes": 230069,
+          "MSM_calls": 272
+        }
+      ]
+    },
+    "V": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 1048576,
+      "actual": 1048576,
+      "master_id": "42ef23e28b8563f9e104bdeea975c1f0f4d576bfef26acba4f10160fae7069a5",
+      "projection_id": "e27fe56afb91803859a317096e7f270686432c0c206d78179fe41ccb82d2983c",
+      "registered_rows": 1024,
+      "zero_tail_coordinates": 0,
+      "chunks": 16,
+      "response_payload_bytes": 33587200,
+      "mask_seconds": 1.894e-06,
+      "response_seconds": 0.464781,
+      "registration_verify_seconds": 10.5666,
+      "seconds": 24.6285,
+      "P_wire_bytes": 0,
+      "wire_bytes": 34210381,
+      "frames": 470,
+      "max_frame_bytes": 2099350,
+      "peak_rss_kib": 483720,
+      "MSM_calls": 1126,
+      "MSM_terms": 1062066,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 17.6255,
+          "P_wire_bytes": 0,
+          "MSM_calls": 1024
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.657061,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.665033,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.103861,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 1.16358,
+          "P_wire_bytes": 0,
+          "MSM_calls": 90
+        }
+      ]
+    }
+  },
+  {
+    "case": "s3b-run-1048576-chunk-repeat",
+    "mode": "s3b-run",
+    "N": 1048576,
+    "attack": "chunk-repeat",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 6.790924520697445,
+    "wire": {
+      "frames": 8,
+      "bytes": 2174059,
+      "max_frame_bytes": 2099349
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-pad-16777216-bad-first",
+    "mode": "s3b-pad",
+    "N": 16777216,
+    "attack": "bad-first",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 13.092316729016602,
+    "wire": {
+      "frames": 6,
+      "bytes": 2612916,
+      "max_frame_bytes": 2082721
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "REJECT B1 provisional row probe cannot complete registration"
+  },
+  {
+    "case": "s3b-pad-16777216-bad-last",
+    "mode": "s3b-pad",
+    "N": 16777216,
+    "attack": "bad-last",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 12.936178867239505,
+    "wire": {
+      "frames": 6,
+      "bytes": 2611124,
+      "max_frame_bytes": 2080929
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "REJECT B1 provisional row probe cannot complete registration"
+  },
+  {
+    "case": "s3b-pad-16777216-bad-boundary",
+    "mode": "s3b-pad",
+    "N": 16777216,
+    "attack": "bad-boundary",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 12.241837380919605,
+    "wire": {
+      "frames": 6,
+      "bytes": 2613164,
+      "max_frame_bytes": 2082975
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "REJECT B1 provisional row probe cannot complete registration"
+  },
+  {
+    "case": "s3b-fc-16777216",
+    "mode": "s3b-fc",
+    "N": 16777216,
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "seconds": 321.8495856751688,
+    "wire": {
+      "frames": 2041,
+      "bytes": 536728152,
+      "max_frame_bytes": 2082967
+    },
+    "P": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 16777216,
+      "actual": 16642424,
+      "master_id": "eb686e1d8c186faac0fdc8d4e2c353d1eb962527c5a0c1830884e444ebc65543",
+      "projection_id": "6253451e413dc86ddc6dfc97a20f8c38df6380361a983fe8866519227bbfa275",
+      "registered_rows": 16384,
+      "zero_tail_coordinates": 134792,
+      "chunks": 256,
+      "response_payload_bytes": 533081856,
+      "mask_seconds": 263.686,
+      "response_seconds": 5.81169,
+      "registration_verify_seconds": 2.06513,
+      "seconds": 320.774,
+      "P_wire_bytes": 536601928,
+      "wire_bytes": 536727979,
+      "frames": 2041,
+      "max_frame_bytes": 2082967,
+      "peak_rss_kib": 1115708,
+      "MSM_calls": 17524,
+      "MSM_terms": 16721148,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 280.53,
+          "P_wire_bytes": 534939109,
+          "MSM_calls": 16384
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 8.4489,
+          "P_wire_bytes": 70857,
+          "MSM_calls": 39
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 7.77722,
+          "P_wire_bytes": 70857,
+          "MSM_calls": 39
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.038545,
+          "P_wire_bytes": 67828,
+          "MSM_calls": 4
+        },
+        {
+          "name": "FC-Sumcheck-Sigma-A3",
+          "seconds": 0.270916,
+          "P_wire_bytes": 56097,
+          "MSM_calls": 140
+        },
+        {
+          "name": "local-child-bridge-0",
+          "seconds": 0.298326,
+          "P_wire_bytes": 203025,
+          "MSM_calls": 176
+        },
+        {
+          "name": "local-child-bridge-1",
+          "seconds": 0.332327,
+          "P_wire_bytes": 203069,
+          "MSM_calls": 176
+        },
+        {
+          "name": "local-child-bridge-2",
+          "seconds": 0.296204,
+          "P_wire_bytes": 123934,
+          "MSM_calls": 166
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 11.2932,
+          "P_wire_bytes": 244293,
+          "MSM_calls": 331
+        }
+      ]
+    },
+    "V": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 16777216,
+      "actual": 16642424,
+      "master_id": "eb686e1d8c186faac0fdc8d4e2c353d1eb962527c5a0c1830884e444ebc65543",
+      "projection_id": "6253451e413dc86ddc6dfc97a20f8c38df6380361a983fe8866519227bbfa275",
+      "registered_rows": 16384,
+      "zero_tail_coordinates": 134792,
+      "chunks": 256,
+      "response_payload_bytes": 533081856,
+      "mask_seconds": 2.8907e-05,
+      "response_seconds": 7.37675,
+      "registration_verify_seconds": 176.934,
+      "seconds": 321.821,
+      "P_wire_bytes": 0,
+      "wire_bytes": 536728152,
+      "frames": 2041,
+      "max_frame_bytes": 2082967,
+      "peak_rss_kib": 483276,
+      "MSM_calls": 16804,
+      "MSM_terms": 16711778,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 281.222,
+          "P_wire_bytes": 0,
+          "MSM_calls": 16384
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 7.75689,
+          "P_wire_bytes": 0,
+          "MSM_calls": 19
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 7.77726,
+          "P_wire_bytes": 0,
+          "MSM_calls": 19
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.100903,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "FC-Sumcheck-Sigma-A3",
+          "seconds": 0.269241,
+          "P_wire_bytes": 0,
+          "MSM_calls": 50
+        },
+        {
+          "name": "local-child-bridge-0",
+          "seconds": 0.292167,
+          "P_wire_bytes": 0,
+          "MSM_calls": 57
+        },
+        {
+          "name": "local-child-bridge-1",
+          "seconds": 0.33233,
+          "P_wire_bytes": 0,
+          "MSM_calls": 57
+        },
+        {
+          "name": "local-child-bridge-2",
+          "seconds": 0.296132,
+          "P_wire_bytes": 0,
+          "MSM_calls": 57
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 11.2934,
+          "P_wire_bytes": 0,
+          "MSM_calls": 121
+        }
+      ]
+    }
+  },
+  {
+    "case": "s3b-fc-16777216-source-wrong",
+    "mode": "s3b-fc",
+    "N": 16777216,
+    "attack": "source-wrong",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation",
+    "seconds": 308.2202256489545,
+    "wire": {
+      "frames": 1750,
+      "bytes": 536557609,
+      "max_frame_bytes": 2082967
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 16384\nPROJECTION_INDEPENDENTLY_REGISTERED\nREAL_FC_ARITHMETIC_VERIFIED\nALL_THREE_CHILD_SOURCES_VERIFIED\nREJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 16384\nPROJECTION_INDEPENDENTLY_REGISTERED\nREAL_FC_ARITHMETIC_VERIFIED\nALL_THREE_CHILD_SOURCES_VERIFIED\nREJECT R7 Sigma compressed linear relation failed",
+    "both_registrations_and_FC_children_passed": true
+  },
+  {
+    "case": "forbidden---challenge=1",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cannot import",
+    "V_reason": "REJECT B1 V cannot import prover challenge/receipt/options\n"
+  },
+  {
+    "case": "forbidden---import-receipt",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cannot import",
+    "V_reason": "REJECT B1 V cannot import prover challenge/receipt/options\n"
+  },
+  {
+    "case": "exact-session-replay",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cross-session rejected",
+    "V_reason": "REJECT R7 interactive cross-session rejected\n"
+  }
+]

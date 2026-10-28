@@ -1,0 +1,74 @@
+PASS fs-16-joint-P
+PASS fs-16-joint-V
+PASS fs-16-grouped-P
+PASS fs-16-grouped-V
+PASS fs-64-joint-P
+PASS fs-64-joint-V
+PASS fs-64-grouped-P
+PASS fs-64-grouped-V
+PASS fs-256-joint-P
+PASS fs-256-joint-V
+PASS fs-256-grouped-P
+PASS fs-256-grouped-V
+PASS fs-1024-joint-P
+PASS fs-1024-joint-V
+PASS fs-1024-grouped-P
+PASS fs-1024-grouped-V
+PASS small-tamper-response
+PASS small-truncate
+PASS small-append
+PASS small-reorder
+PASS small-duplicate
+PASS small-omit
+PASS small-label
+PASS small-label-length
+PASS small-payload-length
+PASS small-footer-challenge-digest
+PASS small-proof-nonce
+PASS small-suite
+PASS small-layout
+PASS small-wrong-context
+PASS small-wrong-instance
+PASS small-same-context-reverification
+PASS small-prohibited-challenge-import
+PASS malicious-challenge-P
+PASS malicious-challenge-V
+PASS malicious-map-P
+PASS malicious-map-V
+PASS malicious-value-P
+PASS malicious-value-V
+FAIL malicious-late-change-P
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/fs_tests.py", line 120, in <module>
+    (small if sys.argv[2]=='--small' else full)()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/fs_tests.py", line 78, in small
+    f=STAGE/('malicious-'+attack+'.fsproof');p=run('malicious-'+attack+'-P',[BIN/'r7_fs_probe_prover',64,'grouped',f,CONTEXT,attack],0 if attack in ['challenge','map'] else 2)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/fs_tests.py", line 35, in run
+    assert passed,text[-2000:]
+AssertionError: {"security_status":"FS_NIZK_CANDIDATE","suite":"R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1","session":"1854f1d2c8dbd61fe6093ccc6bb202144db7aee37909a85738fd212ba274fa45","complete":true,"proof_bytes":149298,"proof_sha256":"9c4f36d984953bb023d279bdfd5ea9165a26d591b18c3769dc5d65fff87f3e8e","transcript_digest":"0e7af5f27f1ea7991a8051cf7af1b0e58a2f81b26fb8498dfb91b797f5031a15","challenge_digest":"90a9f04a6053487877321c4dfab3431c168bee2deaca2dbdca5980230f79c28c","challenges":179,"prover_messages":368,"events":549,"field_rejections":1071,"hash_seconds":0.000897001,"file_io_seconds":0.00376388,"max_message_payload_bytes":4533,"production_gate":"BLOCKED_CRYPTOGRAPHIC_DESIGN","may_enter_stage2":false}
+{"status":"FS_PROBE_CREATED_CANDIDATE","n":64,"grouping":"grouped","roots":4,"claims":6,"seconds":0.639803,"wire_bytes":149298,"P_wire_bytes":149298,"peak_rss_kib":18780,"MSM_calls":469,"MSM_terms":2466}
+
+Command exited with non-zero status 1
+	Command being timed: "python3 -B tools/fs_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T035849Z --small"
+	User time (seconds): 21.52
+	System time (seconds): 0.24
+	Percent of CPU this job got: 96%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:22.59
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 29308
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 30816
+	Voluntary context switches: 823
+	Involuntary context switches: 92
+	Swaps: 0
+	File system inputs: 264
+	File system outputs: 10976
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

@@ -1,0 +1,20 @@
+# Task0-D multi-opening and composition
+Status: DESIGNED / CONDITIONAL. Joint expected-time knowledge extractor: PARTIAL, BLOCKED for production.
+
+Physical PC identity is full bytes, not an id string. Master query U interleaves address/value, so open([0]+p),open([1]+p) refer to the same vector and row convention. Read and final are separate fixed PCs. Trees reference those exact roles, not P-nominated replacements. Per-level PCs authenticate nodes; shared handles are carried by exact identity into Sigma and opening statements.
+
+Every H-PC batch has K<=4 (current schedule K=1 or2); every batch repeats its row audit. Root PC is opened once for root and once for level-zero parent; internal level PC is opened at two child points and once as parent; leaf PC at two child points and once at leaf test. Packed query PC receives two openings for write, two for read, and two per padding slot, distributed among audited batches. Read PC gets one per query tree, final gets one. K<=4 per batch does not bound global K or supply composition for all of them.
+
+B's local tree size is R*(4*5^log2 C)^(K+1). Concatenating many such trees naively grows exponentially in the number of batches. No efficient global extractor is implemented or proved here. A possible future extract-PC-once approach must obtain fixed row openings without changing later accepting-state distribution, then extract each scalar evaluation and reduce any discrepancy to a nontrivial DL relation using those same fixed row openings. Adaptive SC points, gamma/tau forks, and multiple relation challenges require a joint WEE/forking argument with success probability/runtime accounting; pointwise algebra is insufficient. Repeated audit avoids unjustified amortization but does not solve this global proof.
+
+To use Task0-A soundness, extraction must fix the SAME U/read/final before gamma/tau, then consistent nodes after gamma/tau and before tree test coins, then each polynomial before its round coin. A later extractor cannot assert those witnesses were fixed merely because Pedersen bytes were fixed: commitments have many information-theoretic openings. Computational binding reductions and synchronized forks are needed. Conditional soundness in SECURITY explicitly assumes this consistency; it is not full knowledge soundness.
+
+Task0-C erratum retained: two-layer GKR has four independent relation c, not one global c. D has its own separate c for root, each SC-relation batch, each endpoint/product, each leaf/padding relation. Compression bounds apply only to errors fixed before rho. No promotion to 893 openings, full GKR/Lasso knowledge, malicious-Verifier ZK or FS NIZK.
+
+## Future Range / Exp interfaces (DESIGNED only)
+- Range digit h: table T[u]=u, size 2^min(9,bits-9h); packed view uses same digit for address/value, plus an authenticated equality to a digit PC and sum_h 512^h digit_h = encoded. A 64-entry toy does not instantiate a 512-entry digit table.
+- Signed bias: encoded=source+2^(bits-1)*activeMask at the same committed master points. Zero-tail separately proves padded source/encoded zero; memory padding is still a real (0,T0) query. Source: range.cpp:35-52,60-72,123-138,140-188.
+- Exp: committed t,x,selector,delta,nativeE; prove clamp relations and ranges so x=min(t,8191), then lookup (x,nativeE) in the exact profile table of8192 entries. Native E on padded rows is Scale=1048576, while model E padding is zero; bind nativeE=E+Scale*(1-active). Source exp.cpp:5,17-18,27-30,96-114,144-170. Do not replace table/profile or conflate Unclamped and LegacyClampOne.
+- Table identity belongs to V, includes full canonical table/profile/version/digest. Current V toy table is fixed in trusted code.
+- A future external packed W/master and lookup children need typed source layout/offset mapping and committed equality proofs, including active-mask/padding. Current interleaved toy master proves within-memory address/value pairing only; it does not prove any relation to a real W anchor.
+Task0-E mathematical research is permitted once these limits are carried forward; no automatic E executable work or production gate change.

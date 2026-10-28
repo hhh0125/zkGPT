@@ -1,0 +1,63 @@
+test_other_user_proof_name_is_warn_but_own_proof_is_refused (__main__.ThisRunCompetition) ... ERROR
+test_other_user_warn_is_scoped_and_default_remains_strict (__main__.ThisRunCompetition) ... ERROR
+test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) ... 
+======================================================================
+ERROR: test_other_user_proof_name_is_warn_but_own_proof_is_refused (__main__.ThisRunCompetition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 9, in test_other_user_proof_name_is_warn_but_own_proof_is_refused
+    row=self.row();row['visible_large_jobs'][0]['comm']='r6_model_prove';resource_check(row,96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_other_user_warn_is_scoped_and_default_remains_strict (__main__.ThisRunCompetition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 7, in test_other_user_warn_is_scoped_and_default_remains_strict
+    row=self.row();resource_check(row,96,[],other_user_warn=True);self.assertEqual(len(row['warnings']),1)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) (key='effective_memory_bytes')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 14, in test_warn_never_waives_memory_disk_pids_cpu_or_address_space
+    with self.subTest(key=key),self.assertRaises(GateError):resource_check({**self.row(),key:value},96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) (key='disk_free_bytes')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 14, in test_warn_never_waives_memory_disk_pids_cpu_or_address_space
+    with self.subTest(key=key),self.assertRaises(GateError):resource_check({**self.row(),key:value},96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) (key='PID_room')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 14, in test_warn_never_waives_memory_disk_pids_cpu_or_address_space
+    with self.subTest(key=key),self.assertRaises(GateError):resource_check({**self.row(),key:value},96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) (key='affinity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 14, in test_warn_never_waives_memory_disk_pids_cpu_or_address_space
+    with self.subTest(key=key),self.assertRaises(GateError):resource_check({**self.row(),key:value},96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+======================================================================
+ERROR: test_warn_never_waives_memory_disk_pids_cpu_or_address_space (__main__.ThisRunCompetition) (key='RLIMIT_AS')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test_this_run_competition.py", line 14, in test_warn_never_waives_memory_disk_pids_cpu_or_address_space
+    with self.subTest(key=key),self.assertRaises(GateError):resource_check({**self.row(),key:value},96,[],other_user_warn=True)
+TypeError: resource_check() got an unexpected keyword argument 'other_user_warn'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (errors=7)

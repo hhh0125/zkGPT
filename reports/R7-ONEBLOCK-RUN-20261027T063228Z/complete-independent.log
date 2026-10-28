@@ -1,0 +1,56 @@
+FULL_SESSION correct-full
+PASS correct-full
+FULL_SESSION model-response
+PASS model-response
+FULL_SESSION truncated
+PASS truncated
+FULL_SESSION cross-session
+PASS cross-session
+FULL_SESSION wrong-X
+PASS wrong-X
+FULL_SESSION wrong-Y
+PASS wrong-Y
+FULL_SESSION wrong-internal
+FAIL wrong-internal
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/oneblock_tests.py", line 80, in <module>
+    for attack,reason in [('model-response','rerandomization row response equation'),('truncated','truncated'),('cross-session','cross-session rejected'),('wrong-X','compressed linear relation'),('wrong-Y','compressed linear relation'),('wrong-internal','equation'),('wrong-weight','equation'),('wrong-Auxiliary','compressed linear relation'),('missing-constraint','EOF/transport')]:run(attack,reason)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/oneblock_tests.py", line 78, in run
+    if not ok:raise AssertionError(name+'\nV:'+vt[-6000:]+'\nP:'+pt[-6000:])
+AssertionError: wrong-internal
+V:PHASE_COMPLETE model-authority-registration
+PHASE_COMPLETE frozen-witness-and-master-commitment
+PHASE_COMPLETE one-full-master-registration
+PHASE_COMPLETE public-X-Y-constants
+REJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed
+
+P:PHASE_COMPLETE model-authority-registration
+PHASE_COMPLETE frozen-witness-and-master-commitment
+PHASE_COMPLETE one-full-master-registration
+PHASE_COMPLETE public-X-Y-constants
+REJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed
+
+Command exited with non-zero status 1
+	Command being timed: "python3 -B tools/oneblock_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ONEBLOCK-RUN-20261027T063228Z"
+	User time (seconds): 3337.00
+	System time (seconds): 167.49
+	Percent of CPU this job got: 153%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 37:57.99
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2915356
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 11656924
+	Voluntary context switches: 363545
+	Involuntary context switches: 28324
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 9418896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

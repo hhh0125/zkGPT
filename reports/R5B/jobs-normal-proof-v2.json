@@ -1,0 +1,33 @@
+[
+  {
+    "id": "normal-prove-v2",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "require_log": "GENERATED R5B combined proof"
+  },
+  {
+    "id": "normal-independent-v2",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "cwd": "reports/R5B/empty-normal-v2",
+    "empty_cwd": true,
+    "require_log": "ACCEPT R5B engineering candidate"
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "trusted-preprocess-v1",
+    "command": [
+      "build/release/src/paper_r2/r5b_model_preprocess",
+      "data/gpt2_int",
+      "reports/R5B/engineering-model-manifest-v1.txt",
+      "reports/R5B/operator-trust-v1.anchor"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:48:53.333889+00:00",
+    "pid": 645894,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/trusted-preprocess-v1.log",
+    "time": "logs/R5B/trusted-preprocess-v1.time",
+    "exit_code": 0,
+    "seconds": 33.06999210314825,
+    "finished_utc": "2026-10-20T08:49:26.404123+00:00",
+    "max_rss_kib": 1394352
+  },
+  {
+    "id": "release-regression-v2",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "--output-on-failure",
+      "-j4"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:49:26.404807+00:00",
+    "pid": 645894,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/release-regression-v2.log",
+    "time": "logs/R5B/release-regression-v2.time",
+    "exit_code": 0,
+    "seconds": 26.26894122781232,
+    "finished_utc": "2026-10-20T08:49:52.674070+00:00",
+    "max_rss_kib": 1571892
+  }
+]

@@ -1,0 +1,27 @@
+test_every_permit_budget_and_identity_is_checked (__main__.Contracts) ... FAIL
+test_unapproved_manual_record_or_different_binding_is_rejected (__main__.Contracts) ... FAIL
+
+======================================================================
+FAIL: test_every_permit_budget_and_identity_is_checked (__main__.Contracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_contracts.py", line 10, in test_every_permit_budget_and_identity_is_checked
+    c=self.contract();fields={'mode':'prover','blocks':'12','profile-sha256':'a'*64,'circuit':'b'*64,'anchor-sha256':'c'*64,'manifest-sha256':'d'*64,'binary-sha256':'e'*64,'memory-gib':'192','wall-seconds':'28800','disk-reserve-gib':'64','cpu-limit':'4'}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_contracts.py", line 7, in contract
+    p=Path(__file__).with_name('r6b_contract.py');self.assertTrue(p.exists(),'Missing strict CLI/permit/supervisor contract')
+AssertionError: False is not true : Missing strict CLI/permit/supervisor contract
+
+======================================================================
+FAIL: test_unapproved_manual_record_or_different_binding_is_rejected (__main__.Contracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_contracts.py", line 19, in test_unapproved_manual_record_or_different_binding_is_rejected
+    c=self.contract();binding={'run_id':'sim','input_sha256':'f'*64};record={'kind':'R6B-EXECUTION-APPROVAL-v1','origin':'MANUAL-USER-CONFIRMED','scope_evidence':'external user scope message','permit_evidence':{'prover':'external user P approval','verifier':'external user V approval'},'binding':binding,'allowed_attempts':1,'order':['prover','verifier']}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_contracts.py", line 7, in contract
+    p=Path(__file__).with_name('r6b_contract.py');self.assertTrue(p.exists(),'Missing strict CLI/permit/supervisor contract')
+AssertionError: False is not true : Missing strict CLI/permit/supervisor contract
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=2)

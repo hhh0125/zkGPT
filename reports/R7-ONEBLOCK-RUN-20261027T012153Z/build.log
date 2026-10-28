@@ -1,0 +1,38 @@
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 60%] Built target gpt_lib
+[ 71%] Built target paper_r2
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.cpp: In function ‘zkgpt::r7::oneblock::Coverage zkgpt::r7::oneblock::discover()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.cpp:27:297: error: ‘validateRegions’ is not a member of ‘zkgpt::r6’
+   27 |  Coverage p;p.context=master3::trustedContext();master3::QuietStdout quiet;LLM nn(1,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();auto q=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,q);r6::validateRegions(q,nn.parameterRegions());crypto::need(q.circuit_id==p.context.plan.circuit_id,"native coverage circuit mismatch");std::ostringstream native;r6::writePlan(native,graph,nn,q);p.native_json=native.str();p.objects=p.context.objects;p.source_objects=p.objects.size();
+      |                                                                                                                                                                                                                                                                                                         ^~~~~~~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:345: src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3392: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4213: src/paper_r7/CMakeFiles/r7_oneblock_plan.dir/rule] Error 2
+gmake: *** [Makefile:1544: r7_oneblock_plan] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_oneblock_plan r7_oneblock_plan_tests -j4"
+	User time (seconds): 1.68
+	System time (seconds): 0.27
+	Percent of CPU this job got: 101%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.91
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 275136
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 80154
+	Voluntary context switches: 136
+	Involuntary context switches: 19
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 6032
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

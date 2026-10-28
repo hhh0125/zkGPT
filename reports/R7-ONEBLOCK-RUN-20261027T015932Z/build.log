@@ -1,0 +1,111 @@
+[  3%] Built target mcl
+[  6%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 55%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/framework.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/wire.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/interactive.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/r6_adapter.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/research.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_opening.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/streaming_master.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_bridge.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_registration.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/global_bridge.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_vectors.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_bindings.cpp.o
+[ 75%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_public.cpp.o
+[ 79%] Linking CXX static library libpaper_r7.a
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_oneblock_plan.dir/oneblock_plan_main.cpp.o
+[100%] Linking CXX executable r7_oneblock_plan
+[100%] Built target r7_oneblock_plan
+[  3%] Built target mcl
+[  6%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 55%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 96%] Built target paper_r7
+[ 96%] Building CXX object src/paper_r7/CMakeFiles/r7_oneblock_plan_tests.dir/oneblock_plan_tests.cpp.o
+[100%] Linking CXX executable r7_oneblock_plan_tests
+[100%] Built target r7_oneblock_plan_tests
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 57%] Built target gpt_lib
+[ 67%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Linking CXX executable r7_oneblock_model_tests
+[100%] Built target r7_oneblock_model_tests
+[  3%] Built target mcl
+[  6%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 55%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Linking CXX executable r7_oneblock_lookup_tests
+[100%] Built target r7_oneblock_lookup_tests
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 57%] Built target gpt_lib
+[ 67%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Linking CXX executable r7_oneblock_gkr_tests
+[100%] Built target r7_oneblock_gkr_tests
+[  3%] Built target mcl
+[  6%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 55%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 96%] Built target paper_r7
+[ 96%] Building CXX object src/paper_r7/CMakeFiles/r7_oneblock_bindings_tests.dir/oneblock_bindings_tests.cpp.o
+[100%] Linking CXX executable r7_oneblock_bindings_tests
+/usr/bin/ld: libpaper_r7.a(oneblock_bindings.cpp.o): in function `zkgpt::r7::oneblock::authenticateMappedClaims(zkgpt::r7::crypto::IO&, zkgpt::r7::masterB::Registered const&, zkgpt::r7::master3::Secret const*, std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> const&, std::vector<zkgpt::r7::oneblock::MappedMasterClaim, std::allocator<zkgpt::r7::oneblock::MappedMasterClaim> > const&, zkgpt::r7::crypto::Random*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)':
+oneblock_bindings.cpp:(.text+0xdac): undefined reference to `EVP_MD_CTX_new'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0xdc4): undefined reference to `EVP_MD_CTX_free'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0xded): undefined reference to `EVP_sha256'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0xdfe): undefined reference to `EVP_DigestInit_ex'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x111d): undefined reference to `EVP_DigestFinal_ex'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x210f): undefined reference to `EVP_DigestUpdate'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x2193): undefined reference to `EVP_DigestUpdate'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x2864): undefined reference to `EVP_MD_CTX_new'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x287c): undefined reference to `EVP_MD_CTX_free'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x28a5): undefined reference to `EVP_sha256'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x28b6): undefined reference to `EVP_DigestInit_ex'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x2bce): undefined reference to `EVP_DigestFinal_ex'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x35f7): undefined reference to `EVP_DigestUpdate'
+/usr/bin/ld: oneblock_bindings.cpp:(.text+0x3635): undefined reference to `EVP_DigestUpdate'
+collect2: error: ld returned 1 exit status
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_oneblock_bindings_tests.dir/build.make:107: src/paper_r7/r7_oneblock_bindings_tests] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:4415: src/paper_r7/CMakeFiles/r7_oneblock_bindings_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4422: src/paper_r7/CMakeFiles/r7_oneblock_bindings_tests.dir/rule] Error 2
+gmake: *** [Makefile:1609: r7_oneblock_bindings_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_oneblock_plan r7_oneblock_plan_tests r7_oneblock_model_tests r7_oneblock_lookup_tests r7_oneblock_gkr_tests r7_oneblock_bindings_tests r7_oneblock_public_tests r7_oneblock_vectors_tests r7_complete_prover r7_complete_verifier -j4"
+	User time (seconds): 50.23
+	System time (seconds): 3.69
+	Percent of CPU this job got: 254%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.15
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 345404
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6
+	Minor (reclaiming a frame) page faults: 1598534
+	Voluntary context switches: 1371
+	Involuntary context switches: 261
+	Swaps: 0
+	File system inputs: 2584
+	File system outputs: 95144
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

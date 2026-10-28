@@ -1,0 +1,25 @@
+{
+  "id": "red-builder-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_builder_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:02:16.969120+00:00",
+  "seconds": 0.16669162129983306,
+  "exit_code": 2,
+  "expected_exit": 0,
+  "PASS": false,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 8,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4"
+  },
+  "log": "logs/R6A/red-builder-build.log",
+  "time": "logs/R6A/red-builder-build.time"
+}

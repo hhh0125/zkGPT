@@ -1,0 +1,89 @@
+PASS a3-dot-16
+PASS a3-dot-64
+PASS a3-dot-256
+PASS a3-dot-1024
+PASS a3-dot-1
+PASS a3-dot-2
+PASS a3-zero-64
+PASS a3-pc-16
+PASS a3-pc-64
+PASS a3-pc-256
+PASS a3-pc-1024
+PASS a3-pc-1
+PASS a3-pc-zero-64
+PASS a3-pc-padded-16
+PASS exact-prior-session-proof-replay
+PASS a3-dot-16-bad-evaluation REJECT A3 Schnorr equation failed
+PASS a3-dot-16-wrong-commitment REJECT A3 vector knowledge equation failed
+PASS a3-dot-16-cancellation REJECT A3 vector knowledge equation failed
+PASS a3-dot-16-generator-shift REJECT A3 vector knowledge equation failed
+PASS a3-dot-16-bad-vector-knowledge REJECT A3 vector knowledge equation failed
+PASS a3-dot-16-bad-scalar-knowledge REJECT A3 scalar knowledge equation failed
+PASS a3-dot-16-fold-challenge REJECT A3 Schnorr equation failed
+PASS a3-dot-16-final-challenge REJECT A3 Schnorr equation failed
+PASS a3-dot-16-bad-cross-blind REJECT A3 Schnorr equation failed
+PASS a3-dot-16-bad-final-blind REJECT A3 Schnorr equation failed
+PASS a3-dot-16-unblinded-cross REJECT A3 Schnorr equation failed
+PASS a3-dot-16-truncate REJECT R7 crypto truncated wire
+PASS a3-dot-16-noncanonical-point REJECT noncanonical G1
+PASS a3-dot-16-noncanonical-scalar REJECT noncanonical Fr
+PASS a3-dot-16-trailing REJECT R7 crypto trailing bytes
+PASS a3-dot-16-old-suite REJECT A3 suite/version/public input mismatch
+PASS a3-dot-16-unknown-version REJECT A3 suite/version/public input mismatch
+PASS a3-dot-16-swap-handle REJECT A3 suite/version/public input mismatch
+PASS a3-dot-16-order REJECT R7 interactive sequence/label or receipt rejected
+PASS a3-dot-16-session REJECT R7 interactive cross-session rejected
+PASS a3-dot-16-receipt REJECT R7 interactive sequence/label or receipt rejected
+PASS a3-pc-64-bad-evaluation REJECT A3 Schnorr equation failed
+PASS a3-pc-64-wrong-commitment REJECT A3 vector knowledge equation failed
+PASS a3-dot-0 REJECT A3 experiment dimension
+PASS a3-dot-3 REJECT A3 experiment dimension
+PASS a3-dot-2048 REJECT A3 experiment dimension
+PASS opening-16-bench0
+PASS a3-pc-16-bench0
+PASS opening-64-bench0
+PASS a3-pc-64-bench0
+PASS opening-256-bench0
+PASS a3-pc-256-bench0
+PASS opening-1024-bench0
+PASS a3-pc-1024-bench0
+PASS opening-16-bench1
+PASS a3-pc-16-bench1
+PASS opening-64-bench1
+PASS a3-pc-64-bench1
+PASS opening-256-bench1
+PASS a3-pc-256-bench1
+PASS opening-1024-bench1
+PASS a3-pc-1024-bench1
+PASS opening-16-bench2
+PASS a3-pc-16-bench2
+PASS opening-64-bench2
+PASS a3-pc-64-bench2
+PASS opening-256-bench2
+PASS a3-pc-256-bench2
+PASS opening-1024-bench2
+PASS a3-pc-1024-bench2
+LOCAL_CRYPTO_TESTED A3 cases=65 Oneblock=INCOMPLETE
+	Command being timed: "python3 -B tools/hyrax_a3_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100613Z/sessions"
+	User time (seconds): 4.08
+	System time (seconds): 0.16
+	Percent of CPU this job got: 104%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12736
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 31669
+	Voluntary context switches: 1533
+	Involuntary context switches: 18
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 6840
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

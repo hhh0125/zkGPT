@@ -1,0 +1,165 @@
+{
+  "basis": "actual12builder layout+source verified lifetimes, not oneblock*12; estimated not full12RSS",
+  "phases": {
+    "graph_bytes": {
+      "before_bytes": 6368537600,
+      "after_bytes": 6368537600,
+      "before_GiB": 5.9311628341674805,
+      "after_GiB": 5.9311628341674805,
+      "full12_measured": false
+    },
+    "witness_bytes": {
+      "before_bytes": 23112176384,
+      "after_bytes": 23112176384,
+      "before_GiB": 21.52489161491394,
+      "after_GiB": 21.52489161491394,
+      "full12_measured": false
+    },
+    "commit_bytes": {
+      "before_bytes": 29065227264,
+      "after_bytes": 29065227264,
+      "before_GiB": 27.06910228729248,
+      "after_GiB": 27.06910228729248,
+      "full12_measured": false
+    },
+    "prove_bytes": {
+      "before_bytes": 160083395840,
+      "after_bytes": 117133722880,
+      "before_GiB": 149.08928036689758,
+      "after_GiB": 109.08928036689758,
+      "full12_measured": false
+    },
+    "verify_bytes": {
+      "before_bytes": 66339897920,
+      "after_bytes": 66339897920,
+      "before_GiB": 61.78384453058243,
+      "after_GiB": 61.78384453058243,
+      "full12_measured": false
+    },
+    "serialize_bytes": {
+      "before_bytes": 160226833920,
+      "after_bytes": 117277160960,
+      "before_GiB": 149.22286748886108,
+      "after_GiB": 109.22286748886108,
+      "full12_measured": false
+    }
+  },
+  "prove_terms_before_25percent_margin": {
+    "lookup_total": 44388483072,
+    "val0_growth_capacity_envelope": 10478944256,
+    "nonmaster_layers": 1362198528,
+    "integer_matrix_envelope": 654999552,
+    "cc_w_plus_caller_master": 17179869184,
+    "graph_capacity_times3_conservative_envelope_not3actual_copies": 17495000064,
+    "other_workspace_and_threads": 2147483648
+  },
+  "margin_percent": 25,
+  "lookup": {
+    "before_total_bytes": 78748221440,
+    "after_total_bytes": 44388483072,
+    "retained_queries_bytes": 10028744704,
+    "unchanged_local_Range_Exp_workspace_bound": 10737680384,
+    "mapped_workspace_bound": 34359738368,
+    "max_checked_input_domain": 4194304
+  },
+  "lifetimes": [
+    {
+      "object": "pr.val[0]",
+      "size": "actual199348640 fields; compacted 6379156480bytes, larger allocation growth envelope kept",
+      "allocate": "neuralNetwork::calcInputLayer and numerical advice append",
+      "release": "prover destructor at main exit; kept through GKR and serialization",
+      "why_retained": "GKR matrix and ordinary gates still read val0; no unsafe cc.w alias introduced"
+    },
+    {
+      "object": "pr.cc.w",
+      "size_bytes": 8589934592,
+      "allocate": "prover.cpp::commitInput malloc+memcpy of paddedval0",
+      "release": "prover/Commit_return destructor",
+      "why_retained": "old GKR commitment and its input opening read immutable original master"
+    },
+    {
+      "object": "caller master vector",
+      "size_bytes": 8589934592,
+      "allocate": "r6_model_prove.cpp constructs vector from cc.w",
+      "release": "main exit",
+      "why_retained": "existing R1 commit/open, bridge and mapped-input const-vector API; no ownership-interface redesign"
+    },
+    {
+      "object": "all Child vectors including W",
+      "size_bytes": 10028744704,
+      "W_padded_bytes": 8589934592,
+      "allocate": "gatherModelQueries before commitments",
+      "release": "main exit",
+      "why_retained": "local Range/Exp commitments and later mapped-child openings use the same witness; sequential local proofs do not by themselves make these discardable"
+    },
+    {
+      "object": "child validation gather copy",
+      "before_max_bytes": 8589934592,
+      "after_bytes": 0,
+      "allocate_before": "children[j]==gatherInput(s,j,w)",
+      "release_before": "each comparison full expression",
+      "replacement": "same affine indices/biases and all zero-padding checked directly; no query removed"
+    },
+    {
+      "object": "mapped kernel and factor copies",
+      "before_incremental_peak_master_units": 5,
+      "after_incremental_peak_master_units": 2,
+      "immutable_caller_master_units": 1,
+      "planner_before_master_units": 8,
+      "planner_after_master_units": 4,
+      "allocate": "kernel weights, then proveMappedInput Sumcheck setup",
+      "release": "moved factors owned by existing by-value proveSumcheck; both capacities destroyed before final master open",
+      "slack": "old8 vs observed6total buffers; new4 vs3total; budget drop includes1Master less conservative slack, not just measured freed copies"
+    },
+    {
+      "object": "kernel child/checked equality weights",
+      "allocate": "one weights(point) vector at a time in kernel",
+      "release": "end of each child or checked-claim loop",
+      "actual_max_checked_elements": 4194304,
+      "planner": "max(4M,2M+max(maxChild,checkedDomain)*32); checked domain validatedpoweroftwo<=2^28; R2 derives bits exactly as gkr_verifier.cpp claims"
+    },
+    {
+      "object": "graph and coordinates",
+      "capacity_bytes": 5831666688,
+      "allocate": "pr.C actual builder; initial public preflight graph in separate inner scope",
+      "release": "preflight inner scope or final prover destructor",
+      "important": "GKRProofBuilder::C is const layeredCircuit&, not an additional graph copy;3graph term remains conservative reserve, not3observed copies"
+    },
+    {
+      "object": "GKR phase vectors",
+      "allocate": "prepareSumcheckWorkspace sizes real phase domains; matrix bookkeeping vectors per FC; Lasso coefficients at inputdomain",
+      "release": "releaseSumcheckWorkspace each phase; GKRProofBuilder build releasesLassoWorkspace; folding.release before bridge",
+      "why_not_changed": "existing in-place folding and shared circuit reference already optimize these; all constraints/claims retained"
+    },
+    {
+      "object": "PC and IPA scratch",
+      "allocate": "pc.cpp::commit O(columns)row; open reduces to columns then IPAhalf-vectors; old hyrax reduction similarly O(columns)",
+      "release": "end of commit/open or IPA scope",
+      "important": "row PCs/generators are O(sqrtN); not a second full padded W/FullMastercommit copy"
+    },
+    {
+      "object": "proof and wire buffers",
+      "allocate": "Proof p plus builder proof copy, nested serializeGKRProof/serializeLookup/Writer buffers",
+      "release": "serialization temporaries at call return; long-lived witnesses currently persist to main exit",
+      "upper_proof_bytes": 35859520,
+      "serialization_extra_bytes": 143438080,
+      "decision": "retain original4proof allowance; no wire streaming or transcript changes; not dominant"
+    }
+  ],
+  "artifact_budget_bytes": 210546944,
+  "reserve_memory_GiB": 32,
+  "reserve_disk_GiB": 64,
+  "recommended_caps": {
+    "prover_GiB": 128,
+    "verifier_GiB": 96
+  },
+  "wall_caps_seconds": {
+    "prover": 28800,
+    "verifier": 14400
+  },
+  "supervisor_finalization_allowance_seconds": 60,
+  "affinity_CPUs": 4,
+  "fixed_GKR_legacy_worker_phases": 32,
+  "full12_time_estimate": "unknown; oneblock timings do not establish full12duration; keep approved-candidate wall caps",
+  "full12_witness_or_proof_executed": false
+}

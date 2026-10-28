@@ -1,0 +1,144 @@
+# zkGPT R6 full12：D 阶段单次正式执行授权
+
+我明确授权执行 R6-FULL12-P0AB-20261021-v1 的 D 阶段。
+
+本次授权仅允许执行一次真实完整 full12 Prover；只有 Prover 成功、产物完整且身份检查通过后，才允许执行一次独立 Verifier。
+
+## 一、授权身份
+
+Run ID：
+R6-FULL12-P0AB-20261021-v1
+
+D Binding SHA256：
+e19e9fadd10a5d818a62824481ccd84983b8481c92c318a0c2cf0f7d841d6094
+
+C Approval Record SHA256：
+02e48eb04b4d4b04025aa295a690950fccab3d8e016c1c5a2f3a78b6bfc9c38e
+
+Prover Permit SHA256：
+0889376a4e4e2dc0dfc8009821b01aab224d5c994eb83e9063fbbafca21f5134
+
+Verifier Permit SHA256：
+82681c660409db57acda7c1de63c568ae59ce692e9794b51c621250dd1e19bf4
+
+A Scope SHA256：
+98ec102dd2ee7fe3c649f33c5201a211344707a82dde07291be724357029a1e0
+
+源码身份：
+5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416
+
+## 二、正式执行前
+
+1. 重新核验全部已批准的SHA256以及Prover、Verifier、gate、Profile、circuit、120份参数、X、W anchor、manifest和依赖身份。
+2. 检查D实际执行argv与C阶段冻结的只读命令预览完全一致。
+3. 确认执行目标是真实12 blocks、277 GKR layers、612 terminals。
+4. 重新检查共享服务器当前资源状态。此前PASS的资源快照不能代替本次检查。
+5. 核对当前不存在相同run_id的其他证明任务，且本次permit未被消费。
+6. 确认正式输出目录独立，不覆盖历史proof、statement、日志或归档。
+
+如出现任何SHA、执行身份或硬资源条件不匹配，立即停止，不得修复后擅自继续。
+
+## 三、资源要求
+
+严格保持：
+
+- 4逻辑CPU，affinity 0–3。
+- Prover内存上限96GiB。
+- Verifier内存上限96GiB。
+- Prover超时28800秒。
+- Verifier超时14400秒。
+- 外层收尾宽限60秒。
+- 保留至少32GiB有效共享可用内存。
+- 保留至少64GiB可用磁盘空间。
+
+其他用户的大型竞争进程按本run_id已批准的WARN策略处理，不单独拒绝启动。
+
+但不得终止、暂停、调整或干扰其他用户进程，不得修改系统级资源限制。
+
+运行中持续检查cgroup、RSS、可用内存、磁盘、PID及超时。实际硬限制不满足则按既定安全停止流程处理。
+
+不得临时提高资源上限。
+
+## 四、执行完整full12 Prover
+
+使用已批准的正式driver/supervisor与原始冻结argv，执行一次真实full12 Prover。
+
+必须：
+
+1. 执行完整12个Transformer blocks。
+2. 使用真实冻结的GPT-2参数和输入。
+3. 保留完整Range、Exp、GKR、mapped-input、commitment及其他必要证明。
+4. 使用当前包含P0-A、P0-B和OPT2的正式Release二进制。
+5. 正常生成完整full12 proof、statement及第12 block对应的真实输出数据。
+6. 记录实际运行wall、user CPU、system CPU、最大RSS、各主要阶段耗时及资源变化。
+7. 记录proof、statement文件大小及SHA256。
+
+不得使用oneblock、mock proof、随机witness或跳过约束的替代运行。
+
+如果Prover失败、超时、资源超限或产物不完整，立即停止，不启动Verifier，不自动重试。
+
+## 五、执行独立full12 Verifier
+
+仅在Prover成功且所有产物完整后，使用已批准的独立Verifier执行一次真实验证。
+
+要求：
+
+1. 在独立进程中执行。
+2. 加载正确的full12 proof、statement、公开输入、Profile、外部W anchor和manifest。
+3. 严格验证完整12层证明，而不是oneblock。
+4. 保存Verifier完整日志、运行时间、CPU时间、峰值RSS及退出状态。
+5. 明确检查最终日志包含实际ACCEPT，不能仅凭退出码0判断。
+6. 不允许修改proof、statement、信任锚或验证条件以获得ACCEPT。
+
+如果Verifier返回REJECT或运行异常，保留完整证据，立即停止，不自动重试。
+
+## 六、运行身份和结果归档
+
+完整保存：
+
+- 本次A/B/C/D批准与消费记录。
+- 全部执行argv和SHA256。
+- Prover、Verifier原始stdout/stderr。
+- 完整proof和statement。
+- 独立Verifier ACCEPT/REJECT记录。
+- wall、CPU、峰值RSS。
+- 各协议阶段计时。
+- cgroup、内存、磁盘、进程及CPU频率环境快照。
+- 全部运行前后身份核验。
+- 最终Windows归档SHA及恢复读取核验。
+
+不得覆盖或修改历史R5B、R6B、OPT2及P0A/P0B证据。
+
+## 七、最终必须回答
+
+1. 真实full12 Prover是否完成？
+2. 真实full12独立Verifier是否明确ACCEPT？
+3. Prover和Verifier分别运行多少秒？
+4. Prover和Verifier实际峰值RSS是多少？
+5. full12 proof和statement分别多大？
+6. full12 proof、statement的SHA256是什么？
+7. 12 blocks、277 layers、612 terminals是否均实际参与证明？
+8. P0-A、P0-B、OPT2是否确实包含在本次运行二进制中？
+9. 是否出现资源压力、超时、OOM或其他异常？
+10. D阶段permit是否正确消费，最终产物和日志保存在哪里？
+
+严格区分真实测量与此前的内存估算。
+
+## 八、授权边界
+
+本次只批准R6-FULL12-P0AB-20261021-v1的一次正式full12执行。
+
+不批准：
+
+- 第二次Prover运行。
+- 失败后自动重试。
+- 重新生成或替换permit。
+- 更改Scope或审批记录。
+- 提高96GiB内存限制。
+- 更改Profile、模型参数或密码学证明语义。
+- 实施P1 MSM优化、IPA优化或其他代码修改。
+- 未经重新授权开展新的大型实验。
+
+如出现必须修改生产代码才能继续的情况，停止并提交问题报告，不得自行修复后重新启动full12。
+
+完成本次运行后立即停止在结果归档与报告阶段。

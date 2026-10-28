@@ -1,0 +1,32 @@
+{
+  "id": "sanitize-directed",
+  "command": [
+    "ctest",
+    "--test-dir",
+    "build/r5b-sanitize",
+    "--output-on-failure",
+    "-R",
+    "r6_builder_oneblock|r6_trust_metadata|r6_finite_threeblock|r6_system_resources|r5b_|r5a_host_",
+    "-j1"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:49:01.795406+00:00",
+  "seconds": 94.72215193370357,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 600,
+  "address_space_limit_gib": null,
+  "RSS_group_limit_gib": 16,
+  "observed_process_group_peak_bytes": 4699992064,
+  "stop_reason": null,
+  "binary_sha256": null,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/sanitize-directed.log",
+  "time": "logs/R6A/sanitize-directed.time"
+}

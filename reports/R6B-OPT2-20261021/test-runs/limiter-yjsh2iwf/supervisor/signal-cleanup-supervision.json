@@ -1,0 +1,50 @@
+{
+  "PASS": false,
+  "RSS_group_limit_gib": 1,
+  "address_space_limit_gib": 1,
+  "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+  "command": [
+    "/usr/bin/python3",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/test-runs/limiter-yjsh2iwf/process.py"
+  ],
+  "cpu_affinity_limit": 4,
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/test-runs/limiter-yjsh2iwf",
+  "deferred_termination_signals": [
+    15
+  ],
+  "disk_reserve_gib": 8,
+  "driver_output": "signal-cleanup exit 124 expected 0 seconds 1.02\n\n",
+  "environment": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C",
+    "MALLOC_ARENA_MAX": "2",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PATH": "/usr/bin:/bin",
+    "TZ": "UTC",
+    "ZKGPT_THREADS": "4"
+  },
+  "environment_overrides": {
+    "MALLOC_ARENA_MAX": "2",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4"
+  },
+  "exit_code": 124,
+  "expected_exit": 0,
+  "finally_cleanup": true,
+  "id": "signal-cleanup",
+  "limiter_sha256": "14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351",
+  "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/test-runs/limiter-yjsh2iwf/supervisor/signal-cleanup.log",
+  "observed_process_group_peak_bytes": 19804160,
+  "seconds": 1.0183374951593578,
+  "shared_memory_reserve_gib": 32,
+  "started_utc": "2026-10-21T03:42:50.297365+00:00",
+  "stop_reason": "termination_requested",
+  "supervisor_exception": "AssertionError: signal-cleanup",
+  "time": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/test-runs/limiter-yjsh2iwf/supervisor/signal-cleanup.time",
+  "timeout_seconds": 1,
+  "tracked_groups": [
+    3352894
+  ]
+}

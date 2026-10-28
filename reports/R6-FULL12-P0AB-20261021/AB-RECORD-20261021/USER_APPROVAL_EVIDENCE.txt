@@ -1,0 +1,18 @@
+我明确批准 R6-FULL12-P0AB-20261021 的 A Scope 记录及 B 阶段未批准 permit 生成。
+
+批准的 SCOPE_DRAFT.json SHA256：
+
+98ec102dd2ee7fe3c649f33c5201a211344707a82dde07291be724357029a1e0
+
+请先重新计算实际文件 SHA256，并核对源码、Prover、Verifier、gate、Profile、参数、W anchor、manifest和执行范围。完全匹配后：
+
+1. 记录 A Scope 批准及本条批准依据，不得伪造独立数字签名。
+2. 进入 B 阶段，生成两份未批准的 permit。
+3. 计算并报告两份 permit 各自的精确 SHA256、文件路径及绑定的执行身份。
+4. 检查两份 permit 均对应当前版本的真实 R6 full12、12 blocks、277 layers、612 terminals、P/V各96GiB、4 CPU及既定超时和资源约束。
+5. 保留已经批准的本次竞争进程 WARN 策略，但不得放宽硬资源限制。
+6. 不修改旧 Scope、旧 permit、历史证明文件或冻结参数。
+
+生成 permit 后立即停止，提交两份 SHA 供我下一轮进行 C 阶段确认。
+
+本次不批准 C，不批准 D，不启动 full12 Prover/Verifier，不自动重试，不实施新的性能或协议优化。若实际 Scope SHA 或关键身份不匹配，立即停止并报告差异。

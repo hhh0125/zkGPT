@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:zkgpt:r6b:execution-approval:v1",
+  "title": "External manually approved single serial full12 execution; DRAFT is invalid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "origin",
+    "scope_evidence",
+    "permit_evidence",
+    "binding",
+    "allowed_attempts",
+    "order"
+  ],
+  "properties": {
+    "kind": {
+      "const": "R6B-EXECUTION-APPROVAL-v1"
+    },
+    "origin": {
+      "const": "MANUAL-USER-CONFIRMED"
+    },
+    "scope_evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "permit_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prover",
+        "verifier"
+      ],
+      "properties": {
+        "prover": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifier": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "allowed_attempts": {
+      "const": 1
+    },
+    "order": {
+      "const": [
+        "prover",
+        "verifier"
+      ]
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "frozen",
+        "gate_code_sha256",
+        "input_sha256",
+        "input_shape",
+        "environment",
+        "root",
+        "records",
+        "output",
+        "verifier_cwd",
+        "permit_files",
+        "jobs",
+        "scope_approval",
+        "allowed_competing_PIDs",
+        "simulation"
+      ],
+      "properties": {
+        "run_id": {
+          "const": "R6B-20261020T134705Z-6680d8da"
+        },
+        "frozen": {
+          "const": {
+            "source_sha": "68b444159c4fe756eef0fc4d92570150302e47316e16a1e681ad828820e81b8b",
+            "profile": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+            "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+            "anchor": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+            "anchor_sha": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+            "manifest": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+            "manifest_sha": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+            "binaries": {
+              "prover": {
+                "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove",
+                "sha256": "80f0da673f3f07065e41a1377ebad629beb1e1d579bd9df60ca877dda97bdd3d"
+              },
+              "verifier": {
+                "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify",
+                "sha256": "3c257707a2eb2f1669accc5e410145ae3678466e015da59905ed83166b5e23fb"
+              }
+            },
+            "identity_record_sha256": "50231f0c82cfb31b323bbdd7e6efb83eba405b8fd876d78e7d8125dd2614883c"
+          }
+        },
+        "gate_code_sha256": {
+          "const": "48502d5108bbec31e6b3fb3dd4f78ac9b7efbfb6fb40d13b99ca5449b5568c0b"
+        },
+        "input_sha256": {
+          "const": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb"
+        },
+        "input_shape": {
+          "const": [
+            32,
+            768,
+            1024
+          ]
+        },
+        "environment": {
+          "const": {
+            "PATH": "/usr/bin:/bin",
+            "LANG": "C.UTF-8",
+            "LC_ALL": "C",
+            "TZ": "UTC",
+            "ZKGPT_THREADS": "4",
+            "OMP_NUM_THREADS": "4",
+            "OPENBLAS_NUM_THREADS": "4",
+            "MALLOC_ARENA_MAX": "2"
+          }
+        },
+        "root": {
+          "const": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work"
+        },
+        "records": {
+          "type": "object"
+        },
+        "output": {
+          "const": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12"
+        },
+        "verifier_cwd": {
+          "const": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-independent-empty"
+        },
+        "permit_files": {
+          "type": "object",
+          "required": [
+            "prover",
+            "verifier"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "prover": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "const": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/future-permits/prover.permit"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "verifier": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "const": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/future-permits/verifier.permit"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "jobs": {
+          "type": "object",
+          "required": [
+            "prover",
+            "verifier"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "prover": {
+              "type": "object",
+              "required": [
+                "id",
+                "argv",
+                "memory_gib",
+                "seconds",
+                "disk_reserve_gib",
+                "cpu_limit",
+                "expected_exit",
+                "cwd",
+                "fresh_empty_cwd"
+              ]
+            },
+            "verifier": {
+              "type": "object",
+              "required": [
+                "id",
+                "argv",
+                "memory_gib",
+                "seconds",
+                "disk_reserve_gib",
+                "cpu_limit",
+                "expected_exit",
+                "cwd",
+                "fresh_empty_cwd"
+              ]
+            }
+          }
+        },
+        "scope_approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "allowed_competing_PIDs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "simulation": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$comment": "Schema is descriptive shape validation. Runtime additionally requires exact jobs_for/binding_for canonical equality, same-read SHA pinning, current frozen bytes, scope approval chain, all permit fields and fresh resource/path checks. Origin is an explicit MANUAL trust assumption, not a cryptographic signature or proof of an independent human. No production-approved instance or permit exists in this stage."
+}

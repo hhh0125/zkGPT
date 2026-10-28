@@ -1,0 +1,165 @@
+[
+  {
+    "name": "full-verifier-guards",
+    "command": [
+      "python3",
+      "-B",
+      "tools/oneblock_guard_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261028T023146Z"
+    ],
+    "exit_code": 0,
+    "seconds": 10.283042662777007,
+    "passed": true
+  },
+  {
+    "name": "retained-build",
+    "command": [
+      "cmake",
+      "--build",
+      "build/release",
+      "--target",
+      "r7_a3_tests",
+      "r7_a3_prover",
+      "r7_a3_verifier",
+      "r7_crypto_tests",
+      "r7_local_prover",
+      "r7_local_verifier",
+      "r7_framework_tests",
+      "r7_oneblock_prove",
+      "r7_oneblock_verify",
+      "r6_builder_tests",
+      "r6_model_prove",
+      "r6_model_verify",
+      "r6_model_plan",
+      "r5b_gkr_tests",
+      "r6_resources_tests",
+      "r7_s2_fixture",
+      "r7_s2_prover",
+      "r7_s2_verifier",
+      "r7_s2_tests",
+      "r7_m3_tests",
+      "r7_m3_fixture",
+      "r7_m3_prover",
+      "r7_m3_verifier",
+      "r7_b1_dense_tests",
+      "r7_b1_tests",
+      "r7_b1_prover",
+      "r7_b1_verifier",
+      "r7_oneblock_plan",
+      "r7_oneblock_plan_tests",
+      "-j4"
+    ],
+    "exit_code": 0,
+    "seconds": 2.6177443582564592,
+    "passed": true
+  },
+  {
+    "name": "retained-units",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "-V",
+      "--output-on-failure",
+      "-R",
+      "^(r7_hyrax_a3_unit|r7_hyrax_a3_stage2_unit|r7_stage3a_unit|r7_stage3b1_unit|r7_stage3b1_dense_reference|r7_crypto_arithmetic|r7_framework|r6_builder_oneblock|r6_entry_guards|r5b_FC_GKR_coupling|r6_system_resources)$"
+    ],
+    "exit_code": 0,
+    "seconds": 17.050599828828126,
+    "passed": true
+  },
+  {
+    "name": "retained-a3-independent",
+    "command": [
+      "python3",
+      "-B",
+      "tools/hyrax_a3_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261028T023146Z/a3-sessions"
+    ],
+    "exit_code": 0,
+    "seconds": 3.8217985569499433,
+    "passed": true
+  },
+  {
+    "name": "retained-csipa",
+    "command": [
+      "python3",
+      "-B",
+      "tools/r7_interactive_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261028T023146Z/csipa-sessions",
+      "--real"
+    ],
+    "exit_code": 0,
+    "seconds": 60.3533741668798,
+    "passed": true
+  },
+  {
+    "name": "retained-stage2-setup",
+    "command": [
+      "python3",
+      "-B",
+      "tools/hyrax_a3_stage2_setup.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261028T023146Z-ONEBLOCK-REGRESSION"
+    ],
+    "exit_code": 0,
+    "seconds": 19.112065586727113,
+    "passed": true
+  },
+  {
+    "name": "retained-stage2-independent",
+    "command": [
+      "python3",
+      "-B",
+      "tools/hyrax_a3_stage2_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261028T023146Z-ONEBLOCK-REGRESSION/stage2-sessions"
+    ],
+    "exit_code": 0,
+    "seconds": 35.89299962390214,
+    "passed": true
+  },
+  {
+    "name": "retained-stage3a-setup",
+    "command": [
+      "build/release/src/paper_r7/r7_m3_fixture",
+      "R7-STAGE3A-RUN-20261028T023146Z-ONEBLOCK-REGRESSION"
+    ],
+    "exit_code": 0,
+    "seconds": 22.570035898592323,
+    "passed": true
+  },
+  {
+    "name": "retained-stage3a-independent",
+    "command": [
+      "python3",
+      "-B",
+      "tools/stage3a_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-STAGE3A-RUN-20261028T023146Z-ONEBLOCK-REGRESSION"
+    ],
+    "exit_code": 0,
+    "seconds": 388.62920184386894,
+    "passed": true
+  },
+  {
+    "name": "retained-stage3b1-setup",
+    "command": [
+      "build/release/src/paper_r7/r7_m3_fixture",
+      "R7-STAGE3B1-RUN-20261028T023146Z-ONEBLOCK-REGRESSION"
+    ],
+    "exit_code": 0,
+    "seconds": 21.266059355344623,
+    "passed": true
+  },
+  {
+    "name": "retained-stage3b1-independent",
+    "command": [
+      "python3",
+      "-B",
+      "tools/stage3b1_tests.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-STAGE3B1-RUN-20261028T023146Z-ONEBLOCK-REGRESSION",
+      "--small-only"
+    ],
+    "exit_code": 0,
+    "seconds": 108.35044713318348,
+    "passed": true
+  }
+]

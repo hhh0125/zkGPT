@@ -1,0 +1,155 @@
+{
+  "environment": {
+    "platform": "Linux-5.15.0-191-generic-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "limits": {
+    "N_max": 1024,
+    "address_space_bytes": 536870912,
+    "cpu_seconds_per_process": 120,
+    "degree_set": [
+      2,
+      3
+    ],
+    "research_json_wire_bytes": 2097152
+  },
+  "measurement_note": "Each case ran once in a fresh process. Verifier followed prover in the same process and may use warm caches. Peak RSS is their combined Linux ru_maxrss in KiB. Proof bytes are only the canonical research proof object and exclude statement, PC and verifier state.",
+  "results": [
+    {
+      "N": 1,
+      "degree": 2,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 1013,
+      "prover_ms": 15.272,
+      "variables": 0,
+      "verifier_ms": 25.697
+    },
+    {
+      "N": 16,
+      "degree": 2,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 5951,
+      "prover_ms": 120.001,
+      "variables": 4,
+      "verifier_ms": 152.412
+    },
+    {
+      "N": 64,
+      "degree": 2,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 8421,
+      "prover_ms": 165.897,
+      "variables": 6,
+      "verifier_ms": 131.009
+    },
+    {
+      "N": 256,
+      "degree": 2,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18536,
+      "proof_bytes_canonical_json": 10891,
+      "prover_ms": 195.342,
+      "variables": 8,
+      "verifier_ms": 167.533
+    },
+    {
+      "N": 1024,
+      "degree": 2,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18648,
+      "proof_bytes_canonical_json": 13361,
+      "prover_ms": 168.853,
+      "variables": 10,
+      "verifier_ms": 204.319
+    },
+    {
+      "N": 1,
+      "degree": 3,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 1013,
+      "prover_ms": 8.927,
+      "variables": 0,
+      "verifier_ms": 15.308
+    },
+    {
+      "N": 16,
+      "degree": 3,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 7555,
+      "prover_ms": 93.144,
+      "variables": 4,
+      "verifier_ms": 114.198
+    },
+    {
+      "N": 64,
+      "degree": 3,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18168,
+      "proof_bytes_canonical_json": 10827,
+      "prover_ms": 199.115,
+      "variables": 6,
+      "verifier_ms": 166.257
+    },
+    {
+      "N": 256,
+      "degree": 3,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18760,
+      "proof_bytes_canonical_json": 14099,
+      "prover_ms": 172.967,
+      "variables": 8,
+      "verifier_ms": 213.572
+    },
+    {
+      "N": 1024,
+      "degree": 3,
+      "kind": "committed_sumcheck",
+      "max_msm_terms_observed": 0,
+      "peak_rss_kib": 18548,
+      "proof_bytes_canonical_json": 17371,
+      "prover_ms": 217.037,
+      "variables": 10,
+      "verifier_ms": 264.217
+    },
+    {
+      "kind": "toy_one",
+      "max_msm_terms_observed": 2,
+      "peak_rss_kib": 18752,
+      "proof_bytes_canonical_json": 14171,
+      "prover_ms": 220.393,
+      "verifier_ms": 229.606
+    },
+    {
+      "kind": "toy_two",
+      "max_msm_terms_observed": 2,
+      "peak_rss_kib": 18720,
+      "proof_bytes_canonical_json": 26039,
+      "prover_ms": 380.122,
+      "verifier_ms": 401.046
+    },
+    {
+      "kind": "toy_matrix",
+      "max_msm_terms_observed": 4,
+      "peak_rss_kib": 18044,
+      "proof_bytes_canonical_json": 8815,
+      "prover_ms": 163.204,
+      "verifier_ms": 154.822
+    }
+  ],
+  "schema": "R7-TASK0C-RESOURCE-MEASUREMENTS-v1",
+  "suite": "H-PC-CSIPA-AUDIT-RESEARCH-v1/TASK0C-CSGKR-v1"
+}

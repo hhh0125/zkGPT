@@ -1,0 +1,269 @@
+# zkGPT R7：正式启动零知识协议完整性改造
+
+## 一、总体目标与执行顺序
+
+当前选择路线A：优先实现完整协议正确性、零知识隐藏及组合安全，再进行性能优化。
+
+严格按照以下顺序推进：
+
+阶段1：明确证明目标、信任模型并完成全链路ZK安全设计。
+阶段2：实现新协议，完成模块测试、负向测试和oneblock独立验收。
+阶段3：针对新协议开展性能分析与优化。
+阶段4：重新执行R7 full12 Prover与独立Verifier验收。
+
+禁止跳过前一个阶段的验收直接进入后续阶段。
+
+当前立即开展阶段1。阶段1完成后提交实际设计和安全检查结果；后续按照已批准的路线继续推进，但若出现尚无可信解决方案的密码学缺口，必须报告BLOCKED，不得用占位实现冒充ZK。任何新的full12大型执行必须重新取得独立授权。
+
+## 二、冻结现有正确性基线
+
+远程项目工作目录：
+
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+
+已通过完整验证的旧版本：
+
+R6-FULL12-P0AB-20261021-v1
+
+旧版源码SHA256：
+
+5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416
+
+旧版full12 proof SHA256：
+
+d088e55ace3c31f510afbb589022d6f2b8dedfd6725444de37be6f70b18762bd
+
+旧版full12 statement SHA256：
+
+6a73f7a6d71a0c8b4f9d19a08ef4cbf68e4730491d4bf5377b0ae170c7e52958
+
+旧版独立Verifier：
+
+ACCEPT R6 blocks=12
+
+必须保留该基线，不能覆盖、删除或修改其源码快照、proof、statement、参数、运行日志及审批记录。
+
+优先采用独立Git worktree或独立开发目录开展R7开发，保持R6可复现。
+
+## 三、阶段1-A：确定证明目标
+
+正式选择当前冻结R6整数Profile作为R7第一版的计算关系。
+
+即证明：
+
+存在秘密权重W和辅助witness，使得W符合已授权模型身份，并且按照固定整数算子关系，对公开输入X执行12个Transformer blocks后得到公开Y。
+
+必须明确：
+
+1. 公开输入X为量化activation，不是token IDs。
+2. 公开输出Y为第12个block第二次残差之后的hidden state，不是logits或token。
+3. 量化、舍入、LayerNorm、GELU、Attention、Exp clamp等继续沿用已验收R6的整数规则。
+4. 不能把该规则宣称为与标准浮点GPT-2逐点相同。
+5. 不修改冻结参数和数值Profile。
+6. 既有120份参数、GKR计算图、Range/Exp真实查询及最终输出绑定原则上复用。
+
+用精确数学记号给出：
+
+- Public statement包含哪些字段。
+- Secret witness包含哪些字段。
+- 模型和参数身份如何进入公共实例。
+- 计算关系和lookup关系的完整定义。
+- 正确性、知识可靠性、零知识分别要求什么。
+
+完成一份可实现的R7整数关系规格，不能仅写自然语言描述。
+
+## 四、阶段1-B：明确operator-trusted信任边界
+
+保留本次R7第一版的operator-trusted模型注册模式，但必须将其写成显式安全假设，不把外部信任伪装成密码学证明。
+
+明确角色：
+
+- 模型提供方。
+- 预处理/模型注册操作方。
+- Prover。
+- Verifier。
+- 信任锚发布或审批方。
+
+逐步定义：
+
+checkpoint → 冻结量化参数 → W → Commitment → 已认证model anchor → Prover/Verifier。
+
+检查当前R6的anchor生成、W承诺行、manifest、Fiat–Shamir绑定和公开X/Y认证流程。
+
+为R7设计：
+
+1. 固定模型身份及注册证据格式。
+2. 可复核的checkpoint和量化参数对应关系。
+3. 可独立核验的W commitment生成流程。
+4. Verifier侧预期X身份检查。
+5. 模型权重跨多次证明复用时的隐私与安全规则。
+6. 谁负责产生承诺随机性，谁可以持有秘密参数和blinding randomness。
+7. operator可能不诚实或与Prover串通时，哪些保证仍成立、哪些保证不成立。
+
+不要求本阶段消除一切可信第三方，但必须明确这种信任的准确边界。
+
+## 五、阶段1-C：设计全链路零知识协议
+
+这是本轮最高优先级任务。
+
+当前实际R6存在如下已确认缺口：
+
+- paper_r1/pc.cpp使用确定性非隐藏承诺。
+- IPA opening公开部分witness相关代数信息。
+- paper_r1/sumcheck.cpp未实现必要的随机掩码。
+- GKR、indexed Lasso、memory product tree及mapped-input的消息需要联合考虑隐藏性。
+
+必须从真实active调用链入手，不得仅检查仓库中存在的zk原型文件。
+
+逐个设计：
+
+### 1. Hiding Polynomial Commitment
+
+明确如何从当前非隐藏Hyrax/IPA方案改造为具备所需hiding性质的承诺与opening协议。
+
+给出承诺、验证和opening的完整数学关系、随机性使用方式及跨多次证明的可复用性。
+
+明确额外随机盲化后如何维持binding与knowledge性质。
+
+### 2. Zero-Knowledge GKR / Sumcheck
+
+明确每轮消息、最终claim和terminal如何隐藏非公开witness信息。
+
+设计必要的masking polynomial或具有明确安全依据的替代证明结构。
+
+检查mask和真实计算关系之间的联系，防止产生允许错误计算被接受的自由度。
+
+### 3. Zero-Knowledge Lasso
+
+覆盖：
+
+- Range的digit拆分与重构。
+- Exp索引和表值认证。
+- indexed memory一致性。
+- multiplicity/product tree。
+- lookup commitment opening。
+- 查询地址与主witness的绑定。
+
+不仅检查lookup值是否合法，也要分析消息是否泄露秘密查询值及其他witness信息。
+
+### 4. ZK Bridge及统一输入绑定
+
+重点解决：
+
+- 新旧master commitment的相同witness关系。
+- 经过随机掩码后，两个承诺的opening如何保持可验证的一致性。
+- GKR terminal和Lasso child如何统一绑定。
+- public X/Y、W、aux、lookup值及zero-tail如何纳入同一关系。
+- 如何防止Prover为不同子协议提供不同witness。
+- Fiat–Shamir挑战生成的顺序、域分离和transcript绑定。
+
+### 5. 联合安全性
+
+必须给出明确的泄露函数和ZK安全定义。
+
+分别说明：
+
+- 哪些公开信息允许泄露。
+- 哪些witness信息不能泄露。
+- 是否允许公开模型身份和跨proof复用的model anchor。
+- 多次证明同一秘密模型时是否仍有隐藏保证。
+- 每个子协议需要何种模拟器或组合定理。
+- 什么情况下能证明knowledge soundness。
+- Fiat–Shamir转换采用什么随机预言机假设。
+- 不同协议的错误概率如何组合。
+
+必须区分“有实现方案”“已证明安全”“只有测试证据”三个状态。
+
+不要仅因为承诺随机化或proof消息长度正确就标记ZK PASS。
+
+## 六、阶段1-D：确定最小代码改造边界
+
+复用目前已经验收的：
+
+- R6整数模型计算图。
+- GKR及矩阵Sumcheck算术约束。
+- Range/Exp表定义和查询关系。
+- Bridge和mapped-input的数学映射。
+- 完整12block模型参数布局。
+- 独立参考前向及数值测试。
+
+优先修改必要的密码学协议层和proof/statement接口。
+
+建立文件级改造矩阵，包含：
+
+现有文件/函数、拟修改部分、所需新接口、依赖关系、证明语义变化、测试方法、潜在性能影响。
+
+重点检查：
+
+- paper_r1/pc.cpp
+- paper_r1/sumcheck.cpp
+- paper_r1/range.cpp
+- paper_r1/exp.cpp
+- paper_r1/memory.cpp
+- paper_r1/mapped_input.cpp
+- paper_r2/protocol.cpp
+- 实际GKR prover/verifier及transcript实现
+- R6 model prover/verifier
+- 相关wire编码、commitment和IPA opening
+
+所有新增类型与proof格式必须使用新版本身份，不能让旧R6 proof被误认为R7 ZK proof。
+
+## 七、阶段1验收要求
+
+至少交付：
+
+1. R7_PROOF_RELATION.md
+   当前整数模型的完整证明关系、公开输入、秘密witness及数值边界。
+
+2. R7_TRUST_MODEL.md
+   操作方可信假设、模型身份注册和W/X/Y绑定规则。
+
+3. R7_ZK_PROTOCOL_DESIGN.md
+   从commitment到GKR、Lasso、Bridge、opening的完整协议步骤和消息格式。
+
+4. R7_SECURITY_OBLIGATIONS.md
+   Completeness、binding、knowledge soundness、zero knowledge及组合安全的具体证明义务。
+
+5. R7_IMPLEMENTATION_PLAN.md
+   可直接执行的模块开发顺序、实际源码位置、接口和测试计划。
+
+6. R7_STAGE1_GATE.json
+   明确列出已确定的规范、未解决安全问题、是否具备进入阶段2的设计条件。
+
+要求使用已有审计证据及源代码行号，必要时参照zkGPT正式论文和密码学原始协议资料，不能编造不存在的安全定理。
+
+如果尚不能给出安全合理的某个ZK子协议设计，要明确标记BLOCKED并给出需要补充的理论或实现依据。
+
+## 八、后续阶段的执行规则
+
+阶段2：
+
+只在阶段1的协议关系和关键安全设计明确后开展。先实现基础PC/opening，再逐步连接GKR、Lasso、Bridge，最后进行真实oneblock独立验收。保留恶意负例和隐藏性检查，不得默认旧proof与新协议兼容。
+
+阶段3：
+
+只能以阶段2通过验收的新协议作为性能优化对象。优先测量真正的Range/Lasso、MSM、PC、GKR及内存热点，不能直接将R6非隐藏协议的性能结果充当R7基线。
+
+阶段4：
+
+必须新建R7执行身份、新Scope和相关授权。重新评估CPU、RAM、磁盘和超时。只有取得新的单次正式执行授权后才允许启动full12。
+
+当前任务不授权运行新full12。
+
+## 九、当前立即执行的工作
+
+现在开始阶段1实际源码审查、数学设计、信任模型定义以及规格与实施计划编制。
+
+无需重新开展已经完成的R6四项审计。
+
+不得修改R6生产源码、冻结参数、proof、statement或历史归档。
+
+阶段1完成时提交六份结果文件和总评估，明确：
+
+- 哪些问题已经有具体安全设计？
+- 哪些设计尚无可靠证明依据？
+- 哪些原有GKR/Lasso实现可以不变？
+- 阶段2应先修改哪个模块？
+- 哪些设计选择若发生变化会使现有full12性能指标失去可比性？
+
+不要将“完成设计文档”误报为“已经实现零知识”。

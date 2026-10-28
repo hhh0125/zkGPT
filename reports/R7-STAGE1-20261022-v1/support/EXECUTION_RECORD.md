@@ -1,0 +1,17 @@
+# R7阶段1实际执行记录
+
+2026-10-22 Asia/Shanghai。根据用户粘贴任务，执行阶段1源码/数学/信任设计；后续阶段以安全门禁为前提。本轮不请求或消费新full12授权。
+
+使用using-superpowers、brainstorming、writing-plans和verification-before-completion流程。brainstorming要求的独立builder check已执行，发现并补清oneblock关系/anchor策略。没有实施技能默认的代码构建/提交工作，因为用户当前范围是阶段1，且关键密码学设计BLOCKED。
+
+先读Windows与remote AGENTS、migration/cleanup及历史restore/retention资料。迁移success=true。SSH仅用已有4090_sub2api主机及workspace配置，受限连接失败后使用工具授权连接；配置和密钥未归档。
+
+远端执行的脚本均cwd固定zkGPT-work：preflight读取575source hash和R6保护文件并创建本stage源码证据tar；supplement只读hash120参数/R6A和复制身份；publish只写本stage；收尾脚本核对源文件/全部保护清单并打包stage。不在原始主仓库或历史目录写文件。
+
+曾遇远端旧Python不支持hashlib.file_digest，改用分块hash读取后完成；一次只读oneblock Python内联命令因shell引号失败，改用传输原文件读取。原失败日志保留；无生产修改或密码学执行副作用。
+
+Windows执行archive/member/CAS restore-read与文档结构核验；发现旧审计沿用的若干行号上界不准确，按实际冻结文件修正本次新文档，未改历史报告。将未知原协议定理如实保留为未证义务；ePrint PDF直取403只取得官方摘要，不引用未读具体定理。
+
+没有build、witness生成、MSM注册重算、新Prover/Verifier、恶意proof、oneblock/full12、supervisor/permit执行，也没有重新运行R6四项审计。没有新的R7密码学测试或性能测量；所有提及ACCEPT/性能/数值参考均清楚标为历史R6证据。
+
+本阶段成功检查的收据与失败尝试日志共同归档；BLOCKED不是代码已失败的推断，而是精确protocol安全设计/适用性与资源方案尚未闭合。

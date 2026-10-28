@@ -1,0 +1,223 @@
+{
+  "status": "RETAINED_REGRESSIONS_PASSED",
+  "oneblock_status": "INCOMPLETE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "full_prover_success": false,
+  "full_verifier_accept": false,
+  "payload_sha256": "c6d314d2839ee9a2f2b483d8b84f50788eee72d917b07e794d3a9b9d1ff0ce8e",
+  "execution_commit": "df5047ab38bbdb2750b0f9c6e779d959c7d6bfbf",
+  "execution_git_status": "M tools/oneblock_tests.py\n M tools/r7_sync_safety.py\n M tools/remote_oneblock.py\n M tools/run_remote.py\n?? tools/finalize_oneblock.py\n?? tools/oneblock_evidence.py\n?? tools/oneblock_evidence_tests.py\n?? tools/oneblock_guard_tests.py\n?? tools/oneblock_regressions.py",
+  "r6_preservation": true,
+  "events": [
+    {
+      "label": "engineering",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4246215079911053,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/engineering.log"
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.0696714436635375,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/configure.log"
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_oneblock_plan",
+        "r7_oneblock_plan_tests",
+        "r7_oneblock_model_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_oneblock_gkr_tests",
+        "r7_oneblock_bindings_tests",
+        "r7_oneblock_public_tests",
+        "r7_oneblock_vectors_tests",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 1.618418020196259,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/build.log"
+    },
+    {
+      "label": "native-coverage",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_plan",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ONEBLOCK-RUN-20261027T074331Z/native"
+      ],
+      "exit_code": 0,
+      "seconds": 3.7755389236845076,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/native-coverage.log"
+    },
+    {
+      "label": "coverage-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_plan_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 3.5761832958087325,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/coverage-unit.log"
+    },
+    {
+      "label": "model-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_model_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3176383641548455,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/model-unit.log"
+    },
+    {
+      "label": "lookup-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 22.420794270932674,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/lookup-unit.log"
+    },
+    {
+      "label": "gkr-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_gkr_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5190769452601671,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/gkr-unit.log"
+    },
+    {
+      "label": "bindings-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_bindings_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 4.027542416937649,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/bindings-unit.log"
+    },
+    {
+      "label": "public-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_public_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 1.3200109810568392,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/public-unit.log"
+    },
+    {
+      "label": "vectors-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_vectors_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5678423759527504,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/vectors-unit.log"
+    },
+    {
+      "label": "retained-regressions",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/oneblock_regressions.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ONEBLOCK-RUN-20261027T074331Z"
+      ],
+      "exit_code": 0,
+      "seconds": 750.1453388747759,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T074331Z/retained-regressions.log"
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_crypto_tests": "066ca699de1baac169f6f7ae7b5a4ece85ba5d2ecd7f2c910d9c832da6318ead",
+    "r7_oneblock_model_tests": "784cc7406694e7feb1a7afc1b0dc11a6dac482e33032bca63026302275e5e479",
+    "r7_b1_prover": "035af110b12586151c16d80e29bb81f85ff0a55b0c495c5a84f1593735e89475",
+    "r7_oneblock_prove": "d70c95877af80b684902144c2b7f7e9fea168d093e19b3fee95aba294b1287e6",
+    "r7_m3_tests": "1d352e196d41a763ec1d685e77d6d61dbda9c898ece6ce00d9d4a3efd3d04f09",
+    "r7_local_prover": "cca3b794132c6f0bd64c8600bf8b84d0408f9c56ac9efa69f20a2b0a343ba0ce",
+    "r7_b1_verifier": "3a0c240809034cdee379ee05e57deff23b4d7700f078d2f5d451b46cee3f900b",
+    "r7_local_verifier": "b0a669f59227e1ac4186ee5d6f36f129ef1af8cd1cea75ad300a3b632893f6a6",
+    "r7_b1_tests": "875c8dde353f07f905426064308b771bc4de2f88f566834887342e3da2974352",
+    "r7_oneblock_vectors_tests": "9ad528b77f3f3da5c32a606757e5d2bedb5b0ad3df3d52c30edd751b20c61eaf",
+    "r7_m3_fixture": "704cb6ebce03ba9af3f081c0c0f4c3912044305f0feab0208cdad7f189b06eda",
+    "r7_oneblock_plan_tests": "f7d8c6ac6be9b87e867b1ce824f7f510f628e0e45fc2d34965e43c8a5ba69b01",
+    "r7_oneblock_public_tests": "741827cbe205f1811ebedacd3650b2f244a6475689703d8605f111e791db31dc",
+    "r7_s2_verifier": "5d241d356f044af0638c7a752b3470a943e5d73a5a257b346505ca4dfede78b6",
+    "r7_framework_tests": "a9b44c84be507deb39eab9afddb46cea4acb1e1760aedd817f25e06b513fb3ab",
+    "r7_s2_fixture": "b754dd6530e77ea2eee9ee35741099504c71ea2c28f86c92f316af76b08ae075",
+    "r7_oneblock_plan": "36fcba1a4821fd8df0f1147cddb52bf7638d5131cfc0dadcd88fa5acf5352d3b",
+    "r7_a3_prover": "6a5fac3aac8bd20751049a743da995c435b01eafea715bd1c784c723dd6699fa",
+    "r7_oneblock_bindings_tests": "10a49eb48bd024ff24345c10fc4f6592f4a2b150873d771dd38f5eb93544ef25",
+    "r7_m3_prover": "138a9a4c7f2376740358ef103f7b9de631f7f2e2f8c0fedd623009a6bfc6fb66",
+    "r7_a3_verifier": "c8e84d596ec0ec0961da026aa40412ffc6cf7324a50800b85f9ebcddeaa54488",
+    "r7_complete_verifier": "25ed05c31fc01616a45f55df1447bded3bb8a101ebfce05e799b64d683e5b2ce",
+    "r7_oneblock_lookup_tests": "eb2358190b4d6725ea173158eefd6ffeaf89bbaa8b322d722fee0bc5cedadc11",
+    "r7_complete_prover": "a02e8d7d0a62ef3c81fb2feeea7b0d2f4aee28524349e6b7089faf9defa5fc51",
+    "r7_s2_prover": "7d81b91d472b2dbb688a6456e3e311aacfe103df708e9bd699bfdfe6be539c11",
+    "r7_s2_tests": "36c56dc275163bd1bfad1a070704891f6739a49dac35c3bf0a5737445186d8b2",
+    "r7_oneblock_gkr_tests": "8721570605e5fd6d4949dc0c0850c826c0ddf9ae423cd93eb7991168ba41b541",
+    "r7_b1_dense_tests": "d65e674dd79a807a6434108a901e27aead6bd75b0b0c8907d7ed0a2bf02f1487",
+    "r7_a3_tests": "ffc25b8e5e4836460338c93f6b4c6b3c8ba74c10a8594e339847967ee7427efa",
+    "r7_m3_verifier": "d1f5b68abdc47798db5967e4042ecd9647691e2aadd6044a3613449e9d8a709e",
+    "r7_oneblock_verify": "9f350aa67a2059ec730a92ac96d716f170cead7dd4dd4ab6af5369540a5059d4"
+  },
+  "openssl_version": "OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)",
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

@@ -1,0 +1,54 @@
+[  7%] Built target mcl
+[  7%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 59%] Built target gpt_lib
+[ 66%] Built target paper_r2
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fixed_cw.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/hyrax_a3.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_opening.cpp.o
+[ 70%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_sumcheck.cpp.o
+[ 70%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_fixture.cpp.o
+[ 70%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o
+[ 74%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/streaming_master.cpp.o
+[ 74%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_bridge.cpp.o
+[ 74%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_registration.cpp.o
+[ 77%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/global_bridge.cpp.o
+[ 77%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+[ 77%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_sumcheck.cpp.o
+[ 81%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_vectors.cpp.o
+[ 81%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_model.cpp.o
+[ 81%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_lookup.cpp.o
+[ 81%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_gkr.cpp: In function ‘zkgpt::r7::oneblock::PendingGKR zkgpt::r7::oneblock::runHiddenGKR(zkgpt::r7::crypto::IO&, const layeredCircuit&, prover*, std::size_t, zkgpt::r7::crypto::Random*)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_gkr.cpp:178:2: error: ‘checked’ was not declared in this scope
+  178 |  checked(io,"gkr/public-output-evaluation");
+      |  ^~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:415: src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/Makefile2:3401: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4222: src/paper_r7/CMakeFiles/r7_oneblock_plan.dir/rule] Error 2
+gmake: *** [Makefile:1544: r7_oneblock_plan] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_oneblock_plan r7_oneblock_plan_tests r7_oneblock_model_tests r7_oneblock_lookup_tests r7_oneblock_gkr_tests -j4"
+	User time (seconds): 40.83
+	System time (seconds): 2.35
+	Percent of CPU this job got: 359%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:12.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 338688
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1085435
+	Voluntary context switches: 406
+	Involuntary context switches: 220
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 22832
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

@@ -1,4 +1,5 @@
 #include "oneblock_plan.hpp"
+#include "classified_commitments.hpp"
 #include "oneblock_vectors.hpp"
 #include "oneblock_gkr.hpp"
 #include "oneblock_lookup.hpp"
@@ -6,6 +7,7 @@
 #include "oneblock_bindings.hpp"
 #include "oneblock_public.hpp"
 #include "interactive.hpp"
+#include "fs_io.hpp"
 #include "paper_r2/r6_model.hpp"
 #include <sys/prctl.h>
 #include <sys/resource.h>
@@ -22,46 +24,105 @@
 #include <algorithm>
 using namespace zkgpt::r7;using namespace oneblock;using namespace crypto;namespace r6=zkgpt::r6;namespace r2=zkgpt::r2;
 namespace {
+#ifdef R7_FS_ONEBLOCK
+constexpr auto liveSuite=zkgpt::r7::fs::suite;
+constexpr auto coverageAccepted=zkgpt::r7::fs::verifiedStatus;
+#elif defined(R7_CLASSIFIED_V2)
+constexpr auto liveSuite=classified::suite;
+constexpr auto liveProfile=PipeIO::Profile::ClassifiedV2;
+constexpr auto coverageAccepted="ONEBLOCK_INTERACTIVE_ACCEPT";
+#else
 constexpr auto liveSuite="R7-ONEBLOCK-INDEPENDENT-INTERACTIVE-v1";
+constexpr auto liveProfile=PipeIO::Profile::OneblockV1;
+constexpr auto coverageAccepted="ONEBLOCK_INTERACTIVE_ACCEPT";
+#endif
 int fd(const char*n){auto p=std::getenv(n);need(p && *p,"Oneblock missing independent FD");return std::stoi(p);}
 Bytes publicStatement(int f){struct stat st{};auto flags=fcntl(f,F_GETFL);need(f>2 && fstat(f,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid() && st.st_size>0 && std::uint64_t(st.st_size)<=R7Wire::maxStatementBytes && flags>=0 && (flags&O_ACCMODE)==O_RDONLY,"Oneblock independent public statement FD invalid");Bytes b(st.st_size);std::size_t at=0;while(at<b.size()){auto n=pread(f,b.data()+at,b.size()-at,at);if(n<0 && errno==EINTR)continue;need(n>0,"Oneblock public statement read");at+=n;}return b;}
 void output(int f,const std::string&s){std::size_t at=0;while(at<s.size()){auto n=::write(f,s.data()+at,s.size()-at);need(n>0,"Oneblock result write");at+=n;}}
 // Coverage is verifier-local state. There is no peer-supplied coverage bitmap.
 class Tracked final:public IO,public EvidenceSink {
- PipeIO&base_;const Coverage&plan_;std::set<std::string>expected_,done_;std::map<std::string,std::pair<std::uint64_t,std::string>>evidence_;std::string last_,attack_;bool changed_=false;mutable bool saved_=false;
- public:Tracked(PipeIO&b,const Coverage&p,std::string attack):base_(b),plan_(p),attack_(std::move(attack)){for(auto&r:p.required)expected_.insert(r.id);}
+ IO&base_;std::function<std::uint64_t()>frames_;const Coverage&plan_;std::set<std::string>expected_,done_;std::map<std::string,std::pair<std::uint64_t,std::string>>evidence_;std::string last_,attack_;bool changed_=false;mutable bool saved_=false;
+#ifdef R7_CLASSIFIED_V2
+ bool authenticated_=false;
+#else
+ bool authenticated_=true;
+#endif
+ public:Tracked(IO&b,const Coverage&p,std::string attack,std::function<std::uint64_t()>frames):base_(b),frames_(std::move(frames)),plan_(p),attack_(std::move(attack)){for(auto&r:p.required)expected_.insert(r.id);}
  bool prover()const override{return base_.prover();}std::string session()const override{return base_.session();}Digest prefix()const override{return base_.prefix();}
  Bytes message(const std::string&label,const Bytes&v={})override{last_=label;auto b=v;if(prover() && !changed_){
+  if(attack_=="wrong-commitment" && label=="Classified/root/1/PC"){auto pc=decodeVector(b);pc.points[0]+=parameters(1).scalar;b=encodeVector(pc);changed_=true;}
+  if(attack_=="missing-authentication" && label=="Classified/all-claims-fixed"){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
   if(attack_=="model-response" && label=="oneblock/model/register/0/responses"){auto x=r1::decodeFr(Bytes(b.begin(),b.begin()+32));auto c=r1::encode(x+Fr(1));std::copy(c.begin(),c.end(),b.begin());changed_=true;}
   if(attack_=="truncated" && label=="oneblock/model/register/0/responses"){b.pop_back();changed_=true;}
   if(attack_=="missing-constraint" && label.find("Oneblock/GKR/")!=std::string::npos){close(1);throw std::runtime_error("Oneblock deliberate missing constraint");}
  }auto result=base_.message(label,b);return prover()?v:result;}
  Fr coin(const std::string&s)override{last_="coin/"+s;return base_.coin(s);}
- void checkedRelation(const std::string&id)override{if(prover())return;need(expected_.count(id),("Oneblock unknown coverage evidence ID: "+id).c_str());done_.insert(id);evidence_[id]={base_.frames(),last_};}
- void complete()const{need(done_==expected_,("Oneblock uncovered mandatory relations: "+std::to_string(expected_.size()-done_.size())).c_str());}
- void save(bool accepted)const{if(prover() || saved_)return;std::ostringstream out;writeCoverage(out,plan_);auto raw=out.str();auto marker=raw.find("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"");need(marker!=std::string::npos,"coverage schema");raw.replace(marker,std::string("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"").size(),std::string("\"status\":\"")+(accepted?"ONEBLOCK_INTERACTIVE_ACCEPT":"INCOMPLETE")+"\"");
- for(auto&id:done_){auto needle="\"id\":\""+id+"\"";auto at=raw.find(needle);need(at!=std::string::npos,"coverage ID absent");auto status=raw.find("\"status\":\"UNVERIFIED\"",at);need(status!=std::string::npos,"coverage status absent");raw.replace(status,21,"\"status\":\"VERIFIED\"");}
- raw.pop_back();raw.pop_back();raw+=",\"verified_count\":"+std::to_string(done_.size())+",\"session\":\""+session()+"\",\"evidence\":[";bool first=true;for(auto&[id,e]:evidence_){if(!first)raw+=',';first=false;raw+="{\"id\":\""+id+"\",\"through_frame\":"+std::to_string(e.first)+",\"last_checked_message\":\""+e.second+"\"}";}raw+="]}\n";output(fd("R7_ONEBLOCK_COVERAGE_FD"),raw);saved_=true;}
+ void checkedRelation(const std::string&id)override{if(prover())return;need(expected_.count(id),("Oneblock unknown coverage evidence ID: "+id).c_str());done_.insert(id);evidence_[id]={frames_(),last_};}
+ void authenticationComplete(){authenticated_=true;}
+ void complete()const{need(authenticated_,"Classified authentication barrier incomplete");need(done_==expected_,("Oneblock uncovered mandatory relations: "+std::to_string(expected_.size()-done_.size())).c_str());}
+ void save(bool accepted)const{if(prover() || saved_)return;std::ostringstream out;writeCoverage(out,plan_);auto raw=out.str();auto marker=raw.find("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"");need(marker!=std::string::npos,"coverage schema");raw.replace(marker,std::string("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"").size(),std::string("\"status\":\"")+(accepted?coverageAccepted:"INCOMPLETE")+"\"");
+ for(auto&id:done_){if(!accepted || !authenticated_)break;auto needle="\"id\":\""+id+"\"";auto at=raw.find(needle);need(at!=std::string::npos,"coverage ID absent");auto status=raw.find("\"status\":\"UNVERIFIED\"",at);need(status!=std::string::npos,"coverage status absent");raw.replace(status,21,"\"status\":\"VERIFIED\"");}
+ raw.pop_back();raw.pop_back();raw+=",\"verified_count\":"+std::to_string(accepted && authenticated_?done_.size():0)+",\"session\":\""+session()+"\",\"evidence\":[";bool first=true;for(auto&[id,e]:evidence_){if(!first)raw+=',';first=false;raw+="{\"id\":\""+id+"\",\"through_frame\":"+std::to_string(e.first)+",\"last_checked_message\":\""+e.second+"\"}";}raw+="]}\n";output(fd("R7_ONEBLOCK_COVERAGE_FD"),raw);saved_=true;}
 };
 Value masterValue(R7WitnessStore&w){return [&w](std::size_t i){return i<w.baseMaster().size()?w.baseMaster()[i]:Fr(0);};}
 std::pair<std::size_t,Fr>sourceIndex(const r2::ModelQuerySource&s,std::size_t i){for(auto&span:s.spans){if(i<span.count)return {span.offset+i,span.bias};i-=span.count;}throw std::runtime_error("Oneblock native source map overflow");}
 Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){auto w=r1::weights(q);Fr y=0;for(std::size_t i=0;i<v.padded;++i)y+=w[i]*v.value(i);return y;}
 }
 int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
- need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");alarm(21600);r1::init();auto started=std::chrono::steady_clock::now();need(argc>=2 && argc<=3,"Oneblock usage setup|run [P_ATTACK]");auto plan=discover();auto&ctx=plan.context;
+ need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");alarm(21600);r1::init();auto started=std::chrono::steady_clock::now();
+#ifdef R7_FS_ONEBLOCK
+ need(argc>=4 && argc<=5,"FS usage prove|verify PROOF_PATH CONTEXT [P_ATTACK]");
+#else
+ need(argc>=2 && argc<=3,"Oneblock usage setup|run [P_ATTACK]");
+#endif
+ auto plan=discover();auto&ctx=plan.context;
+#ifdef R7_CLASSIFIED_V2
+ auto layout=classified::makeLayout(ctx);
+ plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
+ for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
+ for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/knowledge-tail","CLASSIFIED_BASE_REGISTRATION",r.id,r.padded,0});}
+ for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
+ plan.required.push_back({"classified/authentication-barrier","CLASSIFIED_AUTHENTICATION",classified::identity(layout),ctx.plan.master.actual,0});
+#endif
 #ifdef R7_COMPLETE_VERIFIER
- constexpr bool isP=false;need(argc==2,"Oneblock verifier cannot import challenges/receipt/options");
+ constexpr bool isP=false;
+#ifdef R7_FS_ONEBLOCK
+ need(argc==4,"FS verifier cannot import challenges/receipt/options");
+#else
+ need(argc==2,"Oneblock verifier cannot import challenges/receipt/options");
+#endif
 #else
  constexpr bool isP=true;
 #endif
+ #ifdef R7_FS_ONEBLOCK
+ need(std::string(argv[1])==(isP?"prove":"verify"),"FS role/mode mismatch");
+ std::string mode="run",attack=isP && argc==5?argv[4]:"";
+ [[maybe_unused]] const char*successStatus=isP?"FS_PROOF_CREATED_CANDIDATE":fs::verifiedStatus;
+#else
  std::string mode=argv[1],attack=isP && argc==3?argv[2]:"";need(mode=="setup" || mode=="run","Oneblock unknown mode");
+ [[maybe_unused]] const char*successStatus="ONEBLOCK_CLASSIFIED_INTERACTIVE_ACCEPT";
+#endif
  if(mode=="setup"){need(isP && argc==2,"Oneblock only P creates public test claim");R7WitnessStore w;{master3::QuietStdout quiet;w.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");}auto s=makeStatement(ctx,w.publicX(),w.publicY(ctx));auto b=R7Wire::encodeStatement(s);output(fd("R7_ONEBLOCK_STATEMENT_OUT_FD"),std::string(b.begin(),b.end()));std::cerr<<"PUBLIC_X_Y_CLAIM_CREATED_NO_PRIVATE_WITNESS_EXPORT\n";return 0;}
- auto s=R7Wire::decodeStatement(publicStatement(fd("R7_ONEBLOCK_STATEMENT_FD")));need(validateStatement(s,ctx).code==Code::Ok,"Oneblock invalid frozen public statement");
+ auto statement_bytes=publicStatement(fd("R7_ONEBLOCK_STATEMENT_FD"));auto s=R7Wire::decodeStatement(statement_bytes);need(validateStatement(s,ctx).code==Code::Ok,"Oneblock invalid frozen public statement");
  // Each process independently owns the public statement. Test harness mutates
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
- PipeIO pipe(isP,"oneblock-full",attack=="cross-session"?"session":"",liveSuite,PipeIO::Profile::OneblockV1,isP?-1:fd("R7_PUBLIC_AUDIT_FD"));tracked=std::make_unique<Tracked>(pipe,plan,attack);auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
+ #ifdef R7_FS_ONEBLOCK
+ need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
+ auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+ Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));instance.text(model::trustIdentity(fsTrust));instance.raw(statement_bytes);
+ fs::Binding fsBinding{"Oneblock",argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
+#ifdef R7_COMPLETE_VERIFIER
+ fs::FsVerifierIO pipe(argv[2],fsBinding);
+#else
+ fs::FsProverIO pipe(argv[2],fsBinding);
+#endif
+#else
+ PipeIO pipe(isP,"oneblock-full",attack=="cross-session"?"session":"",liveSuite,liveProfile,isP?-1:fd("R7_PUBLIC_AUDIT_FD"));
+#endif
+ tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
  Writer binding;binding.text(liveSuite);binding.text(identity(plan));binding.raw(R7Wire::encodeStatement(s));bindPublic(io,"Oneblock/statement-native-plan",binding.b);
  std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});std::cerr<<"PHASE_COMPLETE "<<id<<'\n';};
+ #ifndef R7_CLASSIFIED_V2
  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
  R7WitnessStore witness;std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;Value master;master3::Secret masterSecret;master3::Master pc;
@@ -88,4 +149,8 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","master/hidden-openings","model/C_W_model-to-master"})checked(io,id);for(auto&r:trust.regions)checked(io,"model/region/"+r.name);
  need(objects.size()==expected.size(),"Oneblock uncreated native auxiliary object");for(auto&o:ctx.objects)if(o.kind!=ObjectKind::BaseMaster)checked(io,"object/"+o.id+"/source");if(isP)need(witness.legacyCommitmentAbsent(),"Oneblock legacy nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");io.save(true);
  struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\"ONEBLOCK_INTERACTIVE_ACCEPT\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"master_id\":\""<<master3::identity(pc)<<"\",\"registered_rows\":"<<registration.verified_rows<<",\"registration_response_bytes\":"<<registration.response_payload_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t i=0;i<phases.size();++i){if(i)std::cerr<<',';auto&p=phases[i];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<'}';}std::cerr<<"]}\n";return 0;
+
+#else
+#include "classified_controller.inc"
+#endif
  }catch(const std::exception&e){std::cerr<<"REJECT_OR_INCOMPLETE "<<e.what()<<'\n';return 2;}}

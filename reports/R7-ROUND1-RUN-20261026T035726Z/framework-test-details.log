@@ -1,0 +1,153 @@
+Start testing: Oct 26 03:57 UTC
+----------------------------------------------------------
+29/72 Testing: r5b_FC_GKR_coupling
+29/72 Test: r5b_FC_GKR_coupling
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/r5b_gkr_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src
+"r5b_FC_GKR_coupling" start time: Oct 26 03:57 UTC
+Output:
+----------------------------------------------------------
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 0.000043 s
+GKR input-commitment MLE opening time: proof generation 0.004667 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.0175429s
+Total Prover time(GKR+range):0.023466=0.023466+0s
+GKR proof-builder local consistency-check time: 0.000327201s
+Proof size(old): 1.57812KB
+PASS actual R5B rounding with four FC GKR parents, signed half-ties and 16 authenticated matrix terminal claims
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"r5b_FC_GKR_coupling" end time: Oct 26 03:57 UTC
+"r5b_FC_GKR_coupling" time elapsed: 00:00:00
+----------------------------------------------------------
+
+65/72 Testing: r6_builder_oneblock
+65/72 Test: r6_builder_oneblock
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_builder_tests" "1"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+"r6_builder_oneblock" start time: Oct 26 03:57 UTC
+Output:
+----------------------------------------------------------
+input size: 2^24
+++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+Total input size: 2^24
+layer_id: 24
+Circuit Builder time (including structure-only witness construction, subset and validation): 0.764143s
+PASS actual graph,all block/FC/Range/Exp coordinates,public final output,zero metadata witness,residual tamper rejection and old guard; fingerprint=1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a
+<end of output>
+Test time =   1.82 sec
+----------------------------------------------------------
+Test Passed.
+"r6_builder_oneblock" end time: Oct 26 03:57 UTC
+"r6_builder_oneblock" time elapsed: 00:00:01
+----------------------------------------------------------
+
+70/72 Testing: r6_entry_guards
+70/72 Test: r6_entry_guards
+Command: "/usr/local/bin/python3.10" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_entry_tests.py" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_plan"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+"r6_entry_guards" start time: Oct 26 03:57 UTC
+Output:
+----------------------------------------------------------
+PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/must-not-exist', '--blocks', '12'] separately authorized
+PASS r6_model_verify ['reports/R5B/normal-v2/model.statement', 'reports/R5B/normal-v2/model.proof', '--blocks', '12'] separately authorized
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '2'] exactly 1 or 12
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--blocks', '12'] duplicate
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--cpu-limit', '1844674407370955161600000000001'] bound
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--memory-gib', '-1'] unsigned
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--memory-gib', '0'] positive
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--numerical-profile', 'modified-profile'] frozen
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks', '1', '--unknown-option'] unknown
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/invalid.json', '--blocks'] usage
+PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/oneblock.json', '--blocks', '1', '--plan-only'] no private witness/proof
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/inherited-cap.json', '--blocks', '1', '--memory-gib', '8'] inherited
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-nxku_010/too-small.json', '--blocks', '12', '--memory-gib', '1'] bad_alloc
+PASS 13 R6 entry cases; no proof/statement or full12 private witness
+<end of output>
+Test time =   2.54 sec
+----------------------------------------------------------
+Test Passed.
+"r6_entry_guards" end time: Oct 26 03:57 UTC
+"r6_entry_guards" time elapsed: 00:00:02
+----------------------------------------------------------
+
+71/72 Testing: r6_system_resources
+71/72 Test: r6_system_resources
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_resources_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2
+"r6_system_resources" start time: Oct 26 03:57 UTC
+Output:
+----------------------------------------------------------
+PASS effective memory/PID headroom including saturation
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"r6_system_resources" end time: Oct 26 03:57 UTC
+"r6_system_resources" time elapsed: 00:00:00
+----------------------------------------------------------
+
+72/72 Testing: r7_framework
+72/72 Test: r7_framework
+Command: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_framework_tests"
+Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+"r7_framework" start time: Oct 26 03:57 UTC
+Output:
+----------------------------------------------------------
+input size: 2^24
+Total input size: 2^24
+layer_id: 24
+PASS valid real R6 oneblock schema
+PASS wrong version
+PASS wrong circuit
+PASS wrong layout
+PASS wrong model
+PASS wrong profile
+PASS Full12 forbidden
+PASS wrong base master
+PASS wrong X size
+PASS wrong Y semantics
+PASS X padding
+PASS Y padding
+PASS unsigned signed64 overflow
+PASS signed64 endpoints allowed
+PASS signed64 lower overflow rejected
+PASS canonical statement roundtrip
+PASS trailing bytes rejected
+PASS truncated statement rejected
+PASS oversize statement rejected
+PASS deterministic transcript
+PASS transcript binds public hidden Y
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS forged complete envelope cannot accept
+PASS cross statement proof rejected
+PASS base master never flattened to 2^30
+PASS independent auxiliary object identities
+PASS Exp index range binds original t source
+PASS Exp helper range binds correct helper
+PASS Exp memory binds canonical index helper
+PASS proof envelope roundtrip
+PASS trailing proof envelope rejected
+PASS private witness error values never exported
+TESTS_PASSED 39 FRAMEWORK_CONNECTED production_gate=BLOCKED_CRYPTOGRAPHIC_DESIGN may_enter_stage2=false
+<end of output>
+Test time =   3.75 sec
+----------------------------------------------------------
+Test Passed.
+"r7_framework" end time: Oct 26 03:57 UTC
+"r7_framework" time elapsed: 00:00:03
+----------------------------------------------------------
+
+End testing: Oct 26 03:57 UTC

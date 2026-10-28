@@ -1,0 +1,32 @@
+{
+  "id": "preprocess-oneblock-R6-v1",
+  "command": [
+    "build/release/src/paper_r2/r6_model_preprocess",
+    "--blocks",
+    "1",
+    "data/gpt2_int",
+    "reports/R6A/oneblock-model-manifest-v1.txt",
+    "reports/R6A/oneblock-operator-trust-v1.anchor",
+    "reports/R6A/ONEBLOCK_OPERATOR_TRUST_CONFIG.json"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:45:12.304089+00:00",
+  "seconds": 41.940131245180964,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 24,
+  "RSS_group_limit_gib": 24,
+  "observed_process_group_peak_bytes": 1583620096,
+  "stop_reason": null,
+  "binary_sha256": "fbdf480ff1feeb5582a2db9cf9be5dfd9281fbd9120a6c4986b221c03dac9391",
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/preprocess-oneblock-R6-v1.log",
+  "time": "logs/R6A/preprocess-oneblock-R6-v1.time"
+}

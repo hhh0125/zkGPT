@@ -1,0 +1,424 @@
+{
+  "scope": "small-prime algebra only; no model witness, PC/MSM, proof or crypto verifier",
+  "exhaustive": [
+    {
+      "q": 2,
+      "N": 0,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 4,
+      "formal_multiset_accept": 1,
+      "wrong_membership_accept": 0,
+      "first_wrong": null
+    },
+    {
+      "q": 2,
+      "N": 1,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 32,
+      "formal_multiset_accept": 2,
+      "wrong_membership_accept": 0,
+      "first_wrong": null
+    },
+    {
+      "q": 2,
+      "N": 2,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 256,
+      "formal_multiset_accept": 10,
+      "wrong_membership_accept": 4,
+      "first_wrong": {
+        "queries": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "reads": [
+          0,
+          1
+        ],
+        "final": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "q": 3,
+      "N": 0,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 9,
+      "formal_multiset_accept": 1,
+      "wrong_membership_accept": 0,
+      "first_wrong": null
+    },
+    {
+      "q": 3,
+      "N": 1,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 243,
+      "formal_multiset_accept": 2,
+      "wrong_membership_accept": 0,
+      "first_wrong": null
+    },
+    {
+      "q": 3,
+      "N": 2,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 6561,
+      "formal_multiset_accept": 6,
+      "wrong_membership_accept": 0,
+      "first_wrong": null
+    },
+    {
+      "q": 3,
+      "N": 3,
+      "table": [
+        0,
+        1
+      ],
+      "assignments_tested": 177147,
+      "formal_multiset_accept": 66,
+      "wrong_membership_accept": 42,
+      "first_wrong": {
+        "queries": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "reads": [
+          0,
+          1,
+          2
+        ],
+        "final": [
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "balanced_edge_multisets": [
+    {
+      "q": 2,
+      "N": 0,
+      "edge_multiset_count": 1,
+      "balanced_count": 1
+    },
+    {
+      "q": 2,
+      "N": 1,
+      "edge_multiset_count": 2,
+      "balanced_count": 0
+    },
+    {
+      "q": 2,
+      "N": 2,
+      "edge_multiset_count": 3,
+      "balanced_count": 1
+    },
+    {
+      "q": 3,
+      "N": 0,
+      "edge_multiset_count": 1,
+      "balanced_count": 1
+    },
+    {
+      "q": 3,
+      "N": 1,
+      "edge_multiset_count": 3,
+      "balanced_count": 0
+    },
+    {
+      "q": 3,
+      "N": 2,
+      "edge_multiset_count": 6,
+      "balanced_count": 0
+    },
+    {
+      "q": 3,
+      "N": 3,
+      "edge_multiset_count": 10,
+      "balanced_count": 1
+    },
+    {
+      "q": 5,
+      "N": 0,
+      "edge_multiset_count": 1,
+      "balanced_count": 1
+    },
+    {
+      "q": 5,
+      "N": 1,
+      "edge_multiset_count": 5,
+      "balanced_count": 0
+    },
+    {
+      "q": 5,
+      "N": 2,
+      "edge_multiset_count": 15,
+      "balanced_count": 0
+    },
+    {
+      "q": 5,
+      "N": 3,
+      "edge_multiset_count": 35,
+      "balanced_count": 0
+    },
+    {
+      "q": 5,
+      "N": 4,
+      "edge_multiset_count": 70,
+      "balanced_count": 0
+    },
+    {
+      "q": 5,
+      "N": 5,
+      "edge_multiset_count": 126,
+      "balanced_count": 1
+    },
+    {
+      "q": 7,
+      "N": 0,
+      "edge_multiset_count": 1,
+      "balanced_count": 1
+    },
+    {
+      "q": 7,
+      "N": 1,
+      "edge_multiset_count": 7,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 2,
+      "edge_multiset_count": 28,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 3,
+      "edge_multiset_count": 84,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 4,
+      "edge_multiset_count": 210,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 5,
+      "edge_multiset_count": 462,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 6,
+      "edge_multiset_count": 924,
+      "balanced_count": 0
+    },
+    {
+      "q": 7,
+      "N": 7,
+      "edge_multiset_count": 1716,
+      "balanced_count": 1
+    }
+  ],
+  "nonchronological_valid_example": {
+    "q": 7,
+    "table": [
+      2,
+      3
+    ],
+    "queries": [
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "reads": [
+      1,
+      0
+    ],
+    "final": [
+      2,
+      0
+    ]
+  },
+  "single_point_false_accept": {
+    "q": 5,
+    "N": 1,
+    "table": [
+      0
+    ],
+    "queries": [
+      [
+        0,
+        1
+      ]
+    ],
+    "reads": [
+      0
+    ],
+    "final": [
+      1
+    ],
+    "formal_identity": false,
+    "symbolic_difference": "-gamma",
+    "passing_points": [
+      {
+        "gamma": 0,
+        "tau": 0,
+        "roots": {
+          "initial": 0,
+          "write": 1,
+          "read": 0,
+          "final": 1
+        }
+      },
+      {
+        "gamma": 0,
+        "tau": 1,
+        "roots": {
+          "initial": 4,
+          "write": 0,
+          "read": 4,
+          "final": 0
+        }
+      },
+      {
+        "gamma": 0,
+        "tau": 2,
+        "roots": {
+          "initial": 3,
+          "write": 4,
+          "read": 3,
+          "final": 4
+        }
+      },
+      {
+        "gamma": 0,
+        "tau": 3,
+        "roots": {
+          "initial": 2,
+          "write": 3,
+          "read": 2,
+          "final": 3
+        }
+      },
+      {
+        "gamma": 0,
+        "tau": 4,
+        "roots": {
+          "initial": 1,
+          "write": 2,
+          "read": 1,
+          "final": 2
+        }
+      }
+    ],
+    "passing_count": 5,
+    "point_count": 25
+  },
+  "N_equals_q_symbolic_counterexamples": [
+    {
+      "q": 2,
+      "N": 2,
+      "wrong_pair": [
+        0,
+        1
+      ],
+      "read": [
+        0,
+        1
+      ],
+      "polynomial_identity": true
+    },
+    {
+      "q": 3,
+      "N": 3,
+      "wrong_pair": [
+        0,
+        1
+      ],
+      "read": [
+        0,
+        1,
+        2
+      ],
+      "polynomial_identity": true
+    },
+    {
+      "q": 5,
+      "N": 5,
+      "wrong_pair": [
+        0,
+        1
+      ],
+      "read": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "polynomial_identity": true
+    },
+    {
+      "q": 7,
+      "N": 7,
+      "wrong_pair": [
+        0,
+        1
+      ],
+      "read": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "polynomial_identity": true
+    }
+  ],
+  "elapsed_seconds": 1.3179661626927555
+}

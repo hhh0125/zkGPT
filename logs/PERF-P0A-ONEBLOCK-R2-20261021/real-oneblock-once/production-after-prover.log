@@ -1,0 +1,107 @@
+input size: 2^24
+++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+Total input size: 2^24
+layer_id: 24
+Circuit Builder time (including structure-only witness construction, subset and validation): 1.24901s
+PHASE preflight/accepted seconds=2.13844
+input size: 2^24
+input 0: 238.131, scaled: 24384/24384
+input 769: -98.0404, scaled: -10039/-10039
+input 1538: 308.586, scaled: 31599/31599
+input 2307: 147.565, scaled: 15110/15110
+input 3076: -138.179, scaled: -14149/-14149
+input 3845: 193.6, scaled: 19824/19824
+input 4614: 80.3468, scaled: 8227/8227
+input 5383: -300.624, scaled: -30783/-30783
+input 6152: 210.298, scaled: 21534/21534
+input 6921: 280.973, scaled: 28771/28771
+input 7690: -154.281, scaled: -15798/-15798
+input 8459: 307.813, scaled: 31520/31520
+input 9228: 62.1797, scaled: 6367/6367
+input 9997: -132.283, scaled: -13545/-13545
+input 10766: 61.2781, scaled: 6274/6274
+input 11535: -264.031, scaled: -27036/-27036
+input 12304: -277.3, scaled: -28395/-28395
+input 13073: 266.733, scaled: 27313/27313
+input 13842: 344.459, scaled: 35272/35272
+input 14611: -84.0166, scaled: -8603/-8603
+input 15380: -208.479, scaled: -21348/-21348
+input 16149: -322.712, scaled: -33045/-33045
+input 16918: 201.199, scaled: 20602/20602
+input 17687: 108.681, scaled: 11128/11128
+input 18456: 341.308, scaled: 34949/34949
+input 19225: 287.962, scaled: 29487/29487
+input 19994: 192.472, scaled: 19709/19709
+input 20763: -102.862, scaled: -10533/-10533
+input 21532: 232.516, scaled: 23809/23809
+input 22301: 310.804, scaled: 31826/31826
+input 23070: 187.358, scaled: 19185/19185
+input 23839: 232.426, scaled: 23800/23800
+++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+Registered range constraints:
+ROUNDING: ~2^20.426
+LAYER_NORM: ~2^18.002
+GELU: ~2^20.170
+SOFTMAX: ~2^17.148
+Total constrained witness values: ~2^21.515
+val[0] size: ~2^23.988
+Coverage ratio: 18.0051% (debug statistic only)
+Total input size: 2^24
+layer_id: 24
+Circuit Builder time (including private witness/parameter construction, subset and validation): 13.8976s
+Full val[0] witness commit time: 2.79607s
+Registered range constraints:
+ROUNDING: ~2^20.426
+LAYER_NORM: ~2^18.002
+GELU: ~2^20.170
+SOFTMAX: ~2^17.148
+Total constrained witness values: ~2^21.515
+val[0] size: ~2^23.988
+Coverage ratio: 18.0051% (debug statistic only)
+PHASE private-witness/validated seconds=19.9154
+PHASE query-commitments/trusted-W-matched seconds=84.4996
+PHASE range/0/begin seconds=85.8966
+PHASE range/0/end seconds=92.1471
+PHASE range/1/begin seconds=92.1472
+PHASE range/1/end seconds=110.699
+PHASE range/2/begin seconds=110.699
+PHASE range/2/end seconds=111.155
+PHASE range/3/begin seconds=111.155
+PHASE range/3/end seconds=115.332
+PHASE range/4/begin seconds=115.332
+PHASE range/4/end seconds=131.392
+PHASE range/5/begin seconds=131.392
+PHASE range/5/end seconds=131.613
+PHASE range/6/begin seconds=131.613
+PHASE range/6/end seconds=161.196
+PHASE range/7/begin seconds=161.196
+PHASE range/7/end seconds=214.992
+PHASE range/8/begin seconds=214.992
+PHASE range/8/end seconds=215.196
+PHASE range/9/begin seconds=215.196
+PHASE range/9/end seconds=215.438
+PHASE range/10/begin seconds=215.438
+PHASE range/10/end seconds=220.954
+PHASE range/11/begin seconds=220.954
+PHASE range/11/end seconds=221.236
+PHASE range/12/begin seconds=221.236
+PHASE range/12/end seconds=269.553
+PHASE exp/0/begin seconds=269.553
+PHASE exp/0/end seconds=272.254
+PHASE gkr/begin seconds=272.254
+Circuit Initiation finished
+++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+GKR proof-builder consistency checks passed
+GKR Lasso public input-mapping evaluation time: 1.273318 s
+GKR input-commitment MLE opening time: proof generation 0.636781 s
+=========================Our results:================================
+Matrix multiplication Prover time: 0.436979s
+Total Prover time(GKR+range):8.27535=8.27535+0s
+GKR proof-builder local consistency-check time: 0.0035073s
+Proof size(old): 26.5625KB
+PHASE gkr/end seconds=285.403
+PHASE bridge/begin seconds=285.404
+PHASE bridge/end seconds=287.438
+PHASE input/begin seconds=287.438
+PHASE input/end seconds=310.304
+GENERATED R5B combined proof; independent verification required

@@ -1,0 +1,11 @@
+# Next gate: full12 remains separately authorized
+
+No full12 was started; no R5B blocks=1 guard was bypassed. Engineering oneblock acceptance and paper/security certification are different claims. This candidate is not APPROVED-PROFILE, PAPER-EQUIVALENT or SECURITY-AUDITED. Full12 requires a separate explicit user instruction even if oneblock acceptance succeeds.
+
+The next engineering stage must first retain: this exact profile definition/source/binary identity, completed new oneblock independent normal/hostile/artifact evidence, external operator W anchor, per-equation integer bounds and checked host prerequisites. It must extend the actual approved builder/layout to twelve connected blocks, register all parameters/advice/queries, budget lifecycle memory and time before execution, preserve old profiles, and archive the result.
+
+STATIC_FULL12_BUDGET.json gives allocation arithmetic without invoking a twelve-block R5B builder: master actual 199348640, padded 268435456; W actual 163749888, padded 268435456; Exp 76032, padded 131072; Range views 35598080 with each group's actual/padded count. This is not a new full12 circuit fingerprint, production query-plan approval, runtime or proof.
+
+Measured oneblock layout resource preflight: conservative prover 9267062784 bytes, verifier 2351972752 bytes, wire bound 19942720 bytes. Actual oneblock time/RSS is in the final evidence. Do not multiply those measurements by twelve as a full12 budget: power-of-two padding, PC domains, retained vectors and cross-block gate/query layout change. Full12 gate remains BLOCKED on an actual separately authorized structural resource plan with phase-specific peak accounting, shared-server availability, disk budget, measured throughput and an explicit execution-time allowance. No such run is authorized here.
+
+Remaining certification obligations: deployment-wide/model-level error propagation and desired accuracy budget; original-float/printed-equation equivalence; official publisher provenance; independent whole-protocol FS/knowledge-soundness/ZK/security assessment; remaining legacy/external-library/allocator/thread host-safety scope. These limit certification, not the ability to label a successful oneblock engineering relation honestly. The final result must not inherit historical R5A proof acceptance as R5B evidence.

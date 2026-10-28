@@ -1,0 +1,7 @@
+# P0-B 恢复说明
+
+完整归档包含修改前574/修改后575项源码原件、补丁、冻结/新二进制与库、依赖及构建配置、全部120份参数原件与126项参数/Profile/anchor/manifest、真实P0A历史proof/statement参考、小fixture新旧proof/statement及负向原件、完整日志/资源快照/隔离基准布局和代码、无效CLI测试诊断、sanitizer与审查记录。
+
+按P0B_EVIDENCE_MANIFEST.json逐项恢复读取并SHA核验；source tar分别按BEFORE_SOURCE_SHA.json/AFTER_SOURCE_SHA.json核验。参考真实P0A证明只是冻结原件，本轮没有生成或验证真实P0B oneblock。小fixture不能当作真实模型验收。
+
+此归档不是permit，也不授权full12/P1或真实oneblock；历史批准不转移。不要覆盖原历史目录或其他用户进程，Linux唯一活动源码仍为zkGPT-work。Windows仅用于恢复读核验。所有远端本轮证据继续保留，不授权删除。包外WINDOWS_ARCHIVE_VERIFICATION.json为最终Windows核验回执，避免归档自引用。

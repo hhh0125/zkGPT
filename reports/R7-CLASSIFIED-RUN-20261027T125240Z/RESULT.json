@@ -1,0 +1,104 @@
+{
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "error": "small-independent",
+  "events": [
+    {
+      "name": "engineering",
+      "command": [
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4260626793839037,
+      "passed": true
+    },
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.119664420839399,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_classified_layout_tests",
+        "r7_classified_crypto_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_lookup_prepare_tests",
+        "r7_classified_prover",
+        "r7_classified_verifier",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "r7_legacy_oneblock_prover",
+        "r7_legacy_oneblock_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 28.138859231956303,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_layout_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_layout_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 10.194141746964306,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_crypto_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.21725203981623054,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_lookup_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 22.37486467277631,
+      "passed": true
+    },
+    {
+      "name": "r7_lookup_prepare_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_lookup_prepare_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.011684921104460955,
+      "passed": true
+    },
+    {
+      "name": "small-independent",
+      "command": [
+        "python3",
+        "-B",
+        "tools/classified_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261027T125240Z"
+      ],
+      "exit_code": 1,
+      "seconds": 28.288053619209677,
+      "passed": false
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+PASS opening-16
+PASS opening-64
+PASS opening-256
+PASS opening-1024
+PASS opening-zero-64
+PASS sigma-16
+PASS sigma-zero-16
+PASS opening2-64
+PASS sumcheck2-16
+PASS sumcheck3-16
+PASS sumcheck-zero-16
+PASS sumcheck2-1
+PASS sumcheck3-1
+PASS opening-16-bad-opening reason=REJECT R7 opening masked evaluation equation failed
+PASS opening-16-wrong-pc reason=REJECT R7 response IPA terminal equation failed
+PASS sigma-16-bad-mul reason=REJECT R7 product Sigma multiplication equation failed
+PASS sigma-16-bad-linear reason=REJECT R7 Sigma compressed linear relation failed
+PASS sigma-16-sigma-challenge reason=REJECT R7 Sigma representation equation failed
+PASS sigma-16-swap-sigma-identities reason=REJECT R7 public statement/parent binding mismatch
+PASS sigma-16-blind-response reason=REJECT R7 product Sigma multiplication equation failed
+PASS sumcheck2-16-bad-recursion reason=REJECT R7 Sigma compressed linear relation failed
+PASS sumcheck2-16-bad-mul reason=REJECT R7 Sigma compressed linear relation failed
+PASS sumcheck2-16-swap-handle reason=REJECT R7 HiddenScalar session/role identity mismatch
+PASS opening-16-challenge reason=REJECT R7 public statement/parent binding mismatch
+PASS opening-16-order reason=REJECT R7 interactive sequence/label or receipt rejected
+PASS opening-16-receipt reason=REJECT R7 interactive sequence/label or receipt rejected
+PASS opening-16-session reason=REJECT R7 interactive cross-session rejected
+PASS real-FC0-1024
+PASS real-FC0-1024-bad-recursion reason=REJECT R7 Sigma compressed linear relation failed
+PASS real-FC0-1024-wrong-real-output reason=REJECT R7 Sigma compressed linear relation failed
+LOCAL_CRYPTO_TESTED cases=30 Oneblock=INCOMPLETE joint_extraction=PARTIAL
+	Command being timed: "python3 -B tools/r7_interactive_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261026T131031Z/csipa-sessions --real"
+	User time (seconds): 74.77
+	System time (seconds): 3.40
+	Percent of CPU this job got: 128%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:00.64
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1494200
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1837004
+	Voluntary context switches: 2521
+	Involuntary context switches: 1065
+	Swaps: 0
+	File system inputs: 528
+	File system outputs: 6320
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

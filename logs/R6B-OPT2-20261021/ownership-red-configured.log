@@ -1,0 +1,83 @@
+CMake Deprecation Warning at 3rd/mcl/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Configuring done (0.7s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+[  5%] Built target mcl
+[ 11%] Built target mclbn256
+[ 88%] Built target gpt_lib
+[ 94%] Built target gkr_test_support
+[100%] Building CXX object src/CMakeFiles/opt2_ownership_tests.dir/main_opt2_ownership_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:9:15: error: no matching function for call to ‘prover::commitInput(std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int, bool)’
+    9 |  p.commitInput(p.gens,1,true);const auto &shared=p.sharedInputWitness();
+      |  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/gkr_proof_builder.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/tests/gkr_test_fixture.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note: candidate: ‘void prover::commitInput(const std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int)’
+   59 |     void commitInput(const vector<G1> &gens,int thread_n=1);
+      |          ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note:   candidate expects 2 arguments, 3 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:9:52: error: ‘class prover’ has no member named ‘sharedInputWitness’
+    9 |  p.commitInput(p.gens,1,true);const auto &shared=p.sharedInputWitness();
+      |                                                    ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:10:68: error: template argument 1 is invalid
+   10 |  static_assert(std::is_same<decltype(shared),const std::vector<Fr>&>::value,"caller must be readonly");
+      |                                                                    ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:14:69: error: no matching function for call to ‘prover::commitInput(std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int, bool)’
+   14 |  auto pointer=p.cc.w;p.C.circuit[0].size++;rejects([&]{p.commitInput(p.gens,1,true);});p.C.circuit[0].size--;check(p.cc.w==pointer && p.sharedInputWitness()==frozen,"failedcommit lost originalowner");
+      |                                                        ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note: candidate: ‘void prover::commitInput(const std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int)’
+   59 |     void commitInput(const vector<G1> &gens,int thread_n=1);
+      |          ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note:   candidate expects 2 arguments, 3 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:14:137: error: ‘class prover’ has no member named ‘sharedInputWitness’
+   14 |  auto pointer=p.cc.w;p.C.circuit[0].size++;rejects([&]{p.commitInput(p.gens,1,true);});p.C.circuit[0].size--;check(p.cc.w==pointer && p.sharedInputWitness()==frozen,"failedcommit lost originalowner");
+      |                                                                                                                                         ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:15:15: error: no matching function for call to ‘prover::commitInput(std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int, bool)’
+   15 |  p.commitInput(p.gens,1,false);rejects([&]{p.sharedInputWitness();});p.commitInput(p.gens,1,true);check(p.sharedInputWitness().data()==p.cc.w,"recommit sharedview");
+      |  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note: candidate: ‘void prover::commitInput(const std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int)’
+   59 |     void commitInput(const vector<G1> &gens,int thread_n=1);
+      |          ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note:   candidate expects 2 arguments, 3 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:15:46: error: ‘class prover’ has no member named ‘sharedInputWitness’
+   15 |  p.commitInput(p.gens,1,false);rejects([&]{p.sharedInputWitness();});p.commitInput(p.gens,1,true);check(p.sharedInputWitness().data()==p.cc.w,"recommit sharedview");
+      |                                              ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:15:83: error: no matching function for call to ‘prover::commitInput(std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int, bool)’
+   15 |  p.commitInput(p.gens,1,false);rejects([&]{p.sharedInputWitness();});p.commitInput(p.gens,1,true);check(p.sharedInputWitness().data()==p.cc.w,"recommit sharedview");
+      |                                                                      ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note: candidate: ‘void prover::commitInput(const std::vector<mcl::EcT<mcl::FpT<mcl::bn::local::FpTag, 256>, mcl::FpT<mcl::bn::local::FrTag, 256> > >&, int)’
+   59 |     void commitInput(const vector<G1> &gens,int thread_n=1);
+      |          ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:59:10: note:   candidate expects 2 arguments, 3 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:15:107: error: ‘class prover’ has no member named ‘sharedInputWitness’
+   15 |  p.commitInput(p.gens,1,false);rejects([&]{p.sharedInputWitness();});p.commitInput(p.gens,1,true);check(p.sharedInputWitness().data()==p.cc.w,"recommit sharedview");
+      |                                                                                                           ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:16:105: error: ‘class prover’ has no member named ‘sharedInputWitness’
+   16 |  std::cout<<"OWNERSHIP cc.w="<<static_cast<const void*>(p.cc.w)<<" caller="<<static_cast<const void*>(p.sharedInputWitness().data())<<" val0="<<static_cast<const void*>(p.val[0].data())<<" graph="<<&p.C<<" builderref="<<&b.C<<"\n";
+      |                                                                                                         ^~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:18:41: error: ‘class LLM’ has no member named ‘setWitnessCapacityHint’
+   18 |  {LLM n(1,12,64,768,3072);rejects([&]{n.setWitnessCapacityHint(0);});rejects([&]{n.setWitnessCapacityHint((std::size_t(1)<<28)+1);});}
+      |                                         ^~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_opt2_ownership_tests.cpp:18:84: error: ‘class LLM’ has no member named ‘setWitnessCapacityHint’
+   18 |  {LLM n(1,12,64,768,3072);rejects([&]{n.setWitnessCapacityHint(0);});rejects([&]{n.setWitnessCapacityHint((std::size_t(1)<<28)+1);});}
+      |                                                                                    ^~~~~~~~~~~~~~~~~~~~~~
+gmake[3]: *** [src/CMakeFiles/opt2_ownership_tests.dir/build.make:79: src/CMakeFiles/opt2_ownership_tests.dir/main_opt2_ownership_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1287: src/CMakeFiles/opt2_ownership_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1294: src/CMakeFiles/opt2_ownership_tests.dir/rule] Error 2
+gmake: *** [Makefile:517: opt2_ownership_tests] Error 2

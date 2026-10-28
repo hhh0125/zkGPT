@@ -1,0 +1,16 @@
+# Independent read-only review
+
+Reviewer: fresh-context /root/r5b_review, using requesting-code-review; read the verified 04-trusted-integration-review local source and baseline bytes. No source changes, remote commands or C++ execution by the reviewer.
+
+Verdict: no Critical or Important code defect found. Static review is not combined-proof acceptance.
+
+Checked: exact half-open rounding; 25/4096 score rounding before attained max; registered Exp gap/value and normalization; exact nominal epsilon and floor-root interval; LN dimensions; shared-unit GELU coefficients and unique threshold; field-lifting bounds under trusted int32 W and registered activation ranges; constants, terminal/common-input binding, unary GKR phase selection; external SHA-pinned W anchor; deterministic preprocessing order/padding; unchanged cryptographic implementations and legacy dispatch; matching profile JSON/header.
+
+Minor finding: synthetic one-element W anchor tests did not directly exercise preprocessWeights. Addressed after review by src/paper_r2/tests_r5b_mapping.cpp: signed int32 extremes, padded output-major FC, LN halves, region order and deterministic PC; changed SHA, malformed header, truncation and extra bytes rejection; plus real production witness comparison for every 13,645,824 W scalar and 3,131,392 zero-tail values. The real PC matched the independently pinned anchor. This adds tests; numerical/protocol code is unchanged after the review.
+
+Considered but declined: a new cryptographic security proof (not claimed); publisher/checkpoint certification (operator trust boundary only); float/token-to-text/global-model equivalence (not claimed); re-deriving historical Exp provenance (fixed prior evidence reused); full12 execution (unauthorized and guarded); historical cleanup/migration/remote execution (read-only review); arbitrary mutation of protected operator shapes (fixed production shape); canonical values for unused LN padding remainders (no numerical consumer); declaring pending proof, sanitizer or attack runs successful (requires actual execution evidence).
+
+Executor rulings: these exclusions stand within the user's stated engineering-candidate task. Their cost is explicit: no publisher, paper-equivalence, global approximation or cryptographic-security certification, and no full12 acceptance. Static full12 allocation arithmetic is supplied only as a next-gate draft. No deferred code finding remains from this review.
+
+
+Post-review integration discovery: the first combined attempt rejected on the old FC/GKR dual-parent-point requirement; no normal proof was emitted. A new tiny four-FC test using the actual R5B round constructor reproduced the problem before a full retry. The author retained both parent ports with p²-p*A+p*bias=0 in addition to the already-bound A=p+bias. This is an exact redundant equation (residual<2^220<r), not a changed PC/GKR protocol or numerical rounding rule. Tiny GKR and real-model GKR-only verification passed with 51 authenticated terminals. New Release/sanitizer and anchor-refreeze results are separately recorded. The earlier independent static review did not catch this integration issue; it is not retrospectively described as a review pass of this later row.

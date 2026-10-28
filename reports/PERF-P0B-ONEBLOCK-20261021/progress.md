@@ -1,0 +1,2 @@
+Plan: AUTHORIZATION_AND_PLAN.md. Preparation identity/P24V8gates/diagnosticTUbuild+smallfixture equivalence complete. No production run yet. User separately authorized exactly one realoneblock acceptance. No retries.
+ProductionProver once PASS; new/new,p0a/new,new/frozen allindependentACCEPT withexternaltrust; allbytesidentical;7actualnegativesREJECT; actualdiagnosticV before/afterACCEPT withsamekernelresult/countcoverage. Source/production/parameter/history unchanged,allhardlimitsheld. Windowsarchivepending; noP1/full12/permit/scopeinheritance.

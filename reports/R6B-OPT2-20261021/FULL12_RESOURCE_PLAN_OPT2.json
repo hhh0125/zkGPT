@@ -1,0 +1,181 @@
+{
+  "basis": "actual277layer full12builder and source verified ownership/lifetimes; NOT full12RSS or oneblockx12",
+  "full12_actual_layout": {
+    "master_actual": 199348640,
+    "master_padded": 268435456,
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "child_padded_elements": 313398272,
+    "range_values": 35598080,
+    "Exp_actual": 76032,
+    "terminals": 612,
+    "layers": 277,
+    "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4"
+  },
+  "phase_bytes_before": {
+    "graph_bytes": 6368537600,
+    "witness_bytes": 23112176384,
+    "commit_bytes": 29065227264,
+    "prove_bytes": 117133722880,
+    "verify_bytes": 66339897920,
+    "serialize_bytes": 117277160960,
+    "artifact_disk_bytes": 210546944,
+    "full12_execution": false
+  },
+  "phase_bytes_after": {
+    "graph_bytes": 6368537600,
+    "witness_bytes": 19012388608,
+    "commit_bytes": 24965439488,
+    "prove_bytes": 90534151680,
+    "verify_bytes": 66339897920,
+    "serialize_bytes": 90677589760,
+    "artifact_disk_bytes": 210546944,
+    "full12_execution": false
+  },
+  "actual_storage_and_workspace_envelope_before_safety": {
+    "one_actual_graph_capacity": 5831666688,
+    "planned_val0_capacity": 6379156480,
+    "all_nonmaster_layer_values": 1362198528,
+    "int32_parameter_matrices": 654999552,
+    "single_cc_and_caller_master": 8589934592,
+    "all_retained_children_including_W": 10028744704,
+    "mapped_kernel_copy_and_retained_GKR_beta": 25769803776
+  },
+  "storage_envelope_total_bytes": 58616504320,
+  "confirmed_duplicate_budget": {
+    "raw_bytes": 8589934592,
+    "after25percent_bytes": 10737418240,
+    "only_budget_correction_not_RSS_saving": true
+  },
+  "real_code_storage_savings": {
+    "cc_caller_master_bytes": 8589934592,
+    "sharing_budget_effect_with25percent": 10737418240,
+    "not_full12_measured_RSS": true
+  },
+  "val0_capacity_envelope_tightening": {
+    "raw_bytes": 4099787776,
+    "with25percent_bytes": 5124734720,
+    "classification": "not a duplicate; plannedexactcapacity replaces historicalgrowth envelope. OldOPT alreadycompacts val0toactual beforeproof; doNOT claim this entireamount as a removedsteadyproofallocation",
+    "actual_code_benefit": "reserveonce and bypass padresize/shrinkcopy removes construction/committransients; finalactualcapacityaddress verified"
+  },
+  "preserved_conservative_safety": {
+    "extra_graph_count": 2,
+    "extra_graph_bytes": 11663333376,
+    "other_bytes": 2147483648,
+    "margin_percent": 25,
+    "margin_bytes": 18106830336,
+    "extra_serialization_bytes": 143438080,
+    "extraGraphs_are_not_observed_objects_or_confirmed_duplicate": true
+  },
+  "waterfall": [
+    {
+      "step": "OPT frozen estimate",
+      "bytes": 117277160960,
+      "GiB": 109.22286748886108
+    },
+    {
+      "step": "only confirmed duplicate callerMaster corrected (no RSS change)",
+      "bytes": 106539742720,
+      "GiB": 99.22286748886108
+    },
+    {
+      "step": "one physical shared cc/callerMaster instead of two",
+      "bytes": 95802324480,
+      "GiB": 89.22286748886108
+    },
+    {
+      "step": "planned val0 actual capacity; graph reserves unchanged",
+      "bytes": 90677589760,
+      "GiB": 84.45008635520935
+    }
+  ],
+  "lifetimes": [
+    {
+      "object": "preflight public graph",
+      "owner": "scoped local c moved from public builder",
+      "full12_capacity_bytes": 5831666688,
+      "lifetime": "preflight scope only, destructor before private LLM/prover construction",
+      "coexistence_with_private_graph": false,
+      "allocator_caveat": "freedownership is not a guarantee pages/arenas immediately leaveRSS"
+    },
+    {
+      "object": "actual private graph",
+      "owner": "pr.C",
+      "full12_capacity_bytes": 5831666688,
+      "lifetime": "private construction to mainexit",
+      "GKRBuilder": "const layeredCircuit& C, sameobjectaddress; no graph copy"
+    },
+    {
+      "object": "val[0]",
+      "owner": "pr.val[0] vector",
+      "full12_capacity_bytes": 6379156480,
+      "lifetime": "reservedonce atprivate create, growslogicalsize only; mainexit",
+      "legacy": "old reservegrowth/padresize/compact sequence could create temporaryfullsizeallocation; sharedpath does none",
+      "count_for_real_oneblock_path": 1
+    },
+    {
+      "object": "cc.w and callerMaster",
+      "owner": "prover.committed_witness_vector_; cc.w nonowning mutableAPIview, caller const vector&",
+      "full12_capacity_bytes": 8589934592,
+      "lifetime": "after existingprover_commit joinsworkers through mainexit",
+      "count_for_real_oneblock_path": 1,
+      "legacy_objects": 2,
+      "read_only_argument": "samecommitment inputs/order; readonlycaller downstream; legacycommitter receives pointer only during successful commit; inputMLEopening tests confirm unchangedvalues"
+    },
+    {
+      "object": "all retainedchildren",
+      "owner": "gatherModelQueries return vectors v",
+      "full12_capacity_bytes": 10028744704,
+      "W_bytes": 8589934592,
+      "lifetime": "querygather to mainexit, W uses same childfor localbinding and mappedopen"
+    },
+    {
+      "object": "GKR beta_g",
+      "owner": "GKRProofBuilder member vector",
+      "full12_capacity_bytes": 8589934592,
+      "lifetime": "Lasso finalinput mapping weights through end proveR2; clear keepscapacity, survives mappedSumcheck",
+      "accounting": "third Master in incremental3M; never advertised asfree slack"
+    },
+    {
+      "object": "GKR Lasso folding/coefficients",
+      "owner": "existing folding workspace +lasso_v_mult",
+      "max_two_generation_folding_bytes": 12884901888,
+      "coefficients_bytes": 8589934592,
+      "lifetime": "two-generation maxat round2; foldrelease beforebridge; coeffreleased buildend",
+      "other_source_port_domains_max_fields": 4194304,
+      "overlap_bound": "2.5M mainfold+coeff, boundedsourceportbeta/generator/rowPC in remaining0.5M and other2GiB; retainedextra2graph +25% beyondthis"
+    },
+    {
+      "object": "mapped input",
+      "owner": "kernel moved into original Sumcheck factors +one mutable witnesscopy",
+      "full12_incremental_bytes": 17179869184,
+      "lifetime": "inside mapped Sumcheck block; released before finalMaster opening",
+      "immutable_master": "borrowed sharedcc/caller alreadycounted",
+      "GKR_overlap": "retainedbuilderbeta makes3M incremental inR2"
+    },
+    {
+      "object": "serializedproof buffers",
+      "owner": "existing nested serializers/Writer/proofobjects",
+      "extra_upper_bytes": 143438080,
+      "lifetime": "serialization after proveR2 returns; GKRbuilder/mapped temporaries actuallygone",
+      "conservative": "serialize estimate retains fullprove bound plus4proof; no earlydestruction discount taken"
+    }
+  ],
+  "recommended_limits": {
+    "prover_GiB": 96,
+    "verifier_GiB": 96,
+    "prover_seconds": 28800,
+    "verifier_seconds": 14400,
+    "supervisor_extra_seconds": 60,
+    "cpu_affinity": 4,
+    "legacy_GKR_some_worker_counts": 32,
+    "shared_reserve_GiB": 32,
+    "disk_reserve_GiB": 64
+  },
+  "P96_remaining_after_all_safety_bytes": 12401625344,
+  "P128_remaining_after_all_safety_bytes": 46761363712,
+  "conditions": "planningselection only; finalresource/identity checks and explicitfutureauthorization required; do not automaticallyincreasecap/retry",
+  "full12_witness_or_proof_executed": false,
+  "valid_permit": false
+}

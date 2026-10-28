@@ -1,0 +1,1 @@
+A/B record only. Restore exact source/dependency/parameter/build bytes from the verified base archive in BASE_ARCHIVE_RESTORE_MAP.json, then add these new A Scope and UNAPPROVED B permit files. Never treat the A approval or possession of permit bytes as C/D authorization. No model program or new proof was run in this stage. Preserve all old evidence.

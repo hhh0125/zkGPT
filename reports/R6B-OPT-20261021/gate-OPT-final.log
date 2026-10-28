@@ -1,0 +1,344 @@
+test_generation_never_creates_execution_approval_and_same_path_refuses (test_approval_tools.ApprovalTools) ... ERROR
+test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit (test_approval_tools.ApprovalTools) ... ERROR
+test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) ... ok
+test_real_trusted_decoder_and_all_full12_schema_inputs (test_artifacts.Artifacts) ... ok
+test_trusted_proof_decoder_rejects_malformed_proof_without_crypto_verification (test_artifacts.Artifacts) ... ok
+test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) ... ok
+test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) ... ok
+test_ambient_input_library_python_and_secret_overrides_never_reach_child (test_r6b_gate.InputAndEnvironment) ... ok
+test_complete_frozen_X_and_any_active_change_rejected (test_r6b_gate.InputAndEnvironment) ... ok
+test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) ... ok
+test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) ... ok
+test_process_names_containing_spaces_are_parsed_without_losing_resource_fields (test_resources.Resources) ... ok
+test_visible_parallel_proof_cannot_be_waived_by_generic_competing_PID_acknowledgement (test_resources.Resources) ... ok
+test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse (test_review_regressions.ReviewRegressions) ... ERROR
+test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available (test_review_regressions.ReviewRegressions) ... ERROR
+test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant (test_review_regressions.ReviewRegressions) ... ERROR
+test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) ... test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) ... test_same_ID_and_same_approval_never_dispatch_again (test_state_machine.StateMachine) ... ERROR
+test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified (test_state_machine.StateMachine) ... ERROR
+test_clean_environment_real_child_and_existing_output_rejected (test_supervisor.Supervisor) ... ERROR
+test_exception_in_existing_limiter_still_kills_complete_group (test_supervisor.Supervisor) ... ERROR
+test_timeout_terminates_descendant_group (test_supervisor.Supervisor) ... ERROR
+
+======================================================================
+ERROR: test_generation_never_creates_execution_approval_and_same_path_refuses (test_approval_tools.ApprovalTools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_approval_tools.py", line 9, in test_generation_never_creates_execution_approval_and_same_path_refuses
+    a=self.load();root,p,pm,pn,j,af,ah=setup_case();p['permit_paths']={m:str(root/'generated'/ (m+'.simulation-permit')) for m in pm}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-42hw61zk'
+
+======================================================================
+ERROR: test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit (test_approval_tools.ApprovalTools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_approval_tools.py", line 20, in test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit
+    a=self.load();root,p,*_=setup_case();p['permit_paths']={m:str(root/'never'/ (m+'.simulation-permit')) for m in ['prover','verifier']}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ejdgsugy'
+
+======================================================================
+ERROR: test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse (test_review_regressions.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_review_regressions.py", line 38, in test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse
+    root,p,*_=setup_case();p['permit_paths']={m:str(root/'never'/m) for m in ['prover','verifier']}
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-a9ic_3di'
+
+======================================================================
+ERROR: test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available (test_review_regressions.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_review_regressions.py", line 11, in test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available
+    root,p,pm,pn,j,af,ah=setup_case()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ha_8ugez'
+
+======================================================================
+ERROR: test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant (test_review_regressions.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_review_regressions.py", line 20, in test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant
+    fixture=supervisor_tests.Supervisor();root,script,pidfile=fixture.fixture();sup=m.LimitedSupervisor(root,HERE.parent/'R6A/helper.py','14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351');original_sleep=time.sleep;old=signal.getsignal(signal.SIGTERM);injected=[]
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 10, in fixture
+    root=Path(tempfile.mkdtemp(prefix='limiter-',dir=HERE/'test-runs'));p=root/'process.py';pid=root/'grandchild.pid'
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/limiter-k1xp35__'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a36d0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-xzlvn66s'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a3760>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-3suht1ht'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a37f0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-3skz2u_f'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a3880>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-wl96dtqw'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a3910>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ab0oi6rj'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f83124a39a0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-_4ccz864'
+
+======================================================================
+ERROR: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.log_collision at 0x7f83124a3370>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 74, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    try:root,p,result,_=self.run_case(mutate=mutate)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-_9wgjjer'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='nonzero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-pxfgd5sl'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='timeout')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-q5fchukm'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='resource')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-zcogvn0a'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-eb6befox'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='empty')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-hb0_rm0b'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='corrupt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-i1em5ok7'
+
+======================================================================
+ERROR: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='corrupt-proof')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 66, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-5t7xdeg8'
+
+======================================================================
+ERROR: test_same_ID_and_same_approval_never_dispatch_again (test_state_machine.StateMachine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 78, in test_same_ID_and_same_approval_never_dispatch_again
+    g=self.load();root,p,result,args=self.run_case();pm,pn,j,af,ah,rt,admit=args
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-9_di21ca'
+
+======================================================================
+ERROR: test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified (test_state_machine.StateMachine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 61, in test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified
+    root,p,result,_=self.run_case();self.assertEqual((root/'dispatch.log').read_text(),'prover\nverifier\n');self.assertEqual(result['state'],'VERIFIED');self.assertFalse(result['full12_verified']);self.assertEqual((root/'verified-cwd').read_text(),p['verifier_cwd'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 40, in run_case
+    root,p,permits,pins,jobs,af,ah=setup_case(case)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_state_machine.py", line 7, in setup_case
+    root=Path(tempfile.mkdtemp(prefix='serial-',dir=HERE/'test-runs'))
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-zw_10x62'
+
+======================================================================
+ERROR: test_clean_environment_real_child_and_existing_output_rejected (test_supervisor.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 33, in test_clean_environment_real_child_and_existing_output_rejected
+    m=self.load();root=Path(tempfile.mkdtemp(prefix='environment-',dir=HERE/'test-runs'));script=root/'env.py';script.write_text('import os,json;print(json.dumps(dict(os.environ)))')
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/environment-6q21sgbo'
+
+======================================================================
+ERROR: test_exception_in_existing_limiter_still_kills_complete_group (test_supervisor.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 25, in test_exception_in_existing_limiter_still_kills_complete_group
+    m=self.load();root,p,pid=self.fixture()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 10, in fixture
+    root=Path(tempfile.mkdtemp(prefix='limiter-',dir=HERE/'test-runs'));p=root/'process.py';pid=root/'grandchild.pid'
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/limiter-z1tju_9p'
+
+======================================================================
+ERROR: test_timeout_terminates_descendant_group (test_supervisor.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 21, in test_timeout_terminates_descendant_group
+    m=self.load();root,p,pid=self.fixture();sup=m.LimitedSupervisor(root,HERE.parent/'R6A/helper.py','14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351')
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test_supervisor.py", line 10, in fixture
+    root=Path(tempfile.mkdtemp(prefix='limiter-',dir=HERE/'test-runs'));p=root/'process.py';pid=root/'grandchild.pid'
+  File "/usr/lib/python3.10/tempfile.py", line 523, in mkdtemp
+    _os.mkdir(file, 0o700)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/limiter-4h8uz_ir'
+
+----------------------------------------------------------------------
+Ran 23 tests in 108.301s
+
+FAILED (errors=24)

@@ -1,0 +1,12 @@
+[ 20%] Built target mcl
+[ 20%] Built target mclbn256
+[ 90%] Built target paper_r1
+[100%] Building CXX object src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/tests_g1_validation.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_g1_validation.cpp: In function ‘zkgpt::r1::Bytes integerBytes(const mpz_class&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_g1_validation.cpp:18:125: error: ‘mpz_class’ {aka ‘class mcl::Vint’} has no member named ‘get_ui’
+   18 | static Bytes integerBytes(const mpz_class &v){Bytes out(32,0);mpz_class n=v;for(auto &x:out){x=static_cast<unsigned char>(n.get_ui()&255);n>>=8;}return out;}
+      |                                                                                                                             ^~~~~~
+gmake[3]: *** [src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/build.make:79: src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/tests_g1_validation.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:2111: src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:2118: src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/rule] Error 2
+gmake: *** [Makefile:829: p0a_g1_validation_tests] Error 2

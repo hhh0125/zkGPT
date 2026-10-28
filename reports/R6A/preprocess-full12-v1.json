@@ -1,0 +1,28 @@
+{
+  "id": "preprocess-full12-v1",
+  "command": [
+    "build/release/src/paper_r2/r6_model_preprocess",
+    "--blocks",
+    "12",
+    "data/gpt2_int",
+    "reports/R6A/full12-model-manifest-v1.txt",
+    "reports/R6A/full12-operator-trust-v1.anchor",
+    "reports/R6A/FULL12_OPERATOR_TRUST_CONFIG.json"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:16:30.166548+00:00",
+  "seconds": 360.07285050163046,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 1200,
+  "address_space_limit_gib": 24,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/preprocess-full12-v1.log",
+  "time": "logs/R6A/preprocess-full12-v1.time"
+}

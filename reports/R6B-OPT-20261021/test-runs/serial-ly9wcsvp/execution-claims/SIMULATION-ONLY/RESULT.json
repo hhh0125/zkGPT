@@ -1,0 +1,294 @@
+{
+  "approval_sha256": "cde7d81feedc5061f102ca5757025ff2313ac63dd00b330f6eb4cc37f629af08",
+  "artifacts": {
+    "cryptographic_verified": false,
+    "files": {
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.proof": {
+        "bytes": 16,
+        "sha256": "3a70d3b5cc7d085971335201cf7a3df7cd23f908a219c61291d7090258e3159f"
+      },
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.statement": {
+        "bytes": 20,
+        "sha256": "bcd3fba091055c602d106d5002dcd59d415248de88858af19a7037b876bc415e"
+      }
+    }
+  },
+  "binding": {
+    "allowed_competing_PIDs": [],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "frozen": {
+      "simulation": "no-real-model"
+    },
+    "gate_code_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "input_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "input_shape": [
+      32,
+      768,
+      1024
+    ],
+    "jobs": {
+      "prover": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/prover.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/prover.simulation-permit",
+          "--run-permit-sha256",
+          "ab263da22e967b167cfff03bc2151a068d396cc1018fe6bc4dd7870ae1f6f2e0"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": false,
+        "id": "SIMULATION-ONLY-prover",
+        "memory_gib": 1,
+        "seconds": 61
+      },
+      "verifier": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/verifier.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.proof",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/verifier.simulation-permit",
+          "--run-permit-sha256",
+          "71c790715d89c4ab2b85cc9c5c749756e4e96cbfc71363f094571fcbb458dea5"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/independent",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": true,
+        "id": "SIMULATION-ONLY-verifier",
+        "memory_gib": 1,
+        "seconds": 61
+      }
+    },
+    "output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output",
+    "permit_files": {
+      "prover": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/prover.simulation-permit",
+        "sha256": "ab263da22e967b167cfff03bc2151a068d396cc1018fe6bc4dd7870ae1f6f2e0"
+      },
+      "verifier": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/verifier.simulation-permit",
+        "sha256": "71c790715d89c4ab2b85cc9c5c749756e4e96cbfc71363f094571fcbb458dea5"
+      }
+    },
+    "records": {
+      "claim": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/execution-claims/SIMULATION-ONLY",
+      "stage": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp",
+      "supervisor_directory": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp"
+    },
+    "root": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp",
+    "run_id": "SIMULATION-ONLY",
+    "scope_approval": null,
+    "simulation": true,
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/independent"
+  },
+  "checks": [
+    {
+      "SIMULATION_resource_check": true
+    },
+    {
+      "SIMULATION_resource_check": true
+    }
+  ],
+  "full12_verified": false,
+  "prover": {
+    "PASS": true,
+    "RSS_group_limit_gib": 1,
+    "address_space_limit_gib": 1,
+    "binary_sha256": "33f1aa99afdd07395c05a91df6e210a72e1b097c4cf767330ab74c7688b3a20e",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/prover.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output",
+      "--blocks",
+      "12",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/anchor",
+      "--anchor-sha256",
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/manifest",
+      "--execute-full12",
+      "--memory-gib",
+      "1",
+      "--max-seconds",
+      "1",
+      "--disk-reserve-gib",
+      "64",
+      "--cpu-limit",
+      "4",
+      "--run-permit",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/prover.simulation-permit",
+      "--run-permit-sha256",
+      "ab263da22e967b167cfff03bc2151a068d396cc1018fe6bc4dd7870ae1f6f2e0"
+    ],
+    "cpu_affinity_limit": 4,
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp",
+    "deferred_termination_signals": [],
+    "disk_reserve_gib": 64,
+    "driver_output": "SIMULATION-ONLY-prover exit 0 expected 0 seconds 0.26\n\n",
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "environment_overrides": {
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "ZKGPT_THREADS": "4"
+    },
+    "exit_code": 0,
+    "expected_exit": 0,
+    "finally_cleanup": true,
+    "id": "SIMULATION-ONLY-prover",
+    "limiter_sha256": "14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351",
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/supervisor/SIMULATION-ONLY-prover.log",
+    "observed_process_group_peak_bytes": 1871872,
+    "seconds": 0.25679336301982403,
+    "shared_memory_reserve_gib": 32,
+    "started_utc": "2026-10-21T02:45:20.879326+00:00",
+    "stop_reason": null,
+    "supervisor_exception": null,
+    "time": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/supervisor/SIMULATION-ONLY-prover.time",
+    "timeout_seconds": 5,
+    "tracked_groups": [
+      3002390
+    ]
+  },
+  "run_id": "SIMULATION-ONLY",
+  "scope": "SIMULATION_ONLY",
+  "state": "VERIFIED",
+  "states": [
+    "PREPARED",
+    "AUTHORIZED",
+    "PREFLIGHT_PASS",
+    "PROVER_RUNNING",
+    "PROVER_SUCCESS",
+    "ARTIFACT_ADMITTED",
+    "VERIFIER_RUNNING",
+    "VERIFIED"
+  ],
+  "verifier": {
+    "PASS": true,
+    "RSS_group_limit_gib": 1,
+    "address_space_limit_gib": 1,
+    "binary_sha256": "62c183e1b65cd1a0c95d275b825237d126762bd1ac4f0b1a9a4503669a0916b2",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/verifier.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/output/model.proof",
+      "--blocks",
+      "12",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/anchor",
+      "--anchor-sha256",
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/manifest",
+      "--execute-full12",
+      "--memory-gib",
+      "1",
+      "--max-seconds",
+      "1",
+      "--disk-reserve-gib",
+      "64",
+      "--cpu-limit",
+      "4",
+      "--run-permit",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/verifier.simulation-permit",
+      "--run-permit-sha256",
+      "71c790715d89c4ab2b85cc9c5c749756e4e96cbfc71363f094571fcbb458dea5"
+    ],
+    "cpu_affinity_limit": 4,
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/independent",
+    "deferred_termination_signals": [],
+    "disk_reserve_gib": 64,
+    "driver_output": "SIMULATION-ONLY-verifier exit 0 expected 0 seconds 0.26\nSIMULATION ACCEPT\n",
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "environment_overrides": {
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "ZKGPT_THREADS": "4"
+    },
+    "exit_code": 0,
+    "expected_exit": 0,
+    "finally_cleanup": true,
+    "id": "SIMULATION-ONLY-verifier",
+    "limiter_sha256": "14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351",
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/supervisor/SIMULATION-ONLY-verifier.log",
+    "observed_process_group_peak_bytes": 1753088,
+    "seconds": 0.2576353740878403,
+    "shared_memory_reserve_gib": 32,
+    "started_utc": "2026-10-21T02:45:21.199908+00:00",
+    "stop_reason": null,
+    "supervisor_exception": null,
+    "time": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT-20261021/test-runs/serial-ly9wcsvp/supervisor/SIMULATION-ONLY-verifier.time",
+    "timeout_seconds": 5,
+    "tracked_groups": [
+      3002392
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "trusted-preprocess-v1",
+    "argv": [
+      "build/release/src/paper_r2/r5b_model_preprocess",
+      "data/gpt2_int",
+      "reports/R5B/engineering-model-manifest-v1.txt",
+      "reports/R5B/operator-trust-v1.anchor"
+    ],
+    "require_log": "ANCHOR_SHA256"
+  },
+  {
+    "id": "release-regression-v2",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "--output-on-failure",
+      "-j4"
+    ],
+    "require_log": "100% tests passed"
+  }
+]

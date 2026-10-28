@@ -1,0 +1,5 @@
+# P0-B真实oneblock恢复与保留
+
+完整包包含P0A574/P0B575项源码原件、源码及诊断patch、新/冻结生产二进制和依赖配置、全部120参数及126项Profile/anchor/manifest、原/新真实proof/statement、真实独立正负验证及诊断原始日志/time/资源和频率采样、运行脚本与历史基线引用。Windows按EVIDENCE_MANIFEST逐项恢复读取并核验SHA，两个source tar分别按各自源码SHA核验；原/新proof和statement再次逐字节比较。
+
+包外WINDOWS_ARCHIVE_VERIFICATION.json为最终归档核验回执，避免自引用。包内result的ARCHIVE_PENDING是制包时状态，最终是否PASS以同SHA包的包外Windows回执及FINAL_ACCEPTANCE.json为准。此归档不是permit，不转移历史scope，不授权P1/full12。本轮所有远端证据保留；没有删除授权。

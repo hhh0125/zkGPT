@@ -1,0 +1,9 @@
+# R6B gate recovery and retention
+
+Verify the container SHA and every member SHA/size against the separate receipt; consume gzip through EOF/CRC; actually restore and reread bytes. This stage archive contains all source, new parser ELF, compile/link command and SHA identities, synthetic public metadata fixtures, test programs and all successful/failing raw logs/results. It contains no valid full12 permit or actual proof. SIMULATION_ONLY records/ACCEPT are not cryptographic verification.
+
+Unchanged project source/dependencies/binaries/anchor/manifest are in Windows phase_b3_r6a_20261020/archives/03-R6A-final-evidence.tar.gz SHA57498e9926f81111bc9e1a476584fab18df379bdf383d37a8b50dc9da57f9828. Restore120parameter bytes through that archive PARAMETER_RESTORE_MAP and existing verified Windows CAS; no regeneration. Original5R6B prepare reports are carried unchanged here and remain in their earlier verified archive. Preserve all earlier receipts/archives.
+
+Source manifest pins new gate/parser/runtime bytes and records exact static link-input identities; the parser contains linked bytes and can be rebuilt using the frozen original source build, but rebuilt bytes/new OS/root require new identity/approval. This is not an OS image. Use compatible Linux runtime/recorded library identities. No SSH config/private key, Git metadata or credential archive. Never overwrite the protected main/active source during recovery.
+
+Run the lightweight suite only after reading scope; it creates harmless simulations and invalid SIMULATION permit fixtures, not model proofs. Production CLI has no simulation/alternate executable switch. The scope-draft is unapproved and must never be treated as permission. No runtime authorization, deletion or cleanup is granted by this recovery receipt. Future real run requires the separate A/B/C/D user approvals and fresh resource checks in READY_FOR_APPROVAL.

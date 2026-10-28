@@ -1,0 +1,4767 @@
+[
+  {
+    "case": "s2-multi-1",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6661500609479845,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.613644,
+      "cpu_user_seconds": 0.583802,
+      "cpu_system_seconds": 0.007942,
+      "proof_bytes_sent": 44344,
+      "peak_rss_kib": 14652,
+      "vector_msm_calls": 60,
+      "vector_msm_terms": 1028,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0890605,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.14982,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.12976,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0578813,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0574609,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.613292,
+      "cpu_user_seconds": 0.287451,
+      "cpu_system_seconds": 0.003832,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 14652,
+      "vector_msm_calls": 40,
+      "vector_msm_terms": 964,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.271534,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.130863,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.129778,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0582497,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0578485,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-registry-1",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.26612611301243305,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-registry",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.209894,
+      "cpu_user_seconds": 0.207153,
+      "cpu_system_seconds": 0.004061,
+      "proof_bytes_sent": 28978,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 32,
+      "vector_msm_terms": 768,
+      "max_vector_msm": 24,
+      "guard_payload_bytes": 0,
+      "core_payload_bytes": 0,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0563199,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-registry",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.254176,
+      "cpu_user_seconds": 0.18225,
+      "cpu_system_seconds": 0.007755,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 14652,
+      "vector_msm_calls": 32,
+      "vector_msm_terms": 768,
+      "max_vector_msm": 24,
+      "guard_payload_bytes": 0,
+      "core_payload_bytes": 0,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.145182,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-registry-1-padding-attack",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "padding-attack",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "registry row knowledge equation failed",
+    "passed": true,
+    "seconds": 0.3477385640144348,
+    "V_reason": "REJECT S2 registry row knowledge equation failed",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-2",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.5666420441120863,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.535796,
+      "cpu_user_seconds": 0.438485,
+      "cpu_system_seconds": 0.00406,
+      "proof_bytes_sent": 58812,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 88,
+      "vector_msm_terms": 1288,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0562775,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.18423,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.141677,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0585289,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0399403,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0580347,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0388492,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.538917,
+      "cpu_user_seconds": 0.43297,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 48,
+      "vector_msm_terms": 1160,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.145152,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.143926,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.141681,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0305064,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0399716,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0292454,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0388895,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-4",
+    "mode": "s2-multi",
+    "K": 4,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.7170187188312411,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.68333,
+      "cpu_user_seconds": 0.575375,
+      "cpu_system_seconds": 0.008047,
+      "proof_bytes_sent": 87748,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 144,
+      "vector_msm_terms": 1808,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0561064,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.257417,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.215875,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0518004,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0382345,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.0364086,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0361682,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0584453,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0380846,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.036491,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0361391,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.685528,
+      "cpu_user_seconds": 0.537871,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 64,
+      "vector_msm_terms": 1552,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.144061,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.217082,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.215834,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0302537,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0382455,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.0364138,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0361931,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0294278,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0381009,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.036491,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.036124,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc2-1",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6670589209534228,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.641369,
+      "cpu_user_seconds": 0.526708,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0560452,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.407225,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0133792,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0476595,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.056543,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.644076,
+      "cpu_user_seconds": 0.549334,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.143995,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.379013,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0033066,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0299373,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0297048,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc3-1",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.8169006607495248,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.765209,
+      "cpu_user_seconds": 0.629625,
+      "cpu_system_seconds": 0.003959,
+      "proof_bytes_sent": 107899,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 290,
+      "vector_msm_terms": 3572,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0562679,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.509412,
+          "P_wire_bytes": 76088,
+          "vector_msm_calls": 193,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0161146,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.048818,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0565344,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0465893,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.765564,
+      "cpu_user_seconds": 0.666352,
+      "cpu_system_seconds": 0.004014,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15156,
+      "vector_msm_calls": 100,
+      "vector_msm_terms": 1171,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.139802,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.49267,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 68,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00337754,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0295322,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0295619,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0294853,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-real-1",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6668244539760053,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.63855,
+      "cpu_user_seconds": 0.514583,
+      "cpu_system_seconds": 0.004083,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 15420,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0561341,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.410876,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0132145,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0467906,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0579031,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.63924,
+      "cpu_user_seconds": 0.553959,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15420,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.135882,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.382087,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00331665,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0294031,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0293056,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-registry-1-wrong-registry",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "wrong-registry",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.21598926605656743,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-rebind",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "rebind",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.2662030700594187,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-commitment-bytes",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "commitment-bytes",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.1816269550472498,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-wrong-object",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "wrong-object",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.181425872258842,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-wrong-generators",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "wrong-generators",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.18135932926088572,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-wrong-suite",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "wrong-suite",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.2161838272586465,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-wrong-shape",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "wrong-shape",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.19734561117365956,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-bad-registration",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "bad-registration",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "registry row knowledge equation failed",
+    "passed": true,
+    "seconds": 0.21598145086318254,
+    "V_reason": "REJECT S2 registry row knowledge equation failed",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-registry-1-untrusted-source",
+    "mode": "s2-registry",
+    "K": 1,
+    "attack": "untrusted-source",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "untrusted registry source/digest",
+    "passed": true,
+    "seconds": 0.16901159193366766,
+    "V_reason": "REJECT S2 untrusted registry source/digest",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-1-bad-evaluation",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "bad-evaluation",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 Schnorr equation failed",
+    "passed": true,
+    "seconds": 0.3665283927693963,
+    "V_reason": "REJECT A3 Schnorr equation failed",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-1-other-opening-commitment",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "other-opening-commitment",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 vector knowledge equation failed",
+    "passed": true,
+    "seconds": 0.36660555796697736,
+    "V_reason": "REJECT A3 vector knowledge equation failed",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-2-swap-handles",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "swap-handles",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "batch registry/handle/query binding mismatch",
+    "passed": true,
+    "seconds": 0.3164890371263027,
+    "V_reason": "REJECT S2 batch registry/handle/query binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-2-swap-query",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "swap-query",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "batch registry/handle/query binding mismatch",
+    "passed": true,
+    "seconds": 0.3666124027222395,
+    "V_reason": "REJECT S2 batch registry/handle/query binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-2-cross-batch",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "cross-batch",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "batch registry/handle/query binding mismatch",
+    "passed": true,
+    "seconds": 0.4165171701461077,
+    "V_reason": "REJECT S2 batch registry/handle/query binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-2-repeat-masks",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "repeat-masks",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "repeated public protocol masks rejected",
+    "passed": true,
+    "seconds": 0.3675762922503054,
+    "V_reason": "REJECT S2 repeated public protocol masks rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-1-opening-challenge",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "opening-challenge",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 Schnorr equation failed",
+    "passed": true,
+    "seconds": 0.36615139432251453,
+    "V_reason": "REJECT A3 Schnorr equation failed",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-1-order",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "order",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "sequence/label or receipt rejected",
+    "passed": true,
+    "seconds": 0.18119868775829673,
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-1-truncate",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "truncate",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "crypto truncated wire",
+    "passed": true,
+    "seconds": 0.3160292711108923,
+    "V_reason": "REJECT R7 crypto truncated wire",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-multi-1-incomplete",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "incomplete",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "EOF/transport failure",
+    "passed": true,
+    "seconds": 0.31673768209293485,
+    "V_reason": "REJECT R7 interactive EOF/transport failure",
+    "P_reason": "REJECT test deliberately incomplete opening"
+  },
+  {
+    "case": "s2-multi-1-old-csipa",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "old-csipa",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "A3 suite/version/public input mismatch",
+    "passed": true,
+    "seconds": 0.31639911606907845,
+    "V_reason": "REJECT A3 suite/version/public input mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-multi-1-registry-digest",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "registry-digest",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "batch registry/handle/query binding mismatch",
+    "passed": true,
+    "seconds": 0.31605573976412416,
+    "V_reason": "REJECT S2 batch registry/handle/query binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-zero-a-1",
+    "mode": "s2-zero-a",
+    "K": 1,
+    "attack": "",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "zero public vector unsupported: INCOMPLETE",
+    "passed": true,
+    "seconds": 0.2662644600495696,
+    "V_reason": "REJECT A3 zero public vector unsupported: INCOMPLETE",
+    "P_reason": "REJECT A3 zero public vector unsupported: INCOMPLETE"
+  },
+  {
+    "case": "s2-sc2-1-terminal-handle",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "terminal-handle",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.365923800971359,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc2-1-old-sc-backend",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "old-sc-backend",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.3164057992398739,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc2-1-factor-substitution",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "factor-substitution",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.31594378082081676,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc2-1-bad-endpoint",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "bad-endpoint",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.36650585988536477,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc2-1-bad-mul",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "bad-mul",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.3664085501804948,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc2-1-bad-recursion",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "bad-recursion",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.36629093810915947,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc2-1-sc-challenge",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "sc-challenge",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.33154379529878497,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc2-1-sc-order",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "sc-order",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label or receipt rejected",
+    "passed": true,
+    "seconds": 0.31587870325893164,
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc2-1-cross-session-terminal",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "cross-session-terminal",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "HiddenScalar session/role identity mismatch",
+    "passed": true,
+    "seconds": 0.3194176801480353,
+    "V_reason": "REJECT R7 HiddenScalar session/role identity mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc2-preflight-1-opening-valid-bad-sumcheck",
+    "mode": "s2-sc2-preflight",
+    "K": 1,
+    "attack": "opening-valid-bad-sumcheck",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.36578380409628153,
+    "V_reason": "PREFLIGHT_A3_VERIFIED\nREJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "PREFLIGHT_A3_VERIFIED\nREJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc3-1-terminal-handle",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "terminal-handle",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.36578434193506837,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc3-1-old-sc-backend",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "old-sc-backend",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.3658001432195306,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc3-1-factor-substitution",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "factor-substitution",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.36640125745907426,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc3-1-bad-endpoint",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "bad-endpoint",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.41657577082514763,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc3-1-bad-mul",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "bad-mul",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.41645647678524256,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc3-1-bad-recursion",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "bad-recursion",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.41633126186206937,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-sc3-1-sc-challenge",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "sc-challenge",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.3661191835999489,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc3-1-sc-order",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "sc-order",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label or receipt rejected",
+    "passed": true,
+    "seconds": 0.3663277719169855,
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-sc3-1-cross-session-terminal",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "cross-session-terminal",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "HiddenScalar session/role identity mismatch",
+    "passed": true,
+    "seconds": 0.3662909157574177,
+    "V_reason": "REJECT R7 HiddenScalar session/role identity mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-sc3-preflight-1-opening-valid-bad-sumcheck",
+    "mode": "s2-sc3-preflight",
+    "K": 1,
+    "attack": "opening-valid-bad-sumcheck",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.4164800653234124,
+    "V_reason": "PREFLIGHT_A3_VERIFIED\nREJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "PREFLIGHT_A3_VERIFIED\nREJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-real-1-wrong-weight",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "wrong-weight",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 vector knowledge equation failed",
+    "passed": true,
+    "seconds": 0.5665385420434177,
+    "V_reason": "REJECT A3 vector knowledge equation failed",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s2-real-1-wrong-registry",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "wrong-registry",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "unapproved registry identity/rebinding",
+    "passed": true,
+    "seconds": 0.2163718449883163,
+    "V_reason": "REJECT S2 unapproved registry identity/rebinding",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-real-1-wrong-activation",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "wrong-activation",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "A3 Schnorr equation failed",
+    "passed": true,
+    "seconds": 0.49814504897221923,
+    "V_reason": "REJECT A3 Schnorr equation failed",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-real-1-wrong-output",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "wrong-output",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.36668312596157193,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-real-1-terminal-handle",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "terminal-handle",
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent binding mismatch",
+    "passed": true,
+    "seconds": 0.3664804850704968,
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s2-real-1-wrong-claim",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "wrong-claim",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation failed",
+    "passed": true,
+    "seconds": 0.3663749140687287,
+    "V_reason": "REJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "REJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s2-real-1-incomplete",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "incomplete",
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "EOF/transport failure",
+    "passed": true,
+    "seconds": 0.41645909985527396,
+    "V_reason": "REJECT R7 interactive EOF/transport failure",
+    "P_reason": "REJECT test deliberately incomplete opening"
+  },
+  {
+    "case": "s2-multi-exact-session-replay",
+    "passed": true,
+    "expected_reason": "cross-session rejected",
+    "V_exit": 2,
+    "V_reason": "REJECT R7 interactive cross-session rejected"
+  },
+  {
+    "case": "s2-real-exact-session-replay",
+    "passed": true,
+    "expected_reason": "cross-session rejected",
+    "V_exit": 2,
+    "V_reason": "REJECT R7 interactive cross-session rejected"
+  },
+  {
+    "case": "verifier-forbidden-importreceipt",
+    "passed": true,
+    "expected_reason": "cannot import prover challenge/receipt/options",
+    "V_exit": 2,
+    "V_reason": "REJECT S2 verifier cannot import prover challenge/receipt/options"
+  },
+  {
+    "case": "verifier-forbidden-challenge1",
+    "passed": true,
+    "expected_reason": "cannot import prover challenge/receipt/options",
+    "V_exit": 2,
+    "V_reason": "REJECT S2 verifier cannot import prover challenge/receipt/options"
+  },
+  {
+    "case": "s2-multi-1-bench0",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.4165053362958133,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.393551,
+      "cpu_user_seconds": 0.363927,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 44344,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 60,
+      "vector_msm_terms": 1028,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0537323,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.10845,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.0774136,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0340933,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0341471,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.396467,
+      "cpu_user_seconds": 0.251628,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 40,
+      "vector_msm_terms": 964,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.16808,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.0782409,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.0773962,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0293467,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0326426,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-2-bench0",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.46621211618185043,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.453091,
+      "cpu_user_seconds": 0.410158,
+      "cpu_system_seconds": 0.011946,
+      "proof_bytes_sent": 58812,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 88,
+      "vector_msm_terms": 1288,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.054013,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.140763,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112488,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0337191,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0341464,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.033981,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344294,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.453977,
+      "cpu_user_seconds": 0.289441,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 48,
+      "vector_msm_terms": 1160,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.156206,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.112569,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112501,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0286958,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0341846,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0292019,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344412,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-4-bench0",
+    "mode": "s2-multi",
+    "K": 4,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.616813494823873,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.601586,
+      "cpu_user_seconds": 0.561465,
+      "cpu_system_seconds": 0.003982,
+      "proof_bytes_sent": 87748,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 144,
+      "vector_msm_terms": 1808,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0538709,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.214166,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.184038,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0339531,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0342927,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.034819,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0350727,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0338966,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344342,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0348312,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0346107,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.602337,
+      "cpu_user_seconds": 0.383654,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 15684,
+      "vector_msm_calls": 64,
+      "vector_msm_terms": 1552,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.153165,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.187014,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.18399,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0308153,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0343244,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.034847,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0351004,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0236296,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344734,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0348688,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0345632,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc2-1-bench0",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.566814832855016,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.533199,
+      "cpu_user_seconds": 0.509485,
+      "cpu_system_seconds": 0.007899,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0543567,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.30035,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00328136,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0354004,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0401174,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.536069,
+      "cpu_user_seconds": 0.359338,
+      "cpu_system_seconds": 0.003863,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.167064,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.28611,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00203819,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0353592,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0400846,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc3-1-bench0",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6668345280922949,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.651679,
+      "cpu_user_seconds": 0.641674,
+      "cpu_system_seconds": 0.007971,
+      "proof_bytes_sent": 107899,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 290,
+      "vector_msm_terms": 3572,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.054116,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.393745,
+          "P_wire_bytes": 76088,
+          "vector_msm_calls": 193,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00403909,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0397547,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0342216,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0344568,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.651586,
+      "cpu_user_seconds": 0.456194,
+      "cpu_system_seconds": 0.003985,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 100,
+      "vector_msm_terms": 1171,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.153641,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.393676,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 68,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00405499,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0398507,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.034355,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0308057,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-real-1-bench0",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.5166167831048369,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.50837,
+      "cpu_user_seconds": 0.490569,
+      "cpu_system_seconds": 0.003988,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0539777,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.283629,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00313638,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0343568,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0338818,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.509519,
+      "cpu_user_seconds": 0.351908,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.153441,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.271331,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00220315,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0344958,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0329491,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-1-bench1",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.4167970479466021,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.383905,
+      "cpu_user_seconds": 0.347398,
+      "cpu_system_seconds": 0.007986,
+      "proof_bytes_sent": 44344,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 60,
+      "vector_msm_terms": 1028,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0536288,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.106476,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.0776174,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0349415,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0343751,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.38462,
+      "cpu_user_seconds": 0.250564,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 40,
+      "vector_msm_terms": 964,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.154249,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.0787773,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.07762,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0304381,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0330526,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-2-bench1",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.4665551409125328,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.452613,
+      "cpu_user_seconds": 0.422813,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 58812,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 88,
+      "vector_msm_terms": 1288,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.053671,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.140751,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112262,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0339494,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0339249,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.033591,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344302,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.452342,
+      "cpu_user_seconds": 0.288373,
+      "cpu_system_seconds": 0.004061,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 48,
+      "vector_msm_terms": 1160,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.147764,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.112678,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112304,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0291389,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0339314,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0300802,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0344976,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-4-bench1",
+    "mode": "s2-multi",
+    "K": 4,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6169406790286303,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.599311,
+      "cpu_user_seconds": 0.560675,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 87748,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 144,
+      "vector_msm_terms": 1808,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0538826,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.214052,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.18557,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0342593,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0343048,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.0348844,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0352277,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0344519,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0350398,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0349614,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0347435,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.600005,
+      "cpu_user_seconds": 0.381627,
+      "cpu_system_seconds": 0.008207,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16128,
+      "vector_msm_calls": 64,
+      "vector_msm_terms": 1552,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.148305,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.186225,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.185577,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0302743,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0343469,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.0349232,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0352351,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0247317,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.035095,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0349684,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0347757,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc2-1-bench1",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.5670174979604781,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.514944,
+      "cpu_user_seconds": 0.491309,
+      "cpu_system_seconds": 0.011983,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16392,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0544372,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.281774,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00316822,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0343728,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0341459,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.518696,
+      "cpu_user_seconds": 0.354252,
+      "cpu_system_seconds": 0.004119,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16392,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.160154,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.269476,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00197438,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0345589,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0319117,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc3-1-bench1",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.6669784891419113,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.617476,
+      "cpu_user_seconds": 0.607321,
+      "cpu_system_seconds": 0.007991,
+      "proof_bytes_sent": 107899,
+      "peak_rss_kib": 16392,
+      "vector_msm_calls": 290,
+      "vector_msm_terms": 3572,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0538912,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.360849,
+          "P_wire_bytes": 76088,
+          "vector_msm_calls": 193,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00313333,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0341359,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0340412,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0341635,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.619465,
+      "cpu_user_seconds": 0.425044,
+      "cpu_system_seconds": 0.004048,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16392,
+      "vector_msm_calls": 100,
+      "vector_msm_terms": 1171,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.163183,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.360706,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 68,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00198989,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0342474,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0320956,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0318308,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-real-1-bench1",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.5168015598319471,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.503624,
+      "cpu_user_seconds": 0.484542,
+      "cpu_system_seconds": 0.016017,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16408,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0534025,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.272512,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00295458,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0343278,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0339679,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.504463,
+      "cpu_user_seconds": 0.345808,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16408,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.152624,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.268878,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0029185,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0344689,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0329415,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-1-bench2",
+    "mode": "s2-multi",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.4164603208191693,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.389906,
+      "cpu_user_seconds": 0.36137,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 44344,
+      "peak_rss_kib": 16448,
+      "vector_msm_calls": 60,
+      "vector_msm_terms": 1028,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0540757,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.105846,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.077044,
+          "P_wire_bytes": 7683,
+          "vector_msm_calls": 14,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0341985,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0337652,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.389717,
+      "cpu_user_seconds": 0.252523,
+      "cpu_system_seconds": 0.004008,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16448,
+      "vector_msm_calls": 40,
+      "vector_msm_terms": 964,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2368,
+      "core_payload_bytes": 896,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.155276,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.0779578,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.0770372,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0298965,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.032078,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-2-bench2",
+    "mode": "s2-multi",
+    "K": 2,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.46671637799590826,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.460427,
+      "cpu_user_seconds": 0.426391,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 58812,
+      "peak_rss_kib": 16472,
+      "vector_msm_calls": 88,
+      "vector_msm_terms": 1288,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.053909,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.144101,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112446,
+          "P_wire_bytes": 14917,
+          "vector_msm_calls": 28,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0345299,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0346667,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0338821,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0342777,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 2,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.461396,
+      "cpu_user_seconds": 0.291225,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16472,
+      "vector_msm_calls": 48,
+      "vector_msm_terms": 1160,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 4736,
+      "core_payload_bytes": 1792,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.162874,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.113954,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.112418,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 8,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0297752,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0347377,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0277029,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0343221,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-multi-4-bench2",
+    "mode": "s2-multi",
+    "K": 4,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 1.0182805419899523,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.973018,
+      "cpu_user_seconds": 0.934815,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 87748,
+      "peak_rss_kib": 16496,
+      "vector_msm_calls": 144,
+      "vector_msm_terms": 1808,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0890775,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.327605,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.312703,
+          "P_wire_bytes": 29385,
+          "vector_msm_calls": 56,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.0571884,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0576181,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.058393,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.0600134,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0573544,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0584896,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0588808,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0597997,
+          "P_wire_bytes": 6428,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-multi",
+      "K": 4,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.976804,
+      "cpu_user_seconds": 0.499406,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16496,
+      "vector_msm_calls": 64,
+      "vector_msm_terms": 1552,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 9472,
+      "core_payload_bytes": 3584,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.279612,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch0",
+          "wall_seconds": 0.310055,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "batch1",
+          "wall_seconds": 0.312702,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 16,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/batch0/0",
+          "wall_seconds": 0.057484,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/1",
+          "wall_seconds": 0.0576955,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/2",
+          "wall_seconds": 0.0584653,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch0/3",
+          "wall_seconds": 0.060064,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/0",
+          "wall_seconds": 0.0578056,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/1",
+          "wall_seconds": 0.0585887,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/2",
+          "wall_seconds": 0.0588839,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/batch1/3",
+          "wall_seconds": 0.0598441,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc2-1-bench2",
+    "mode": "s2-sc2",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.8678731978870928,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.821595,
+      "cpu_user_seconds": 0.808229,
+      "cpu_system_seconds": 0.012003,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16552,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0892429,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.447912,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00493114,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0575319,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0574508,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc2",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.823145,
+      "cpu_user_seconds": 0.427918,
+      "cpu_system_seconds": 0.00815,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16552,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.268251,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.448341,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00512077,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0578507,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0577423,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-sc3-1-bench2",
+    "mode": "s2-sc3",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 1.017905549146235,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.979515,
+      "cpu_user_seconds": 0.967759,
+      "cpu_system_seconds": 0.007947,
+      "proof_bytes_sent": 107899,
+      "peak_rss_kib": 16576,
+      "vector_msm_calls": 290,
+      "vector_msm_terms": 3572,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0887743,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.567036,
+          "P_wire_bytes": 76088,
+          "vector_msm_calls": 193,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00495891,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0583546,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0572572,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0349488,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-sc3",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.980689,
+      "cpu_user_seconds": 0.552341,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16576,
+      "vector_msm_calls": 100,
+      "vector_msm_terms": 1171,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 3744,
+      "core_payload_bytes": 1472,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.262453,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "committed-sumcheck",
+          "wall_seconds": 0.567306,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 68,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00505429,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0587355,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0577179,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-factor2/0",
+          "wall_seconds": 0.0241811,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  },
+  {
+    "case": "s2-real-1-bench2",
+    "mode": "s2-real",
+    "K": 1,
+    "attack": "",
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "passed": true,
+    "seconds": 0.5163851738907397,
+    "P_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "P",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.504868,
+      "cpu_user_seconds": 0.487268,
+      "cpu_system_seconds": 0.003994,
+      "proof_bytes_sent": 86629,
+      "peak_rss_kib": 16604,
+      "vector_msm_calls": 205,
+      "vector_msm_terms": 2308,
+      "max_vector_msm": 33,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.0539285,
+          "P_wire_bytes": 28828,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.280803,
+          "P_wire_bytes": 56097,
+          "vector_msm_calls": 140,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.00349469,
+          "P_wire_bytes": 2115,
+          "vector_msm_calls": 3,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.0343286,
+          "P_wire_bytes": 6544,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0338869,
+          "P_wire_bytes": 6555,
+          "vector_msm_calls": 13,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    },
+    "V_metrics": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "role": "V",
+      "mode": "s2-real",
+      "K": 1,
+      "registry_digest": "8898d16ea451e5fe5e556a8571ee5e557c26709a3f17681d444a475b2d22a650",
+      "seconds": 0.505135,
+      "cpu_user_seconds": 0.355294,
+      "cpu_system_seconds": 0,
+      "proof_bytes_sent": 0,
+      "peak_rss_kib": 16604,
+      "vector_msm_calls": 82,
+      "vector_msm_terms": 1045,
+      "max_vector_msm": 32,
+      "guard_payload_bytes": 2560,
+      "core_payload_bytes": 1024,
+      "witness_generation_included": false,
+      "cached_real_R6_fixture": true,
+      "C_W_model": "INCOMPLETE",
+      "scalar_multiplications": "NOT_COUNTED",
+      "joint_extraction": "UNPROVED",
+      "oneblock_status": "INCOMPLETE",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "registration",
+          "wall_seconds": 0.148548,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 32,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "real-FC-proof",
+          "wall_seconds": 0.268505,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 50,
+          "PC_total_N": 0,
+          "A3_folded_n": 0
+        },
+        {
+          "name": "S2/open/sumcheck-output/0",
+          "wall_seconds": 0.0021041,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1,
+          "A3_folded_n": 1
+        },
+        {
+          "name": "S2/open/sumcheck-factor0/0",
+          "wall_seconds": 0.034338,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        },
+        {
+          "name": "S2/open/sumcheck-weight/0",
+          "wall_seconds": 0.0310494,
+          "P_wire_bytes": 0,
+          "vector_msm_calls": 4,
+          "PC_total_N": 1024,
+          "A3_folded_n": 32
+        }
+      ]
+    }
+  }
+]

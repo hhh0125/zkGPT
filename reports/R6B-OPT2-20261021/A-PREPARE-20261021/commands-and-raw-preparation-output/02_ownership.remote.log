@@ -1,0 +1,352 @@
+src/neuralNetwork.cpp:2831: if(!r6_engineering_ || layer_num>3 || structure_only || pr.cc.w)throw std::invalid_argument("finite R6 witness supports at most3 blocks and no existing commitment");
+src/neuralNetwork.cpp:2833: if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
+src/prover.hpp:77:    std::unique_ptr<Fr[]> committed_witness_;
+src/prover.hpp:78:    std::vector<Fr> committed_witness_vector_;
+src/paper_r2/model_numerical_probe.cpp:13: std::vector<Fr> master(pr.cc.w,pr.cc.w+p.master.padded);auto children=gatherModelQueries(p,master);
+src/range_logup.cpp:120:    delete[] commitments;
+src/paper_r2/model_integrated.cpp:32: std::vector<Fr> master(pr.cc.w,pr.cc.w+plan.master.padded);
+src/paper_r2/r6_cli.hpp:37: // Shared cc.w/caller vector has one owner. Keep two EXTRA graph capacities
+src/paper_r2/model_source_probe.cpp:15: std::vector<Fr> master(pr.cc.w,pr.cc.w+plan.master.padded);
+src/range_prover.cpp:336:    delete[] f_comm;
+src/range_prover.cpp:337:    delete[] t_comm;
+src/range_prover.cpp:338:    delete[] c_comm;
+src/range_prover.cpp:339:    delete[] g_comm;
+src/range_prover.cpp:340:    delete[] h_comm;
+src/gkr_proof_builder.cpp:239:    // Input opening uses comm.w, commitments and r_u[0], not the Lasso
+src/gkr_proof_builder.cpp:805:    if (comm.w==nullptr)
+src/gkr_proof_builder.cpp:906:            Fr* read_1=p->lasso_mult_v.data(),*read_2=comm.w;
+src/gkr_proof_builder.cpp:948:            Fr* read_1=p->lasso_mult_v.data(),*read_2=comm.w,*write_1=folding.output1(),*write_2=folding.output2();
+src/gkr_proof_builder.cpp:997:            Fr* read_2=i==1 ? comm.w : folding.input2();
+src/gkr_proof_builder.cpp:1054:    eval_in=n==0 ? comm.w[0] : folding.input2()[0];
+src/gkr_proof_builder.cpp:1158:    if (!comm.w || !comm.comm || !comm.g)
+src/gkr_proof_builder.cpp:1177:    const HyraxFrWitnessView witness(comm.w,value_count);
+src/prover.cpp:1038:        committed_witness_vector_=std::move(owner);committed_witness_.reset();
+src/prover.cpp:1041:        cc.l=bits;cc.w=committed_witness_vector_.data();cc.ww=nullptr;
+src/prover.cpp:1047:                logAddress("shared_commit/published","cc.w",cc.w,padded_len*sizeof(Fr),"prover.vector");
+src/prover.cpp:1049:                logVector("shared_commit/published","committed_vector",committed_witness_vector_);
+src/prover.cpp:1103:    std::vector<Fr>().swap(committed_witness_vector_);
+src/prover.cpp:1104:    committed_witness_=std::move(witness_owner);
+src/prover.cpp:1111:    cc.w=dat;
+src/prover.cpp:1112:    cc.ww=nullptr;
+src/prover.cpp:1116:            "commit_input_cc_w_ready","cc.w",padded_len,sizeof(Fr));
+src/prover.cpp:1123:    // touched padding capacity here preserves cc.w and all witness values while
+src/prover.cpp:1131:            "commit_input_val0_compacted","cc.w",padded_len,sizeof(Fr));
+src/prover.cpp:1138:    if(cc.l<0 || cc.l>28 || committed_witness_vector_.empty() ||
+src/prover.cpp:1139:       committed_witness_vector_.size()!=(std::size_t(1)<<cc.l) || cc.w!=committed_witness_vector_.data())
+src/prover.cpp:1141:    return committed_witness_vector_;
+src/prover.cpp:1185:    logScalar(stage,"committed_witness_alive",bool(committed_witness_) || !committed_witness_vector_.empty());
+src/prover.cpp:1186:    logScalar(stage,"committed_legacy_array_alive",bool(committed_witness_));
+src/prover.cpp:1187:    logScalar(stage,"committed_shared_vector_alive",!committed_witness_vector_.empty());
+src/prover.cpp:1188:    logVector(stage,"committed_shared_vector",committed_witness_vector_);
+src/prover.cpp:1190:    if (committed_witness_) logAllocation(stage,"committed_witness",1ULL<<cc.l,sizeof(Fr));
+
+src/paper_r1/pc.cpp:80:Commitment commit(const PCSpec &s, const std::vector<Fr> &w) {
+src/paper_r1/pc.cpp:99:static Reduction reduce(const PCSpec &s, const Commitment &c, const std::vector<Fr> &r) {
+src/paper_r1/pc.cpp:115:static void statement(Fs &t, const PCSpec &s, const Commitment &c, const std::vector<Fr> &r,
+src/paper_r1/pc.cpp:126:OpenProof open(const PCSpec &s, const Commitment &c, const std::vector<Fr> &w,
+src/paper_r1/pc.cpp:127:               const std::vector<Fr> &r, Fs &t, const std::string &l) {
+src/paper_r1/pc.cpp:167:void verify(const PCSpec &s, const Commitment &c, const std::vector<Fr> &r, const OpenProof &p,
+src/hyrax.cpp:12:#include "thread_joiner.hpp"
+src/hyrax.cpp:96:    delete []used;
+src/hyrax.cpp:152:    delete []used;
+src/hyrax.cpp:262:        delete[] local_res; // Free thread-local storage
+src/hyrax.cpp:276:        if (th.joinable())
+src/hyrax.cpp:277:            th.join();
+src/hyrax.cpp:359:    delete[] used;
+src/hyrax.cpp:418:            if (th.joinable())
+src/hyrax.cpp:419:                th.join();
+src/hyrax.cpp:435:        delete []a;
+src/hyrax.cpp:436:        delete []g;
+src/hyrax.cpp:437:        delete []x;
+src/hyrax.cpp:467:G1* prover_commit(ll* w, G1* g, int l,int thread_n) //compute Tk, int version with pippenger
+src/hyrax.cpp:484:    for (auto &worker : workers) worker.join();
+src/hyrax.cpp:491:        delete [] W[i];
+src/hyrax.cpp:492:    delete []W;
+src/hyrax.cpp:496:G1* prover_commit(Fr* w, G1* g, int l, int thread_n)
+src/hyrax.cpp:510:    zkgpt::ThreadJoiner joiner(workers);
+src/hyrax.cpp:530:    joiner.join();
+src/hyrax.cpp:570:    delete[] RT;
+
+src/gkr_proof_builder.hpp:43:    double builder_check_time;
+src/gkr_proof_builder.cpp:5:#include "gkr_proof_builder.hpp"
+src/gkr_proof_builder.cpp:30:    if (!p) throw std::invalid_argument("GKR proof builder requires a prover");
+src/gkr_proof_builder.cpp:38:    prover_time=builder_check_time=0;
+src/gkr_proof_builder.cpp:250:    cout<<"GKR proof-builder local consistency-check time: "
+src/gkr_proof_builder.cpp:251:        <<builder_check_time<<"s"<<endl;
+src/gkr_proof_builder.cpp:693:                builder_check_time+=vtimer.elapse_sec();
+src/gkr_proof_builder.cpp:736:                        builder_check_time+=vtimer.elapse_sec();
+src/gkr_proof_builder.cpp:789:        builder_check_time+=vtimer.elapse_sec();
+src/gkr_proof_builder.cpp:1045:        builder_check_time+=vtimer.elapse_sec();
+src/gkr_proof_builder.cpp:1115:    builder_check_time+=vtimer.elapse_sec();
+src/gkr_proof_builder.cpp:1117:    fprintf(stderr, "GKR proof-builder consistency checks passed\n");
+src/paper_r2/protocol.cpp:7:#include "gkr_proof_builder.hpp"
+src/paper_r2/protocol.cpp:14:        s.input.master.spec.padded==(std::size_t(1)<<g.val0_log_size),"R2 master/GKR shape");
+src/paper_r2/protocol.cpp:15:    // Old GKR input binding uses row-major PC. New master may have either
+src/paper_r2/protocol.cpp:31:    const auto digest=opening.stateDigest();t.bytes("R2.GKR-master-opening",r1::Bytes(digest.begin(),digest.end()));
+src/paper_r2/protocol.cpp:38:std::vector<r1::CheckedInputClaim> mappedClaims(const layeredCircuit &c,const std::vector<GKRInputTerminalClaim> &claims) {
+src/paper_r2/protocol.cpp:55:Proof proveR2(::prover &pr,GKRPublicStatement &g,
+src/paper_r2/protocol.cpp:56:    const r1::LookupBatchSpec &s,const std::vector<Fr> &w,const std::vector<std::vector<Fr>> &children,const r1::LookupProgress &progress) {
+src/paper_r2/protocol.cpp:62:    GKRProofBuilder builder(&pr,pr.C,g.model_shape,g.val0_generator_domain,nullptr,&g.integration_context);
+src/paper_r2/protocol.cpp:63:    r1::require(&builder.C==&pr.C,"GKR builder must borrow actual circuit");
+src/paper_r2/protocol.cpp:64:    zkgpt::memory_diagnostics::logAddress("gkr/builder-created","builder_C_ref",&builder.C,0,"borrowed-prover.C");
+src/paper_r2/protocol.cpp:65:    zkgpt::memory_diagnostics::logAddress("gkr/builder-created","master_readonly",w.data(),w.capacity()*sizeof(Fr),"caller-const-ref");
+src/paper_r2/protocol.cpp:66:    builder.build();p.gkr=builder.proof();
+src/paper_r2/protocol.cpp:67:    const auto &actual=builder.publicStatement();
+src/paper_r2/protocol.cpp:76:    const auto r=r1::point(t,g.val0_log_size,"R2.common-master.point");
+src/paper_r2/protocol.cpp:77:    p.master_binding=r1::open(s.input.master.spec,s.input.master,w,r,t,"R2.new-master");
+src/paper_r2/protocol.cpp:80:        p.master_binding.value,old,"R2.GKR-master");
+src/paper_r2/protocol.cpp:96:    const auto r=r1::point(t,g.val0_log_size,"R2.common-master.point");
+src/paper_r2/protocol.cpp:97:    r1::verify(s.input.master.spec,s.input.master,r,p.master_binding,t,"R2.new-master");
+src/paper_r2/protocol.cpp:100:        p.master_binding.value,p.gkr_input_binding,old,"R2.GKR-master",&error);
+src/paper_r2/protocol.cpp:101:    r1::require(valid,"R2 GKR master bridge: "+error);
+
+INPUT
+2351: 
+2352: 
+2353: void neuralNetwork::refreshFCParam(const fconKernel &fc) {
+2354:     channel_in = fc.channel_in;
+2355:     channel_out = fc.channel_out;
+2356: }
+2357: 
+2358: i64 neuralNetwork::getFFTLen() const {
+2359:     return 1L << getFFTBitLen();
+2360: }
+2361: 
+2362: i8 neuralNetwork::getFFTBitLen() const {
+2363:     return 0;
+2364: }
+2365: 
+2366: 
+2367: void neuralNetwork::calcSizeAfterPool(const poolKernel &p) {
+2368: }
+2369: 
+2370: // 将输入的浮点数据转换为有限域元素，为后续的零知识证明计算做准备。
+2371: void neuralNetwork::calcInputLayer(layer &circuit) 
+2372: {
+2373:     if(r6Metadata()){const auto scale=search(0.01);input_e=scale.first;input_c=scale.second;return;}
+2374:     val[0].resize(circuit.size);
+2375: 
+2376:     if (val[0].size()!=static_cast<size_t>(total_in_size))
+2377:         throw std::logic_error("input layer witness size mismatch");
+2378:     auto val_0 = val[0].begin();
+2379: 
+2380:     if (structure_only) {
+2381:         for (auto &value : val[0]) value.clear();
+2382:         const auto scale=search(0.01);
+2383:         input_e=scale.first;
+2384:         input_c=scale.second;
+2385:         return;
+2386:     }
+2387: 
+2388:     if (const char *path=std::getenv("ZKGPT_PUBLIC_EMBEDDING")) {
+2389:         if (attn_dim!=768 || len!=32) throw std::runtime_error("embedding loader supports 32x768 only");
+2390:         for (auto &value:val[0]) value.clear();
+2391:         std::ifstream input(path); long long value;
+2392:         for (int row=0;row<32;++row) for (int col=0;col<768;++col) {
+2393:             if (!(input>>value)) throw std::runtime_error("invalid embedding integer count");
+2394:             val[0][row*1024+col]=Fr(value);
+2395:         }
+2396:         std::string extra; if (input>>extra) throw std::runtime_error("extra embedding input");
+2397:         const auto scale=search(0.01); input_e=scale.first; input_c=scale.second;
+2398:         return;
+2399:     }
+2400:     double num, mx = -10000, mn = 10000;
+2401:     vector<double> input_dat;
+2402:     int hidden=768;
+2403:     double random_input_abs = 350.0;
+2404:     if (const char *env = std::getenv("ZKGPT_RANDOM_INPUT_ABS")) {
+2405:         char *end=nullptr;errno=0;
+2406:         const double configured=std::strtod(env,&end);
+2407:         if(end==env || *end || errno==ERANGE || !std::isfinite(configured) ||
+2408:            configured<=0 || configured>std::numeric_limits<double>::max()/2)
+2409:             throw std::invalid_argument("invalid ZKGPT_RANDOM_INPUT_ABS");
+2410:         random_input_abs=configured;
+2411:     }
+2412:     for (i64 i=0;i<len;i++)
+2413:     {
+2414:         for(i64 j=0;j<hidden;j++)
+2415:         {
+2416:             //in >> num; 
+2417:             num = static_cast<double>(rand()) / static_cast<double>(RAND_MAX) * (2 * random_input_abs) - random_input_abs;
+2418:             // printf("input %d: %f\t", i*hidden+j, num);
+2419:             input_dat.push_back(num);
+2420:             mx = max(mx, num);
+2421:             mn = min(mn, num);
+2422:         }
+2423:     }
+2424:     pair<int,int> pm=search(0.01);  
+2425:     input_e=pm.first;
+2426:     input_c=pm.second;
+2427:     
+2428:     double sc=input_c*pow(2,input_e);
+2429:     // input_c=10,input_e=-10
+2430:     // printf("input scale: %f, c: %d, e: %d\n", sc, input_c, input_e);
+2431:     int k=0;
+2432:     for (i64 i=0;i<len;i++)
+2433:     {
+2434:         for(i64 j=0;j<hidden;j++)
+2435:         {
+STATEMENT_PARSER
+"""Trusted native decoding, followed by independent complete public-layout admission."""
+from pathlib import Path
+import subprocess,resource,json
+from r6b_common import *
+MODULUS=16798108731015832284940804142231733909759579603404752749028378864165570215949
+class Reader:
+    def __init__(self,b):self.b=b;self.at=0
+    def raw(self,n):
+        require(type(n) is int and 0<=n<=len(self.b)-self.at,'truncated/oversized wire field');v=self.b[self.at:self.at+n];self.at+=n;return v
+    def u(self):return int.from_bytes(self.raw(8),'little')
+    def blob(self):return self.raw(self.u())
+    def text(self):return self.blob().decode('ascii')
+    def fr(self):
+        v=int.from_bytes(self.raw(32),'little');require(v<MODULUS,'noncanonical Fr');return v
+    def pc(self):
+        spec=[self.text()]+[self.u() for _ in range(5)];n=self.u();require(n==spec[3],'PC rows');return spec,digest(self.raw(n*32))
+    def done(self):require(self.at==len(self.b),'trailing wire bytes')
+def decode_native(parser,statement,anchor=None,proof=None):
+    argv=[str(parser),'--admit' if anchor else '--decode',str(statement)]+([str(anchor)] if anchor else [])+([str(proof)] if proof else [])
+    def cap():resource.setrlimit(resource.RLIMIT_AS,(2<<30,2<<30));resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+    p=subprocess.run(argv,env=child_environment(),capture_output=True,text=True,timeout=600,preexec_fn=cap)
+    require(p.returncode==0,'trusted artifact decoder: '+p.stderr[:512]);v=json.loads(p.stdout);require(v['decoded'] and not v['cryptographic_verified'],'decoder result');return v
+def schema(plan):
+    constants=set();zero=[]
+    for region in plan['ranges']:
+        n=region['name'];reserve=20 if n.startswith('round_') and n.endswith('_q') else 10 if ((n.startswith(('layer_norm_','gelu_')) and n.endswith('_y')) or (n.startswith('softmax_') and n.endswith('_sumE'))) else 0
+        if reserve:at=region['offset']-reserve;constants.add(at);zero.extend(range(at+1,at+reserve))
+    require(len(constants)==96,'full12 constant coverage');return sorted(constants),zero
+def inspect_statement(statement,parser,anchor,plan_file,proof=None):
+    statement=Path(statement);b=read_regular(statement,16<<20);before=digest(b)
+    native=decode_native(parser,statement,anchor,proof);require(file_sha(statement,16<<20)==before,'statement replacement during decode')
+    plan=json_read(plan_file);r=Reader(b);require(r.text()=='ZKGPTR2' and r.u()==3 and r.text()=='statement','R2 header');require(r.u()==2,'GKR protocol')
+    require([r.u() for _ in range(6)]==[32,12,12,64,768,3072],'full12 shape');require(r.u()==28 and r.text()=='zkGPT/main' and r.u()==16384,'master GKR dimensions')
+    require(r.raw(32).hex()==plan['circuit'] and r.fr()==0,'circuit/output identity');integration=r.raw(32).hex();require(integration!='00'*32,'zero integration context')
+    require(r.u()==16384,'GKR PC rows');r.raw(16384*32);lookup=r.blob();r.done();s=Reader(lookup)
+    require(s.text()=='ZKGPTR1' and s.u()==1 and s.u()==12,'lookup header')
+    anchor_lines=read_regular(anchor,2<<20).decode().splitlines();context='R6-R5B-engineering-candidate-NOT-PAPER-APPROVED/'+anchor_lines[5]+'/'+plan['circuit']
+    require(anchor_lines[1]=='r5b-engineering-candidate-v1' and anchor_lines[2]==plan['profile_sha256'] and anchor_lines[4]==plan['circuit'],'anchor Profile/circuit')
+    require(s.text()==context,'model/Profile/context mismatch')
+    master,_=s.pc();require(master==['r2/model/master',plan['master_actual'],plan['master_padded'],16384,16384,1],'master layout')
+    require(s.u()==len(plan['children']),'children coverage')
+    for child in plan['children']:
+        pc,pcsha=s.pc();require(pc==[child['role'],child['actual'],child['padded'],child['rows'],child['columns'],0],'child layout')
+        spans=child['spans'];require(s.u()==len(spans),'child source span count')
+        for span in spans:require([s.u(),s.u(),s.raw(32).hex()]==[span['offset'],span['count'],span['bias']],'child master coordinates/bias')
+        if child['role']=='r2/model/W':require(pcsha==digest(b''.join(bytes.fromhex(x) for x in anchor_lines[8:])),'full W anchor row identity')
+    constants,zero=schema(plan);require(s.u()==65536+len(constants)+len(zero),'complete public coordinates count')
+    x=[]
+    for at in range(32768):
+        require(s.u()==at,'public X coordinate');v=s.fr();v=v if v<=MODULUS//2 else v-MODULUS;x.append(v)
+    xsha=validate_public_x(x);output=plan['connections'][-1]['output']
+    for at in range(32768):
+        require(s.u()==output+at,'public Y coordinate');v=s.fr();signed=v if v<=MODULUS//2 else v-MODULUS
+        require(-(1<<63)<=signed<(1<<63),'Y signed64 domain');require(at%1024<768 or v==0,'Y padding')
+    for at in constants:require(s.u()==at and s.fr()==1,'numeric public constant')
+    for at in zero:require(s.u()==at and s.fr()==0,'reserved zero padding')
+    ranges=[(i,c['role']) for i,c in enumerate(plan['children']) if c['role'].startswith('r2/model/range/')]
+    # Derive each group's width from its role/order and the registered numeric spans;
+    # registry grouping is ordered by (bits,signed), with duplicate widths allowed.
+    groups=sorted(set((q['bits'],q['signed']) for q in plan['ranges']))
+    require(len(groups)==len(ranges) and s.u()==len(ranges),'Range coverage')
+    for (index,role),(bits,_) in zip(ranges,groups):require([s.u(),s.text(),s.u()]==[index,role,bits],'Range identity/width')
+    ti=next(j for j,c in enumerate(plan['children']) if c['role']=='r2/model/Exp-t');ei=ti+1
+    require(s.u()==1 and [s.u(),s.u(),s.text(),s.u()]==[ti,ei,'r2/model/Exp',1],'Exp identity/profile');s.done()
+    return {'X_sha256':xsha,'statement_sha256':before,'statement_bytes':len(b),'anchor_W_equal':True,'shape':[32,12,12,64,768,3072],'context':context,'integration_context':integration,'integration_context_crypto_check':'deferred to actual independent verifyR2','proof_decoded':native['proof_decoded'],'cryptographic_verified':False}
+def artifact_admission(policy):
+    statement=Path(policy['output'])/'model.statement';proof=Path(policy['output'])/'model.proof'
+    require(statement.stat().st_size>0 and proof.stat().st_size>0,'empty artifacts')
+    hashes={str(p):{'sha256':file_sha(p,64<<20),'bytes':p.stat().st_size} for p in [statement,proof]}
+    result=inspect_statement(statement,policy['parser'],policy['anchor'],policy['plan'],proof)
+    require(all(file_sha(p,64<<20)==row['sha256'] for p,row in hashes.items()),'artifact changed during admission')
+    return {'files':hashes,'statement':result,'cryptographic_verified':False}
+
+CLI
+"""Frozen R6B external gate. No production simulation CLI or approval issuer."""
+from pathlib import Path
+import os,datetime,sys,json,argparse,uuid,signal
+if __name__=='__main__':
+    if Path(__file__).resolve().parent!=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021'):raise RuntimeError('fixed gate location required')
+    sys.path.insert(0,str(Path(__file__).resolve().parent))
+from r6b_common import *
+from r6b_contract import validate_contract,binding_for,check_approval
+
+def execute_serial(policy,approval_file,approval_pin,jobs,permits,pins,supervisor,preflight,admit):
+    approval_record=pinned_json(approval_file,approval_pin)
+    validate_contract(policy,jobs,permits,pins)
+    binding=binding_for(policy,jobs,permits,pins);check_approval(approval_record,binding)
+    stage=Path(policy['stage']);root=Path(policy['root'])
+    for path in [policy['output'],policy['verifier_cwd']]:
+        target=path_under(path,root);require(not target.exists(),'existing output/independent cwd')
+    logs=Path(policy.get('supervisor_directory',policy['stage']+'/execution-supervision'))/'supervisor'
+    path_under(logs,root)
+    for job in jobs.values():
+        for suffix in ['.log','.time','.json','-supervision.json']:
+            file=path_under(logs/(job['id']+suffix),root);require(not file.exists(),'preexisting log/result filename')
+    # Persistent atomic claims, never removed even on failure. Existing prepare ID
+    # is expected; an execution claim for it is never reusable.
+    base=stage/'execution-claims';path_under(base,root);base.mkdir(exist_ok=True)
+    used=stage/'approval-consumed';path_under(used,root);used.mkdir(exist_ok=True)
+    attempt=base/policy['run_id'];attempt.mkdir(mode=0o700,exist_ok=False)
+    write_new(used/approval_pin,{'run_id':policy['run_id'],'approval_sha256':approval_pin})
+    result={'run_id':policy['run_id'],'state':None,'states':[],'full12_verified':False,'scope':'FULL12' if policy['production'] else 'SIMULATION_ONLY','approval_sha256':approval_pin,'binding':binding,'checks':[]}
+    def transition(state):
+        result['state']=state;result['states'].append(state)
+        write_new(attempt/(str(len(result['states'])).zfill(2)+'-'+state+'.json'),{'state':state,'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'scope':result['scope']})
+    def fresh(mode):
+        validate_contract(policy,jobs,permits,pins)
+        require(file_sha(approval_file)==approval_pin,'approval replaced')
+        for binary_mode in ['prover','verifier']:require(file_sha(policy['binaries'][binary_mode]['path'])==policy['binaries'][binary_mode]['sha256'],'binary SHA changed')
+        result['checks'].append(preflight({**policy,'phase_mode':mode}))
+    try:
+        transition('PREPARED');transition('AUTHORIZED');fresh('prover');transition('PREFLIGHT_PASS')
+        transition('PROVER_RUNNING');pr=supervisor.run(jobs['prover']);result['prover']=pr
+        require(pr.get('exit_code')==0 and not pr.get('stop_reason') and not pr.get('supervisor_exception'),'Prover failed/stopped; Verifier forbidden')
+        transition('PROVER_SUCCESS')
+        for name in ['model.statement','model.proof']:
+            file=path_under(Path(policy['output'])/name,root);require(file.is_file() and file.stat().st_size>0,'missing/empty artifact')
+        result['artifacts']=admit(policy);fresh('verifier')
+        for file,row in result['artifacts']['files'].items():require(file_sha(file,64<<20)==row['sha256'],'admitted artifact replaced')
+        require(not Path(policy['verifier_cwd']).exists(),'independent cwd collision before dispatch')
+        transition('ARTIFACT_ADMITTED');transition('VERIFIER_RUNNING');vr=supervisor.run(jobs['verifier']);result['verifier']=vr
+        if vr.get('stop_reason') or vr.get('supervisor_exception'):raise GateError('Verifier stopped/monitor failure')
+        if vr.get('exit_code')!=0:transition('REJECTED');result['failure']='Verifier nonzero; NOT classified as cryptographic rejection evidence'
+        else:
+            require(policy['expected_accept'] in read_regular(vr['log'],64<<20).decode().splitlines(),'Verifier exit0 without expected acceptance')
+            for file,row in result['artifacts']['files'].items():require(file_sha(file,64<<20)==row['sha256'],'artifact changed during verifier')
+            transition('VERIFIED');result['full12_verified']=bool(policy['production'])
+    except BaseException as error:
+        result['failed_after']=result['state'];result['failure']=type(error).__name__+': '+str(error);transition('ABORTED')
+    write_new(attempt/'RESULT.json',result);return result
+
+def main():
+    parser=argparse.ArgumentParser(description='R6B fixed-identity serial gate; no approval issuer or simulation CLI')
+    parser.add_argument('--execute',action='store_true');parser.add_argument('--approval',required=True);parser.add_argument('--approval-sha256',required=True);parser.add_argument('--acknowledge-manual-approval-boundary',action='store_true')
+    args=parser.parse_args();require(args.execute and args.acknowledge_manual_approval_boundary,'separate actual execution authorization required');require(sys.flags.isolated==1,'launch using python3 -I')
+    # Isolated Python removes script-directory imports; the trusted launcher below
+    # explicitly adds only its own fixed directory, never ambient PYTHONPATH.
+    from r6b_policy import production_policy
+    from r6b_resources import preflight
+    from r6b_artifacts import artifact_admission
+    from r6b_supervisor import LimitedSupervisor
+    policy=production_policy();approval=pinned_json(args.approval,args.approval_sha256)
+    bound=approval['binding'];policy['allowed_competing_PIDs']=bound['allowed_competing_PIDs']
+    from r6b_approval_tools import verify_scope
+    verify_scope(policy,bound['scope_approval']['path'],bound['scope_approval']['sha256'])
+    permits={m:bound['permit_files'][m]['path'] for m in ['prover','verifier']};pins={m:bound['permit_files'][m]['sha256'] for m in ['prover','verifier']}
+    def terminated(signum,frame):raise KeyboardInterrupt('external termination signal '+str(signum))
+    signal.signal(signal.SIGTERM,terminated);signal.signal(signal.SIGINT,terminated)
+    supervisor=LimitedSupervisor(Path(policy['stage'])/'execution-supervision',policy['helper'],policy['helper_sha'])
+    Path(supervisor.directory).mkdir(exist_ok=True)
+    result=execute_serial(policy,args.approval,args.approval_sha256,bound['jobs'],permits,pins,supervisor,preflight,artifact_admission)
+    print(json.dumps({'state':result['state'],'full12_verified':result['full12_verified']}));return 0 if result['full12_verified'] else 1
+
+if __name__=='__main__':
+    try:sys.exit(main())
+    except BaseException as error:
+        if isinstance(error,SystemExit):raise
+        try:
+            stage=Path(__file__).resolve().parent;folder=stage/'gate-refusals';folder.mkdir(exist_ok=True)
+            write_new(folder/(str(uuid.uuid4())+'.json'),{'state':'REFUSED_BEFORE_AUTHORIZED_DISPATCH','error':type(error).__name__+': '+str(error),'full12_started_by_gate':False})
+        except Exception:pass
+        print('GATE_REFUSED '+type(error).__name__+': '+str(error),file=sys.stderr);sys.exit(1)
+

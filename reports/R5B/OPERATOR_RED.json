@@ -1,0 +1,26 @@
+[
+  {
+    "cmd": [
+      "build/release/src/r5b_tests",
+      "round-boundaries"
+    ],
+    "exit": 0,
+    "expected": 0
+  },
+  {
+    "cmd": [
+      "build/release/src/r5b_tests",
+      "ln"
+    ],
+    "exit": 1,
+    "expected": 1
+  },
+  {
+    "cmd": [
+      "build/release/src/r5b_tests",
+      "gelu"
+    ],
+    "exit": 1,
+    "expected": 1
+  }
+]

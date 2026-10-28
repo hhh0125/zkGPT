@@ -1,0 +1,65 @@
+MASTER_STATIC_PLAN {"N":16777216,"rows":4096,"columns":4096,"generators":4098,"generator_bytes":393408,"commitment_points":4096,"serialized_commitment_bytes":131072,"witness_bytes":536870912,"row_blind_bytes":131072,"row_msm_count":4096,"max_row_msm_bases":4097,"opening_cores_at_K4":5,"IPA_rounds_per_core":12,"full_master_operation_enabled":false}
+PASS fresh independent row blinds
+PASS PC identity includes commitment bytes
+PASS fresh independent row blinds
+PASS PC identity includes commitment bytes
+PASS fresh independent row blinds
+PASS PC identity includes commitment bytes
+PASS fresh independent row blinds
+PASS PC identity includes commitment bytes
+REJECT_REASON wrong witness length: R7 witness length mismatch
+PASS wrong witness length
+REJECT_REASON wrong suite: R7 wrong generator suite
+PASS wrong suite
+REJECT_REASON wrong generator: R7 generators differ from independently derived suite
+PASS wrong generator
+REJECT_REASON wrong generator derivation map mode: R7 exact MCL BN254 curve/encoding/map mode required
+PASS wrong generator derivation map mode
+REJECT_REASON wrong layout: R7 PC role/layout mismatch
+PASS wrong layout
+REJECT_REASON wrong rows/columns: R7 PC row/column mismatch
+PASS wrong rows/columns
+REJECT_REASON full Master cryptography remains resource gated: R7 PC dimensions/padding bound
+PASS full Master cryptography remains resource gated
+REJECT_REASON noncanonical point: noncanonical G1
+PASS noncanonical point
+REJECT_REASON random source failure: entropy source failed
+PASS random source failure
+PASS zero vector valid
+PASS canonical PC roundtrip
+REJECT_REASON trailing PC bytes: R7 crypto trailing bytes
+PASS trailing PC bytes
+REJECT_REASON cross-session hidden handle: R7 HiddenScalar session/role identity mismatch
+PASS cross-session hidden handle
+REJECT_REASON cross-batch hidden handle: R7 HiddenScalar session/role identity mismatch
+PASS cross-batch hidden handle
+PASS vacuous linear relation rejected before interaction
+input size: 2^24
+Total input size: 2^24
+layer_id: 24
+PASS offline envelope cannot import prover challenge/receipt
+REJECT_REASON offline receipt: UNIMPLEMENTED HidingPC offline verification unavailable; local research requires live independent verifier state
+LOCAL_CRYPTO_TESTED HidingPC unit arithmetic only; opening/session tests required separately
+	Command being timed: "build/release/src/paper_r7/r7_crypto_tests"
+	User time (seconds): 3.97
+	System time (seconds): 0.23
+	Percent of CPU this job got: 190%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.21
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 431084
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 131004
+	Voluntary context switches: 2
+	Involuntary context switches: 15
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

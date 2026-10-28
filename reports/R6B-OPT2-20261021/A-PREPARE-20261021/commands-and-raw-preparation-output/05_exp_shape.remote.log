@@ -1,0 +1,48 @@
+src/exp_table_values.inc 6891 [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+raw 821dfeefe7de13b5360d57edf3178c7782de68632c7359fb6b37e5d7495d59ab clamp 821dfeefe7de13b5360d57edf3178c7782de68632c7359fb6b37e5d7495d59ab
+src/paper_r1/exp_table.inc 8192 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+raw 1512c3a6be872285a1f51dea8d5356e5a345072692bb316b3dd7a8fb05c1e8b1 clamp 062c686f919b356c9f8c47acada933bc2683c13ac8886a0cb881239e807f21dc
+#include "exp_lookup.hpp"
+#include "range_logup.hpp"
+#include "range_sumcheck.hpp"
+#include "range_serialization.hpp"
+#include "hyrax_opening.hpp"
+#include "sparse_opening.hpp"
+#include <cybozu/sha2.hpp>
+#include <chrono>
+#include <iostream>
+#include <set>
+namespace {
+const std::uint32_t activeTable[]={
+#include "exp_table_values.inc"
+};
+static_assert(sizeof(activeTable)/sizeof(activeTable[0])==kExpTailStart,"table size");
+void require(bool b,const std::string &e) { if(!b) throw std::runtime_error(e); }
+size_t log2exact(size_t n) { require(n && !(n&(n-1)),"exp power-of-two size");size_t l=0;while(n>1){n>>=1;++l;}return l; }
+size_t padded(size_t n) {size_t p=1;while(p<n)p*=2;return p;}
+std::vector<Fr> point(Transcript &t,size_t l) {std::vector<Fr> r;while(l--)r.push_back(t.challenge("exp.point"));return r;}
+Fr mle(std::vector<Fr> v,const std::vector<Fr> &r) { for(auto &x:r){ for(size_t i=0;i<v.size()/2;i++)v[i]=v[2*i]*(Fr(1)-x)+v[2*i+1]*x;v.resize(v.size()/2);} require(v.size()==1,"exp MLE dimensions");return v[0]; }
+void appendComm(Transcript &t,const std::vector<std::vector<std::vector<G1>>> &c){t.appendU64("vectors",c.size());for(auto &a:c){require(a.size()==1,"exp commitment layout");t.appendU64("rows",a[0].size());for(auto &g:a[0])t.appendG1("commitment",g);}}
+RangePublicStatement sparseLayout(const RangePublicStatement &s,const std::vector<ExpQueryPosition> &q) {
+    RangePublicStatement o=s; o.queries.clear();o.regions.clear();size_t n=padded(q.size());
+    o.queries={{32,q.size(),n,{}},{32,q.size(),n,{}}};
+    for(size_t col=0;col<2;col++)for(size_t i=0;i<q.size();) {
+        size_t idx=col?q[i].E_witness_index:q[i].t_witness_index,k=1;
+        while(i+k<q.size() && (col?q[i+k].E_witness_index:q[i+k].t_witness_index)==idx+k)++k;
+        o.regions.push_back({WitnessKind::SOFTMAX,"exp",idx,k,32,false,col,i});i+=k;
+    } return o;
+}
+Transcript start(const RangePublicStatement &s,const ExpLookupProof &p,const Fr &context) {
+    Transcript t("zkGPT.exp-lookup.v4"); t.appendFr("bound-context",context);
+    t.appendBytes("exp_table_id",p.exp_table_id.data(),32);t.appendU64("queries",p.query_count);
+    appendRangeStatement(t,s);appendComm(t,p.payload.chunk_commitments);return t;
+}
+// The reused Range codec serializes every LogUp scalar even when this slot
+// carries only a normalization sumcheck. MCL Fr's default constructor does
+// not initialize storage; explicitly zero the unused canonical shell.
+LogUpProof normalizationShell() {
+    LogUpProof p;
+    p.multiplicity_evaluation=Fr(0);p.reciprocal_sum=Fr(0);p.transcript_binding=Fr(0);
+    p.reciprocal_table_sumcheck.final_f_evaluation=Fr(0);
+    p.reciprocal_table_sumcheck.final_g_evaluation=Fr(0);
+  

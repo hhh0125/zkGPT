@@ -1,0 +1,10 @@
+# Integration rulings
+
+The first complete Release run passed 54/54. The true default-input witness failed the declared D<u96 domain (not an arithmetic wrap): row0 D=868979391129862304624640000000. This is a new exact rational-root representation, not the old R5A B. No proof was started.
+
+Extend candidate B to u96, D to u112 and positive sigma to u56. All coefficients, epsilon, n factors, rounding and parameter bytes remain identical. D<2^112 implies sigma<2^56; floor-root residuals<2sigma+1<2^57; output denominator=10sigma<2^60, and 2D_out<2^61 fits the retained u64 remainder bounds. B equality residual<2^154; 60000000*B<2^122; root equations<2^114; output bilinear residual<2^126, all below the existing >2^253 scalar modulus. Accepted-input host intermediates fit checked signed128. This is an explicit engineering domain extension, not a numerical constant approximation. The out-of-domain fixture is adjusted to 400000001 after extending the declared domain; its previous failure is retained.
+
+A new public-layout test exposed need_phase2=true on unary-only R5B layers, giving an absent v port. r5bFinish now derives this existing GKR switch from whether binary gates are present. The RED layout log is retained; no GKR protocol, challenge or serialization changes are made.
+
+
+The first combined attempt completed 13 Range Lasso groups and Exp Lasso, then rejected before GKR generation because the old Thaler FC routine requires both parent u/v evaluation points. The new linear-only round relation provided only one. A tiny actual-R5B four-FC GKR fixture reproduces this in milliseconds, before any large retry. Fix: retain a redundant exact degree-two row p²-p*A+p*bias=0 alongside A=p+bias; it exposes both real FC parent ports without changing numerical semantics, GKR, Lasso, transcript or wire code. Its residual is <2^220 under the existing trusted-W/affine bounds, below the >2^253 scalar modulus. Tiny GKR and public port tests must pass, then real GKR-only and regression/sanitizer gates and a fresh circuit-bound anchor precede any combined retry. The failed attempt and old anchor remain preserved.

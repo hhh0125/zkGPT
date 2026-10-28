@@ -1,0 +1,95 @@
+[
+  {
+    "id": "mapping-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/release"
+    ]
+  },
+  {
+    "id": "mapping-build",
+    "argv": [
+      "cmake",
+      "--build",
+      "build/release",
+      "--target",
+      "r5b_mapping_tests",
+      "-j6"
+    ]
+  },
+  {
+    "id": "mapping-small",
+    "argv": [
+      "build/release/src/paper_r2/r5b_mapping_tests",
+      "small"
+    ],
+    "require_log": "PASS preprocessing"
+  },
+  {
+    "id": "mapping-real",
+    "argv": [
+      "build/release/src/paper_r2/r5b_mapping_tests",
+      "real",
+      "reports/R5B/engineering-model-manifest-v1.txt",
+      "data/gpt2_int",
+      "reports/R5B/operator-trust-v1.anchor",
+      "f2feb14a31b316c3a32b35549bbeaed8ec4fc3f285f5eb79e75ddde8b9cb51b3"
+    ],
+    "require_log": "PASS real W preprocessing"
+  },
+  {
+    "id": "release-regression-final",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "--output-on-failure",
+      "-j4"
+    ],
+    "require_log": "100% tests passed"
+  },
+  {
+    "id": "sanitize-mapping-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/r5b-sanitize"
+    ]
+  },
+  {
+    "id": "sanitize-mapping-build",
+    "argv": [
+      "cmake",
+      "--build",
+      "build/r5b-sanitize",
+      "--target",
+      "r5b_mapping_tests",
+      "-j6"
+    ]
+  },
+  {
+    "id": "sanitize-mapping-small",
+    "argv": [
+      "build/r5b-sanitize/src/paper_r2/r5b_mapping_tests",
+      "small"
+    ],
+    "env": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "require_log": "PASS preprocessing"
+  },
+  {
+    "id": "gelu-error-certificate-final",
+    "argv": [
+      "python3",
+      "reports/R5B/error_certificate.py"
+    ],
+    "require_log": "continuous_error_upper_on_domain"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "original_draft_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/A-PREPARE-20261021/R6B_OPT2_SCOPE_UNAPPROVED.json",
+  "original_draft_sha256": "77e609a4453f36b2b9d533bbece444ab94d37e3816f7248a9491fd3792afa0a2",
+  "new_record_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-OPT2-20261021/scope-approved.json",
+  "new_record_sha256_calculated_only": "31d8806baeff9e316389d370b26e7147910e534cf4aac513e35057ede9dd1607",
+  "binding_identical": true,
+  "changed_fields": {
+    "kind": {
+      "before": "DRAFT-NOT-A-SCOPE-APPROVAL",
+      "after": "R6B-SCOPE-APPROVAL-v1"
+    },
+    "origin": {
+      "before": "UNAPPROVED",
+      "after": "MANUAL-USER-CONFIRMED"
+    },
+    "scope_evidence": {
+      "before": "",
+      "after": "我明确批准 zkGPT **R6B-OPT2 的 A 阶段运行范围**，唯一 ID 为 `R6B-OPT2-20261021-v1`。\n\n批准范围采用本轮冻结身份：\n\n- 源码树 SHA：`ff09226c16454a6060252a6fc61554a4b052dcf7926409d1f21edcfb7d9434f9`\n- 门禁 SHA：`6d14e86f97bb551381b0b4ef062f26232ca8cfde43b19fcfff4639ca141e6c0f`\n- Prover SHA：`9cbdd4529117d59d78328466f3101681ccedccf0309c9dfee4efba5c87687f95`\n- Verifier SHA：`8cda578918d9fdf4acb43e3f9bfc66fe2568a906232658563f4035788f7713c8`\n\nProfile、full12 circuit、W anchor、manifest、全部120份参数、Exp表和32768项公共X均保持已冻结值。\n\n批准的候选运行限制为：Prover 96 GiB/28800秒、Verifier 96 GiB/14400秒；外层各增加60秒用于收尾；CPU affinity为4；至少保留32 GiB共享可用内存和64 GiB磁盘；只允许一次串行尝试，失败即停，不自动重试。\n\n运行前不得豁免未经协调的大型并发任务，也不得修改输入、Profile、证明约束或预算。\n\n**本次仅授权创建 A 阶段的 `scope-approved.json` 记录，不授权执行 B/C/D。**\n\n请先核实草案与全部实际文件身份一致，再创建批准记录，并向我返回：\n\n1. `scope-approved.json` 的完整原文。\n2. 该文件实际 SHA-256。\n3. 与原草案相比的字段差异。\n4. 当前 A/B/C/D 状态。\n\n在我独立审核并确认新的 SCOPE_SHA 前，不得生成两份 permit。\n\n本次禁止启动 full12 witness、Prover 或 Verifier，也不得自行生成任何用户许可 SHA 批准证据。"
+    }
+  }
+}

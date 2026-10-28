@@ -1,0 +1,72 @@
+{
+  "status": "FAILED",
+  "oneblock_status": "INCOMPLETE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "full_prover_success": false,
+  "full_verifier_accept": false,
+  "payload_sha256": "909e87dca037ca7eb8db7e0f1c3faa0a8ed615b4e095f7967708853e74a25143",
+  "execution_commit": "a7680ab1f7cd6deba039be0feb6d4fb0d5883528",
+  "execution_git_status": "M src/paper_r7/CMakeLists.txt\n M src/paper_r7/hyrax_a3.cpp\n M src/paper_r7/hyrax_a3.hpp\n M tools/r7_sync_safety.py\n M tools/run_remote.py\n?? R7_ONEBLOCK_PLAN.md\n?? src/paper_r7/oneblock_gkr.cpp\n?? src/paper_r7/oneblock_gkr.hpp\n?? src/paper_r7/oneblock_gkr_tests.cpp\n?? src/paper_r7/oneblock_lookup.cpp\n?? src/paper_r7/oneblock_lookup.hpp\n?? src/paper_r7/oneblock_lookup_tests.cpp\n?? src/paper_r7/oneblock_model.cpp\n?? src/paper_r7/oneblock_model.hpp\n?? src/paper_r7/oneblock_model_tests.cpp\n?? src/paper_r7/oneblock_plan.cpp\n?? src/paper_r7/oneblock_plan.hpp\n?? src/paper_r7/oneblock_plan_main.cpp\n?? src/paper_r7/oneblock_plan_tests.cpp\n?? src/paper_r7/oneblock_sumcheck.cpp\n?? src/paper_r7/oneblock_sumcheck.hpp\n?? src/paper_r7/oneblock_vectors.cpp\n?? src/paper_r7/oneblock_vectors.hpp\n?? tools/remote_oneblock.py",
+  "error": "build failed",
+  "events": [
+    {
+      "label": "engineering",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4213901050388813,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T014528Z/engineering.log"
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1196238989941776,
+      "passed": true,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T014528Z/configure.log"
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_oneblock_plan",
+        "r7_oneblock_plan_tests",
+        "r7_oneblock_model_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_oneblock_gkr_tests",
+        "-j4"
+      ],
+      "exit_code": 2,
+      "seconds": 12.047909461893141,
+      "passed": false,
+      "log": "reports/R7-ONEBLOCK-RUN-20261027T014528Z/build.log"
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

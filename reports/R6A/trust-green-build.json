@@ -1,0 +1,27 @@
+{
+  "id": "trust-green-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_trust_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:14:51.181379+00:00",
+  "seconds": 6.333389677107334,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 8,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/trust-green-build.log",
+  "time": "logs/R6A/trust-green-build.time"
+}

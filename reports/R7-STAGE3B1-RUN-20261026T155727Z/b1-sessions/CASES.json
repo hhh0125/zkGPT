@@ -1,0 +1,605 @@
+[
+  {
+    "case": "s3b-run-4096",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "expected_reason": null,
+    "seconds": 4.972906241659075,
+    "wire": {
+      "frames": 306,
+      "bytes": 567763,
+      "max_frame_bytes": 131349
+    },
+    "P": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 4096,
+      "actual": 4096,
+      "master_id": "ebf53014e07ae20b3f438fab65ff9ccdd0d167f67aeff9fecaec8b9fe12bc36b",
+      "projection_id": "51a43b41ef172120007e75e583ead3d4fa7aa825925d0cc08be7d11ad05fdbc5",
+      "registered_rows": 4,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 131200,
+      "mask_seconds": 0.0616945,
+      "response_seconds": 0.00142718,
+      "registration_verify_seconds": 0.000518772,
+      "seconds": 4.90576,
+      "P_wire_bytes": 544386,
+      "wire_bytes": 567593,
+      "frames": 306,
+      "max_frame_bytes": 131349,
+      "peak_rss_kib": 483648,
+      "MSM_calls": 240,
+      "MSM_terms": 18730,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 0.0664646,
+          "P_wire_bytes": 133262,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.255479,
+          "P_wire_bytes": 70473,
+          "MSM_calls": 24
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.209079,
+          "P_wire_bytes": 70473,
+          "MSM_calls": 24
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.0388567,
+          "P_wire_bytes": 67828,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.563873,
+          "P_wire_bytes": 201621,
+          "MSM_calls": 184
+        }
+      ]
+    },
+    "V": {
+      "status": "LOCAL_CRYPTO_TESTED",
+      "N": 4096,
+      "actual": 4096,
+      "master_id": "ebf53014e07ae20b3f438fab65ff9ccdd0d167f67aeff9fecaec8b9fe12bc36b",
+      "projection_id": "51a43b41ef172120007e75e583ead3d4fa7aa825925d0cc08be7d11ad05fdbc5",
+      "registered_rows": 4,
+      "zero_tail_coordinates": 0,
+      "chunks": 1,
+      "response_payload_bytes": 131200,
+      "mask_seconds": 1.83e-07,
+      "response_seconds": 0.00190638,
+      "registration_verify_seconds": 0.0659708,
+      "seconds": 4.90795,
+      "P_wire_bytes": 0,
+      "wire_bytes": 567763,
+      "frames": 306,
+      "max_frame_bytes": 131349,
+      "peak_rss_kib": 481416,
+      "MSM_calls": 74,
+      "MSM_terms": 14462,
+      "max_MSM": 1024,
+      "oneblock_status": "INCOMPLETE",
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "full-registration",
+          "seconds": 0.132351,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-0",
+          "seconds": 0.190093,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "registered-opening-1",
+          "seconds": 0.209117,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "projection-registration",
+          "seconds": 0.105429,
+          "P_wire_bytes": 0,
+          "MSM_calls": 4
+        },
+        {
+          "name": "global-projection-bridge",
+          "seconds": 0.497385,
+          "P_wire_bytes": 0,
+          "MSM_calls": 58
+        }
+      ]
+    }
+  },
+  {
+    "case": "s3b-run-4096-chunk-order",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "chunk-order",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "sequence/label",
+    "seconds": 4.086638800799847,
+    "wire": {
+      "frames": 3,
+      "bytes": 1334,
+      "max_frame_bytes": 585
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-chunk-length",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "chunk-length",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 4.03579231724143,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-active-set",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "active-set",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.7851158529520035,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-timing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "timing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label",
+    "seconds": 3.7871091682463884,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-response",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "response",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.822479291819036,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-mask-reuse",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "mask-reuse",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "reused public row mask",
+    "seconds": 3.821394093334675,
+    "wire": {
+      "frames": 5,
+      "bytes": 2304,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT B1 reused public row mask",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-challenge",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "challenge",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.8709258399903774,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-master",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-master",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.8021479761227965,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-layout",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "layout",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.752434075810015,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-actual-length",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "actual-length",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.786757946945727,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-row-column",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "row-column",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.7840360668487847,
+    "wire": {
+      "frames": 2,
+      "bytes": 749,
+      "max_frame_bytes": 579
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-column-major",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "column-major",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.821937618777156,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-generator-set",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "generator-set",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "constrained row knowledge/zero-tail equation",
+    "seconds": 3.8211571858264506,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT B1 constrained row knowledge/zero-tail equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-opening-master",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "opening-master",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.8722603148780763,
+    "wire": {
+      "frames": 22,
+      "bytes": 137527,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 public statement/parent binding mismatch",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-old-suite",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "old-suite",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "expected_reason": "public statement/parent",
+    "seconds": 3.785212675575167,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 public statement/parent binding mismatch",
+    "P_reason": ""
+  },
+  {
+    "case": "s3b-run-4096-truncated",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "truncated",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "crypto truncated",
+    "seconds": 3.847191479988396,
+    "wire": {
+      "frames": 5,
+      "bytes": 2303,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 crypto truncated wire",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-bad-point",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "bad-point",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "canonical",
+    "seconds": 3.837606149725616,
+    "wire": {
+      "frames": 5,
+      "bytes": 2304,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT noncanonical G1",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-bad-scalar",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "bad-scalar",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "canonical",
+    "seconds": 3.786270098760724,
+    "wire": {
+      "frames": 7,
+      "bytes": 133839,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "REJECT noncanonical Fr",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-trailing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "trailing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "trailing bytes",
+    "seconds": 3.8720925878733397,
+    "wire": {
+      "frames": 7,
+      "bytes": 133840,
+      "max_frame_bytes": 131350
+    },
+    "V_reason": "REJECT R7 crypto trailing bytes",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-missing",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "missing",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "EOF/transport",
+    "seconds": 3.770913482643664,
+    "wire": {
+      "frames": 6,
+      "bytes": 2490,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 interactive EOF/transport failure",
+    "P_reason": "REJECT B1 deliberate missing chunk"
+  },
+  {
+    "case": "s3b-run-4096-early-complete",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "early-complete",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "sequence/label",
+    "seconds": 3.8372360221110284,
+    "wire": {
+      "frames": 4,
+      "bytes": 2031,
+      "max_frame_bytes": 697
+    },
+    "V_reason": "REJECT R7 interactive sequence/label or receipt rejected",
+    "P_reason": "REJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-gather-index",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "gather-index",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "public statement/parent",
+    "seconds": 4.338885645382106,
+    "wire": {
+      "frames": 97,
+      "bytes": 368459,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 public statement/parent binding mismatch",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-kernel",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-kernel",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "compressed linear relation",
+    "seconds": 4.572536820080131,
+    "wire": {
+      "frames": 147,
+      "bytes": 447056,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 Sigma compressed linear relation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nPROJECTION_INDEPENDENTLY_REGISTERED\nREJECT R7 Sigma compressed linear relation failed"
+  },
+  {
+    "case": "s3b-run-4096-wrong-claim",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-claim",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "A3 Schnorr equation",
+    "seconds": 4.1725339610129595,
+    "wire": {
+      "frames": 49,
+      "bytes": 208930,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT A3 Schnorr equation failed",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "s3b-run-4096-wrong-handle",
+    "mode": "s3b-run",
+    "N": 4096,
+    "attack": "wrong-handle",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "expected_reason": "HiddenScalar session/role",
+    "seconds": 3.870993852149695,
+    "wire": {
+      "frames": 21,
+      "bytes": 136548,
+      "max_frame_bytes": 131349
+    },
+    "V_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 HiddenScalar session/role identity mismatch",
+    "P_reason": "FULL_ROWS_AND_ZERO_TAIL_REGISTERED 4\nREJECT R7 interactive EOF/transport failure"
+  },
+  {
+    "case": "forbidden---challenge=1",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cannot import",
+    "V_reason": "REJECT B1 V cannot import prover challenge/receipt/options\n"
+  },
+  {
+    "case": "forbidden---import-receipt",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cannot import",
+    "V_reason": "REJECT B1 V cannot import prover challenge/receipt/options\n"
+  },
+  {
+    "case": "exact-session-replay",
+    "passed": true,
+    "V_exit": 2,
+    "expected_reason": "cross-session rejected",
+    "V_reason": "REJECT R7 interactive cross-session rejected\n"
+  }
+]

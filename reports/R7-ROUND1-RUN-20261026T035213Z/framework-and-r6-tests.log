@@ -1,0 +1,80 @@
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+    Start 29: r5b_FC_GKR_coupling
+1/5 Test #29: r5b_FC_GKR_coupling ..............   Passed    0.08 sec
+    Start 65: r6_builder_oneblock
+2/5 Test #65: r6_builder_oneblock ..............   Passed    1.69 sec
+    Start 70: r6_entry_guards
+3/5 Test #70: r6_entry_guards ..................   Passed    2.59 sec
+    Start 71: r6_system_resources
+4/5 Test #71: r6_system_resources ..............   Passed    0.00 sec
+    Start 72: r7_framework
+5/5 Test #72: r7_framework .....................***Failed    3.57 sec
+input size: 2^24
+Total input size: 2^24
+layer_id: 24
+PASS valid real R6 oneblock schema
+PASS wrong version
+PASS wrong circuit
+PASS wrong layout
+PASS wrong model
+PASS wrong profile
+PASS Full12 forbidden
+PASS wrong base master
+PASS wrong X size
+PASS wrong Y semantics
+PASS X padding
+PASS Y padding
+PASS unsigned signed64 overflow
+PASS canonical statement roundtrip
+PASS trailing bytes rejected
+PASS truncated statement rejected
+PASS oversize statement rejected
+PASS deterministic transcript
+PASS transcript binds public hidden Y
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS missing component fails closed
+PASS forged complete envelope cannot accept
+PASS cross statement proof rejected
+PASS base master never flattened to 2^30
+PASS independent auxiliary object identities
+FAIL Exp index range binds original t source
+
+
+80% tests passed, 1 tests failed out of 5
+
+Total Test time (real) =   7.93 sec
+
+The following tests FAILED:
+	 72 - r7_framework (Failed)
+Errors while running CTest
+Command exited with non-zero status 8
+	Command being timed: "ctest --test-dir build/release --output-on-failure -R ^(r7_framework|r6_builder_oneblock|r6_entry_guards|r5b_FC_GKR_coupling|r6_system_resources)$"
+	User time (seconds): 11.31
+	System time (seconds): 1.12
+	Percent of CPU this job got: 155%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.02
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 816664
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 2
+	Minor (reclaiming a frame) page faults: 662542
+	Voluntary context switches: 183
+	Involuntary context switches: 103
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 104
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 8

@@ -1,0 +1,112 @@
+{
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "child_argv_SHA256": {
+    "prover": "8c29719e8c21934ec8ca1b07292658fd4675295028c70af8c68d302b212b41a5",
+    "verifier": "81cf25df7892e1b457daec305b7d7cf87dbd0e800a2a71398f858f131a46f668"
+  },
+  "child_jobs": {
+    "prover": {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_prove",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-full12",
+        "--blocks",
+        "12",
+        "--trusted-anchor",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+        "--anchor-sha256",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "--model-manifest",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+        "--execute-full12",
+        "--memory-gib",
+        "96",
+        "--max-seconds",
+        "28800",
+        "--disk-reserve-gib",
+        "64",
+        "--cpu-limit",
+        "4",
+        "--run-permit",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/future-permits/prover.permit",
+        "--run-permit-sha256",
+        "0889376a4e4e2dc0dfc8009821b01aab224d5c994eb83e9063fbbafca21f5134"
+      ],
+      "cpu_limit": 4,
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "disk_reserve_gib": 64,
+      "expected_exit": 0,
+      "fresh_empty_cwd": false,
+      "id": "R6-FULL12-P0AB-20261021-v1-prover",
+      "memory_gib": 96,
+      "seconds": 28860
+    },
+    "verifier": {
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_verify",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-full12/model.statement",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-full12/model.proof",
+        "--blocks",
+        "12",
+        "--trusted-anchor",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+        "--anchor-sha256",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "--model-manifest",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+        "--execute-full12",
+        "--memory-gib",
+        "96",
+        "--max-seconds",
+        "14400",
+        "--disk-reserve-gib",
+        "64",
+        "--cpu-limit",
+        "4",
+        "--run-permit",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/future-permits/verifier.permit",
+        "--run-permit-sha256",
+        "82681c660409db57acda7c1de63c568ae59ce692e9794b51c621250dd1e19bf4"
+      ],
+      "cpu_limit": 4,
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-independent-empty",
+      "disk_reserve_gib": 64,
+      "expected_exit": 0,
+      "fresh_empty_cwd": true,
+      "id": "R6-FULL12-P0AB-20261021-v1-verifier",
+      "memory_gib": 96,
+      "seconds": 14460
+    }
+  },
+  "environment": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C",
+    "MALLOC_ARENA_MAX": "2",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PATH": "/usr/bin:/bin",
+    "TZ": "UTC",
+    "ZKGPT_THREADS": "4"
+  },
+  "gate_argv_SHA256": "49bdbbdcea790bfe76182d50a11957183ff5ec7ece5efc584f547b1105c1e7a2",
+  "gate_command": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/r6b_execution_gate.py",
+      "--execute",
+      "--approval",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/C-RECORD-20261022/C_PERMIT_APPROVAL.json",
+      "--approval-sha256",
+      "02e48eb04b4d4b04025aa295a690950fccab3d8e016c1c5a2f3a78b6bfc9c38e",
+      "--acknowledge-manual-approval-boundary"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work"
+  },
+  "note": "Exact frozen argv, unchanged official gate/supervisor; observer only records process/resource data."
+}

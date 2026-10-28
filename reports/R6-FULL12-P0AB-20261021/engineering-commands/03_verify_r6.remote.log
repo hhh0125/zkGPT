@@ -1,0 +1,33 @@
+ctest-current exit 0 expected 0 seconds 131.65
+70/70 Test #70: r6_system_resources .......................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 70
+
+Total Test time (real) = 131.51 sec
+schema-build exit 0 expected 0 seconds 3.28
+
+schema-current exit 0 expected 0 seconds 18.12
+REJECT-EXPECTED excess CPU option: R6 option exceeds bound
+REJECT-EXPECTED full12 execution without permit: R6 full12 execution requires separately authorized SHA-pinned run permit and explicit memory/time limits
+REJECT-EXPECTED wrong-circuit run permit: R6 run permit mismatch: circuit
+REJECT-EXPECTED wrong run permit pin: R6 independent run permit SHA256 mismatch
+PASS R6 actual full12 schema,trusted anchor,cross-layer W binding,options,26 negative checks; NO proof or full verifier
+full12-actual-builder-plan exit 0 expected 0 seconds 21.62
+++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+Total input size: 2^28
+layer_id: 277
+Circuit Builder time (including structure-only witness construction, subset and validation): 6.83991s
+PASS R6 actual builder metadata,zero field witness,no proof
+r6-oneblock-smoke-prover exit 0 expected 0 seconds 317.92
+[ZKGPT_MEM] stage=input_opening_after_ipa vmsize_kib=3975376 vmrss_kib=3425972 vmhwm_kib=4206484 process_peak_rss_kib=4206484
+PHASE bridge/end seconds=268.751
+PHASE input/begin seconds=268.751
+PHASE input/end seconds=292.627
+GENERATED R6 blocks=1; independent verification required; OPERATOR-TRUSTED candidate only
+r6-oneblock-smoke-independent exit 0 expected 0 seconds 54.12
+PHASE bridge/begin
+PHASE bridge/end
+PHASE input/begin
+PHASE input/end
+ACCEPT R6 blocks=1 GKR+production Lasso+bridge+unified input,externally OPERATOR-TRUSTED W; candidate only
+R6_COMPATIBILITY_PASS; SMOKE ONLY; FULL12 NOT STARTED

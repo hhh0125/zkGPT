@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O2",
+    "-DR1_VERIFY_ONLY",
+    "-DMCLBN_NO_AUTOLINK",
+    "-DMCL_NO_AUTOLINK",
+    "-DMCL_USE_LLVM=1",
+    "-Isrc/paper_r2",
+    "-Isrc",
+    "-Isrc/paper_r1",
+    "-Ideps/cnpy/include",
+    "-I3rd/mcl/include",
+    "reports/R6B-OPT2-20261021/r6b_statement_parser.cpp",
+    "-o",
+    "reports/R6B-OPT2-20261021/r6b_statement_parser",
+    "build/release/src/paper_r2/libpaper_r2_verifier.a",
+    "build/release/src/libgpt_lib.a",
+    "deps/cnpy/lib/libcnpy.a",
+    "-lz",
+    "build/release/src/paper_r1/libpaper_r1_verifier.a",
+    "build/release/lib/libmclbn256.so.1.74",
+    "build/release/lib/libmcl.so.1.74",
+    "-lpthread",
+    "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib"
+  ],
+  "exit": 0
+}

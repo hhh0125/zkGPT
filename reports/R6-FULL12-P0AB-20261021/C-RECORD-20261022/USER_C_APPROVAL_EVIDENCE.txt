@@ -1,0 +1,38 @@
+我明确批准 R6-FULL12-P0AB-20261021 的 C 阶段，授权批准以下两份 permit，但暂不授权 D 阶段运行。
+
+Prover permit SHA256：\
+0889376a4e4e2dc0dfc8009821b01aab224d5c994eb83e9063fbbafca21f5134
+
+Verifier permit SHA256：\
+82681c660409db57acda7c1de63c568ae59ce692e9794b51c621250dd1e19bf4
+
+A Scope SHA256：\
+98ec102dd2ee7fe3c649f33c5201a211344707a82dde07291be724357029a1e0
+
+A 批准记录 SHA256：\
+f4d20ca14007cc812aacd1da73a5ee4a8142a91ff0cca490b00a264eb99a08ff
+
+请执行：
+
+1. 重新计算两份 permit 的实际 SHA256，必须与上述值逐字节一致。
+2. 核对 permit 与已批准 A Scope、源码、Prover、Verifier、gate、Profile、120份参数、W anchor、manifest及12 blocks/277 layers/612 terminals身份完全匹配。
+3. 确认4CPU、Prover/Verifier各96GiB、28800/14400秒超时、32GiB有效内存与64GiB磁盘预留不变。
+4. 保持当前run_id范围内其他用户大型进程仅WARN的策略，不放宽硬资源限制。
+5. 通过检查后，按照既有审批机制生成C阶段批准记录，记录本条用户批准依据、两份permit的精确SHA和批准时间。不得伪造数字签名。
+6. 生成C阶段完成报告，提供批准记录SHA、permit最终状态、D阶段执行身份及待执行命令的只读预览。
+
+本轮完成C后立即停止。
+
+明确禁止：
+
+- 不执行full12 Prover。
+- 不执行full12 Verifier。
+- 不调用实际启动证明的supervisor或driver。
+- 不自动进入D阶段。
+- 不修改证明协议、Profile、模型参数或旧Scope。
+- 不重新生成与本次批准SHA不同的permit并自动批准。
+- 不启动P1 MSM等其他优化。
+
+如果任何SHA或绑定身份不一致，立即停止并报告差异，不得自行修复后继续签署。
+
+C完成后，把结果提交给我，等待D阶段单次正式执行授权。

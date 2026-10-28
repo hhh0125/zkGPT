@@ -1,0 +1,209 @@
+{
+  "approval_sha256": "4a8026aac979f1c2e99839a07a818f2b2c8b84cf301569b49ce59642013c6551",
+  "binding": {
+    "allowed_competing_PIDs": [],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "frozen": {
+      "simulation": "no-real-model"
+    },
+    "gate_code_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "input_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "input_shape": [
+      32,
+      768,
+      1024
+    ],
+    "jobs": {
+      "prover": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/prover.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/output",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/prover.simulation-permit",
+          "--run-permit-sha256",
+          "403f20aef3acdfbb396dc4fb94783585cb5e77f778277574c150849387bbcf3a"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": false,
+        "id": "SIMULATION-ONLY-prover",
+        "memory_gib": 1,
+        "seconds": 61
+      },
+      "verifier": {
+        "argv": [
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/verifier.py",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/output/model.statement",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/output/model.proof",
+          "--blocks",
+          "12",
+          "--trusted-anchor",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/anchor",
+          "--anchor-sha256",
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "--model-manifest",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/manifest",
+          "--execute-full12",
+          "--memory-gib",
+          "1",
+          "--max-seconds",
+          "1",
+          "--disk-reserve-gib",
+          "64",
+          "--cpu-limit",
+          "4",
+          "--run-permit",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/verifier.simulation-permit",
+          "--run-permit-sha256",
+          "091fc05ae6bdbb3690c96f2849a6011db98e5fa3d1e6b9bdcfb97155f9f21c35"
+        ],
+        "cpu_limit": 4,
+        "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/independent",
+        "disk_reserve_gib": 64,
+        "expected_exit": 0,
+        "fresh_empty_cwd": true,
+        "id": "SIMULATION-ONLY-verifier",
+        "memory_gib": 1,
+        "seconds": 61
+      }
+    },
+    "output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/output",
+    "permit_files": {
+      "prover": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/prover.simulation-permit",
+        "sha256": "403f20aef3acdfbb396dc4fb94783585cb5e77f778277574c150849387bbcf3a"
+      },
+      "verifier": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/verifier.simulation-permit",
+        "sha256": "091fc05ae6bdbb3690c96f2849a6011db98e5fa3d1e6b9bdcfb97155f9f21c35"
+      }
+    },
+    "records": {
+      "claim": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/execution-claims/SIMULATION-ONLY",
+      "stage": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna",
+      "supervisor_directory": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna"
+    },
+    "resource_policy": "STRICT",
+    "root": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna",
+    "run_id": "SIMULATION-ONLY",
+    "scope_approval": null,
+    "simulation": true,
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/independent"
+  },
+  "checks": [
+    {
+      "SIMULATION_resource_check": true
+    }
+  ],
+  "failed_after": "PROVER_SUCCESS",
+  "failure": "GateError: controlled simulation artifact admission rejected",
+  "full12_verified": false,
+  "prover": {
+    "PASS": true,
+    "RSS_group_limit_gib": 1,
+    "address_space_limit_gib": 1,
+    "binary_sha256": "4d9e5ae317c1b1c090547f83ce7098b65ca7d8709a9cc9fd5f8c9ef4c6319e1d",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/prover.py",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/output",
+      "--blocks",
+      "12",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/anchor",
+      "--anchor-sha256",
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/manifest",
+      "--execute-full12",
+      "--memory-gib",
+      "1",
+      "--max-seconds",
+      "1",
+      "--disk-reserve-gib",
+      "64",
+      "--cpu-limit",
+      "4",
+      "--run-permit",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/prover.simulation-permit",
+      "--run-permit-sha256",
+      "403f20aef3acdfbb396dc4fb94783585cb5e77f778277574c150849387bbcf3a"
+    ],
+    "cpu_affinity_limit": 4,
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna",
+    "deferred_termination_signals": [],
+    "disk_reserve_gib": 64,
+    "driver_output": "SIMULATION-ONLY-prover exit 0 expected 0 seconds 0.31\n\n",
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "environment_overrides": {
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "ZKGPT_THREADS": "4"
+    },
+    "exit_code": 0,
+    "expected_exit": 0,
+    "finally_cleanup": true,
+    "id": "SIMULATION-ONLY-prover",
+    "limiter_sha256": "14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351",
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/supervisor/SIMULATION-ONLY-prover.log",
+    "observed_process_group_peak_bytes": 372736,
+    "seconds": 0.30551808094605803,
+    "shared_memory_reserve_gib": 32,
+    "started_utc": "2026-10-21T14:42:43.333139+00:00",
+    "stop_reason": null,
+    "supervisor_exception": null,
+    "time": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/test-runs/serial-thlkcrna/supervisor/SIMULATION-ONLY-prover.time",
+    "timeout_seconds": 5,
+    "tracked_groups": [
+      436624
+    ]
+  },
+  "run_id": "SIMULATION-ONLY",
+  "scope": "SIMULATION_ONLY",
+  "state": "ABORTED",
+  "states": [
+    "PREPARED",
+    "AUTHORIZED",
+    "PREFLIGHT_PASS",
+    "PROVER_RUNNING",
+    "PROVER_SUCCESS",
+    "ABORTED"
+  ]
+}

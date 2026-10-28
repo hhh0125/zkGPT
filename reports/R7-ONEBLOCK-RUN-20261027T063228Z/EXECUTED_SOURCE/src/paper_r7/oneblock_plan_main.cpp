@@ -1,0 +1,5 @@
+#include "oneblock_plan.hpp"
+#include <fstream>
+#include <filesystem>
+#include <iostream>
+int main(int argc,char**argv){try{zkgpt::r1::init();zkgpt::r7::crypto::need(argc==2,"usage r7_oneblock_plan NEW_REPORT_DIRECTORY");auto root=std::filesystem::canonical(std::filesystem::current_path()),dest=std::filesystem::weakly_canonical(std::filesystem::absolute(argv[1]));auto relative=dest.lexically_relative(root);zkgpt::r7::crypto::need(!relative.empty() && *relative.begin()!=".." && !std::filesystem::exists(dest),"coverage new in-workspace directory required");auto p=zkgpt::r7::oneblock::discover();std::filesystem::create_directories(dest);std::ofstream native(dest/"R6_NATIVE_PLAN.json"),coverage(dest/"R7_ONEBLOCK_COVERAGE.json");native<<p.native_json;zkgpt::r7::oneblock::writeCoverage(coverage,p);std::cout<<"NATIVE_ONEBLOCK_COVERAGE "<<p.required.size()<<" objects="<<p.objects.size()<<" terminals="<<p.native_terminals<<'\n';return 0;}catch(const std::exception&e){std::cerr<<"REJECT "<<e.what()<<'\n';return 2;}}

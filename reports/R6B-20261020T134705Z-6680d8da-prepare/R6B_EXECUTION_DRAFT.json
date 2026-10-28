@@ -1,0 +1,252 @@
+{
+  "schema": "ZKGPT-R6B-PREPARE-DRAFT-NOT-A-JOB-v1",
+  "prepare_only": true,
+  "authorized": false,
+  "executable": false,
+  "run_id": "R6B-20261020T134705Z-6680d8da",
+  "workspace": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "paths": {
+    "prepare": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare",
+    "prover_output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12",
+    "permits": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-permits",
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-independent-empty"
+  },
+  "future_log_paths_due_to_immutable_R6A_helper": {
+    "prover": {
+      "log": "logs/R6A/R6B-20261020T134705Z-6680d8da-prover.log",
+      "time": "logs/R6A/R6B-20261020T134705Z-6680d8da-prover.time",
+      "run_record": "reports/R6A/R6B-20261020T134705Z-6680d8da-prover.json"
+    },
+    "verifier": {
+      "log": "logs/R6A/R6B-20261020T134705Z-6680d8da-verifier.log",
+      "time": "logs/R6A/R6B-20261020T134705Z-6680d8da-verifier.time",
+      "run_record": "reports/R6A/R6B-20261020T134705Z-6680d8da-verifier.json"
+    }
+  },
+  "frozen_identity": {
+    "blocks": 12,
+    "profile": "r5b-engineering-candidate-v1",
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+    "anchor_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+    "anchor_sha256": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+    "manifest_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+    "manifest_sha256": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "trust": "OPERATOR-TRUSTED, not publisher-certified"
+  },
+  "source_tree_sha256": "68b444159c4fe756eef0fc4d92570150302e47316e16a1e681ad828820e81b8b",
+  "input": {
+    "generator": "original default; implicit seed1,abs350; no override file",
+    "active_shape": [
+      32,
+      768
+    ],
+    "padded_shape": [
+      32,
+      1024
+    ],
+    "unit": "5/512",
+    "quantization": "truncation toward zero for public generator only",
+    "X_signed64le_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "must_unset": [
+      "ZKGPT_PUBLIC_EMBEDDING",
+      "ZKGPT_RANDOM_INPUT_ABS",
+      "LD_PRELOAD",
+      "LD_LIBRARY_PATH"
+    ],
+    "public_padding": "every row col768..1023 zero; output Y same shape/padding",
+    "identity_scope": "exactly matches32768 X scalars extracted from frozen accepted R5B normal-v2 statement; not a smaller/easier replacement input"
+  },
+  "permit_grammar": {
+    "version_after_future_approval_only": "ZKGPT-R6-RUN-PERMIT-v1",
+    "ordered_fields": [
+      "mode",
+      "blocks",
+      "profile-sha256",
+      "circuit",
+      "anchor-sha256",
+      "manifest-sha256",
+      "binary-sha256",
+      "memory-gib",
+      "wall-seconds",
+      "disk-reserve-gib",
+      "cpu-limit"
+    ],
+    "exact_token_rules": "istringstream whitespace;11 ordered key/value pairs; no extra tokens; SHA pins independent external CLI args",
+    "current_permit_files": [],
+    "current_approved_permit_SHA": {
+      "prover": null,
+      "verifier": null
+    },
+    "no_automatic_materialization": true
+  },
+  "jobs_draft": {
+    "prover": {
+      "id": "R6B-20261020T134705Z-6680d8da-prover",
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12",
+        "--blocks",
+        "12",
+        "--numerical-profile",
+        "r5b-engineering-candidate-v1",
+        "--trusted-anchor",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+        "--anchor-sha256",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "--model-manifest",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+        "--memory-gib",
+        "192",
+        "--max-seconds",
+        "28800",
+        "--disk-reserve-gib",
+        "64",
+        "--cpu-limit",
+        "4",
+        "--run-permit",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-permits/prover.permit",
+        "--run-permit-sha256",
+        "<UNAPPROVED-PROVER-PERMIT-SHA>"
+      ],
+      "memory_gib": 192,
+      "seconds": 28860,
+      "disk_reserve_gib": 64,
+      "expected_exit": 0,
+      "audit_cpu_limit": 4,
+      "cpu_field_note": "audit only; existing supervisor ignores this key; CLI/permit must agree4 and native affinity enforces at most4CPUs",
+      "permit_field_values_DRAFT_NOT_LICENSE": {
+        "DRAFT": true,
+        "mode": "prover",
+        "blocks": 12,
+        "profile-sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+        "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+        "anchor-sha256": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "manifest-sha256": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+        "binary-sha256": "80f0da673f3f07065e41a1377ebad629beb1e1d579bd9df60ca877dda97bdd3d",
+        "memory-gib": 192,
+        "wall-seconds": 28800,
+        "disk-reserve-gib": 64,
+        "cpu-limit": 4
+      },
+      "permit_sha256": null,
+      "execution_flag_omitted": "--execute-full12 must be added only after explicit authorization and independent pins",
+      "authorization": false
+    },
+    "verifier": {
+      "id": "R6B-20261020T134705Z-6680d8da-verifier",
+      "argv": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12/model.statement",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12/model.proof",
+        "--blocks",
+        "12",
+        "--numerical-profile",
+        "r5b-engineering-candidate-v1",
+        "--trusted-anchor",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+        "--anchor-sha256",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "--model-manifest",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+        "--memory-gib",
+        "96",
+        "--max-seconds",
+        "14400",
+        "--disk-reserve-gib",
+        "64",
+        "--cpu-limit",
+        "4",
+        "--run-permit",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-permits/verifier.permit",
+        "--run-permit-sha256",
+        "<UNAPPROVED-VERIFIER-PERMIT-SHA>"
+      ],
+      "memory_gib": 96,
+      "seconds": 14460,
+      "disk_reserve_gib": 64,
+      "expected_exit": 0,
+      "audit_cpu_limit": 4,
+      "cpu_field_note": "audit only; existing supervisor ignores this key; CLI/permit must agree4 and native affinity enforces at most4CPUs",
+      "permit_field_values_DRAFT_NOT_LICENSE": {
+        "DRAFT": true,
+        "mode": "verifier",
+        "blocks": 12,
+        "profile-sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+        "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+        "anchor-sha256": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "manifest-sha256": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+        "binary-sha256": "3c257707a2eb2f1669accc5e410145ae3678466e015da59905ed83166b5e23fb",
+        "memory-gib": 96,
+        "wall-seconds": 14400,
+        "disk-reserve-gib": 64,
+        "cpu-limit": 4
+      },
+      "permit_sha256": null,
+      "execution_flag_omitted": "--execute-full12 must be added only after explicit authorization and independent pins",
+      "authorization": false,
+      "cwd": "reports/R6B-20261020T134705Z-6680d8da-independent-empty",
+      "fresh_empty_cwd": true
+    }
+  },
+  "mandatory_external_gates": [
+    {
+      "order": 1,
+      "condition": "NEXT explicit user approval of this ID, frozen identities,input hash,scope,budgets,paths,one attempt/no retry."
+    },
+    {
+      "order": 2,
+      "condition": "Generate two permits only after authorization; separate user approval of each actual mode/executable/budget-bound permit bytes and SHA. No self-approved pin."
+    },
+    {
+      "order": 3,
+      "condition": "Check source,binaries,dependencies,120parameters,Profile,Exp,anchor,manifest,permit hashes; compare CLI/permit/supervisor budgets and CPU4; reject all path/symlink collisions and input env overrides."
+    },
+    {
+      "order": 4,
+      "condition": "Fresh host+cgroup+PID+RLIMIT+disk+affinity+competing-job check; no concurrent large proof; shared32GiB/disk64GiB reserve. Current snapshot is not a reservation."
+    },
+    {
+      "order": 5,
+      "condition": "Run full12 witness then Prover exactly once with bounded group supervision; all blocks including3..11 numerical checks retained."
+    },
+    {
+      "order": 6,
+      "condition": "Only on actual Prover exit0,no watchdog stop,regular nonempty statement/proof in unique approved output directory: record SHA/size,decode public X and zero padding,require approved X hash,record full12 shape/circuit/W context. Reject missing/mismatched/partial output; no verifier dispatch."
+    },
+    {
+      "order": 7,
+      "condition": "Require fresh unused empty verifier cwd; recheck approved artifact/anchor/manifest/permit/binary hashes; then launch separate bounded verifier only after prior gatePASS."
+    },
+    {
+      "order": 8,
+      "condition": "Record all phases/first failure/exit/signal/group peak and raw logs. On any domain/W/proof/resource/timeout failure stop whole group,retain evidence,no retries or profile/input/query/budget changes."
+    }
+  ],
+  "non_executable_barriers": [
+    "Top level lacks run_limited required id and argv",
+    "No --execute-full12 in draft argv",
+    "Missing permit files and invalid non64hex SHA placeholders",
+    "No approved SHA or execution authority"
+  ],
+  "scope_exclusions": [
+    "no valid permit",
+    "no permit SHA approval",
+    "no source changes",
+    "no full12 witness/proof/complete verifier",
+    "no automatic retries"
+  ],
+  "draft_consistency_checks": {
+    "PASS": true,
+    "type": "pure data comparisons, not runtime enforcement",
+    "memory": true,
+    "native_wall_vs_outer60seconds": true,
+    "disk": true,
+    "cpu4": true,
+    "separate_binary_hashes": true,
+    "permit_template_fields_match_source": true,
+    "top_level_runner_rejects_missing_id": true
+  }
+}

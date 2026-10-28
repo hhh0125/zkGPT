@@ -1,0 +1,133 @@
+{
+  "local_git_commit": "3febc273e77fa9e29e69fdb8f3c7f96e9d8cbb9c",
+  "payload_sha256": "2c0fb23bc6eb91f759b3464a03912dc5e6a1eee6323d3b75f39fc19a3f5864d6",
+  "remote_code_version": "2c0fb23bc6eb91f759b3464a03912dc5e6a1eee6323d3b75f39fc19a3f5864d6",
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "label": "engineering-safety-tests",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T074837Z/engineering-safety-tests.log",
+      "exit_code": 0,
+      "seconds": 1.7186311497353017,
+      "passed": true
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T074837Z/configure.log",
+      "exit_code": 0,
+      "seconds": 0.9173166612163186,
+      "passed": true
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_crypto_tests",
+        "r7_local_prover",
+        "r7_local_verifier",
+        "r7_framework_tests",
+        "r7_oneblock_prove",
+        "r7_oneblock_verify",
+        "r6_builder_tests",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_model_plan",
+        "r5b_gkr_tests",
+        "r6_resources_tests",
+        "-j4"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T074837Z/build.log",
+      "exit_code": 0,
+      "seconds": 19.264422247186303,
+      "passed": true
+    },
+    {
+      "label": "crypto-arithmetic",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_crypto_tests"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T074837Z/crypto-arithmetic.log",
+      "exit_code": 0,
+      "seconds": 0.11640014592558146,
+      "passed": true
+    },
+    {
+      "label": "interactive-crypto",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_interactive_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ROUND2-RUN-20261026T074837Z/sessions",
+        "--real"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T074837Z/interactive-crypto.log",
+      "exit_code": 1,
+      "seconds": 1.3697580476291478,
+      "passed": false
+    }
+  ],
+  "error": "interactive-crypto unexpected exit code",
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_framework_tests": "a75b1db4cd05b72532bb09a06698349c86350a06bf29e430783454ec8a5d9346",
+    "r7_crypto_tests": "a4953967ae224e856f08d4e6b34ac05a34aab493eac001d1f4212d48c8e16b4d",
+    "r7_local_prover": "63192b227470faf5044ec0e20ff00c0b3e35ba6b7eaf53ba5d7a84ed350123ba",
+    "r7_local_verifier": "aa3fee7e66c0a0f7de28e6e888f2971c2e1e71ccaf49e3e2ef00879c14512bcf",
+    "r7_oneblock_prove": "9912ae12c6e20a3fe0534e250c31a0f7f0b62318fd96305b31453352f3cc1d10",
+    "r7_oneblock_verify": "7db437b7de184adc0ce95b3449a8fa21cbf3c4d3abad5c70c72457f8fd110353"
+  },
+  "cmake_cache_sha256": "c2c2aa212a4305ffa84461177cb82dca607756ecb013e68e3bfcdf2cf8782d7f",
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "deps/cnpy/include/cnpy.h": "68a34a847cfed2dfcc1dc8bcd495cdb51477061536d670161a62c5103547ae93",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097"
+  },
+  "mcl_submodule_commit": "dd66a53a4dce2ab27f9d028846bc1b1cdbf050f5"
+}

@@ -1,0 +1,14 @@
+[  6%] Built target mcl
+[ 10%] Built target mclbn256
+[ 37%] Built target paper_r1
+[ 82%] Built target gpt_lib
+[ 96%] Built target paper_r2
+[100%] Building CXX object src/paper_r2/CMakeFiles/r6_integration_tests.dir/tests_r6_integration.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/tests_r6_integration.cpp: In function ‘int main(int, char**)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/tests_r6_integration.cpp:16:321: error: ‘__gnu_cxx::__alloc_traits<std::allocator<zkgpt::r1::MappedVector>, zkgpt::r1::MappedVector>::value_type’ {aka ‘struct zkgpt::r1::MappedVector’} has no member named ‘source’
+   16 |  auto bad=s;bad.input.context="R5B-old-context";reject("wrong public/model context",[&]{r2::requireModelQueryStatement(p,bad,a.w,x,y,a.model_id);});bad=s;bad.ranges[0].bits++;reject("widened numerical Range",[&]{r2::requireModelQueryStatement(p,bad,a.w,x,y,a.model_id);});bad=s;bad.input.children[p.exps[0].index_child].source[0].count--;reject("missing Exp address",[&]{r2::requireModelQueryStatement(p,bad,a.w,x,y,a.model_id);});
+      |                                                                                                                                                                                                                                                                                                                                 ^~~~~~
+gmake[3]: *** [src/paper_r2/CMakeFiles/r6_integration_tests.dir/build.make:79: src/paper_r2/CMakeFiles/r6_integration_tests.dir/tests_r6_integration.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3001: src/paper_r2/CMakeFiles/r6_integration_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:3008: src/paper_r2/CMakeFiles/r6_integration_tests.dir/rule] Error 2
+gmake: *** [Makefile:1154: r6_integration_tests] Error 2

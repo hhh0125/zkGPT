@@ -1,0 +1,31 @@
+{
+  "id": "finite-green-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_witness_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:25:26.613393+00:00",
+  "seconds": 14.19077254878357,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 8,
+  "RSS_group_limit_gib": 8,
+  "observed_process_group_peak_bytes": 1216184320,
+  "stop_reason": null,
+  "binary_sha256": null,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/finite-green-build.log",
+  "time": "logs/R6A/finite-green-build.time"
+}

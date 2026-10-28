@@ -1,0 +1,69 @@
+{
+  "binding": {
+    "allowed_attempts": 1,
+    "allowed_competing_PIDs": [],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "frozen": {
+      "anchor": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+      "anchor_sha": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+      "binaries": {
+        "prover": {
+          "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove",
+          "sha256": "80f0da673f3f07065e41a1377ebad629beb1e1d579bd9df60ca877dda97bdd3d"
+        },
+        "verifier": {
+          "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify",
+          "sha256": "3c257707a2eb2f1669accc5e410145ae3678466e015da59905ed83166b5e23fb"
+        }
+      },
+      "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+      "identity_record_sha256": "50231f0c82cfb31b323bbdd7e6efb83eba405b8fd876d78e7d8125dd2614883c",
+      "manifest": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+      "manifest_sha": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+      "profile": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+      "source_sha": "68b444159c4fe756eef0fc4d92570150302e47316e16a1e681ad828820e81b8b"
+    },
+    "gate_code_sha256": "48502d5108bbec31e6b3fb3dd4f78ac9b7efbfb6fb40d13b99ca5449b5568c0b",
+    "input_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "input_shape": [
+      32,
+      768,
+      1024
+    ],
+    "limits": {
+      "prover": {
+        "memory": 192,
+        "wall": 28800
+      },
+      "verifier": {
+        "memory": 96,
+        "wall": 14400
+      }
+    },
+    "order": [
+      "prover",
+      "verifier"
+    ],
+    "output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-full12",
+    "permit_paths": {
+      "prover": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/future-permits/prover.permit",
+      "verifier": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/future-permits/verifier.permit"
+    },
+    "root": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "run_id": "R6B-20261020T134705Z-6680d8da",
+    "simulation": false,
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-independent-empty"
+  },
+  "kind": "DRAFT-NOT-A-SCOPE-APPROVAL",
+  "origin": "UNAPPROVED",
+  "scope_evidence": ""
+}

@@ -1,0 +1,27 @@
+test_changed_X_padding_context_W_shape_and_corruption_rejected (__main__.Artifacts) ... FAIL
+test_real_trusted_decoder_and_all_full12_schema_inputs (__main__.Artifacts) ... FAIL
+
+======================================================================
+FAIL: test_changed_X_padding_context_W_shape_and_corruption_rejected (__main__.Artifacts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_artifacts.py", line 14, in test_changed_X_padding_context_W_shape_and_corruption_rejected
+    a=self.module()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_artifacts.py", line 7, in module
+    self.assertTrue((HERE/'r6b_artifacts.py').exists(),'Missing independent statement admission')
+AssertionError: False is not true : Missing independent statement admission
+
+======================================================================
+FAIL: test_real_trusted_decoder_and_all_full12_schema_inputs (__main__.Artifacts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_artifacts.py", line 10, in test_real_trusted_decoder_and_all_full12_schema_inputs
+    a=self.module();result=a.inspect_statement(HERE/'test-data/full12-synthetic.statement',HERE/'r6b_statement_parser',HERE.parent/'R6A/full12-operator-trust-v1.anchor',HERE.parent/'R6A/FULL12_FINAL_PLAN.json')
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_artifacts.py", line 7, in module
+    self.assertTrue((HERE/'r6b_artifacts.py').exists(),'Missing independent statement admission')
+AssertionError: False is not true : Missing independent statement admission
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=2)

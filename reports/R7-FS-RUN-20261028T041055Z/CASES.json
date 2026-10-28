@@ -1,0 +1,274 @@
+[
+  {
+    "case": "full-P",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_prover",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 0,
+    "seconds": 913.3533500088379,
+    "passed": true,
+    "log": "full-P.log",
+    "fs": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "session": "eb8ff3519532cd1c6386a63338c3a297220471c5ec703b0d833b83d59e26ec44",
+      "complete": true,
+      "proof_bytes": 675459862,
+      "proof_sha256": "dd3ccaebc36bc3992d9553a1e8f253a237e5d7d1462eaa479bd58693a279d675",
+      "transcript_digest": "99f675eb4b852397efbb95a0539dc49f3f37a7744bf170ee84ed849162c877e2",
+      "challenge_digest": "2009a46aec559314ded106453acd9397603aa352f938cef3251086c9ff9982cc",
+      "challenges": 99168,
+      "prover_messages": 316307,
+      "events": 415477,
+      "field_rejections": 588006,
+      "hash_seconds": 1.49802,
+      "file_io_seconds": 2.19056,
+      "max_message_payload_bytes": 2626363,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "metrics": {
+      "status": "FS_PROOF_CREATED_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "required_count": 5351,
+      "coverage_sha256": "b3e38e0a5ffa5a297ac9752e7fa8dc41736742aa1922de43d5df8e3c5e990794",
+      "layout_id": "ed7c606074752c33dafbbf1b1e726860a1e6a231df7e19abf53917126dd9bc6b",
+      "root_count": 6,
+      "claims": 936,
+      "registered_rows": 8193,
+      "registration_response_bytes": 532819744,
+      "GKR_rounds": 627,
+      "seconds": 913.033,
+      "wire_bytes": 675459862,
+      "P_wire_bytes": 675459862,
+      "frames": 415477,
+      "peak_rss_kib": 4905880,
+      "MSM_calls": 531884,
+      "MSM_terms": 72166749,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "frozen-witness-and-prechallenge-lookup",
+          "seconds": 33.4213,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0
+        },
+        {
+          "name": "all-classified-roots-prechallenge-seal",
+          "seconds": 79.03,
+          "P_wire_bytes": 2390252,
+          "MSM_calls": 53249
+        },
+        {
+          "name": "complete-classified-base-knowledge-and-tail",
+          "seconds": 265.206,
+          "P_wire_bytes": 533465482,
+          "MSM_calls": 20481
+        },
+        {
+          "name": "classified-public-X-Y-constants",
+          "seconds": 0.177905,
+          "P_wire_bytes": 2627388,
+          "MSM_calls": 1
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 15.5713,
+          "P_wire_bytes": 2032192,
+          "MSM_calls": 7843
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 313.966,
+          "P_wire_bytes": 129934204,
+          "MSM_calls": 448576
+        },
+        {
+          "name": "all-source-original-handles",
+          "seconds": 3.63085,
+          "P_wire_bytes": 18145,
+          "MSM_calls": 16
+        },
+        {
+          "name": "mandatory-classified-authentication-barrier",
+          "seconds": 193.114,
+          "P_wire_bytes": 2844237,
+          "MSM_calls": 1718
+        }
+      ]
+    },
+    "rejection": null
+  },
+  {
+    "case": "full-V",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 0,
+    "seconds": 434.7666126410477,
+    "passed": true,
+    "log": "full-V.log",
+    "fs": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "session": "eb8ff3519532cd1c6386a63338c3a297220471c5ec703b0d833b83d59e26ec44",
+      "complete": true,
+      "proof_bytes": 675459862,
+      "proof_sha256": "dd3ccaebc36bc3992d9553a1e8f253a237e5d7d1462eaa479bd58693a279d675",
+      "transcript_digest": "99f675eb4b852397efbb95a0539dc49f3f37a7744bf170ee84ed849162c877e2",
+      "challenge_digest": "2009a46aec559314ded106453acd9397603aa352f938cef3251086c9ff9982cc",
+      "challenges": 99168,
+      "prover_messages": 316307,
+      "events": 415477,
+      "field_rejections": 588006,
+      "hash_seconds": 1.45588,
+      "file_io_seconds": 0.639743,
+      "max_message_payload_bytes": 2626363,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "metrics": {
+      "status": "FS_NIZK_CANDIDATE_VERIFIED",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "required_count": 5351,
+      "coverage_sha256": "b3e38e0a5ffa5a297ac9752e7fa8dc41736742aa1922de43d5df8e3c5e990794",
+      "layout_id": "ed7c606074752c33dafbbf1b1e726860a1e6a231df7e19abf53917126dd9bc6b",
+      "root_count": 6,
+      "claims": 936,
+      "registered_rows": 8193,
+      "registration_response_bytes": 532819744,
+      "GKR_rounds": 627,
+      "seconds": 434.61,
+      "wire_bytes": 675459862,
+      "P_wire_bytes": 675459862,
+      "frames": 415477,
+      "peak_rss_kib": 1176572,
+      "MSM_calls": 197070,
+      "MSM_terms": 17069455,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "frozen-witness-and-prechallenge-lookup",
+          "seconds": 0.510489,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0
+        },
+        {
+          "name": "all-classified-roots-prechallenge-seal",
+          "seconds": 9.52608,
+          "P_wire_bytes": 2390252,
+          "MSM_calls": 0
+        },
+        {
+          "name": "complete-classified-base-knowledge-and-tail",
+          "seconds": 172.719,
+          "P_wire_bytes": 533465482,
+          "MSM_calls": 20481
+        },
+        {
+          "name": "classified-public-X-Y-constants",
+          "seconds": 0.174677,
+          "P_wire_bytes": 2627388,
+          "MSM_calls": 1
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 4.5431,
+          "P_wire_bytes": 2032192,
+          "MSM_calls": 2953
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 146.079,
+          "P_wire_bytes": 129934204,
+          "MSM_calls": 172989
+        },
+        {
+          "name": "all-source-original-handles",
+          "seconds": 1.54241,
+          "P_wire_bytes": 18145,
+          "MSM_calls": 0
+        },
+        {
+          "name": "mandatory-classified-authentication-barrier",
+          "seconds": 88.0297,
+          "P_wire_bytes": 2844237,
+          "MSM_calls": 646
+        }
+      ]
+    },
+    "rejection": null
+  },
+  {
+    "case": "full-wrong-context",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028-other"
+    ],
+    "exit_code": 2,
+    "seconds": 6.629181747790426,
+    "passed": true,
+    "log": "full-wrong-context.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch"
+  },
+  {
+    "case": "full-wrong-X",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 6.2790192840620875,
+    "passed": true,
+    "log": "full-wrong-X.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch"
+  },
+  {
+    "case": "full-wrong-model-identity",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 3.9240544578060508,
+    "passed": true,
+    "log": "full-wrong-model-identity.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE Oneblock invalid frozen public statement"
+  },
+  {
+    "case": "full-appended-data",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T041055Z/attack-temp.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 432.6258294391446,
+    "passed": true,
+    "log": "full-appended-data.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS appended data rejected"
+  }
+]

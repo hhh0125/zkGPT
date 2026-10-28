@@ -1,0 +1,68 @@
+[
+  {
+    "id": "trusted-preprocess-v2",
+    "argv": [
+      "build/release/src/paper_r2/r5b_model_preprocess",
+      "data/gpt2_int",
+      "reports/R5B/engineering-model-manifest-v1.txt",
+      "reports/R5B/operator-trust-v2.anchor"
+    ],
+    "require_log": "ANCHOR_SHA256"
+  },
+  {
+    "id": "sanitize-coupling-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/r5b-sanitize"
+    ]
+  },
+  {
+    "id": "sanitize-coupling-build",
+    "argv": [
+      "cmake",
+      "--build",
+      "build/r5b-sanitize",
+      "--target",
+      "r5b_tests",
+      "r5b_gkr_tests",
+      "r5b_model_prove",
+      "r5b_trust_tests",
+      "r5b_mapping_tests",
+      "r5a_host_tests",
+      "-j6"
+    ]
+  },
+  {
+    "id": "sanitize-after-FC-bridge",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "build/r5b-sanitize",
+      "--output-on-failure",
+      "-R",
+      "r5b_|r5a_host_",
+      "-j1"
+    ],
+    "env": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "require_log": "100% tests passed"
+  },
+  {
+    "id": "sanitize-witness-after-FC-bridge",
+    "argv": [
+      "build/r5b-sanitize/src/paper_r2/r5b_model_prove",
+      "reports/R5B/witness-sanitize-v2",
+      "--witness-only"
+    ],
+    "env": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "require_log": "WITNESS VALIDATED"
+  }
+]

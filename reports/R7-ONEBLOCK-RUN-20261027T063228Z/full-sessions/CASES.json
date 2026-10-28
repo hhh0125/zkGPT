@@ -1,0 +1,274 @@
+[
+  {
+    "case": "correct-full",
+    "attack": "",
+    "passed": true,
+    "V_exit": 0,
+    "P_exit": 0,
+    "timeout": false,
+    "seconds": 1068.5925749349408,
+    "expected_reason": null,
+    "wire": {
+      "bytes": 773661555,
+      "parts": 185,
+      "sha256": "25b303f5b1097a2b51eaddfbbdcf0521f337a97eadd85865219fb6b243d61a43",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "P": {
+      "status": "ONEBLOCK_INTERACTIVE_ACCEPT",
+      "required_count": 5676,
+      "coverage_sha256": "41d4580b35302b3a86c6a92ae0a80d1f79b25c2e6bd862e5e972c1499a29635c",
+      "master_id": "6558d1074c0b1635a886aa83d9f8b3ed4e9f5b6584fd32a3af16eb55d943fc95",
+      "registered_rows": 16384,
+      "registration_response_bytes": 533081856,
+      "GKR_rounds": 627,
+      "seconds": 1065.32,
+      "wire_bytes": 773661383,
+      "P_wire_bytes": 749375815,
+      "frames": 434843,
+      "peak_rss_kib": 2915356,
+      "MSM_calls": 560906,
+      "MSM_terms": 90721117,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "model-authority-registration",
+          "seconds": 9.35721,
+          "P_wire_bytes": 702866,
+          "MSM_calls": 0
+        },
+        {
+          "name": "frozen-witness-and-master-commitment",
+          "seconds": 67.9975,
+          "P_wire_bytes": 524744,
+          "MSM_calls": 16384
+        },
+        {
+          "name": "one-full-master-registration",
+          "seconds": 280.959,
+          "P_wire_bytes": 534948343,
+          "MSM_calls": 16384
+        },
+        {
+          "name": "public-X-Y-constants",
+          "seconds": 16.9153,
+          "P_wire_bytes": 2788987,
+          "MSM_calls": 326
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 23.0922,
+          "P_wire_bytes": 2531152,
+          "MSM_calls": 7843
+        },
+        {
+          "name": "native-source-commitments",
+          "seconds": 8.57559,
+          "P_wire_bytes": 140731,
+          "MSM_calls": 4284
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 605.095,
+          "P_wire_bytes": 204069984,
+          "MSM_calls": 515001
+        },
+        {
+          "name": "all-source-opening-handles",
+          "seconds": 13.2439,
+          "P_wire_bytes": 1350311,
+          "MSM_calls": 358
+        },
+        {
+          "name": "all-terminals-and-sources-to-one-master",
+          "seconds": 32.4476,
+          "P_wire_bytes": 220858,
+          "MSM_calls": 326
+        }
+      ]
+    },
+    "V": {
+      "status": "ONEBLOCK_INTERACTIVE_ACCEPT",
+      "required_count": 5676,
+      "coverage_sha256": "41d4580b35302b3a86c6a92ae0a80d1f79b25c2e6bd862e5e972c1499a29635c",
+      "master_id": "6558d1074c0b1635a886aa83d9f8b3ed4e9f5b6584fd32a3af16eb55d943fc95",
+      "registered_rows": 16384,
+      "registration_response_bytes": 533081856,
+      "GKR_rounds": 627,
+      "seconds": 1068.52,
+      "wire_bytes": 773661555,
+      "P_wire_bytes": 0,
+      "frames": 434843,
+      "peak_rss_kib": 1019152,
+      "MSM_calls": 196116,
+      "MSM_terms": 18369983,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "model-authority-registration",
+          "seconds": 9.32568,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0
+        },
+        {
+          "name": "frozen-witness-and-master-commitment",
+          "seconds": 68.5317,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0
+        },
+        {
+          "name": "one-full-master-registration",
+          "seconds": 281.083,
+          "P_wire_bytes": 0,
+          "MSM_calls": 16384
+        },
+        {
+          "name": "public-X-Y-constants",
+          "seconds": 16.2532,
+          "P_wire_bytes": 0,
+          "MSM_calls": 127
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 23.0914,
+          "P_wire_bytes": 0,
+          "MSM_calls": 2953
+        },
+        {
+          "name": "native-source-commitments",
+          "seconds": 8.59883,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 605.072,
+          "P_wire_bytes": 0,
+          "MSM_calls": 176461
+        },
+        {
+          "name": "all-source-opening-handles",
+          "seconds": 13.2435,
+          "P_wire_bytes": 0,
+          "MSM_calls": 64
+        },
+        {
+          "name": "all-terminals-and-sources-to-one-master",
+          "seconds": 32.4479,
+          "P_wire_bytes": 0,
+          "MSM_calls": 127
+        }
+      ]
+    }
+  },
+  {
+    "case": "model-response",
+    "attack": "model-response",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 14.007909880019724,
+    "expected_reason": "rerandomization row response equation",
+    "wire": {
+      "bytes": 2238561,
+      "parts": 1,
+      "sha256": "7b75a72d5609ccd199904f301c1395805a96202bcbc2b129dc9df0771343da04",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "REJECT_OR_INCOMPLETE oneblock model rerandomization row response equation\n",
+    "P_reason": "REJECT_OR_INCOMPLETE R7 interactive EOF/transport failure\n"
+  },
+  {
+    "case": "truncated",
+    "attack": "truncated",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 13.326877563260496,
+    "expected_reason": "truncated",
+    "wire": {
+      "bytes": 2238560,
+      "parts": 1,
+      "sha256": "50650b0d5925ee9f27e43e3122e300db77be13839652d31c8a5dfd6d11d8b637",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "REJECT_OR_INCOMPLETE R7 crypto truncated wire\n",
+    "P_reason": "REJECT_OR_INCOMPLETE R7 interactive EOF/transport failure\n"
+  },
+  {
+    "case": "cross-session",
+    "attack": "cross-session",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": -13,
+    "timeout": false,
+    "seconds": 12.413146029226482,
+    "expected_reason": "cross-session rejected",
+    "wire": {
+      "bytes": 172,
+      "parts": 1,
+      "sha256": "f1e7a39d8507fd83e8132a77ee1a7c4b152012f759923e98cfd08c249690301a",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "REJECT_OR_INCOMPLETE R7 interactive cross-session rejected\n",
+    "P_reason": ""
+  },
+  {
+    "case": "wrong-X",
+    "attack": "wrong-X",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 369.60705900518224,
+    "expected_reason": "compressed linear relation",
+    "wire": {
+      "bytes": 540970020,
+      "parts": 129,
+      "sha256": "f426f5c7eb3d865d6cf9d52ce6a9e3a2bb5b10826562107eaabdacac6820adca",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-Y",
+    "attack": "wrong-Y",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 371.8804324809462,
+    "expected_reason": "compressed linear relation",
+    "wire": {
+      "bytes": 540970020,
+      "parts": 129,
+      "sha256": "5dcc1371a338015faf7ab738a62315025a85b185b2864d958168bd44256c2d93",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-internal",
+    "attack": "wrong-internal",
+    "passed": false,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 401.2481581568718,
+    "expected_reason": "equation",
+    "wire": {
+      "bytes": 543513946,
+      "parts": 130,
+      "sha256": "a82421b4fbfacdb24bace257f2635fa441214f5082265ee4d2c3c847047d2c03",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  }
+]

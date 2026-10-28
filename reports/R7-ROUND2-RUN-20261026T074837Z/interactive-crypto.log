@@ -1,0 +1,48 @@
+PASS opening-16
+PASS opening-64
+PASS opening-256
+PASS opening-1024
+PASS opening-zero-64
+PASS sigma-16
+PASS sigma-zero-16
+PASS sumcheck2-16
+PASS sumcheck3-16
+PASS sumcheck-zero-16
+PASS opening-16-bad-opening reason=REJECT R7 opening masked evaluation equation failed
+PASS sigma-16-bad-mul reason=REJECT R7 product Sigma multiplication equation failed
+PASS sigma-16-bad-linear reason=REJECT R7 Sigma compressed linear relation failed
+PASS sigma-16-blind-response reason=REJECT R7 product Sigma multiplication equation failed
+PASS sumcheck2-16-bad-recursion reason=REJECT R7 Sigma compressed linear relation failed
+FAIL sumcheck2-16-bad-mul reason=REJECT R7 Sigma compressed linear relation failed
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/r7_interactive_tests.py", line 42, in <module>
+    ('opening','session','cross-session rejected')]:run(mode,16,attack,reason)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/r7_interactive_tests.py", line 27, in run
+    if not ok:raise RuntimeError(name+' '+text+' '+ppath.read_text())
+RuntimeError: sumcheck2-16-bad-mul REJECT R7 Sigma compressed linear relation failed
+ REJECT R7 Sigma compressed linear relation failed
+
+Command exited with non-zero status 1
+	Command being timed: "python3 -B tools/r7_interactive_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ROUND2-RUN-20261026T074837Z/sessions --real"
+	User time (seconds): 1.41
+	System time (seconds): 0.09
+	Percent of CPU this job got: 110%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.35
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 26068
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10620
+	Voluntary context switches: 637
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 632
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

@@ -1,0 +1,62 @@
+{
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "error": "build",
+  "events": [
+    {
+      "name": "engineering",
+      "command": [
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.4250419228337705,
+      "passed": true
+    },
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1704240767285228,
+      "passed": true
+    },
+    {
+      "name": "bindings-red",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_classified_crypto_tests",
+        "-j4"
+      ],
+      "exit_code": 2,
+      "seconds": 0.11733864527195692,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_classified_layout_tests",
+        "r7_oneblock_lookup_tests",
+        "-j4"
+      ],
+      "exit_code": 2,
+      "seconds": 3.925857170019299,
+      "passed": false
+    }
+  ]
+}

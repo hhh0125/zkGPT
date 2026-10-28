@@ -1,0 +1,35 @@
+test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse (__main__.ReviewRegressions) ... FAIL
+test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available (__main__.ReviewRegressions) ... FAIL
+test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant (__main__.ReviewRegressions) ... FAIL
+
+======================================================================
+FAIL: test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse (__main__.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_review_regressions.py", line 45, in test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse
+    with patch.object(common,'read_regular',read_then_replace),self.assertRaises(common.GateError):tools.verify_scope(p,f,pin)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available (__main__.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_review_regressions.py", line 17, in test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available
+    self.assertEqual(result['state'],'ABORTED');self.assertFalse((root/'dispatch.log').exists(),'Prover must not launch with only Verifier memory room')
+AssertionError: 'VERIFIED' != 'ABORTED'
+- VERIFIED
++ ABORTED
+
+
+======================================================================
+FAIL: test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant (__main__.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_review_regressions.py", line 30, in test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant
+    self.assertTrue(row['finally_cleanup'],'termination interrupted required SIGKILL cleanup');fixture.assert_dead(pidfile)
+AssertionError: False is not true : termination interrupted required SIGKILL cleanup
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.699s
+
+FAILED (failures=3)

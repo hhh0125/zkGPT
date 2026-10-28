@@ -1,0 +1,37 @@
+{
+  "id": "system-green-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_resources_tests",
+    "r6_model_plan",
+    "r6_model_preprocess",
+    "r6_model_prove",
+    "r6_model_verify",
+    "r6_witness_tests",
+    "r6_integration_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:44:50.847090+00:00",
+  "seconds": 21.200151776894927,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 12,
+  "RSS_group_limit_gib": 12,
+  "observed_process_group_peak_bytes": 368410624,
+  "stop_reason": null,
+  "binary_sha256": null,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/system-green-build.log",
+  "time": "logs/R6A/system-green-build.time"
+}

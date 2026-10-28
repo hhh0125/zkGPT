@@ -1,0 +1,41 @@
+[
+  {
+    "cmd": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/release"
+    ],
+    "exit": 0,
+    "log": "logs/R5B/red-0.log"
+  },
+  {
+    "cmd": [
+      "cmake",
+      "--build",
+      "build/release",
+      "--target",
+      "r5b_tests",
+      "-j8"
+    ],
+    "exit": 0,
+    "log": "logs/R5B/red-1.log"
+  },
+  {
+    "cmd": [
+      "build/release/src/r5b_tests",
+      "round"
+    ],
+    "exit": 1,
+    "log": "logs/R5B/red-2.log"
+  },
+  {
+    "cmd": [
+      "build/release/src/r5b_tests",
+      "attention"
+    ],
+    "exit": 1,
+    "log": "logs/R5B/red-3.log"
+  }
+]

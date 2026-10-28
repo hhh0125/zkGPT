@@ -1,0 +1,7 @@
+# End of OPT2 scope
+
+This round stops after optimization, boundedtests, actualfull12 metadata, identityfreeze and Windowsarchive verification. No A/B/C/D formal authorization step, production scopeapproval draft generation, effectivepermit or full12witness/proof/independentVerifier execution is authorized or performed. Simulation testpermits are invalid for production and cannot authorize realmodelbinaries. NewID/source/binaries/gate/plan and P96/V96 replace older OPTcandidate identities; previous drafts andpermitSHA must not transfer.
+
+Future separately authorized review must pin new identity, unchanged X/seed/dimensions and trustedW, P96/28800s,V96/14400s,+60s supervisor allowance,CPUaffinity4,32GiB sharedreserve and64GiBdiskreserve. Lastminute identity/cgroup/RLIMIT/PID/space/concurrency checks are mandatory. Snapshot is not resource reservation. A largercap must be explicitly approved separately; no automaticretry/budgetincrease.
+
+Stop at first range/conversion/W/proof/timeout/AS/RSS/disk/sharedreserve failure, record earliestposition/rawlogs, preserve partialartifacts, terminate/join ownedprocessgroup. Never changeProfile, replaceinput, truncateblock3..11values, deleteconstraints/reducequeries or silentlyincreasebudget. Full12 realnumeric domain/RSS/duration/proofacceptance remain unmeasured. Only after future successfulProverexit and actual statement/proofhash records could a separately authorized independentVerifier use a newemptycwd.

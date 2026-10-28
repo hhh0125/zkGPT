@@ -1,0 +1,1245 @@
+{
+  "all_cases": [
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_positive_1",
+      "pass": true,
+      "proof_json_bytes": 205810,
+      "prover_cpu_seconds": 4.912691000000001,
+      "prover_rss_kib": 22728,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "eb43c03962e913396b1d8e04c80386f4688643626fa56a5cea452903854aaa33",
+        "reason": "complete verified interactive session",
+        "sid": "71a70bee230b1a073b0aec07281e3cb57248ef4821e88ac9c48f4ef98c76447f",
+        "statement_digest": "28a165147cd0ab8312effbb73b973def31c823bb1e574a6da79a4d3f343340f9",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.080612,
+        "verifier_rss_kib": 23188
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 13.29861544398591,
+      "wire_bytes": {
+        "P->V": 591228,
+        "V->P": 147763
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_zero_values",
+      "pass": true,
+      "proof_json_bytes": 205812,
+      "prover_cpu_seconds": 6.203443,
+      "prover_rss_kib": 22908,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "b221a7bc25ee5bf9deb5818bca3641932820871d58792e30d313f9fd3241d021",
+        "reason": "complete verified interactive session",
+        "sid": "7ab6b7c61ac753b943389a06b2deb0f3ecc9befe9d7dd512a2b88b941fd90ac7",
+        "statement_digest": "3cc7353e4b851a08f73fa706d0a882d96178f826e075ebcf74b0bab7ea460fa1",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.588102,
+        "verifier_rss_kib": 23192
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 14.971743875183165,
+      "wire_bytes": {
+        "P->V": 591227,
+        "V->P": 147763
+      },
+      "zeros": true
+    },
+    {
+      "attack": "wrong_X",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_wrong_X",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 2.6447040000000004,
+      "prover_rss_kib": 19964,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 273,
+        "components": 51,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "2feaec593810eafe6b5afa98cd442154920de619a934177a3ca73ca60e29bf78",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 5.95121814776212,
+      "wire_bytes": {
+        "P->V": 213375,
+        "V->P": 82400
+      },
+      "zeros": false
+    },
+    {
+      "attack": "wrong_Y",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_wrong_Y",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 2.5871370000000002,
+      "prover_rss_kib": 19628,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 259,
+        "components": 49,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "6ab77673a6d63c9f69fb96dbcf7c6ab3a96ba1efb200217b8fa3ed2e8fbeabbe",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 6.5751176699995995,
+      "wire_bytes": {
+        "P->V": 195520,
+        "V->P": 79588
+      },
+      "zeros": false
+    },
+    {
+      "attack": "child_padding",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_child_padding",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 5.363017,
+      "prover_rss_kib": 21776,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 537,
+        "components": 82,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "7a1382647edfeea024cd6e4a6ae1b9c2695bdcb16ccba45f4c1b768586220f7e",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 13.078487978782505,
+      "wire_bytes": {
+        "P->V": 373147,
+        "V->P": 143780
+      },
+      "zeros": false
+    },
+    {
+      "attack": "master_tail",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_master_tail",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.996747000000001,
+      "prover_rss_kib": 21796,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 537,
+        "components": 82,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "711dd338eb25a1420bcf5f1cd72d6f2a22ab5636a3796ee6d26f6dc49c995f48",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 13.056812894996256,
+      "wire_bytes": {
+        "P->V": 373141,
+        "V->P": 143780
+      },
+      "zeros": false
+    },
+    {
+      "attack": "wrong_W_master",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_wrong_W_master",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 5.987626,
+      "prover_rss_kib": 21592,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 537,
+        "components": 82,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "ae306a0c1055fd32b5b10c119345effeddaf0ec476681931a4ff7d49ec8a3ba0",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 14.513912030030042,
+      "wire_bytes": {
+        "P->V": 373145,
+        "V->P": 143780
+      },
+      "zeros": false
+    },
+    {
+      "attack": "wrong_W_registration",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_wrong_W_registration",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.07923899999999999,
+      "prover_rss_kib": 18236,
+      "reason": "ValueError: E approved toy W commitment identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "ValueError: E approved toy W commitment identity",
+        "sid": "83e4c0b96a69d9a167d7878838d03e060fb01a95379f7318418b7d1d2f6b22bc",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.18811132106930017,
+      "wire_bytes": {
+        "P->V": 4222,
+        "V->P": 368
+      },
+      "zeros": false
+    },
+    {
+      "attack": "wrong_bias",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_wrong_bias",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 5.2497869999999995,
+      "prover_rss_kib": 21692,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 537,
+        "components": 82,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "0b70020a109259b2c2b58c2083d3918d00afead3d89a64819caad3889e2fc80a",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 13.402720623183995,
+      "wire_bytes": {
+        "P->V": 373147,
+        "V->P": 143780
+      },
+      "zeros": false
+    },
+    {
+      "attack": "detached_memory",
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_detached_memory",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.3683819999999995,
+      "prover_rss_kib": 21788,
+      "reason": "Rejected: component mathematical verification",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 537,
+        "components": 82,
+        "reason": "Rejected: component mathematical verification",
+        "sid": "5a531f11b3675002e44c46cab68de630c0c57e70b4abd3e7ce1186d322717d46",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 10.251895364373922,
+      "wire_bytes": {
+        "P->V": 373150,
+        "V->P": 143780
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_state",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.04567499999999999,
+      "prover_rss_kib": 18372,
+      "reason": "Rejected: request schema",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "Rejected: request schema",
+        "sid": "c8e195994413aee0ee590753dca34eeff2385b28cfd2f90c318e14e14fc8071d",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.161646980792284,
+      "wire_bytes": {
+        "P->V": 4259,
+        "V->P": 344
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_receipt",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.045415999999999984,
+      "prover_rss_kib": 18396,
+      "reason": "Rejected: request schema",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "Rejected: request schema",
+        "sid": "dc79b272486b2487b6700d43de88d0e60fb642706870e66a58bfd575f75cb29d",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.12338291620835662,
+      "wire_bytes": {
+        "P->V": 4261,
+        "V->P": 344
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_seed",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.045631000000000005,
+      "prover_rss_kib": 18320,
+      "reason": "Rejected: request schema",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "Rejected: request schema",
+        "sid": "400ac51a55b0d7337180c50cd080bdf78d000dc795f31a98235d39ceb6375f58",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.16279408894479275,
+      "wire_bytes": {
+        "P->V": 4258,
+        "V->P": 344
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_mapping",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.047027,
+      "prover_rss_kib": 18440,
+      "reason": "ValueError: schema keys",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "ValueError: schema keys",
+        "sid": "82741ae9a2024989246a1fe309290137d420507cd4a9ffa5ee22fff190869855",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.12559028016403317,
+      "wire_bytes": {
+        "P->V": 4250,
+        "V->P": 343
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_model",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.047054000000000006,
+      "prover_rss_kib": 18336,
+      "reason": "ValueError: E verifier-owned instance/registration",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "ValueError: E verifier-owned instance/registration",
+        "sid": "a97b40764d6cf33246c0a0eef11e6225722ad2e8a9be9f2d572ecfa3aac45505",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.12527975207194686,
+      "wire_bytes": {
+        "P->V": 4209,
+        "V->P": 370
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_duplicate_wire",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.045534,
+      "prover_rss_kib": 18408,
+      "reason": "Rejected: duplicate JSON key",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "Rejected: duplicate JSON key",
+        "sid": "779f446b5abacfb4f9509108e6c98336cc81f271b1c9a7d3d9f10ea4b1939435",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.12100729392841458,
+      "wire_bytes": {
+        "P->V": 0,
+        "V->P": 348
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_choose_gamma",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.075059,
+      "prover_rss_kib": 18232,
+      "reason": "Rejected: prover cannot specify coins",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "Rejected: prover cannot specify coins",
+        "sid": "d2b473c9a63f820d1a0bb1a2a55466c6f578f26a487ee1e66f8239e0c2e9ce45",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.24138172483071685,
+      "wire_bytes": {
+        "P->V": 4488,
+        "V->P": 471
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_missing_second_fc",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.363474999999999,
+      "prover_rss_kib": 21064,
+      "reason": "Rejected: request schema",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 337,
+        "components": 62,
+        "reason": "Rejected: request schema",
+        "sid": "7dbdac4d0962b27753d4ebec40a5ea1013a22e5d875b46ee63e9a9bd7f3ac0cd",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 10.438877826090902,
+      "wire_bytes": {
+        "P->V": 273770,
+        "V->P": 99658
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_early_after_memory",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 2.916372,
+      "prover_rss_kib": 19756,
+      "reason": "Rejected: request schema",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 244,
+        "components": 47,
+        "reason": "Rejected: request schema",
+        "sid": "86d0e3c457d0163b1d50212daf86e72d44d9388077955916e68c3dc3185a21b9",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 6.870742719154805,
+      "wire_bytes": {
+        "P->V": 192098,
+        "V->P": 75736
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_bad_group",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.127682,
+      "prover_rss_kib": 18316,
+      "reason": "ValueError: group field",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 2,
+        "components": 0,
+        "reason": "ValueError: group field",
+        "sid": "b39d77d2586ad22fa16a3969b7c96622a2422584c2c3918c01aec78a02620a50",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.314708377700299,
+      "wire_bytes": {
+        "P->V": 7962,
+        "V->P": 750
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_bad_field",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.29006799999999994,
+      "prover_rss_kib": 18544,
+      "reason": "ValueError: noncanonical scalar",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 19,
+        "components": 4,
+        "reason": "ValueError: noncanonical scalar",
+        "sid": "ad79af338a8ec5806a2b68358ec99f431ab9a76b55f750cc90b7976e5c80e7ed",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.5536723956465721,
+      "wire_bytes": {
+        "P->V": 20458,
+        "V->P": 6050
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_old_session",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.10986599999999999,
+      "prover_rss_kib": 22400,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 2,
+        "components": 1,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "108060e70420c19361c05f4a3c9f5b4c81559b82dedd4a22d4e9348cf8e068e0",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.23283770307898521,
+      "wire_bytes": {
+        "P->V": 8680,
+        "V->P": 886
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_alternate_domain",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.123831,
+      "prover_rss_kib": 18560,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 2,
+        "components": 1,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "f63cbe0a97f37f45a3424dbd4b02560d12b0f608edbcf12f385d19efb9b61ad6",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 0.31534163374453783,
+      "wire_bytes": {
+        "P->V": 8680,
+        "V->P": 886
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_master_splice",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 2.362694,
+      "prover_rss_kib": 19928,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 246,
+        "components": 48,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "9de161805f987736bc767aeb6d04d9dda8791c4e4141e0238bb05a8dcb1a85af",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 5.82193706696853,
+      "wire_bytes": {
+        "P->V": 189875,
+        "V->P": 76168
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_internal_terminal",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.5671230000000005,
+      "prover_rss_kib": 21108,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 379,
+        "components": 69,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "1860ea877896410b505589ad8b963f94786070ebfdfca2ce708869f879aa692c",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 10.900508364662528,
+      "wire_bytes": {
+        "P->V": 294927,
+        "V->P": 110534
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_kernel",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.6589279999999995,
+      "prover_rss_kib": 21544,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 523,
+        "components": 81,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "d477307ea8cc8baac352a5465fe12ce78fc7517abe964fcca0fffa0e63b0bb9f",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 11.520683444105089,
+      "wire_bytes": {
+        "P->V": 356012,
+        "V->P": 141084
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_truncate",
+      "pass": true,
+      "proof_json_bytes": 205815,
+      "prover_cpu_seconds": 6.773398,
+      "prover_rss_kib": 22228,
+      "reason": "Rejected: EOF before protocol completion",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "reason": "Rejected: EOF before protocol completion",
+        "sid": "f9474f7ca93506f789d29061f463f3877e1def2c0ff860f9ffbd91df4e800c11",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 15.400985253043473,
+      "wire_bytes": {
+        "P->V": 381183,
+        "V->P": 147543
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_lambda",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 3.459049,
+      "prover_rss_kib": 20244,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 277,
+        "components": 53,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "ba55f59f840b6496217c16f907c2d924ec2814d8443b7982baa334ac6d6d285a",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 8.198651927057654,
+      "wire_bytes": {
+        "P->V": 218647,
+        "V->P": 83577
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_theta",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 6.287349,
+      "prover_rss_kib": 21696,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 523,
+        "components": 81,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "90b7cc7d952043851d1e97d5fc84b4bf819d91c2f35e057755ff6ae0626e0509",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 14.6183783528395,
+      "wire_bytes": {
+        "P->V": 356011,
+        "V->P": 141084
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "REJECTED",
+      "name": "E_point",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 4.981197,
+      "prover_rss_kib": 21664,
+      "reason": "Rejected: component statement/parent identity",
+      "status": "REJECTED",
+      "terminal": {
+        "challenges": 468,
+        "components": 79,
+        "reason": "Rejected: component statement/parent identity",
+        "sid": "f247ea5beff1dd886688669ac985d737111f0c31ee1401b32b220a4c1692a1fb",
+        "status": "REJECTED"
+      },
+      "verifier_exit": 2,
+      "wall_seconds": 11.960306379944086,
+      "wire_bytes": {
+        "P->V": 347806,
+        "V->P": 132726
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "FAILED",
+      "name": "E_rng_failure",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.047763,
+      "prover_rss_kib": 18328,
+      "reason": "RuntimeError: injected verifier entropy failure",
+      "status": "FAILED",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "RuntimeError: injected verifier entropy failure",
+        "sid": "af4d1552d94504c17618cdfef1d6221b9a61a915b85ebd4cea713a1a62e0a437",
+        "status": "FAILED"
+      },
+      "verifier_exit": 4,
+      "wall_seconds": 0.2141392040066421,
+      "wire_bytes": {
+        "P->V": 4357,
+        "V->P": 479
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "TIMED_OUT",
+      "name": "E_timeout",
+      "pass": true,
+      "proof_json_bytes": null,
+      "prover_cpu_seconds": 0.04674299999999999,
+      "prover_rss_kib": 18500,
+      "reason": "session or idle timeout",
+      "status": "TIMED_OUT",
+      "terminal": {
+        "challenges": 0,
+        "components": 0,
+        "reason": "session or idle timeout",
+        "sid": "c2adb644efdae9d4e731976a8edc44b8c43f6e4db911b662cb8652d962d15940",
+        "status": "TIMED_OUT"
+      },
+      "verifier_exit": 3,
+      "wall_seconds": 0.4457846307195723,
+      "wire_bytes": {
+        "P->V": 4222,
+        "V->P": 458
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_positive_2",
+      "pass": true,
+      "proof_json_bytes": 205818,
+      "prover_cpu_seconds": 6.38466,
+      "prover_rss_kib": 22868,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "336f47433c90b78b9c15c536305a17f014b49fbd3f32724efc1764acd3c42bcb",
+        "reason": "complete verified interactive session",
+        "sid": "e15e2ba0938aa7b736c8042458f7d179e60bd52915bd2b61c85104f9873b77de",
+        "statement_digest": "631791b612380babf74eadfb73622c76ba05039fd01b49a299dd87c7438f01a4",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.689345000000001,
+        "verifier_rss_kib": 23372
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 15.328430946916342,
+      "wire_bytes": {
+        "P->V": 591235,
+        "V->P": 147772
+      },
+      "zeros": false
+    }
+  ],
+  "classification": "TOY_TESTED",
+  "full_flat_master_static": {
+    "actual": 714217488,
+    "allocated": false,
+    "exceeds_R6_bound": true,
+    "one_Fr_array_bytes": 34359738368,
+    "padded": 1073741824
+  },
+  "limits": {
+    "AS_MiB": 512,
+    "CPU_seconds": 120,
+    "HPC_batchK_cap": 4,
+    "HPC_batchK_observed": 2,
+    "MSM_cap": 32,
+    "degree": 3,
+    "events": 2048,
+    "idle_seconds": 10,
+    "input_bytes": 16777216,
+    "logical_actual": 40,
+    "master": 64,
+    "max_authorized_table": 64,
+    "max_authorized_vector": 1024,
+    "message_bytes": 2097152,
+    "session_wall_seconds": 60,
+    "table": 4
+  },
+  "notes": "Fresh P/V processes per sample. ru_maxrss KiB individually, not combined simultaneous RSS. Wire is canonical logged JSON bytes, includes final redundant proof submission. No production timing/throughput extrapolation.",
+  "samples": [
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_positive_1",
+      "pass": true,
+      "proof_json_bytes": 205810,
+      "prover_cpu_seconds": 4.912691000000001,
+      "prover_rss_kib": 22728,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "eb43c03962e913396b1d8e04c80386f4688643626fa56a5cea452903854aaa33",
+        "reason": "complete verified interactive session",
+        "sid": "71a70bee230b1a073b0aec07281e3cb57248ef4821e88ac9c48f4ef98c76447f",
+        "statement_digest": "28a165147cd0ab8312effbb73b973def31c823bb1e574a6da79a4d3f343340f9",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.080612,
+        "verifier_rss_kib": 23188
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 13.29861544398591,
+      "wire_bytes": {
+        "P->V": 591228,
+        "V->P": 147763
+      },
+      "zeros": false
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_zero_values",
+      "pass": true,
+      "proof_json_bytes": 205812,
+      "prover_cpu_seconds": 6.203443,
+      "prover_rss_kib": 22908,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "b221a7bc25ee5bf9deb5818bca3641932820871d58792e30d313f9fd3241d021",
+        "reason": "complete verified interactive session",
+        "sid": "7ab6b7c61ac753b943389a06b2deb0f3ecc9befe9d7dd512a2b88b941fd90ac7",
+        "statement_digest": "3cc7353e4b851a08f73fa706d0a882d96178f826e075ebcf74b0bab7ea460fa1",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.588102,
+        "verifier_rss_kib": 23192
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 14.971743875183165,
+      "wire_bytes": {
+        "P->V": 591227,
+        "V->P": 147763
+      },
+      "zeros": true
+    },
+    {
+      "attack": null,
+      "bounds": {
+        "MSM_max": 32,
+        "batchK_max": 2,
+        "degree": 3,
+        "master": 64,
+        "table": 4
+      },
+      "classification": "TOY_TESTED",
+      "expected": "ACCEPT",
+      "name": "E_positive_2",
+      "pass": true,
+      "proof_json_bytes": 205818,
+      "prover_cpu_seconds": 6.38466,
+      "prover_rss_kib": 22868,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "terminal": {
+        "challenges": 550,
+        "components": 84,
+        "proof_digest": "336f47433c90b78b9c15c536305a17f014b49fbd3f32724efc1764acd3c42bcb",
+        "reason": "complete verified interactive session",
+        "sid": "e15e2ba0938aa7b736c8042458f7d179e60bd52915bd2b61c85104f9873b77de",
+        "statement_digest": "631791b612380babf74eadfb73622c76ba05039fd01b49a299dd87c7438f01a4",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 9.689345000000001,
+        "verifier_rss_kib": 23372
+      },
+      "verifier_exit": 0,
+      "wall_seconds": 15.328430946916342,
+      "wire_bytes": {
+        "P->V": 591235,
+        "V->P": 147772
+      },
+      "zeros": false
+    }
+  ]
+}

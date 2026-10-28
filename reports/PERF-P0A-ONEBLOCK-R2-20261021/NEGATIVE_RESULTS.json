@@ -1,0 +1,65 @@
+{
+  "scope": "mutations of actual accepted R5B oneblock artifacts",
+  "cases": [
+    {
+      "case": "statement-noncanonical-G1",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "d3ab62842aa6848e4d3a71dbe04cf3dfb4b30e8d007ccecacc90c1190f7666ac",
+      "proof_sha256": "59df6b40265249bcb6a861ed27c0ef6461d88993ffa80d362086cda8672c4ca4"
+    },
+    {
+      "case": "statement-noncanonical-G1",
+      "verifier": "frozen",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "d3ab62842aa6848e4d3a71dbe04cf3dfb4b30e8d007ccecacc90c1190f7666ac",
+      "proof_sha256": "59df6b40265249bcb6a861ed27c0ef6461d88993ffa80d362086cda8672c4ca4"
+    },
+    {
+      "case": "proof-noncanonical-G1",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "926615c1e21744bd271e1b225e908dea9abc234d2fb7c860e2b8c3d4977cb4fb",
+      "proof_sha256": "0d14a08559fbe943130a207fe7f1c3d6b855020b0c8965b583b55f285081b068"
+    },
+    {
+      "case": "statement-binding-flip",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "926615c1e21744bd271e1b225e908dea9abc234d2fb7c860e2b8c3d4977cb4fb",
+      "proof_sha256": "606135d3e8005092eb8fa6744382518230b57b284ff5ce6fa798a77d4a64582b"
+    },
+    {
+      "case": "canonical-opening-value-flip",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "926615c1e21744bd271e1b225e908dea9abc234d2fb7c860e2b8c3d4977cb4fb",
+      "proof_sha256": "559c2f3dcbd0e1a62dee6843a83fb8bf800e132d7d439cf083adeb1b4710f3f6"
+    },
+    {
+      "case": "truncated-proof",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "926615c1e21744bd271e1b225e908dea9abc234d2fb7c860e2b8c3d4977cb4fb",
+      "proof_sha256": "0a7f4a7b6b42a7a2844738433115a98ff54bb5cee685549e438ef90866e85a4a"
+    },
+    {
+      "case": "trailing-proof",
+      "verifier": "new",
+      "exit": 2,
+      "rejected": true,
+      "statement_sha256": "926615c1e21744bd271e1b225e908dea9abc234d2fb7c860e2b8c3d4977cb4fb",
+      "proof_sha256": "e6e2b4c9f587cc37c8eeed276aac591cc93da05116e99cae06bc690122ba45fd"
+    }
+  ],
+  "all_rejected": true,
+  "proof_group_byte_offset": 67236,
+  "statement_group_byte_offset": 234,
+  "opening_scalar_byte_offset": 67196
+}

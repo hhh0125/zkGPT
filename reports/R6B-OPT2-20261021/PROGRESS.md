@@ -1,0 +1,9 @@
+# OPT2 ledger
+Baseline source4c57... verified. Protected2486evidence rows SHA frozen. Prior Windows OPT receipt successful; no deletion orGit.
+Sharedowner test trueRED missingAPI ->GREEN; realGKR verifies and does not mutate sharedmaster; addresses recorded. Optinvectorcommit bypasses logicalval0paddingcopy and retains legacydefaultnew[] semantics. Exactpublicplan hint reservedonce and validatedbeforecommit. Sourceonlyfixedworkspace.
+Allocation test initially demanded totalrequests-1, but newoptionaldiagnosticlabelstrings add4tiny requests113bytes. Correctedassert to Master-sizedrequests only, retain ALLrawcounts. Realfulldomainallocation-1andbytes-1Mverified; counter nowatomic; firstfailedlog retained. No model/protocolcodefix needed. GKRBuilderbeta_g1M remainslive throughmappedinput and occupies thirdMaster of incremental3M; it is real storage, not free margin.
+FinalfullRelease68CTest+actualfull12metadata+ASan/UBSanproverownershipanddirectspan testscomplete. Alloldplanfieldsidentical,newstoragebreakdownonly. No full12witnessorproof.
+Final realoneblockP+independentV complete. Statement/proof byteidentical to freshbeforebaseline AND originalindependentlyACCEPTED R5Bnormal-v2; no input/model/protocol change. Full12 still notexecuted.
+FinalfullRelease68CTest+actualfull12metadata+ASan/UBSanproverownershipanddirectspan testscomplete. Alloldplanfieldsidentical,newstoragebreakdownonly. No full12witnessorproof.
+Final realoneblockP+independentV complete. Statement/proof byteidentical to freshbeforebaseline AND originalindependentlyACCEPTED R5Bnormal-v2; no input/model/protocol change. Full12 still notexecuted.
+Packagingcurrent sourcepatch, before/afterbytes, oldandnewexecutables,libraries,buildconfig,proofstatementandrawlogs. No source edits after finalfreeze, no effectivepermit orfull12output; waitingWindowsSHA/restore.

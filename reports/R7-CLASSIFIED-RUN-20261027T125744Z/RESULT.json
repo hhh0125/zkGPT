@@ -1,0 +1,136 @@
+{
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "error": "full-independent",
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "openssl": "OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)",
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/lib/libmcl.so.1.74": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so.1.74": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384.so": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmclbn384_256.so.1": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097",
+    "build/release/lib/libmcl.so.1": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so.1": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384.so.1.74": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmclbn384.so.1": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmcl.so": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384_256.so.1.74": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802",
+    "build/release/lib/libmclbn384_256.so": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802",
+    "build/release/src/paper_r7/r7_complete_verifier": "6fa6321cfaeb1487f45c9558b3b6a2f13a2c91a8aadb36e1f8f0033b4075dd53",
+    "build/release/src/paper_r7/r7_complete_prover": "301a83cc473fbe920f65f72bf940fe57ba6bf8296db4bea1190eab2323c6fdf9",
+    "build/release/src/paper_r7/r7_classified_prover": "29f421b49f94a91e79dfa3db0cf494bcfaf03fef3a235d6aa17b933f285a78a5",
+    "build/release/src/paper_r7/r7_classified_verifier": "23d10a760f4e227be5d68c4d7df306bf294f63a76a82210d680447a300922aa9",
+    "build/release/src/paper_r7/r7_classified_crypto_tests": "09a14a63eeaaa182c693a11878d1d2115ab6cd87505dc5895613fd36377b0e3e",
+    "build/release/src/paper_r7/r7_classified_layout_tests": "e62ede6ad52e9cd1f4403a07d01aa41451493fd3fda53ad72fd6bd8d4ea57927"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+  "events": [
+    {
+      "name": "engineering",
+      "command": [
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.425071122124791,
+      "passed": true
+    },
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9698133361525834,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_classified_layout_tests",
+        "r7_classified_crypto_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_lookup_prepare_tests",
+        "r7_classified_prover",
+        "r7_classified_verifier",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "r7_legacy_oneblock_prover",
+        "r7_legacy_oneblock_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 1.6688642548397183,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_layout_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_layout_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 9.739769661799073,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_crypto_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.16826586332172155,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_lookup_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 22.572892170399427,
+      "passed": true
+    },
+    {
+      "name": "r7_lookup_prepare_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_lookup_prepare_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.01140016270801425,
+      "passed": true
+    },
+    {
+      "name": "full-independent",
+      "command": [
+        "python3",
+        "-B",
+        "tools/classified_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261027T125744Z",
+        "--full",
+        "--positive-only"
+      ],
+      "exit_code": -9,
+      "seconds": 194.2958634030074,
+      "passed": false
+    }
+  ]
+}

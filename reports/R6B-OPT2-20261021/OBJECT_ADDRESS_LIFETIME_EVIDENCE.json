@@ -1,0 +1,139 @@
+{
+  "source_log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/logs/R6B-OPT2-20261021/final-oneblock-prover.log",
+  "actual_oneblock_not_full12_addresses": true,
+  "rows": [
+    {
+      "line": 1100,
+      "raw": "[ZKGPT_ADDR] stage=public_graph/move-out object=graph_layers address=0x564ddbba2490 bytes=4608 owner=moved-to-preflight"
+    },
+    {
+      "line": 1101,
+      "raw": "[ZKGPT_ADDR] stage=preflight/graph object=object address=0x7ffc7d837970 bytes=0 owner=scoped-preflight"
+    },
+    {
+      "line": 1102,
+      "raw": "[ZKGPT_ADDR] stage=preflight/graph object=layers address=0x564ddbba2490 bytes=4608 owner=scoped-preflight"
+    },
+    {
+      "line": 1103,
+      "raw": "[ZKGPT_MEM] stage=preflight/graph-destroyed metric=live_preflight_graphs value=0"
+    },
+    {
+      "line": 1106,
+      "raw": "[ZKGPT_MEM] stage=val0/planned-reserve object=val0 size=0 capacity=16642424 element_size=32 capacity_bytes=532557568"
+    },
+    {
+      "line": 1107,
+      "raw": "[ZKGPT_ADDR] stage=val0/planned-reserve object=val0 address=0x7fabdc41d010 bytes=532557568 owner=prover.val0"
+    },
+    {
+      "line": 2248,
+      "raw": "[ZKGPT_ADDR] stage=private_graph/ready object=graph_object address=0x7ffc7d83e8c0 bytes=0 owner=prover.C"
+    },
+    {
+      "line": 2249,
+      "raw": "[ZKGPT_ADDR] stage=private_graph/ready object=graph_layers address=0x564ddbeaf020 bytes=4608 owner=prover.C"
+    },
+    {
+      "line": 2250,
+      "raw": "[ZKGPT_ADDR] stage=shared_commit/published object=cc.w address=0x7fabbc41c010 bytes=536870912 owner=prover.vector"
+    },
+    {
+      "line": 2251,
+      "raw": "[ZKGPT_ADDR] stage=shared_commit/published object=val0 address=0x7fabdc41d010 bytes=532557568 owner=prover.val0"
+    },
+    {
+      "line": 2268,
+      "raw": "[ZKGPT_ADDR] stage=caller/master-ref object=caller_master address=0x7fabbc41c010 bytes=536870912 owner=prover.vector/const-ref"
+    },
+    {
+      "line": 2269,
+      "raw": "[ZKGPT_ADDR] stage=caller/master-ref object=val0 address=0x7fabdc41d010 bytes=532557568 owner=prover.val0"
+    },
+    {
+      "line": 2270,
+      "raw": "[ZKGPT_ADDR] stage=caller/master-ref object=actual_graph address=0x7ffc7d83e8c0 bytes=0 owner=prover.C"
+    },
+    {
+      "line": 2321,
+      "raw": "[ZKGPT_ADDR] stage=gkr/builder-created object=builder_C_ref address=0x7ffc7d83e8c0 bytes=0 owner=borrowed-prover.C"
+    },
+    {
+      "line": 2322,
+      "raw": "[ZKGPT_ADDR] stage=gkr/builder-created object=master_readonly address=0x7fabbc41c010 bytes=536870912 owner=caller-const-ref"
+    }
+  ],
+  "full12_objects_not_allocated": true,
+  "lifetime_source_basis": [
+    {
+      "object": "preflight public graph",
+      "owner": "scoped local c moved from public builder",
+      "full12_capacity_bytes": 5831666688,
+      "lifetime": "preflight scope only, destructor before private LLM/prover construction",
+      "coexistence_with_private_graph": false,
+      "allocator_caveat": "freedownership is not a guarantee pages/arenas immediately leaveRSS"
+    },
+    {
+      "object": "actual private graph",
+      "owner": "pr.C",
+      "full12_capacity_bytes": 5831666688,
+      "lifetime": "private construction to mainexit",
+      "GKRBuilder": "const layeredCircuit& C, sameobjectaddress; no graph copy"
+    },
+    {
+      "object": "val[0]",
+      "owner": "pr.val[0] vector",
+      "full12_capacity_bytes": 6379156480,
+      "lifetime": "reservedonce atprivate create, growslogicalsize only; mainexit",
+      "legacy": "old reservegrowth/padresize/compact sequence could create temporaryfullsizeallocation; sharedpath does none",
+      "count_for_real_oneblock_path": 1
+    },
+    {
+      "object": "cc.w and callerMaster",
+      "owner": "prover.committed_witness_vector_; cc.w nonowning mutableAPIview, caller const vector&",
+      "full12_capacity_bytes": 8589934592,
+      "lifetime": "after existingprover_commit joinsworkers through mainexit",
+      "count_for_real_oneblock_path": 1,
+      "legacy_objects": 2,
+      "read_only_argument": "samecommitment inputs/order; readonlycaller downstream; legacycommitter receives pointer only during successful commit; inputMLEopening tests confirm unchangedvalues"
+    },
+    {
+      "object": "all retainedchildren",
+      "owner": "gatherModelQueries return vectors v",
+      "full12_capacity_bytes": 10028744704,
+      "W_bytes": 8589934592,
+      "lifetime": "querygather to mainexit, W uses same childfor localbinding and mappedopen"
+    },
+    {
+      "object": "GKR beta_g",
+      "owner": "GKRProofBuilder member vector",
+      "full12_capacity_bytes": 8589934592,
+      "lifetime": "Lasso finalinput mapping weights through end proveR2; clear keepscapacity, survives mappedSumcheck",
+      "accounting": "third Master in incremental3M; never advertised asfree slack"
+    },
+    {
+      "object": "GKR Lasso folding/coefficients",
+      "owner": "existing folding workspace +lasso_v_mult",
+      "max_two_generation_folding_bytes": 12884901888,
+      "coefficients_bytes": 8589934592,
+      "lifetime": "two-generation maxat round2; foldrelease beforebridge; coeffreleased buildend",
+      "other_source_port_domains_max_fields": 4194304,
+      "overlap_bound": "2.5M mainfold+coeff, boundedsourceportbeta/generator/rowPC in remaining0.5M and other2GiB; retainedextra2graph +25% beyondthis"
+    },
+    {
+      "object": "mapped input",
+      "owner": "kernel moved into original Sumcheck factors +one mutable witnesscopy",
+      "full12_incremental_bytes": 17179869184,
+      "lifetime": "inside mapped Sumcheck block; released before finalMaster opening",
+      "immutable_master": "borrowed sharedcc/caller alreadycounted",
+      "GKR_overlap": "retainedbuilderbeta makes3M incremental inR2"
+    },
+    {
+      "object": "serializedproof buffers",
+      "owner": "existing nested serializers/Writer/proofobjects",
+      "extra_upper_bytes": 143438080,
+      "lifetime": "serialization after proveR2 returns; GKRbuilder/mapped temporaries actuallygone",
+      "conservative": "serialize estimate retains fullprove bound plus4proof; no earlydestruction discount taken"
+    }
+  ]
+}

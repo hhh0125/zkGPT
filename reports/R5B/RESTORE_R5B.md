@@ -1,0 +1,9 @@
+# Restore R5B
+
+Verify the final archive SHA/member manifest against LOCAL_DELIVERY_RECEIPT.json and consume gzip to EOF for CRC. The final archive carries actual source/3rd/deps/root bytes, Release binaries and project shared libraries, exact proof/statement/attack bytes, build caches/toolchain/config identities and raw logs. No Git metadata, SSH configuration or credential material is included.
+
+Parameters are unchanged and deduplicated against the already verified Windows R5A archive/CAS. PARAMETER_RESTORE_MAP.json supplies every one of the120 data/gpt2_int file paths, exact SHA and CAS object/member. Restore these bytes to the given relative paths and re-hash all120 files; do not re-export parameters or regenerate Exp-table files. LOCAL_DELIVERY_RECEIPT.json checks all mapped CAS bytes too. This stage is recoverable with the explicit map plus the retained historical archive, not a claim that its payload duplicates350MB of unchanged data.
+
+On compatible Linux, extract into a new empty directory for recovery only (never overwrite the protected main or active workspace). Rebuild using CMake with deps/cnpy/include and deps/cnpy/lib/libcnpy.a, GNU C++17 and toolchain/dependency identity from TOOLCHAIN_BINARIES_FINAL.json; ctest must pass. Existing binaries require their archived project shared libraries plus a compatible OS/GMP/zlib/libstdc++ runtime. This is not an OS image. Original absolute paths in raw logs/config are provenance, not a requirement to restore deleted historical snapshots.
+
+Run the independent verifier from a fresh empty directory using absolute statement/proof/anchor/manifest paths and the separately protected anchor SHA in OPERATOR_TRUST_CONFIG.json. Never derive the expected anchor SHA or approved W from the statement. Reconstructed source and all final artifacts have exact hashes; no reset, clean, commit or deletion is needed for recovery. Full12 remains separately unauthorized.

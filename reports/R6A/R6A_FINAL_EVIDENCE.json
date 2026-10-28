@@ -1,0 +1,2186 @@
+{
+  "Git_mutation_or_deletion_performed": false,
+  "R5B_oneblock_circuit_unchanged": "1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a",
+  "R6_oneblock_trust": {
+    "PC_columns": 4096,
+    "PC_rows": 4096,
+    "W_actual": 13645824,
+    "W_padded": 16777216,
+    "all_parameter_files_SHA_checked": 120,
+    "anchor": "reports/R6A/oneblock-operator-trust-v1.anchor",
+    "anchor_sha256": "404418280785fb8ef30bd97d20a29f98eed4607aea21fa30ca7e3b3884b6f93e",
+    "blocks": 1,
+    "circuit": "1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a",
+    "full12_numeric_witness_built": false,
+    "full12_proof_run": false,
+    "manifest": "reports/R6A/oneblock-model-manifest-v1.txt",
+    "manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+    "model_id": "r6-op-model/1/3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+    "operator_trusted": true,
+    "padded_tail_zero_scalars": 3131392,
+    "production_reader_matched_scalars": 13645824,
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "publisher_certified": false,
+    "seconds": 41.8002
+  },
+  "actual_plan_summary": {
+    "Exp_actual": 76032,
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "blocks": 12,
+    "child_padded_elements": 313398272,
+    "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+    "coordinate_capacity_bytes": 1021602816,
+    "full12_proof_executed": false,
+    "gate_and_map_bytes": 4256969280,
+    "gate_capacity_bytes": 4810063872,
+    "layers": 277,
+    "lookup_prover_bytes": 78748221440,
+    "master_actual": 199348640,
+    "master_padded": 268435456,
+    "max_layer_padded_fields": 268435456,
+    "metadata_field_witness_elements": 0,
+    "nonmaster_layer_padded_fields": 42568704,
+    "profile": "r5b-engineering-candidate-v1",
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "proof_upper_bytes": 35859520,
+    "range_values": 35598080,
+    "shared_legacy_resource_envelope_prover": 131260313600,
+    "shared_legacy_resource_envelope_verifier": 31167956928,
+    "terminals": 612
+  },
+  "actual_terminal_coordinate_plans": 612,
+  "archive_receipt": "separate external LOCAL_RESTORE_RECEIPT.json binds immutable payload and restored CAS/data/evidence identities",
+  "baseline_source_tree_sha256": "3a956366d3351652a419d73e14d11636b43b236142172be1257301288f27ac4e",
+  "binary_sha256": {
+    "build/r5b-sanitize/src/paper_r2/r6_builder_tests": "bbe94d296654b42b00f2b55dc3a66060d469418ed3da38c172ed1b91141b73d7",
+    "build/r5b-sanitize/src/paper_r2/r6_resources_tests": "3ea689699253efe4365a42b612c77e4059f1fb51c56702fe075544798567e0ea",
+    "build/r5b-sanitize/src/paper_r2/r6_trust_tests": "849be5bf02f61af6b4491de4902374687f4973575278dbd39aabcec3c4f5668a",
+    "build/r5b-sanitize/src/paper_r2/r6_witness_tests": "82278940fbdc885d20a392827a174f9fbc1079e7aafca4199b31d682bbe4168a",
+    "build/release/src/paper_r2/r6_builder_tests": "8f9784764d3d7b9113a269a4aeae93a19212866681650c2497a260234561876f",
+    "build/release/src/paper_r2/r6_integration_tests": "5975c0d725f7d0078c2318be53484c3c0ddc7de7f02365778ed8b8d8286c3f4b",
+    "build/release/src/paper_r2/r6_model_plan": "9a7c69109db579c0a9640d0d61488db6c377280870bbe4c17ff9a160c3deb528",
+    "build/release/src/paper_r2/r6_model_preprocess": "fbdf480ff1feeb5582a2db9cf9be5dfd9281fbd9120a6c4986b221c03dac9391",
+    "build/release/src/paper_r2/r6_model_prove": "80f0da673f3f07065e41a1377ebad629beb1e1d579bd9df60ca877dda97bdd3d",
+    "build/release/src/paper_r2/r6_model_verify": "3c257707a2eb2f1669accc5e410145ae3678466e015da59905ed83166b5e23fb",
+    "build/release/src/paper_r2/r6_resources_tests": "481fe8a6033ee44a54751684a603de865ad5cb6ca6e6326acf58a555946e5416",
+    "build/release/src/paper_r2/r6_trust_tests": "ce2092ab9241f4b3905a3057257ecd2c35894a90e03af679d2749ec787af442c",
+    "build/release/src/paper_r2/r6_witness_tests": "08032d34d2973d0e29b7fb4f14d756d37b4e37f3b85b5015c9deb2727f211596"
+  },
+  "blocking_conditions": [
+    "next explicit full12 Prover+independent Verifier authorization not granted",
+    "no valid executable/model/resource-bound run permits created",
+    "fresh effective resource availability required immediately before run",
+    "all12-block numerical witness input-domain admission awaits actual authorized construction"
+  ],
+  "completed_utc": "2026-10-20T13:02:46.296772+00:00",
+  "current_resources_fit_snapshot": true,
+  "full12_W_preprocessed": true,
+  "full12_circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+  "full12_graph_completed": true,
+  "full12_independent_verifier_run": false,
+  "full12_numeric_witness_built": false,
+  "full12_proof_generated": false,
+  "full12_trust": {
+    "PC_columns": 16384,
+    "PC_rows": 16384,
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "all_parameter_files_SHA_checked": 120,
+    "anchor": "reports/R6A/full12-operator-trust-v1.anchor",
+    "anchor_sha256": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+    "blocks": 12,
+    "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+    "full12_numeric_witness_built": false,
+    "full12_proof_run": false,
+    "manifest": "reports/R6A/full12-model-manifest-v1.txt",
+    "manifest_sha256": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+    "model_id": "r6-op-model/12/b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+    "operator_trusted": true,
+    "padded_tail_zero_scalars": 104685568,
+    "production_reader_matched_scalars": 163749888,
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "publisher_certified": false,
+    "seconds": 359.715
+  },
+  "full12_walltime_calibrated": false,
+  "historical_R5B_evidence_unchanged": true,
+  "numeric_witness_tested_blocks": [
+    0,
+    1,
+    2
+  ],
+  "parameters": {
+    "data/gpt2_int/fc_0.bin": "fb4abf46ebb80705eef043e9d3c57f608e851cdc4598abbc0731409a4b97b5c0",
+    "data/gpt2_int/fc_0_bias.bin": "5591fdcdfda410933452988c5b21b8ab8ad2dc79e6e052e82249bbf1fda23610",
+    "data/gpt2_int/fc_1.bin": "46c991157d14d5761a26ddc3cdfdd3058f80931bd96ed0d898d59c3cbc7d3f8d",
+    "data/gpt2_int/fc_10.bin": "cc45017a4c6b1ca017766667c34cd2ba91acf8b36358222c1e91194755ed1c83",
+    "data/gpt2_int/fc_10_bias.bin": "e301b820063a243db51f00af2a9a3f389c14384e59c97727b781d74a0d0e67e4",
+    "data/gpt2_int/fc_11.bin": "a285710cb3bd16be92fd67cabdbe61df7eb48cc676e9f5811c7be7249e759751",
+    "data/gpt2_int/fc_11_bias.bin": "42e29d455dc4d2534d06bb853b426192b68a3e5e1fb066710295406c287be2a9",
+    "data/gpt2_int/fc_12.bin": "6f9ba38976fe226879ce2c7a2c93625195787a65054f5a95e047ea08db442f58",
+    "data/gpt2_int/fc_12_bias.bin": "563809274e91a0989b47265c3c4a52845582da43ca2465b7eeac33d377e04a76",
+    "data/gpt2_int/fc_13.bin": "d695919f359e70872007c0544a30bf966e9529125c93cb33f3c09150ff955b2d",
+    "data/gpt2_int/fc_13_bias.bin": "3b4cbf398ab59833630eb8c3cab28128f4c7b0b43df4ffe5a3e07ba90b21d09c",
+    "data/gpt2_int/fc_14.bin": "310287e9486716e9e8ac25278e0812775aec80c932ec18c4fd59f6e852d6e417",
+    "data/gpt2_int/fc_14_bias.bin": "fc5a36ac135753b00646dad040577065ca3eb889b868ee91adc4cb72fddfc32a",
+    "data/gpt2_int/fc_15.bin": "7f44178a62ab2c0320d2b68624bcc23c1a5cdbb5a3f6d4472508e328f3651fd7",
+    "data/gpt2_int/fc_15_bias.bin": "e6618286163f9f63d093bf8c91586a8c1eec8090e87c6b6ed807bfac38bb7a5f",
+    "data/gpt2_int/fc_16.bin": "19f0c26ba7d6351fb67913f3807a676d8c93e9679c0217e29b7b80834de62a8b",
+    "data/gpt2_int/fc_16_bias.bin": "c8e07962f394b072559dea9b97564db8a678d89659aeea611719ab262623589c",
+    "data/gpt2_int/fc_17.bin": "8a32bb25e6321fa478735d5b277aadb59ae2b6648590e72608fc9dc9079210bc",
+    "data/gpt2_int/fc_17_bias.bin": "dd4249384ef06acb8c87b8576f473f325a03515d16e3165e0dc29055545d73b0",
+    "data/gpt2_int/fc_18.bin": "3cf71aaacf421f1eaa1812c929b6c8e9b94551270f128a07f03fd384c013153f",
+    "data/gpt2_int/fc_18_bias.bin": "8d2742c2ea9868d07ed4529a4e9b6096548fd14eb011eef052781381efa117fe",
+    "data/gpt2_int/fc_19.bin": "94618aca7485e0dd1f6ba42f3f4d957b66e3d15ffd10ca7a1cd271740d4e897a",
+    "data/gpt2_int/fc_19_bias.bin": "958fcb42eb2393ee79f75be0dbc3eac41c5ff715ee053729a429db8631c66f7a",
+    "data/gpt2_int/fc_1_bias.bin": "f42903adef0f4c402e89fd05cbdbffb1a1248c4606b6bfe29d140b574043e55d",
+    "data/gpt2_int/fc_2.bin": "42c3a2076aec94e64bbc93fe6585b883131a73eef272fbeab2d8065f3e3a6d40",
+    "data/gpt2_int/fc_20.bin": "45bc843db3cf9924e2ab5d77c7942d175ca51cfab6547c67671a1037b937bff9",
+    "data/gpt2_int/fc_20_bias.bin": "0d2ed9af9bd79b8189f831ff6e2714896c15c6145e2b47930252be1339c8724a",
+    "data/gpt2_int/fc_21.bin": "1672b18f2f0227b109042327be63adf23987986ae3b28da6be8acce142d8046a",
+    "data/gpt2_int/fc_21_bias.bin": "a0f461c40c99120115959f7b21b0ec64da920db8abd8b279023438d541cecc8b",
+    "data/gpt2_int/fc_22.bin": "e4ccdb0a4c5b581f993efc54ae7813e30d12eeb00b4cf1cf46b70468968936cb",
+    "data/gpt2_int/fc_22_bias.bin": "5171d07622a20acf42ac52ce66ea8ed56884b41e7938d7a311d49e4325e762db",
+    "data/gpt2_int/fc_23.bin": "f29495b535a2253679b3317562e53a9eb0ff6906e20781c9ce76d09e76db2c90",
+    "data/gpt2_int/fc_23_bias.bin": "373b77347931b37794b007cbf7b7fe2594f275eef1f6bb87664fc0cc52e3de89",
+    "data/gpt2_int/fc_24.bin": "efb4ad7b66f94c783c66d578770038e1ae55720863448f4e03f04f314b9192dd",
+    "data/gpt2_int/fc_24_bias.bin": "d72ed36338a0a318b7fb9c946b9c0319284373f722cfecb8fd4babc0dd2a1533",
+    "data/gpt2_int/fc_25.bin": "500cf3b48e470928559b4c474a9e8494053b42a9bbab0f4818e267196c6052a4",
+    "data/gpt2_int/fc_25_bias.bin": "783a31c460fdde886757269a8c1d8a7d83bf49f8f54071783aff52ad658fce00",
+    "data/gpt2_int/fc_26.bin": "438a456eda6085f59fcb2fd02f72dec40dc2cfe0b0b044dfab0c50a96d3bb2bc",
+    "data/gpt2_int/fc_26_bias.bin": "21d056cb5c5730bbc5b2fbb073ec47bafdb89fd9449bbd83b32c85e89b145cd7",
+    "data/gpt2_int/fc_27.bin": "6e39ce27bd3120ef1298066ae5e68aa5ab9f8bc88bf386ad372edbd79c5877c4",
+    "data/gpt2_int/fc_27_bias.bin": "600dad134ada8e1abe8a123ec665ee18dbcfa095f848cc60b83c572721680971",
+    "data/gpt2_int/fc_28.bin": "f35c0f7a88f9b16b2f5cd38eb63ca5176ac664fea24c88eb3bafada194eb8ff5",
+    "data/gpt2_int/fc_28_bias.bin": "203f42d54f5f161ac181e6ea581ae5bae92c96857a1a8c955501f5b7502b6500",
+    "data/gpt2_int/fc_29.bin": "0d049b2269912ebd055805461d13ac96656222f69c7bd38c64aecf64d6b207f5",
+    "data/gpt2_int/fc_29_bias.bin": "6025bcc147846f35d3aac6343d1a98f047e1734f7a68a23a8d835d6f4b7b9794",
+    "data/gpt2_int/fc_2_bias.bin": "95349d52b80aa47e3e62330040b1173d128c5244777105c889237a274beea0b4",
+    "data/gpt2_int/fc_3.bin": "93e058ca754dc8a7903da18c537324c4b028b4b76c30ad01d1572bfd8a565176",
+    "data/gpt2_int/fc_30.bin": "e5f6dfe9b99bc895a894302d44c78a7901ea729d0c31a9a72c7e544d28c451fc",
+    "data/gpt2_int/fc_30_bias.bin": "29e0d2a35ac51a62168c860c2469c8bd0a688eff1c000c866cc275f2632c4684",
+    "data/gpt2_int/fc_31.bin": "1bd01027c3115fea5b9567628c5108677b9a309f85bdd2bbd182322b846a4c36",
+    "data/gpt2_int/fc_31_bias.bin": "e55d874eb08d4e819bbf7b86e0d6d40843a1e894966ea6a130c1cb0cf95a5b85",
+    "data/gpt2_int/fc_32.bin": "844f48dd2a28650c0e6dd31ca8b4e6a1ae45c7223e7458c4aac2a7c72eed409e",
+    "data/gpt2_int/fc_32_bias.bin": "c460f1d2551fa456aa6dbd372aa55c89856540f5f3386733ab6306264626c30b",
+    "data/gpt2_int/fc_33.bin": "5f999d8eaee8c605a7f2f3b1956c4d0a29a006163dc921b64e6b6c2d03968a48",
+    "data/gpt2_int/fc_33_bias.bin": "7d4915ec4176169fd9b373da6a7b9b72d802dfbc2917055d4987b20269f88687",
+    "data/gpt2_int/fc_34.bin": "2f91ded41685be4be7f718836a9e02499e824af54550ea15c8fe9d74e74ca8fb",
+    "data/gpt2_int/fc_34_bias.bin": "5e0e7bf38671c8826d670051a377a74f6a40d35fc3faca8330eabaee3b032e33",
+    "data/gpt2_int/fc_35.bin": "ffaa114f7fa5cdf17c6c89c41f2de954c16e7a38a8d53287255b463a71ab1d5a",
+    "data/gpt2_int/fc_35_bias.bin": "d49b5b2d8ee24f2a831e17fe024ddf2df353908ffb435973eca522754a531ce9",
+    "data/gpt2_int/fc_36.bin": "970ed9010f6acb4452decd98e5699ef7762d781f8ce9562e69a53389f440b5f3",
+    "data/gpt2_int/fc_36_bias.bin": "39128e62e6e6da8f0f1e516afe247173e4d9ceedf426e840f51ecf713188ddf9",
+    "data/gpt2_int/fc_37.bin": "69bac4d2f0c3fc7c1412c1813ac44db84f0c4d084c6dced34420c76f5d11847b",
+    "data/gpt2_int/fc_37_bias.bin": "71e8e8716af9281f87ea17a97043c25797291e90cf61a11bbeddf0a00ee53147",
+    "data/gpt2_int/fc_38.bin": "0fef9412794750ce7151e541f7076c8f717355a3913685af5099b66674f5e3aa",
+    "data/gpt2_int/fc_38_bias.bin": "3720b18662448a78dc83df5d0b9431ae14f8ed6394178c39a7aab4fd5cb33765",
+    "data/gpt2_int/fc_39.bin": "605d22a160739ab89e2a2d8a85a92f39ba89545cb541c054f8be96b6c9cb4a12",
+    "data/gpt2_int/fc_39_bias.bin": "4f601f144dbddb68e734d0ae6e7b07318110f4dde86a51f197e46dee5bf7f640",
+    "data/gpt2_int/fc_3_bias.bin": "19a121bdc7abd4e51596cd6e3e583a50072a89fae17ac2b658d6d1fd337bf0ff",
+    "data/gpt2_int/fc_4.bin": "7560c9f2bc04ca21e07aa72df87d39cc0fa84425074acf3d99d1f861b6dad7d3",
+    "data/gpt2_int/fc_40.bin": "6a001d93d26476c32bdefedf725ada23a805c781949538a6114fc17469222763",
+    "data/gpt2_int/fc_40_bias.bin": "d8a3e8e5c5361e97585023cb0e92daf1aaa382c350d11f9f2a7e75dab5ea6e36",
+    "data/gpt2_int/fc_41.bin": "2cee86f2f2c37985ab098f0e75fc356e9482d147b5e269345c5560591ce31c5d",
+    "data/gpt2_int/fc_41_bias.bin": "744757086debe66c11179ae63d40d0496e592d9ceaa3b67a0dcd7e8d64bcdb83",
+    "data/gpt2_int/fc_42.bin": "a66cb228ef6ebe8380fdd4ad1f77f992594e63a51d459194ff7b7efbb485c299",
+    "data/gpt2_int/fc_42_bias.bin": "d75e1d6521c5fb3f2bfa0b1744cab6121da2f32338ef6187c8c3be8470784a2a",
+    "data/gpt2_int/fc_43.bin": "cd980df7046dcb9758c8746be9d0615d130eb4fa5b5ea59259431910148cb308",
+    "data/gpt2_int/fc_43_bias.bin": "4716a958668ee151f226b4cae32ff3b6689e2e535852202f5219271ddc851965",
+    "data/gpt2_int/fc_44.bin": "f2b1e10451097e233115dde94e986015b3c02270ce4655db8f2545a4f5a7247d",
+    "data/gpt2_int/fc_44_bias.bin": "9fbb561026874ff1180f58c3b7b7458580b8d737f6f98684bd351d3425c06d21",
+    "data/gpt2_int/fc_45.bin": "bfcebaef4b097b567b2c64fbafc070e6ec74c16c89aa49d8738aed9ef36fbb6a",
+    "data/gpt2_int/fc_45_bias.bin": "154c784bbc93fb7be375609bcf1e272ecb79bc00ae0d424bafc448b6a83a74e3",
+    "data/gpt2_int/fc_46.bin": "a2e5e62724356c0e8085a13922f16e2a6b6999bab0e0470f2850dd7d1e6e9be6",
+    "data/gpt2_int/fc_46_bias.bin": "025ebc3a842e563f28513b16e636ac8f8e5682ff40d9ae374c0c019dacf35e0d",
+    "data/gpt2_int/fc_47.bin": "31c6e649285dba44b6cf868b5428196bd35709d79a75f1f28819e34151115f8b",
+    "data/gpt2_int/fc_47_bias.bin": "6fa7feeded88e7a121e87adf8ba198041b5e39dacfed52a96bd2b51ee3ffcdee",
+    "data/gpt2_int/fc_4_bias.bin": "c9fd78a88b1079ce44bf8c94a5d8ef38147ab7b05e9bcd8ba2cd5c907600ff96",
+    "data/gpt2_int/fc_5.bin": "72dee293c26d8a817bf858744d05a827d873f3b71b55aa65a4d9824a97e7ec9c",
+    "data/gpt2_int/fc_5_bias.bin": "4da003794c3988d5500495ab97920a041229f7667f7a1f93387cc7a08200fdda",
+    "data/gpt2_int/fc_6.bin": "b8c75b52f48d3c8fe03718cd9ba66ae81bfc3eb230b64465b0d710656561b76e",
+    "data/gpt2_int/fc_6_bias.bin": "2f3a7c426dbc0e9c5c13df8cdc91c181b2030cc57adeed2de3f3ac67055af6db",
+    "data/gpt2_int/fc_7.bin": "4b502f0a64b71a9840adc0ffaaee64a83a6a2f07d567374df8cb69d48754bcb8",
+    "data/gpt2_int/fc_7_bias.bin": "93ca1fd6d0ae6ca4de10ae58d2d55a1ee8098e34eb696bffded51effda960e1f",
+    "data/gpt2_int/fc_8.bin": "f5aea54c31e126f2ef9b8e0c0e9ea4cc5fb5359abb724d28481d0fd066f8a39f",
+    "data/gpt2_int/fc_8_bias.bin": "772e7618a1d740b7b266bb90e22c0fd3f5e7587bffc88b86498fff653576f8da",
+    "data/gpt2_int/fc_9.bin": "f6d47eefb81e4224ce592888821948071c426bc961bba84ee8e4f9211ac34d87",
+    "data/gpt2_int/fc_9_bias.bin": "6d31c1e3a307e0f2b0772b49862a6614b5d4ab7a9455f9cec11300adb5b4a58b",
+    "data/gpt2_int/ln_0.bin": "621224e1c5811b34fe85f801980e62508f917b788abd46d662d5e98a96f5a224",
+    "data/gpt2_int/ln_1.bin": "8223d4f4cd4005d36d2bceaa90030dc2534bfebcf13b90cf2f124e4dbc5065e2",
+    "data/gpt2_int/ln_10.bin": "1ff823be82a8ffe74adf5bb72af50764050dde7b7ac8aee5f4984a935de6cb3f",
+    "data/gpt2_int/ln_11.bin": "d810cf19206181894ebc89062136aa600131efb955ef6cf57c5b945b597082fa",
+    "data/gpt2_int/ln_12.bin": "d3335fdef177a950ee5875f143dc054ab0b5a19a2fcd1dfa47a78cf7b2b89748",
+    "data/gpt2_int/ln_13.bin": "3f39329f51ff001cb5e826eb5c672de62c1becda77e73adf23002abb7e954ab4",
+    "data/gpt2_int/ln_14.bin": "cd5b228c2f8d6c3ec625fe08779630333ca017022d76abd838c485ceb2d94dea",
+    "data/gpt2_int/ln_15.bin": "339e549cb9e2caf4319c62d6127dfd479f9af2167fdad619fefb3df2a141edba",
+    "data/gpt2_int/ln_16.bin": "90eff25fb4040e992dbb67e5a63cca28d34f4bce13b17da4c056899110173550",
+    "data/gpt2_int/ln_17.bin": "2c0d4eb7c620191d8ee4aba2a0480bf3527c130b000a1aab9eb3eaf2177e6492",
+    "data/gpt2_int/ln_18.bin": "d0488b90ec84966702079da3d2c74afb88171d7cc40505f91736cfffabc2a80f",
+    "data/gpt2_int/ln_19.bin": "e4b6d6acdd1cd215d98c58895bcb47249dfd61e6ce2d1e091fe14f4548f3fc54",
+    "data/gpt2_int/ln_2.bin": "f25402bbd21803da31831ac70d25840c8a15ff07872ca61d773032a3364cfa6d",
+    "data/gpt2_int/ln_20.bin": "79ec9ef7bd4df61e723a5d9e805f5fa92ba97cf1a96d983794950fbb83148ae0",
+    "data/gpt2_int/ln_21.bin": "d8bbfdf76b85d6323c25b6fdd15be8698a4753b0c3f626c0869018770b70236e",
+    "data/gpt2_int/ln_22.bin": "2c642b132e0bb22426ec5f59ba3b0af48b19071bacfcb0f5e5f842b7c1b7e296",
+    "data/gpt2_int/ln_23.bin": "422d56ec6ba5b4ed9d10fb43f7b311132de57195c9638cdd790add952d5e2f3d",
+    "data/gpt2_int/ln_3.bin": "d7450cfed6a7d4271e2c65fc917572ca399a1e929a60107e1f9d8484a5f2c88f",
+    "data/gpt2_int/ln_4.bin": "8b22dc4374735d2b25f7b28c93ec554d19df2ac6819e866f3d892ae566ffc39f",
+    "data/gpt2_int/ln_5.bin": "59e20389ab60d04dd3447bbd317b32f29233f96167972c123a5c8f39377dcd75",
+    "data/gpt2_int/ln_6.bin": "52d232ef98f2d1090d96a324231c65644c124d6d39ddf4eba7ed393b077c86de",
+    "data/gpt2_int/ln_7.bin": "e585e49c3ff25fff509ccc8ee4c504df468473258622c5e5fc546007289a61c3",
+    "data/gpt2_int/ln_8.bin": "928fed57e81b85c36bd2c8ecddfe5d15080b5099e23d7f926eda2827ce0a7b19",
+    "data/gpt2_int/ln_9.bin": "d64024523ec2ff08efadbe1c6e17803145595bb09c5fa91ce773df2693745f99"
+  },
+  "profile": {
+    "canonical_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "id": "r5b-engineering-candidate-v1",
+    "unchanged": true
+  },
+  "recommended_caps": {
+    "affinity_CPUs": 4,
+    "disk_reserve_gib": 64,
+    "existing_fixed_worker_phase_threads": 32,
+    "prover_gib": 192,
+    "prover_seconds": 28800,
+    "shared_memory_reserve_gib": 32,
+    "verifier_gib": 96,
+    "verifier_seconds": 14400
+  },
+  "remote_workspace": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "resource_phase_bytes": {
+    "artifact_disk_bytes": 210546944,
+    "commit_bytes": 29065227264,
+    "full12_execution": false,
+    "graph_bytes": 6368537600,
+    "prove_bytes": 160083395840,
+    "serialize_bytes": 160226833920,
+    "verify_bytes": 66339897920,
+    "witness_bytes": 23112176384
+  },
+  "runs": {
+    "LN-terminal-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_integration_tests",
+        "r6_builder_tests",
+        "r6_model_plan",
+        "r6_model_prove",
+        "r6_model_verify",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "LN-terminal-build",
+      "log": "logs/R6A/LN-terminal-build.log",
+      "max_rss_kib": 331440,
+      "observed_process_group_peak_bytes": 361897984,
+      "seconds": 19.43430473189801,
+      "started_utc": "2026-10-20T12:35:31.300368+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/LN-terminal-build.time",
+      "timeout_seconds": 240
+    },
+    "builder-green-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_builder_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "builder-green-build",
+      "log": "logs/R6A/builder-green-build.log",
+      "max_rss_kib": 369140,
+      "seconds": 21.320771113038063,
+      "started_utc": "2026-10-20T12:03:56.691095+00:00",
+      "time": "logs/R6A/builder-green-build.time",
+      "timeout_seconds": 240
+    },
+    "builder-green-full12": {
+      "PASS": false,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 0,
+      "id": "builder-green-full12",
+      "log": "logs/R6A/builder-green-full12.log",
+      "max_rss_kib": 4714628,
+      "seconds": 7.487173623871058,
+      "started_utc": "2026-10-20T12:04:18.012541+00:00",
+      "time": "logs/R6A/builder-green-full12.time",
+      "timeout_seconds": 240
+    },
+    "builder-green-full12-bounded-workers": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "builder-green-full12-bounded-workers",
+      "log": "logs/R6A/builder-green-full12-bounded-workers.log",
+      "max_rss_kib": 4645952,
+      "seconds": 12.046643029898405,
+      "started_utc": "2026-10-20T12:05:52.479979+00:00",
+      "time": "logs/R6A/builder-green-full12-bounded-workers.time",
+      "timeout_seconds": 240
+    },
+    "entries-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_model_plan",
+        "r6_model_prove",
+        "r6_model_verify",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "entries-build",
+      "log": "logs/R6A/entries-build.log",
+      "max_rss_kib": 330088,
+      "observed_process_group_peak_bytes": 1148039168,
+      "seconds": 14.669179707299918,
+      "started_utc": "2026-10-20T12:28:18.154409+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entries-build.time",
+      "timeout_seconds": 240
+    },
+    "entries-configure": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "entries-configure",
+      "log": "logs/R6A/entries-configure.log",
+      "max_rss_kib": 18820,
+      "observed_process_group_peak_bytes": 25640960,
+      "seconds": 1.2567925192415714,
+      "started_utc": "2026-10-20T12:28:16.896835+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entries-configure.time",
+      "timeout_seconds": 240
+    },
+    "entries-prover-full12-default-blocked": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "4c3ae73f45ecdb92e1876cb42e5cfa741b34b0cb718279ef171996d4cada5913",
+      "command": [
+        "build/release/src/paper_r2/r6_model_prove",
+        "reports/R6A/SHOULD_NOT_EXIST",
+        "--blocks",
+        "12"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "entries-prover-full12-default-blocked",
+      "log": "logs/R6A/entries-prover-full12-default-blocked.log",
+      "max_rss_kib": 5108,
+      "observed_process_group_peak_bytes": 372736,
+      "seconds": 0.25949266320094466,
+      "started_utc": "2026-10-20T12:28:32.824059+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entries-prover-full12-default-blocked.time",
+      "timeout_seconds": 240
+    },
+    "entries-prover-plan-only": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "4c3ae73f45ecdb92e1876cb42e5cfa741b34b0cb718279ef171996d4cada5913",
+      "command": [
+        "build/release/src/paper_r2/r6_model_prove",
+        "reports/R6A/ENTRY_FULL12_PLAN.json",
+        "--blocks",
+        "12",
+        "--plan-only"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "entries-prover-plan-only",
+      "log": "logs/R6A/entries-prover-plan-only.log",
+      "max_rss_kib": 4644692,
+      "observed_process_group_peak_bytes": 4757307392,
+      "seconds": 17.329019617754966,
+      "started_utc": "2026-10-20T12:28:33.353720+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entries-prover-plan-only.time",
+      "timeout_seconds": 240
+    },
+    "entries-verifier-full12-default-blocked": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "619ad8bb302181733d65989d6e41d21e092cb4e9de5ebb3612765d6175105ac2",
+      "command": [
+        "build/release/src/paper_r2/r6_model_verify",
+        "reports/R5B/normal-v2/model.statement",
+        "reports/R5B/normal-v2/model.proof",
+        "--blocks",
+        "12"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 2,
+      "expected_exit": 2,
+      "id": "entries-verifier-full12-default-blocked",
+      "log": "logs/R6A/entries-verifier-full12-default-blocked.log",
+      "max_rss_kib": 4920,
+      "observed_process_group_peak_bytes": 1114112,
+      "seconds": 0.2680952255614102,
+      "started_utc": "2026-10-20T12:28:33.084581+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entries-verifier-full12-default-blocked.time",
+      "timeout_seconds": 240
+    },
+    "entry-fixture-corrected": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-R",
+        "^r6_entry_guards$",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "entry-fixture-corrected",
+      "log": "logs/R6A/entry-fixture-corrected.log",
+      "max_rss_kib": 816664,
+      "observed_process_group_peak_bytes": 528044032,
+      "seconds": 3.2725262898020446,
+      "started_utc": "2026-10-20T12:43:43.014759+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/entry-fixture-corrected.time",
+      "timeout_seconds": 240
+    },
+    "final-full12-metadata": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "d44a5a810969c862576d7c840f23e2c269c5a3cca6df611ea0554ec6d4c71f33",
+      "command": [
+        "build/release/src/paper_r2/r6_model_plan",
+        "reports/R6A/FULL12_FINAL_PLAN.json",
+        "--blocks",
+        "12"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "final-full12-metadata",
+      "log": "logs/R6A/final-full12-metadata.log",
+      "max_rss_kib": 4649800,
+      "observed_process_group_peak_bytes": 4762542080,
+      "seconds": 21.102443736046553,
+      "started_utc": "2026-10-20T12:36:38.706332+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/final-full12-metadata.time",
+      "timeout_seconds": 240
+    },
+    "finite-green-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_witness_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "finite-green-build",
+      "log": "logs/R6A/finite-green-build.log",
+      "max_rss_kib": 369792,
+      "observed_process_group_peak_bytes": 1216184320,
+      "seconds": 14.19077254878357,
+      "started_utc": "2026-10-20T12:25:26.613393+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/finite-green-build.time",
+      "timeout_seconds": 240
+    },
+    "finite-red-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_witness_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "finite-red-build",
+      "log": "logs/R6A/finite-red-build.log",
+      "max_rss_kib": 369156,
+      "seconds": 13.951025274116546,
+      "started_utc": "2026-10-20T12:24:26.398066+00:00",
+      "time": "logs/R6A/finite-red-build.time",
+      "timeout_seconds": 240
+    },
+    "finite-red-configure": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "finite-red-configure",
+      "log": "logs/R6A/finite-red-configure.log",
+      "max_rss_kib": 18980,
+      "seconds": 0.9185700630769134,
+      "started_utc": "2026-10-20T12:24:25.478418+00:00",
+      "time": "logs/R6A/finite-red-configure.time",
+      "timeout_seconds": 240
+    },
+    "finite-red-uncommitted": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_witness_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "finite-red-uncommitted",
+      "log": "logs/R6A/finite-red-uncommitted.log",
+      "max_rss_kib": 5248,
+      "seconds": 0.009705205913633108,
+      "started_utc": "2026-10-20T12:24:40.351296+00:00",
+      "time": "logs/R6A/finite-red-uncommitted.time",
+      "timeout_seconds": 240
+    },
+    "graph-audit-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_builder_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "graph-audit-build",
+      "log": "logs/R6A/graph-audit-build.log",
+      "max_rss_kib": 369128,
+      "seconds": 26.83871543686837,
+      "started_utc": "2026-10-20T12:08:18.139917+00:00",
+      "time": "logs/R6A/graph-audit-build.time",
+      "timeout_seconds": 240
+    },
+    "graph-audit-full12-fixed": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests",
+        "12",
+        "reports/R6A/FULL12_PLAN.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "graph-audit-full12-fixed",
+      "log": "logs/R6A/graph-audit-full12-fixed.log",
+      "max_rss_kib": 4645828,
+      "seconds": 20.015371274668723,
+      "started_utc": "2026-10-20T12:09:36.145492+00:00",
+      "time": "logs/R6A/graph-audit-full12-fixed.time",
+      "timeout_seconds": 240
+    },
+    "graph-audit-oneblock": {
+      "PASS": false,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests",
+        "1",
+        "reports/R6A/R6_ONEBLOCK_PLAN.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 0,
+      "id": "graph-audit-oneblock",
+      "log": "logs/R6A/graph-audit-oneblock.log",
+      "max_rss_kib": 431084,
+      "seconds": 1.4691977920010686,
+      "started_utc": "2026-10-20T12:08:44.979391+00:00",
+      "time": "logs/R6A/graph-audit-oneblock.time",
+      "timeout_seconds": 240
+    },
+    "graph-audit-oneblock-fixed": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests",
+        "1",
+        "reports/R6A/R6_ONEBLOCK_PLAN.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "graph-audit-oneblock-fixed",
+      "log": "logs/R6A/graph-audit-oneblock-fixed.log",
+      "max_rss_kib": 431536,
+      "seconds": 1.7212374182417989,
+      "started_utc": "2026-10-20T12:09:34.422549+00:00",
+      "time": "logs/R6A/graph-audit-oneblock-fixed.time",
+      "timeout_seconds": 240
+    },
+    "graph-audit-schedule-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_builder_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "graph-audit-schedule-build",
+      "log": "logs/R6A/graph-audit-schedule-build.log",
+      "max_rss_kib": 291276,
+      "seconds": 3.023307090625167,
+      "started_utc": "2026-10-20T12:09:31.398029+00:00",
+      "time": "logs/R6A/graph-audit-schedule-build.time",
+      "timeout_seconds": 240
+    },
+    "integration-green-full12-schema": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "a73e6d19e2d3b6fd9de07008c018f2d2fb65c82f22585a2a07d21908b4ad61ac",
+      "command": [
+        "build/release/src/paper_r2/r6_integration_tests",
+        "reports/R6A/full12-operator-trust-v1.anchor",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "reports/R6A/full12-model-manifest-v1.txt"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "integration-green-full12-schema",
+      "log": "logs/R6A/integration-green-full12-schema.log",
+      "max_rss_kib": 4662384,
+      "observed_process_group_peak_bytes": 4775428096,
+      "seconds": 47.96905895229429,
+      "started_utc": "2026-10-20T12:35:50.736156+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/integration-green-full12-schema.time",
+      "timeout_seconds": 240
+    },
+    "integration-red-LN-parameter-map": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "b7f00af493e25f9864b73d8188168ad309bfe635ddec74694245cd3a3d8ec1d4",
+      "command": [
+        "build/release/src/paper_r2/r6_integration_tests",
+        "reports/R6A/full12-operator-trust-v1.anchor",
+        "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+        "reports/R6A/full12-model-manifest-v1.txt"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "integration-red-LN-parameter-map",
+      "log": "logs/R6A/integration-red-LN-parameter-map.log",
+      "max_rss_kib": 4645844,
+      "observed_process_group_peak_bytes": 4758458368,
+      "seconds": 23.870269876904786,
+      "started_utc": "2026-10-20T12:34:07.563603+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/integration-red-LN-parameter-map.time",
+      "timeout_seconds": 240
+    },
+    "integration-red-build": {
+      "PASS": false,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_integration_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 2,
+      "expected_exit": 0,
+      "id": "integration-red-build",
+      "log": "logs/R6A/integration-red-build.log",
+      "max_rss_kib": 279180,
+      "observed_process_group_peak_bytes": 293146624,
+      "seconds": 2.270625929813832,
+      "started_utc": "2026-10-20T12:33:21.945464+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/integration-red-build.time",
+      "timeout_seconds": 240
+    },
+    "integration-red-build-field-fixed": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_integration_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "integration-red-build-field-fixed",
+      "log": "logs/R6A/integration-red-build-field-fixed.log",
+      "max_rss_kib": 328216,
+      "observed_process_group_peak_bytes": 359043072,
+      "seconds": 3.7830465231090784,
+      "started_utc": "2026-10-20T12:34:03.779288+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/integration-red-build-field-fixed.time",
+      "timeout_seconds": 240
+    },
+    "integration-red-configure": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "integration-red-configure",
+      "log": "logs/R6A/integration-red-configure.log",
+      "max_rss_kib": 18812,
+      "observed_process_group_peak_bytes": 24834048,
+      "seconds": 1.0069481688551605,
+      "started_utc": "2026-10-20T12:33:20.937711+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/integration-red-configure.time",
+      "timeout_seconds": 240
+    },
+    "limited-threeblock-witness": {
+      "PASS": true,
+      "RSS_group_limit_gib": 16,
+      "address_space_limit_gib": 16,
+      "binary_sha256": "20894ba5fa94fb45608142ee9ad03c804ba22ecc174469b2b818fc62a26b608f",
+      "command": [
+        "build/release/src/paper_r2/r6_witness_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "limited-threeblock-witness",
+      "log": "logs/R6A/limited-threeblock-witness.log",
+      "max_rss_kib": 4353588,
+      "observed_process_group_peak_bytes": 4452147200,
+      "seconds": 44.44990650191903,
+      "started_utc": "2026-10-20T12:25:40.805798+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/limited-threeblock-witness.time",
+      "timeout_seconds": 480
+    },
+    "preprocess-entry-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_model_preprocess",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "preprocess-entry-build",
+      "log": "logs/R6A/preprocess-entry-build.log",
+      "max_rss_kib": 276180,
+      "seconds": 2.7750421576201916,
+      "started_utc": "2026-10-20T12:16:27.389826+00:00",
+      "time": "logs/R6A/preprocess-entry-build.time",
+      "timeout_seconds": 240
+    },
+    "preprocess-entry-configure": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "preprocess-entry-configure",
+      "log": "logs/R6A/preprocess-entry-configure.log",
+      "max_rss_kib": 18940,
+      "seconds": 1.017855869140476,
+      "started_utc": "2026-10-20T12:16:26.370849+00:00",
+      "time": "logs/R6A/preprocess-entry-configure.time",
+      "timeout_seconds": 240
+    },
+    "preprocess-full12-v1": {
+      "PASS": true,
+      "address_space_limit_gib": 24,
+      "command": [
+        "build/release/src/paper_r2/r6_model_preprocess",
+        "--blocks",
+        "12",
+        "data/gpt2_int",
+        "reports/R6A/full12-model-manifest-v1.txt",
+        "reports/R6A/full12-operator-trust-v1.anchor",
+        "reports/R6A/FULL12_OPERATOR_TRUST_CONFIG.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "preprocess-full12-v1",
+      "log": "logs/R6A/preprocess-full12-v1.log",
+      "max_rss_kib": 13926756,
+      "seconds": 360.07285050163046,
+      "started_utc": "2026-10-20T12:16:30.166548+00:00",
+      "time": "logs/R6A/preprocess-full12-v1.time",
+      "timeout_seconds": 1200
+    },
+    "preprocess-oneblock-R6-v1": {
+      "PASS": true,
+      "RSS_group_limit_gib": 24,
+      "address_space_limit_gib": 24,
+      "binary_sha256": "fbdf480ff1feeb5582a2db9cf9be5dfd9281fbd9120a6c4986b221c03dac9391",
+      "command": [
+        "build/release/src/paper_r2/r6_model_preprocess",
+        "--blocks",
+        "1",
+        "data/gpt2_int",
+        "reports/R6A/oneblock-model-manifest-v1.txt",
+        "reports/R6A/oneblock-operator-trust-v1.anchor",
+        "reports/R6A/ONEBLOCK_OPERATOR_TRUST_CONFIG.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "preprocess-oneblock-R6-v1",
+      "log": "logs/R6A/preprocess-oneblock-R6-v1.log",
+      "max_rss_kib": 1846656,
+      "observed_process_group_peak_bytes": 1583620096,
+      "seconds": 41.940131245180964,
+      "started_utc": "2026-10-20T12:45:12.304089+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/preprocess-oneblock-R6-v1.time",
+      "timeout_seconds": 240
+    },
+    "red-builder-build": {
+      "PASS": false,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_builder_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 2,
+      "expected_exit": 0,
+      "id": "red-builder-build",
+      "log": "logs/R6A/red-builder-build.log",
+      "max_rss_kib": 18892,
+      "seconds": 0.16669162129983306,
+      "started_utc": "2026-10-20T12:02:16.969120+00:00",
+      "time": "logs/R6A/red-builder-build.time",
+      "timeout_seconds": 240
+    },
+    "red-builder-build-configured": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_builder_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "red-builder-build-configured",
+      "log": "logs/R6A/red-builder-build-configured.log",
+      "max_rss_kib": 269456,
+      "seconds": 2.1720007229596376,
+      "started_utc": "2026-10-20T12:02:38.582098+00:00",
+      "time": "logs/R6A/red-builder-build-configured.time",
+      "timeout_seconds": 240
+    },
+    "red-builder-configure": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+        "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "red-builder-configure",
+      "log": "logs/R6A/red-builder-configure.log",
+      "max_rss_kib": 18724,
+      "seconds": 0.8675585240125656,
+      "started_utc": "2026-10-20T12:02:37.713488+00:00",
+      "time": "logs/R6A/red-builder-configure.time",
+      "timeout_seconds": 240
+    },
+    "red-full12-existing-guard": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_builder_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "red-full12-existing-guard",
+      "log": "logs/R6A/red-full12-existing-guard.log",
+      "max_rss_kib": 7788,
+      "seconds": 0.03429626813158393,
+      "started_utc": "2026-10-20T12:02:40.755747+00:00",
+      "time": "logs/R6A/red-full12-existing-guard.time",
+      "timeout_seconds": 240
+    },
+    "release-build-final": {
+      "PASS": true,
+      "RSS_group_limit_gib": 12,
+      "address_space_limit_gib": 12,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "release-build-final",
+      "log": "logs/R6A/release-build-final.log",
+      "max_rss_kib": 445216,
+      "observed_process_group_peak_bytes": 1528442880,
+      "seconds": 47.06456088135019,
+      "started_utc": "2026-10-20T12:38:21.630748+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/release-build-final.time",
+      "timeout_seconds": 240
+    },
+    "release-configure-final": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "release-configure-final",
+      "log": "logs/R6A/release-configure-final.log",
+      "max_rss_kib": 18940,
+      "observed_process_group_peak_bytes": 25939968,
+      "seconds": 1.0054497653618455,
+      "started_utc": "2026-10-20T12:38:20.624550+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/release-configure-final.time",
+      "timeout_seconds": 240
+    },
+    "release-ctest-complete": {
+      "PASS": true,
+      "RSS_group_limit_gib": 16,
+      "address_space_limit_gib": 16,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "release-ctest-complete",
+      "log": "logs/R6A/release-ctest-complete.log",
+      "max_rss_kib": 4662324,
+      "observed_process_group_peak_bytes": 4786692096,
+      "seconds": 216.2623753482476,
+      "started_utc": "2026-10-20T12:45:54.245252+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/release-ctest-complete.time",
+      "timeout_seconds": 600
+    },
+    "release-ctest-final": {
+      "PASS": false,
+      "RSS_group_limit_gib": 16,
+      "address_space_limit_gib": 16,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 8,
+      "expected_exit": 0,
+      "id": "release-ctest-final",
+      "log": "logs/R6A/release-ctest-final.log",
+      "max_rss_kib": 4662840,
+      "observed_process_group_peak_bytes": 4787146752,
+      "seconds": 214.76806435920298,
+      "started_utc": "2026-10-20T12:39:08.696609+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/release-ctest-final.time",
+      "timeout_seconds": 600
+    },
+    "release-ctest-post-review": {
+      "PASS": true,
+      "RSS_group_limit_gib": 16,
+      "address_space_limit_gib": 16,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "release-ctest-post-review",
+      "log": "logs/R6A/release-ctest-post-review.log",
+      "max_rss_kib": 4662700,
+      "observed_process_group_peak_bytes": 4787040256,
+      "seconds": 228.41430748300627,
+      "started_utc": "2026-10-20T12:52:01.173508+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/release-ctest-post-review.time",
+      "timeout_seconds": 600
+    },
+    "review-fix-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_model_plan",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_integration_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "review-fix-build",
+      "log": "logs/R6A/review-fix-build.log",
+      "max_rss_kib": 337824,
+      "observed_process_group_peak_bytes": 362942464,
+      "seconds": 14.38296856591478,
+      "started_utc": "2026-10-20T12:51:43.265075+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/review-fix-build.time",
+      "timeout_seconds": 240
+    },
+    "review-green-inherited-hard-cap": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-R",
+        "^r6_entry_guards$",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "review-green-inherited-hard-cap",
+      "log": "logs/R6A/review-green-inherited-hard-cap.log",
+      "max_rss_kib": 816628,
+      "observed_process_group_peak_bytes": 531693568,
+      "seconds": 3.523100988008082,
+      "started_utc": "2026-10-20T12:51:57.649330+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/review-green-inherited-hard-cap.time",
+      "timeout_seconds": 240
+    },
+    "review-red-inherited-hard-cap": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-R",
+        "^r6_entry_guards$",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 8,
+      "expected_exit": 8,
+      "id": "review-red-inherited-hard-cap",
+      "log": "logs/R6A/review-red-inherited-hard-cap.log",
+      "max_rss_kib": 436340,
+      "observed_process_group_peak_bytes": 470368256,
+      "seconds": 5.030503895133734,
+      "started_utc": "2026-10-20T12:51:23.486708+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/review-red-inherited-hard-cap.time",
+      "timeout_seconds": 240
+    },
+    "sanitize-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 12,
+      "address_space_limit_gib": 12,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/r5b-sanitize",
+        "--target",
+        "r6_witness_tests",
+        "r6_builder_tests",
+        "r6_trust_tests",
+        "r6_resources_tests",
+        "r5b_tests",
+        "r5b_gkr_tests",
+        "r5b_model_prove",
+        "r5b_mapping_tests",
+        "r5b_trust_tests",
+        "r5a_host_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "sanitize-build",
+      "log": "logs/R6A/sanitize-build.log",
+      "max_rss_kib": 606332,
+      "observed_process_group_peak_bytes": 1893621760,
+      "seconds": 98.20849850680679,
+      "started_utc": "2026-10-20T12:47:23.585080+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/sanitize-build.time",
+      "timeout_seconds": 480
+    },
+    "sanitize-configure": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/r5b-sanitize",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+        "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+        "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -O1",
+        "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "sanitize-configure",
+      "log": "logs/R6A/sanitize-configure.log",
+      "max_rss_kib": 18856,
+      "observed_process_group_peak_bytes": 23187456,
+      "seconds": 1.0048307040706277,
+      "started_utc": "2026-10-20T12:47:22.579516+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/sanitize-configure.time",
+      "timeout_seconds": 240
+    },
+    "sanitize-directed": {
+      "PASS": true,
+      "RSS_group_limit_gib": 16,
+      "address_space_limit_gib": null,
+      "binary_sha256": null,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/r5b-sanitize",
+        "--output-on-failure",
+        "-R",
+        "r6_builder_oneblock|r6_trust_metadata|r6_finite_threeblock|r6_system_resources|r5b_|r5a_host_",
+        "-j1"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "sanitize-directed",
+      "log": "logs/R6A/sanitize-directed.log",
+      "max_rss_kib": 4627928,
+      "observed_process_group_peak_bytes": 4699992064,
+      "seconds": 94.72215193370357,
+      "started_utc": "2026-10-20T12:49:01.795406+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/sanitize-directed.time",
+      "timeout_seconds": 600
+    },
+    "system-green-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 12,
+      "address_space_limit_gib": 12,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_resources_tests",
+        "r6_model_plan",
+        "r6_model_preprocess",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_witness_tests",
+        "r6_integration_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "system-green-build",
+      "log": "logs/R6A/system-green-build.log",
+      "max_rss_kib": 337760,
+      "observed_process_group_peak_bytes": 368410624,
+      "seconds": 21.200151776894927,
+      "started_utc": "2026-10-20T12:44:50.847090+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/system-green-build.time",
+      "timeout_seconds": 240
+    },
+    "system-green-effective-room": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "481fe8a6033ee44a54751684a603de865ad5cb6ca6e6326acf58a555946e5416",
+      "command": [
+        "build/release/src/paper_r2/r6_resources_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "system-green-effective-room",
+      "log": "logs/R6A/system-green-effective-room.log",
+      "max_rss_kib": 3768,
+      "observed_process_group_peak_bytes": 1146880,
+      "seconds": 0.2545108241029084,
+      "started_utc": "2026-10-20T12:45:12.048274+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/system-green-effective-room.time",
+      "timeout_seconds": 240
+    },
+    "system-red-build": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_resources_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "system-red-build",
+      "log": "logs/R6A/system-red-build.log",
+      "max_rss_kib": 68492,
+      "observed_process_group_peak_bytes": 74874880,
+      "seconds": 0.7575181038118899,
+      "started_utc": "2026-10-20T12:43:42.001159+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/system-red-build.time",
+      "timeout_seconds": 240
+    },
+    "system-red-configure": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": null,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "system-red-configure",
+      "log": "logs/R6A/system-red-configure.log",
+      "max_rss_kib": 19004,
+      "observed_process_group_peak_bytes": 25956352,
+      "seconds": 1.005892240907997,
+      "started_utc": "2026-10-20T12:43:40.994587+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/system-red-configure.time",
+      "timeout_seconds": 240
+    },
+    "system-red-effective-room": {
+      "PASS": true,
+      "RSS_group_limit_gib": 8,
+      "address_space_limit_gib": 8,
+      "binary_sha256": "33821c560a74e491602d75e3758c16d0052f66f1c6bd9648e018372bf3863783",
+      "command": [
+        "build/release/src/paper_r2/r6_resources_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "system-red-effective-room",
+      "log": "logs/R6A/system-red-effective-room.log",
+      "max_rss_kib": 3732,
+      "observed_process_group_peak_bytes": 1085440,
+      "seconds": 0.2541440259665251,
+      "started_utc": "2026-10-20T12:43:42.759666+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/system-red-effective-room.time",
+      "timeout_seconds": 240
+    },
+    "trust-green-build": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_trust_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "trust-green-build",
+      "log": "logs/R6A/trust-green-build.log",
+      "max_rss_kib": 309636,
+      "seconds": 6.333389677107334,
+      "started_utc": "2026-10-20T12:14:51.181379+00:00",
+      "time": "logs/R6A/trust-green-build.time",
+      "timeout_seconds": 240
+    },
+    "trust-green-manifest": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_trust_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "trust-green-manifest",
+      "log": "logs/R6A/trust-green-manifest.log",
+      "max_rss_kib": 4920,
+      "seconds": 0.01118059502914548,
+      "started_utc": "2026-10-20T12:14:57.516320+00:00",
+      "time": "logs/R6A/trust-green-manifest.time",
+      "timeout_seconds": 240
+    },
+    "trust-red-build": {
+      "PASS": false,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_trust_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 2,
+      "expected_exit": 0,
+      "id": "trust-red-build",
+      "log": "logs/R6A/trust-red-build.log",
+      "max_rss_kib": 244620,
+      "seconds": 2.0718677546828985,
+      "started_utc": "2026-10-20T12:12:32.367362+00:00",
+      "time": "logs/R6A/trust-red-build.time",
+      "timeout_seconds": 240
+    },
+    "trust-red-build-header": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r6_trust_tests",
+        "-j4"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "trust-red-build-header",
+      "log": "logs/R6A/trust-red-build-header.log",
+      "max_rss_kib": 258548,
+      "seconds": 2.6216095369309187,
+      "started_utc": "2026-10-20T12:12:58.430486+00:00",
+      "time": "logs/R6A/trust-red-build-header.time",
+      "timeout_seconds": 240
+    },
+    "trust-red-configure": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "trust-red-configure",
+      "log": "logs/R6A/trust-red-configure.log",
+      "max_rss_kib": 18680,
+      "seconds": 1.017427105922252,
+      "started_utc": "2026-10-20T12:12:31.349447+00:00",
+      "time": "logs/R6A/trust-red-configure.time",
+      "timeout_seconds": 240
+    },
+    "trust-red-version": {
+      "PASS": true,
+      "address_space_limit_gib": 8,
+      "command": [
+        "build/release/src/paper_r2/r6_trust_tests"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "environment_overrides": {
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4"
+      },
+      "exit_code": 1,
+      "expected_exit": 1,
+      "id": "trust-red-version",
+      "log": "logs/R6A/trust-red-version.log",
+      "max_rss_kib": 5132,
+      "seconds": 0.009917997289448977,
+      "started_utc": "2026-10-20T12:13:01.053281+00:00",
+      "time": "logs/R6A/trust-red-version.time",
+      "timeout_seconds": 240
+    },
+    "watchdog-deadline-fixture": {
+      "PASS": true,
+      "RSS_group_limit_gib": 1,
+      "address_space_limit_gib": 1,
+      "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+      "command": [
+        "/usr/bin/python3",
+        "-c",
+        "import time; time.sleep(30)"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "disk_reserve_gib": 64,
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 124,
+      "expected_exit": 124,
+      "id": "watchdog-deadline-fixture",
+      "log": "logs/R6A/watchdog-deadline-fixture.log",
+      "max_rss_kib": null,
+      "observed_process_group_peak_bytes": 10129408,
+      "seconds": 1.0195288299582899,
+      "shared_memory_reserve_gib": 32,
+      "started_utc": "2026-10-20T12:56:11.155639+00:00",
+      "stop_reason": "deadline",
+      "time": "logs/R6A/watchdog-deadline-fixture.time",
+      "timeout_seconds": 1
+    },
+    "watchdog-deadline-fixture-driver": {
+      "PASS": true,
+      "RSS_group_limit_gib": 2,
+      "address_space_limit_gib": 2,
+      "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+      "command": [
+        "/usr/bin/python3",
+        "reports/R6A/run_limited.py",
+        "reports/R6A/watchdog-deadline-fixture.job.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "disk_reserve_gib": 8,
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "watchdog-deadline-fixture-driver",
+      "log": "logs/R6A/watchdog-deadline-fixture-driver.log",
+      "max_rss_kib": 21516,
+      "observed_process_group_peak_bytes": 27672576,
+      "seconds": 1.2710898080840707,
+      "shared_memory_reserve_gib": 32,
+      "started_utc": "2026-10-20T12:56:11.100847+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/watchdog-deadline-fixture-driver.time",
+      "timeout_seconds": 60
+    },
+    "watchdog-disk-fixture": {
+      "PASS": true,
+      "RSS_group_limit_gib": 1,
+      "address_space_limit_gib": 1,
+      "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+      "command": [
+        "/usr/bin/python3",
+        "-c",
+        "import time; time.sleep(30)"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "disk_reserve_gib": 8192,
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 137,
+      "expected_exit": 137,
+      "id": "watchdog-disk-fixture",
+      "log": "logs/R6A/watchdog-disk-fixture.log",
+      "max_rss_kib": null,
+      "observed_process_group_peak_bytes": 1138688,
+      "seconds": 0.0152370510622859,
+      "shared_memory_reserve_gib": 32,
+      "started_utc": "2026-10-20T12:56:12.440009+00:00",
+      "stop_reason": "disk reserve",
+      "time": "logs/R6A/watchdog-disk-fixture.time",
+      "timeout_seconds": 30
+    },
+    "watchdog-disk-fixture-driver": {
+      "PASS": true,
+      "RSS_group_limit_gib": 2,
+      "address_space_limit_gib": 2,
+      "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+      "command": [
+        "/usr/bin/python3",
+        "reports/R6A/run_limited.py",
+        "reports/R6A/watchdog-disk-fixture.job.json"
+      ],
+      "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "disk_reserve_gib": 8,
+      "environment_overrides": {
+        "MALLOC_ARENA_MAX": "2",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "ZKGPT_THREADS": "4"
+      },
+      "exit_code": 0,
+      "expected_exit": 0,
+      "id": "watchdog-disk-fixture-driver",
+      "log": "logs/R6A/watchdog-disk-fixture-driver.log",
+      "max_rss_kib": 21492,
+      "observed_process_group_peak_bytes": 1134592,
+      "seconds": 0.27763016521930695,
+      "shared_memory_reserve_gib": 32,
+      "started_utc": "2026-10-20T12:56:12.372892+00:00",
+      "stop_reason": null,
+      "time": "logs/R6A/watchdog-disk-fixture-driver.time",
+      "timeout_seconds": 60
+    }
+  },
+  "source_diff": {
+    "src/circuit.cpp": {
+      "after": "09474d815afd10e18a61d63eb2578a2f9e2d153f1332bc482f72d3961f3e00c2",
+      "before": "c189355a658eaf17afdd24cfe740152c85185ea52da64353f79f3a0044ce046e",
+      "kind": "MODIFIED"
+    },
+    "src/circuit.h": {
+      "after": "eb57274fd6b96f3cac2afee4e792f23c11ab8919fabdba5d9a5ae70593cd4bfe",
+      "before": "ff1ef36ce8537daa25af3bd995b06d2fd1eb9edd1a901cb524e51f7593273d11",
+      "kind": "MODIFIED"
+    },
+    "src/neuralNetwork.cpp": {
+      "after": "efd9ff95ef2f5365f4f83ecae3d95d989ef89d960c0f4e55af3ef876aaf9423e",
+      "before": "d65615bc6f1204dff19d8906402b5f80dcef5bf51a70811f4d88f9c290ee48fb",
+      "kind": "MODIFIED"
+    },
+    "src/neuralNetwork.hpp": {
+      "after": "cc7b40c8ff1fe73bc05d79b634b98e0b7f669a43f1cb09bb1fdefd680433aeab",
+      "before": "1d8a8e3d9d83b1af57eb79cbd5ad7f2f561a7d497824ffbced31776e3f3687b6",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/CMakeLists.txt": {
+      "after": "9fc1dfa83cb7dface7ad36c72aebea857aac0856e18452ee9f637de2c95e1b90",
+      "before": "d504b3d19167c75804b74e0d36de6b22e945dc9afadde4d5b1bfcf7db8b530c1",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/model_queries.cpp": {
+      "after": "d074efabe88bd2d96cd1422c92afa9ee986f5a8038f60c9f4dd8bbc97a13b7f8",
+      "before": "eea46d41f4711690e7bc1fd6c1936249947d40ef1f289b6ebfffbde36567c564",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/model_queries.hpp": {
+      "after": "628dd2cf22fba1322a0b2554bfe167f5fb2ffbcf13db58ed627a289b6dd871ea",
+      "before": "58acfcc81c0b4753078d19def608c9fd8b5d6f282b8b7ec0c829034fc0c02523",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/r5b_trust.cpp": {
+      "after": "18d958d7082512d8cd540312e061a79203fa7a966e1b8e03f6a924551028de00",
+      "before": "951864e5b8ba334166219ab0494bfae13cba1d8ec7bb5900f54a36592d1d78a3",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/r5b_trust.hpp": {
+      "after": "a5d35a14080babfad9753a3024cc8eec45bb2a6db6d8be5185d81e7b6d2ece9c",
+      "before": "40c690bbdfbd9bbd62398b4b2e0923c63edfd69da0dd0d9bc4a7f4d0973cc967",
+      "kind": "MODIFIED"
+    },
+    "src/paper_r2/r6_cli.hpp": {
+      "after": "f1a60e7c4d2d614007358b5e823b360171c682390459606bb88abb014bb3e844",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_entry_tests.py": {
+      "after": "aeb272dd455c9cd240572162d46b1dd8f6215dafa040c44195bc19ee96f307ba",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_mapping.cpp": {
+      "after": "911e1905243aee1c57cd54c506bc64cad3310b29e8faf9813de9ea7b10710761",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model.cpp": {
+      "after": "814d4f8e2f0befe9a3472a8da2df60a2913ef4db5a9dd81f256ba249fd0cfdb6",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model.hpp": {
+      "after": "ff07d2fee89645ab4aaa86661085a942d0e5e0824077699c895e925be3b6c0b9",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model_plan.cpp": {
+      "after": "b05ee272152677cee0ea085b15d4c8cf8aaff13fb97a40971931a7ca41f2731f",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model_preprocess.cpp": {
+      "after": "317ad2f247d57dc5615ccb0d3ed6e748b1934b99d0be2ab77873becffb63b63d",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model_prove.cpp": {
+      "after": "5f23eb62922cc8efac198c4db6686a0f61938cf8b7e6baa0566bd2f9837c7c82",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_model_verify.cpp": {
+      "after": "ba7f60f780d1665b3f8a0762c051ccce0cbcbba6aabd4dcf6d29de330ac6b38f",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_system.hpp": {
+      "after": "81ac20f78532e607caa5eec86ab69aef05ae302ee40b694cb95cbac0ac8fff7a",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_trust.cpp": {
+      "after": "2b37875d14750c9deac76b51599cf9c4cf7746ef3e4775b2d26e86d8ed2ff3e5",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/r6_trust.hpp": {
+      "after": "dce595795aaf2a14d3010a92144b9c70a2f50e737b10e202e80e9361483d63ec",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/tests_r6_builder.cpp": {
+      "after": "ac7370d56e000d353ae46e24baba963202696b8ae8f428f619802400c4d0aa4f",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/tests_r6_integration.cpp": {
+      "after": "93198e0efe0e91f205722695c67ede0f0ab8d6ac98471063e50bccbf96d31cac",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/tests_r6_resources.cpp": {
+      "after": "b4dcc33d4d2e65dcaff98290aaea948c096e61c92c52d8bbe9290fa4cc277255",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/tests_r6_trust.cpp": {
+      "after": "ec2fe866d87d9abbf82af2a97a0d50f783233f5adc17162ed440d4476db6c458",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/paper_r2/tests_r6_witness.cpp": {
+      "after": "213e57158c99b0241d87ba2caabc942d27e2ad847ae903f5c8bf301c29522c81",
+      "before": null,
+      "kind": "ADDED"
+    },
+    "src/r5b_operators.cpp": {
+      "after": "0681cb739f0db8193e921ea43e68422b477ada73d10e1ea6b9b2b8fbd5a75272",
+      "before": "42c852c9d6cd10a67a0e3793ea193376b8e0d18e949d0e26e6b3495d2629b673",
+      "kind": "MODIFIED"
+    },
+    "src/witness_registry.hpp": {
+      "after": "757f4b80f69dac2b7d785a8bb26bdf7fa14dc650b18a7d54c56cfca57bb9a725",
+      "before": "3f88b9e482052254e8b20f9bf4a88aecd2ae51445b3417767a20478e210c13f9",
+      "kind": "MODIFIED"
+    }
+  },
+  "source_profile_parameters_checkpoint_Exp_unchanged": true,
+  "source_tree_sha256": "68b444159c4fe756eef0fc4d92570150302e47316e16a1e681ad828820e81b8b",
+  "status": "R6A_IMPLEMENTED_AND_PREPARED_NO_FULL12_PROOF",
+  "status_axes": {
+    "APPROVED_PROFILE": false,
+    "CODED": true,
+    "INDEPENDENTLY_VERIFIED_FULL12_PROOF": false,
+    "INTEGRATED_FULL12_GRAPH": true,
+    "NUMERICALLY_SPECIFIED": true,
+    "OPERATOR_TRUSTED_FULL12_W": true,
+    "PAPER_EQUIVALENT": false,
+    "PUBLISHER_CERTIFIED": false,
+    "RUN_ADMISSION": "conditional: snapshot resources fit; separate explicit authorization,exact run permits and fresh resource/input preflight required",
+    "SECURITY_AUDITED": false,
+    "UNIT_TESTED": true
+  },
+  "validation": {
+    "ASan_UBSan": "29/29 directed",
+    "CLI_cases": 13,
+    "Release": "64/64 post-review",
+    "actual_full12_W_scalars_matched": 163749888,
+    "all120parameters_participate_full12_W": true,
+    "deadline_and_disk_stop_fixtures": true,
+    "independent_review_important_resolved": true,
+    "minor_limit": "no exhaustive synthetic cgroup hierarchy parser fixtures",
+    "outstanding_critical_important_findings": 0,
+    "schema_and_trust_negatives": 26
+  }
+}

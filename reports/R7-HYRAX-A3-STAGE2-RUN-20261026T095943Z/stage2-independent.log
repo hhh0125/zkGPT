@@ -1,0 +1,73 @@
+PASS s2-multi-1
+PASS s2-registry-1-padding-attack
+PASS s2-multi-2
+PASS s2-multi-4
+PASS s2-sc2-1
+PASS s2-sc3-1
+PASS s2-real-1
+PASS s2-registry-1-wrong-registry
+PASS s2-registry-1-rebind
+PASS s2-registry-1-commitment-bytes
+PASS s2-registry-1-wrong-object
+PASS s2-registry-1-wrong-generators
+PASS s2-registry-1-wrong-suite
+PASS s2-registry-1-wrong-shape
+PASS s2-registry-1-bad-registration
+PASS s2-registry-1-untrusted-source
+PASS s2-multi-1-bad-evaluation
+PASS s2-multi-1-other-opening-commitment
+PASS s2-multi-2-swap-handles
+PASS s2-multi-2-swap-query
+PASS s2-multi-2-cross-batch
+PASS s2-multi-2-repeat-masks
+PASS s2-multi-1-opening-challenge
+PASS s2-multi-1-order
+PASS s2-multi-1-truncate
+PASS s2-multi-1-incomplete
+PASS s2-multi-1-old-csipa
+PASS s2-multi-1-registry-digest
+PASS s2-zero-a-1
+PASS s2-sc2-1-terminal-handle
+PASS s2-sc2-1-old-sc-backend
+PASS s2-sc2-1-factor-substitution
+PASS s2-sc2-1-bad-endpoint
+PASS s2-sc2-1-bad-mul
+PASS s2-sc2-1-bad-recursion
+PASS s2-sc2-1-sc-challenge
+PASS s2-sc2-1-sc-order
+PASS s2-sc2-1-cross-session-terminal
+FAIL s2-sc2-1-opening-valid-bad-sumcheck
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/hyrax_a3_stage2_tests.py", line 72, in <module>
+    ('opening-valid-bad-sumcheck','compressed linear relation failed')]:run(mode,1,attack,reason)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/hyrax_a3_stage2_tests.py", line 36, in run
+    if not ok:raise AssertionError(name+'\nV: '+text+'\nP: '+pt)
+AssertionError: s2-sc2-1-opening-valid-bad-sumcheck
+V: REJECT R7 interactive sequence/label or receipt rejected
+
+P: REJECT R7 interactive EOF/transport failure
+
+Command exited with non-zero status 1
+	Command being timed: "python3 -B tools/hyrax_a3_stage2_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261026T095943Z/stage2-sessions"
+	User time (seconds): 20.22
+	System time (seconds): 0.23
+	Percent of CPU this job got: 142%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:14.32
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 26628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 34517
+	Voluntary context switches: 1882
+	Involuntary context switches: 98
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 4088
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

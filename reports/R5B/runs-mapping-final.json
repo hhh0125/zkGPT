@@ -1,0 +1,197 @@
+[
+  {
+    "id": "mapping-configure",
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/release"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:54:24.732269+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/mapping-configure.log",
+    "time": "logs/R5B/mapping-configure.time",
+    "exit_code": 0,
+    "seconds": 0.9923439933918417,
+    "finished_utc": "2026-10-20T08:54:25.724880+00:00",
+    "max_rss_kib": 18800
+  },
+  {
+    "id": "mapping-build",
+    "command": [
+      "cmake",
+      "--build",
+      "build/release",
+      "--target",
+      "r5b_mapping_tests",
+      "-j6"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:54:25.725340+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/mapping-build.log",
+    "time": "logs/R5B/mapping-build.time",
+    "exit_code": 0,
+    "seconds": 3.4272635197266936,
+    "finished_utc": "2026-10-20T08:54:29.152913+00:00",
+    "max_rss_kib": 299524
+  },
+  {
+    "id": "mapping-small",
+    "command": [
+      "build/release/src/paper_r2/r5b_mapping_tests",
+      "small"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:54:29.153702+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/mapping-small.log",
+    "time": "logs/R5B/mapping-small.time",
+    "exit_code": 0,
+    "seconds": 0.09746631002053618,
+    "finished_utc": "2026-10-20T08:54:29.251532+00:00",
+    "max_rss_kib": 6480
+  },
+  {
+    "id": "mapping-real",
+    "command": [
+      "build/release/src/paper_r2/r5b_mapping_tests",
+      "real",
+      "reports/R5B/engineering-model-manifest-v1.txt",
+      "data/gpt2_int",
+      "reports/R5B/operator-trust-v1.anchor",
+      "f2feb14a31b316c3a32b35549bbeaed8ec4fc3f285f5eb79e75ddde8b9cb51b3"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:54:29.252209+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/mapping-real.log",
+    "time": "logs/R5B/mapping-real.time",
+    "exit_code": 0,
+    "seconds": 50.33714501000941,
+    "finished_utc": "2026-10-20T08:55:19.590025+00:00",
+    "max_rss_kib": 3150556
+  },
+  {
+    "id": "release-regression-final",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "--output-on-failure",
+      "-j4"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:55:19.591289+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/release-regression-final.log",
+    "time": "logs/R5B/release-regression-final.time",
+    "exit_code": 0,
+    "seconds": 25.47858076915145,
+    "finished_utc": "2026-10-20T08:55:45.070752+00:00",
+    "max_rss_kib": 1571808
+  },
+  {
+    "id": "sanitize-mapping-configure",
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/r5b-sanitize"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:55:45.071820+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-mapping-configure.log",
+    "time": "logs/R5B/sanitize-mapping-configure.time",
+    "exit_code": 0,
+    "seconds": 1.0185709008947015,
+    "finished_utc": "2026-10-20T08:55:46.091322+00:00",
+    "max_rss_kib": 18740
+  },
+  {
+    "id": "sanitize-mapping-build",
+    "command": [
+      "cmake",
+      "--build",
+      "build/r5b-sanitize",
+      "--target",
+      "r5b_mapping_tests",
+      "-j6"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:55:46.092725+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-mapping-build.log",
+    "time": "logs/R5B/sanitize-mapping-build.time",
+    "exit_code": 0,
+    "seconds": 5.240210377145559,
+    "finished_utc": "2026-10-20T08:55:51.333982+00:00",
+    "max_rss_kib": 367704
+  },
+  {
+    "id": "sanitize-mapping-small",
+    "command": [
+      "build/r5b-sanitize/src/paper_r2/r5b_mapping_tests",
+      "small"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "started_utc": "2026-10-20T08:55:51.335298+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-mapping-small.log",
+    "time": "logs/R5B/sanitize-mapping-small.time",
+    "exit_code": 0,
+    "seconds": 0.1491450839675963,
+    "finished_utc": "2026-10-20T08:55:51.485480+00:00",
+    "max_rss_kib": 55124
+  },
+  {
+    "id": "gelu-error-certificate-final",
+    "command": [
+      "python3",
+      "reports/R5B/error_certificate.py"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:55:51.486778+00:00",
+    "pid": 732063,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/gelu-error-certificate-final.log",
+    "time": "logs/R5B/gelu-error-certificate-final.time",
+    "exit_code": 0,
+    "seconds": 12.9650225257501,
+    "finished_utc": "2026-10-20T08:56:04.452851+00:00",
+    "max_rss_kib": 11840
+  }
+]

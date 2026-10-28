@@ -1,0 +1,75 @@
+{
+  "status": "CLASSIFIED_COMPONENTS_TESTED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "name": "engineering",
+      "command": [
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.424562403932214,
+      "passed": true
+    },
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1207365998998284,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_classified_layout_tests",
+        "r7_classified_crypto_tests",
+        "r7_oneblock_lookup_tests",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 8.387055063154548,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_layout_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_layout_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 10.59436532156542,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_crypto_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.16772497491911054,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_lookup_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 23.220670950133353,
+      "passed": true
+    }
+  ]
+}

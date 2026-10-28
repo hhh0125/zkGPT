@@ -1,0 +1,53 @@
+[
+  {
+    "id": "normal-prove-v2",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T09:15:49.657458+00:00",
+    "pid": 942011,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/normal-prove-v2.log",
+    "time": "logs/R5B/normal-prove-v2.time",
+    "exit_code": 0,
+    "seconds": 422.208818285726,
+    "finished_utc": "2026-10-20T09:22:51.866565+00:00",
+    "max_rss_kib": 6754440
+  },
+  {
+    "id": "normal-independent-v2",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/empty-normal-v2",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T09:22:51.867359+00:00",
+    "pid": 942011,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/normal-independent-v2.log",
+    "time": "logs/R5B/normal-independent-v2.time",
+    "exit_code": 0,
+    "seconds": 297.92412154516205,
+    "finished_utc": "2026-10-20T09:27:49.791801+00:00",
+    "max_rss_kib": 1433580
+  }
+]

@@ -1,0 +1,4 @@
+#include "models.hpp"
+#include "paper_r1/core.hpp"
+#include <iostream>
+int main(){zkgpt::r1::init();LLM nn(1,12,64,768,3072);nn.setR5BEngineeringCandidate();auto c=nn.buildPublicCircuit();size_t claim=0,total=0;for(size_t i=1;i<c.circuit.size();++i){const auto &l=c.circuit[i];auto output=[&](unsigned port,unsigned mp){const auto &ids=port?l.ori_id_v:l.ori_id_u;size_t n=port?l.size_v[0]:l.size_u[0];size_t spans=0;for(size_t j=0;j<n;++j)if(j==0 || ids[j]!=ids[j-1]+1)++spans;std::cout<<"MAP "<<claim++<<" layer="<<i<<" type="<<int(l.ty)<<" port="<<port<<" matrix_point="<<mp<<" actual="<<n<<" spans="<<spans<<'\n';total+=spans;};if(l.bit_length_u[0]>=0)output(0,0);if(l.bit_length_v[0]>=0)output(1,0);if(l.ty==layerType::FCONN){output(0,1);output(1,1);}}std::cout<<"TOTAL claims="<<claim<<" spans="<<total<<" layers="<<c.size<<'\n';}

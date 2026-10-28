@@ -1,0 +1,181 @@
+GATE_FILES ['r6b_common.py', 'r6b_contract.py', 'r6b_artifacts.py', 'r6b_supervisor.py', 'r6b_resources.py', 'r6b_policy.py', 'r6b_execution_gate.py', 'r6b_approval_tools.py', 'r6b_statement_parser.cpp', 'r6b_statement_parser']
+"""Only production policy available to CLI; no executable/shape/permit override."""
+from pathlib import Path
+from r6b_common import *
+ROOT='/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work'
+ID='R6B-OPT2-20261021-v1'
+STAGE=ROOT+'/reports/R6B-OPT2-20261021'
+IDENTITY_SHA='cfaf50caac2dcf63dff8ef9d0ab5abd85a2d72dcf5439d56f7103926861774a7'
+def production_policy():
+    stage=Path(STAGE);require(Path.cwd().resolve()==Path(ROOT),'launch from fixed workspace')
+    identity=stage/'R6B_IDENTITY_CHECK.json';require(file_sha(identity)==IDENTITY_SHA,'frozen prepare identity record changed');d=json_read(identity)
+    manifest=json_read(stage/'R6B_EXECUTION_GATE_SOURCE_SHA.json')
+    for name,row in manifest['production_files'].items():require(file_sha(stage/name)==row['sha256'],'gate source/parser identity changed')
+    require(digest(canonical({p:row['sha256'] for p,row in manifest['production_files'].items()}))==manifest['production_tree_sha256'],'gate code manifest')
+    bound_identity={key:manifest[key] for key in ['production_files','runtime_library_files','reused_protection']}
+    require(digest(canonical(bound_identity))==manifest['gate_identity_sha256'],'gate/runtime/protection identity manifest')
+    files={row['actual_path']:row['actual_sha256'] for row in d['files'].values()};files.update({str(stage/n):row['sha256'] for n,row in manifest['production_files'].items()})
+    files.update({p:row['sha256'] for p,row in manifest['runtime_library_files'].items()})
+    p={'production':True,'root':ROOT,'stage':STAGE,'run_id':ID,'source_sha':'ff09226c16454a6060252a6fc61554a4b052dcf7926409d1f21edcfb7d9434f9','identity_files':files,'profile':'399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4','circuit':'ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7','anchor':ROOT+'/reports/R6A/full12-operator-trust-v1.anchor','anchor_sha':'754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306','manifest':ROOT+'/reports/R6A/full12-model-manifest-v1.txt','manifest_sha':'b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1','binaries':d['selected_executables'],'limits':{'prover':{'memory':96,'wall':28800},'verifier':{'memory':96,'wall':14400}},'output':ROOT+'/reports/'+ID+'-full12','verifier_cwd':ROOT+'/reports/'+ID+'-independent-empty','permit_version':'ZKGPT-R6-RUN-PERMIT-v1','helper':ROOT+'/reports/R6A/helper.py','helper_sha':'14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351','parser':str(stage/'r6b_statement_parser'),'plan':ROOT+'/reports/R6B-OPT2-20261021/FULL12_FINAL_OPT2_PLAN.json','code_sha':manifest['production_tree_sha256'],'expected_accept':'ACCEPT R6 blocks=12 GKR+production Lasso+bridge+unified input,externally OPERATOR-TRUSTED W; candidate only','allowed_competing_PIDs':[]}
+    p['code_sha']=manifest['gate_identity_sha256']
+    p['permit_paths']={m:STAGE+'/future-permits/'+m+'.permit' for m in ['prover','verifier']}
+    p['frozen']={key:p[key] for key in ['source_sha','profile','circuit','anchor','anchor_sha','manifest','manifest_sha','binaries']};p['frozen']['identity_record_sha256']=IDENTITY_SHA
+    return p
+
+FILE src/prover.hpp
+#ifndef ZKCNN_PROVER_HPP
+#define ZKCNN_PROVER_HPP
+
+#include "global_var.hpp"
+#include "circuit.h"
+#include "polynomial.h"
+#include "hyrax.hpp"
+#include <memory>
+using std::unique_ptr;
+
+class neuralNetwork;
+// Non-owning view: w/comm are owned by prover; g borrows generators.
+// Copying this view never transfers ownership. Do not delete its pointers.
+struct Commit_return
+{
+    int l;  // input的长度
+    Fr* w;  // fr类型的input数据 254bit
+    ll* ww;  // ll类型的input数据  128bit
+    G1 G,*g;  // 生成元G，数组g
+    G1* comm;  
+};
+
+class prover {
+public:
+    int fc_row[100],fc_col[100],fc_start_id[100], fc_input_row[100],fc_input_col[100],fc_input_id[100];
+    int fc_real_row[100],fc_real_col[100],fc_real_input_row[100],fc_real_input_col[100]; // padded
+    u32 total[2], total_size[2];
+    vector<linear_poly> mult_array[2];
+    vector<linear_poly> V_mult[2];
+    vector<linear_poly> tmp_mult_array[2];
+    vector<linear_poly> tmp_V_mult[2];
+    int** mat_val=nullptr; // Borrows network or test-fixture matrix storage.
+    void init();
+    void logWorkspaceMemory(const std::string &stage) const;
+    void logPrivateMemory(const std::string &stage) const;
+    void releaseSumcheckWorkspace();
+    void releaseLassoWorkspace();
+
+    void sumcheckInitAll(const vector<F>::const_iterator &r_0_from_v);
+    void sumcheckInit(const F &alpha_0, const F &beta_0);
+    void sumcheckDotProdInitPhase1();
+    void sumcheckInitPhase1(const F &relu_rou_0);
+    void sumcheckInitPhase2();
+
+    cubic_poly sumcheckDotProdUpdate1(const F &previous_random);
+    quadratic_poly sumcheckUpdate1(const F &previous_random);
+    quadratic_poly sumcheckUpdate2(const F &previous_random);
+
+    F Vres(const vector<F>::const_iterator &r, u32 output_size, u32 r_size, u32 layer_id, u32 start=0);
+    vector<F> lasso_mult_v,lasso_v_mult;
+    void sumcheckDotProdFinalize1(const F &previous_random, F &claim_1);
+    void sumcheckFinalize1(const F &previous_random, F &claim_0, F &claim_1);
+    void sumcheckFinalize2(const F &previous_random, F &claim_0, F &claim_1);
+    void sumcheck_lasso_Finalize(const F &previous_random, F &claim_1);
+
+    void sumcheckLassoInit(const vector<F> &s_u, const vector<F> &s_v,const vector<vector<F>>& r_uu, const vector<vector<F>>& r_vv);
+    quadratic_poly sumcheckLassoUpdate(const F &previous_random);
+    quadratic_poly sumcheckUpdateEach_Lasso(const F &previous_random, bool idx) ;
+    void commitInput(const vector<G1> &gens,int thread_n=1,bool shared_vector=false);
+    const std::vector<Fr>& sharedInputWitness() const;
+
+    timer prove_timer;
+    vector<double> throw_time[500];
+    double proveTime() const{ return 0;}// { return prove_timer.elapse_sec(); }
+    double proofSize() const { return 0;}// (double) proof_size / 1024.0; }
+    double polyProverTime() const { return 0;}//poly_p -> getPT(); }
+    double polyProofSize() const { return 0;}//{ return poly_p -> getPS(); }
+    
+    layeredCircuit C{};
+    vector<vector<F>> val;        // the output of each gate
+    F getCirValue(u32 layer_id, const vector<u32> &ori, u32 u);
+    u64 proof_size;
+    vector<G> gens;
+    Commit_return cc{};
+    
+private:
+    std::unique_ptr<Fr[]> committed_witness_;
+    std::vector<Fr> committed_witness_vector_;
+    std::unique_ptr<G1[]> committed_rows_;
+    void prepareSumcheckWorkspace();
+    quadratic_poly sumcheckUpdateEach(const F &previous_random, bool idx);
+    quadratic_poly sumcheckUpdate(const F &previous_random, vector<F> &r_arr);
+    
+
+    vector<F>::iterator r_0, r_1;         // current positions
+    vector<vector<F>> r_u, r_v;             // next positions
+
+    vector<F> beta_g;
+    
+    F add_term;
+    
+    F V_u0, V_u1;
+
+    F alpha, beta, relu_rou;
+
+    
+    u32 round;         // step within a sumcheck
+    u32 sumcheck_id;    // the level
+
+    friend neuralNetwork;
+};
+__int128 convert(Fr x)	;
+
+#endif //ZKCNN_PROVER_HPP
+
+FILE src/paper_r2/r6_model_prove.cpp
+#include "memory_diagnostics.hpp"
+#include "r6_cli.hpp"
+#include "wire.hpp"
+#include <iostream>
+using namespace zkgpt;
+int main(int argc,char**argv){try{r1::require(argc>=4,"usage: r6_model_prove NEW_DIR --blocks1|12 --trusted-anchor FILE --anchor-sha256 HEX --model-manifest FILE [--plan-only]");auto o=r6::options(argc,argv,2);if(o.plan_only){r1::init();r6::plan(argv[1],o);std::cout<<"PASS R6 plan-only,no private witness/proof\n";return 0;}r6::requireExecution(o);r6::limits(o,false);r1::init();r1::require(!std::filesystem::exists(argv[1]),"R6 output directory exists");
+ r5b::Anchor anchor;std::string fingerprint;r6::Resources budgets;std::size_t planned_actual=0;
+ {LLM pub(o.blocks,12,64,768,3072);r6::configure(pub);auto c=pub.buildPublicCircuit();auto p=r2::planModelQueries(c,pub.getWitnessRegistry(),pub.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(c,pub,p);anchor=r6::loadAnchor(o.anchor,o.pin,o.manifest,p);planned_actual=p.master.actual;zkgpt::memory_diagnostics::logAddress("preflight/graph","object",&c,0,"scoped-preflight");zkgpt::memory_diagnostics::logAddress("preflight/graph","layers",c.circuit.data(),c.circuit.capacity()*sizeof(layer),"scoped-preflight");budgets=r6::resources(c,pub,p);r6::preflight(o,budgets,p,"prover");fingerprint=p.circuit_id;}
+ zkgpt::memory_diagnostics::logScalar("preflight/graph-destroyed","live_preflight_graphs",0);
+ r5b::newDirectory(argv[1]);const std::filesystem::path dir=argv[1];auto mb=r1::readFile(o.manifest);auto manifest=r6::parseManifest(mb,o.blocks);r6::checkParameterFiles(manifest,"data/gpt2_int");LLM nn(o.blocks,12,64,768,3072);r6::configure(nn);nn.setWitnessCapacityHint(planned_actual);prover pr{};nn.create(pr,false);nn.validateCurrentWitness(pr);r6::checkParameterFiles(manifest,"data/gpt2_int");
+ auto p=r2::planModelQueries(pr.C,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r1::require(p.circuit_id==fingerprint,"R6 private/public circuit mismatch");r6::validateRegions(p,nn.parameterRegions());auto start=std::chrono::steady_clock::now();auto progress=[&](const std::string&s){r6::runtimeCheck(o);std::cerr<<"PHASE "<<s<<" seconds="<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<std::endl;};
+ const auto&master=pr.sharedInputWitness();
+ zkgpt::memory_diagnostics::logAddress("caller/master-ref","caller_master",master.data(),master.capacity()*sizeof(Fr),"prover.vector/const-ref");
+ zkgpt::memory_diagnostics::logAddress("caller/master-ref","val0",pr.val[0].data(),pr.val[0].capacity()*sizeof(Fr),"prover.val0");
+ zkgpt::memory_diagnostics::logAddress("caller/master-ref","actual_graph",&pr.C,0,"prover.C");
+auto v=r2::gatherModelQueries(p,master);auto cm=r1::commit(p.master,master);std::vector<r1::Commitment>cs;for(std::size_t i=0;i<v.size();++i){r6::runtimeCheck(o);cs.push_back(r1::commit(p.sources[i].spec,v[i]));}r5b::requireAnchorW(anchor,cs.back());std::vector<Fr>x(master.begin(),master.begin()+32768),y;for(auto i:p.output)y.push_back(master[i]);auto s=r2::makeModelQueryStatement(p,cm,cs,anchor.w,x,y,anchor.model_id);r2::requireModelQueryStatement(p,s,anchor.w,x,y,anchor.model_id);
+ GKRPublicStatement g;g.model_shape=p.shape;g.val0_log_size=pr.cc.l;g.val0_commitment.assign(pr.cc.comm,pr.cc.comm+(std::size_t(1)<<(pr.cc.l/2)));g.val0_generator_domain={"zkGPT/main",std::uint32_t(std::size_t(1)<<(pr.cc.l-pr.cc.l/2))};g.circuit_fingerprint=fingerprintCircuit(pr.C);g.output_evaluation=Fr(0);auto proof=r2::proveR2(pr,g,s,master,v,progress);r1::writeFile((dir/"model.statement").string(),r2::serializeStatement(g,s));r1::writeFile((dir/"model.proof").string(),r2::serializeProof(g,s,proof));std::cout<<"GENERATED R6 blocks="<<o.blocks<<"; independent verification required; OPERATOR-TRUSTED candidate only\n";return 0;
+ }catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+
+SELECTED {'prover': {'path': '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove', 'sha256': '9cbdd4529117d59d78328466f3101681ccedccf0309c9dfee4efba5c87687f95', 'prior_sha256': '02ca7fef5bb9cd6aad845fc5ef1ce958916f10770e1db15f759e206c613e8e56'}, 'verifier': {'path': '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify', 'sha256': '8cda578918d9fdf4acb43e3f9bfc66fe2568a906232658563f4035788f7713c8', 'prior_sha256': 'd2131c7319009f1027b1a657c6f88db7995c481adf3f84b368cfcecb58a25c69'}}
+SPECIAL_ROWS [('src/exp_lookup.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/exp_lookup.cpp', 'b5e3b7891025f60e6c2ae74d062ec5945deaa3b71ed4642582d45e2190f1527c'), ('src/exp_lookup.hpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/exp_lookup.hpp', 'b08535e35e07a86c2ce437aaa01b711fcc0d41508f46f4de0446bb069b9902d9'), ('src/exp_table_values.inc', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/exp_table_values.inc', '1f3cd6d8935dcc2ad1a8463b404f5649fec6a6ed6698637ef7d69d4f4d3d4141'), ('src/export_gpt2_complete_params.py', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/export_gpt2_complete_params.py', '39b0e546dd72c24879f824210eebe57f7db0f7a06412da970e8b6c53119af564'), ('src/main_exp_lookup_tests.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/main_exp_lookup_tests.cpp', '9c9d890c3576653254f76d2e34871d091184a9dd454825b03e0fed33a5733ad8'), ('src/paper_r1/exp.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/exp.cpp', 'c6b42c1669f16faae26e383546997ecfc6f551ef4e69fc03c7069a90111b1070'), ('src/paper_r1/exp.hpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/exp.hpp', '99947f2ff376fd5d54fe0b79cddb62fedcf424b945e0590d2c9c38a8c4ca4657'), ('src/paper_r1/exp_table.inc', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/exp_table.inc', '316148a0acd929150535f540c93b3c58d6d26e2ac0ad91ac593f7fa78cdf82f5'), ('src/paper_r1/input.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/input.cpp', '7819537f17cfcc78824402b9272e15a8e72f80620457b3c38a5eefc7f2ed10cc'), ('src/paper_r1/input.hpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/input.hpp', '08733dfec3bc844229e3ebd28dd9a0463a3c56f7493407969b0006712d3b2330'), ('src/paper_r1/mapped_input.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/mapped_input.cpp', '1b49a5dbf8aa0590eeabfb104216d5d154faaa8351f7b2d22ef196d6d4bb30ff'), ('src/paper_r1/mapped_input.hpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/mapped_input.hpp', 'd70c70cbb1d512e0b48d94cc13ba6ae3b0d0a5ee0a7109314bca27e8e36eb922'), ('src/paper_r1/tests_exp.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_exp.cpp', 'b384d8e312beb7aaf85e2dfcf0fb04cd982471c5db657459c5780adc7de6f70c'), ('src/paper_r1/tests_exp_profile.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_exp_profile.cpp', '8ed79805287713825cdd1ac5006264647f66814253f92e004243f38cdbdccdf3'), ('src/paper_r1/tests_input.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_input.cpp', '9c4f7d105c58db617900e8b99c3bdbe402ab7271e220dfaa1002e84bd78ce59b'), ('src/paper_r1/tests_mapped_input.cpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tests_mapped_input.cpp', 'd66d26d8980ab49e64566a7cbb5e796472d13f3d9026f9765976c106cda28194'), ('src/paper_r1/tools/generate_exp_table.py', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tools/generate_exp_table.py', 'a6ddfb8b8edfe9c029166b2c89c6bc401d90e1cb9aaa41166933c4eac651768d'), ('src/paper_r1/tools/test_exp_table.py', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/tools/test_exp_table.py', 'dda7d94c35eb7817473923906fa97c2073b2fd0432b9bbce7448a22d6c85b50f'), ('src/r5b_profile.hpp', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/r5b_profile.hpp', '63aa1de47dab9940ddfd645f1da106aed574c5b7c9078b5dbfece0e41456f345'), ('src/r5b_profile.json', 'source_dependency', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/r5b_profile.json', '304600536c6d837688eb947680aec03a5d8c440355eac88c163292234e494a85'), ('build/release/src/CMakeFiles/exp_lookup_tests.dir/flags.make', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/CMakeFiles/exp_lookup_tests.dir/flags.make', 'ed214a93dae93caedc7fd511cbfda827ab49a07675135140b146b39bd2c9f102'), ('build/release/src/CMakeFiles/exp_lookup_tests.dir/link.txt', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/CMakeFiles/exp_lookup_tests.dir/link.txt', '076936b6c9ec1454000cee157dddab0fe0b9244531f047fe203b019bc8435073'), ('build/release/src/paper_r1/CMakeFiles/r1_exp_tests.dir/flags.make', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r1_exp_tests.dir/flags.make', '7ec03ad1778f94b8bd026157c9ca7ec1339a1b6f229acad91ab2ba9254669592'), ('build/release/src/paper_r1/CMakeFiles/r1_exp_tests.dir/link.txt', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r1_exp_tests.dir/link.txt', '6187c68ec5172d3024ec463b9c427ce928efb9aa9f4bb4b2d8997e8d54014d71'), ('build/release/src/paper_r1/CMakeFiles/r1_input_tests.dir/flags.make', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r1_input_tests.dir/flags.make', '7ec03ad1778f94b8bd026157c9ca7ec1339a1b6f229acad91ab2ba9254669592'), ('build/release/src/paper_r1/CMakeFiles/r1_input_tests.dir/link.txt', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r1_input_tests.dir/link.txt', '53c93fa5b218e0a83f47bae009fda30dc07e2cf56cf5863aef96816732ab49f7'), ('build/release/src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/flags.make', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/flags.make', '7ec03ad1778f94b8bd026157c9ca7ec1339a1b6f229acad91ab2ba9254669592'), ('build/release/src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/link.txt', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/link.txt', 'ecbd426bd59cb63452387d7eba365795855b1a7bdf19eed99a0306e5f5d021e6'), ('build/release/src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/flags.make', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/flags.make', '7ec03ad1778f94b8bd026157c9ca7ec1339a1b6f229acad91ab2ba9254669592'), ('build/release/src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/link.txt', 'release_dependency_or_build_config', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/link.txt', '0df7bd45007ca13230813e680602cb907b9d328ecad3d443252bd39209d7305c'), ('reports/R6A/R6A_DIFF_MANIFEST.json', 'R6A_frozen_evidence', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/R6A_DIFF_MANIFEST.json', 'd5c57822f5ae4a224a5688d09cb7290e52827a91206f9c8dae5662ad17223d56'), ('reports/R6A/full12-operator-trust-v1.anchor', 'full12_trust', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor', '754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306'), ('reports/R6A/full12-model-manifest-v1.txt', 'full12_trust', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt', 'b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1')]
+src/neuralNetwork.cpp:2403:    double random_input_abs = 350.0;
+src/neuralNetwork.cpp:2417:            num = static_cast<double>(rand()) / static_cast<double>(RAND_MAX) * (2 * random_input_abs) - random_input_abs;
+src/neuralNetwork.cpp:2576:                    //mat_values[id][co*channel_in+ci] = (rand() % 65) - 32;
+src/neuralNetwork.cpp:2831: if(!r6_engineering_ || layer_num>3 || structure_only || pr.cc.w)throw std::invalid_argument("finite R6 witness supports at most3 blocks and no existing commitment");
+src/neuralNetwork.cpp:2833: if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
+src/prover.cpp:1038:        committed_witness_vector_=std::move(owner);committed_witness_.reset();
+src/prover.cpp:1041:        cc.l=bits;cc.w=committed_witness_vector_.data();cc.ww=nullptr;
+src/prover.cpp:1047:                logAddress("shared_commit/published","cc.w",cc.w,padded_len*sizeof(Fr),"prover.vector");
+src/prover.cpp:1049:                logVector("shared_commit/published","committed_vector",committed_witness_vector_);
+src/prover.cpp:1103:    std::vector<Fr>().swap(committed_witness_vector_);
+src/prover.cpp:1104:    committed_witness_=std::move(witness_owner);
+src/prover.cpp:1111:    cc.w=dat;
+src/prover.cpp:1112:    cc.ww=nullptr;
+src/prover.cpp:1114:        zkgpt::memory_diagnostics::logProcess("commit_input_cc_w_ready");
+src/prover.cpp:1116:            "commit_input_cc_w_ready","cc.w",padded_len,sizeof(Fr));
+src/prover.cpp:1118:            "commit_input_cc_w_ready","padded_witness_buffers",2);
+src/prover.cpp:1123:    // touched padding capacity here preserves cc.w and all witness values while
+src/prover.cpp:1131:            "commit_input_val0_compacted","cc.w",padded_len,sizeof(Fr));
+src/prover.cpp:1137:const std::vector<Fr>& prover::sharedInputWitness() const {
+src/prover.cpp:1138:    if(cc.l<0 || cc.l>28 || committed_witness_vector_.empty() ||
+src/prover.cpp:1139:       committed_witness_vector_.size()!=(std::size_t(1)<<cc.l) || cc.w!=committed_witness_vector_.data())
+src/prover.cpp:1141:    return committed_witness_vector_;
+src/prover.cpp:1185:    logScalar(stage,"committed_witness_alive",bool(committed_witness_) || !committed_witness_vector_.empty());
+src/prover.cpp:1186:    logScalar(stage,"committed_legacy_array_alive",bool(committed_witness_));
+src/prover.cpp:1187:    logScalar(stage,"committed_shared_vector_alive",!committed_witness_vector_.empty());
+src/prover.cpp:1188:    logVector(stage,"committed_shared_vector",committed_witness_vector_);
+src/prover.cpp:1190:    if (committed_witness_) logAllocation(stage,"committed_witness",1ULL<<cc.l,sizeof(Fr));
+
+INPUT_ARTIFACTS ['reports/R6A/watchdog-disk-fixture.job.json', 'reports/R6B-OPT2-20261021/WINDOWS_RESTORE_RECEIPT.json', 'reports/R6B-OPT2-20261021/BASELINE_SOURCE_SHA.json', 'reports/R6B-OPT2-20261021/R6B_OPT2_MEMORY_REPORT.md', 'reports/R6A/review-fix-build.json', 'reports/R6B-OPT2-20261021/address-ownership.json', 'reports/R6B-OPT2-20261021/TARGETED_SANITIZER_COMMANDS.json', 'reports/R6A/entries-prover-full12-default-blocked.json', 'reports/R6B-OPT2-20261021/final-targeted-undefined/prover.o', 'reports/R6B-OPT2-20261021/final-targeted-undefined/ownership', 'reports/R6B-OPT2-20261021/SUPERSEDED_IDENTITIES.json', 'reports/R6B-OPT2-20261021/final-targeted-undefined/span', 'reports/R6B-OPT2-20261021/r6b_approval_tools.py', 'reports/R6B-OPT2-20261021/R6B_OPT2_final_evidence_v1.tar.gz', 'reports/R6B-OPT2-20261021/parser-build-command.json', 'reports/R6B-OPT2-20261021/final-oneblock-independent.json', 'reports/R6B-OPT2-20261021/final-targeted-undefined/mapped_input.o', 'reports/R6B-OPT2-20261021/final-oneblock-prover.json', 'reports/R6B-OPT2-20261021/NEW_GATE_IDENTITY_ONLY_CHECK.json', 'reports/R6B-OPT2-20261021/IMPLEMENTATION_PLAN.md', 'reports/R6B-OPT2-20261021/R6B_AUTHORIZATION_BINDING_SCHEMA.json', 'reports/R6B-OPT2-20261021/test_supervisor.py', 'reports/R6B-OPT2-20261021/test_approval_tools.py', 'reports/R6B-OPT2-20261021/NO_FULL12_EXECUTION_AUDIT.json', 'reports/R6A/preprocess-entry-build.json']

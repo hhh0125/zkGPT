@@ -1,0 +1,33 @@
+{
+  "id": "release-ctest-v2",
+  "command": [
+    "/usr/bin/ctest",
+    "--test-dir",
+    "build/release",
+    "--output-on-failure",
+    "-j",
+    "1"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-21T03:28:34.654501+00:00",
+  "seconds": 239.2083676289767,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 900,
+  "address_space_limit_gib": 16,
+  "RSS_group_limit_gib": 16,
+  "observed_process_group_peak_bytes": 4790013952,
+  "stop_reason": null,
+  "disk_reserve_gib": 64,
+  "shared_memory_reserve_gib": 32,
+  "binary_sha256": "5907669b8851c24b629db2cba4be3968285734c53bbeb204ad67d7cfaf14a901",
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/logs/R6B-OPT2-20261021/release-ctest-v2.log",
+  "time": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/logs/R6B-OPT2-20261021/release-ctest-v2.time"
+}

@@ -1,0 +1,48 @@
+{
+  "local_git_commit": "3febc273e77fa9e29e69fdb8f3c7f96e9d8cbb9c",
+  "payload_sha256": "e20798bd6ce49f2d23dceab1783117bfc4c07368e48e165dffa17df98bd1bc96",
+  "remote_code_version": "e20798bd6ce49f2d23dceab1783117bfc4c07368e48e165dffa17df98bd1bc96",
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "label": "engineering-safety-tests",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080054Z/engineering-safety-tests.log",
+      "exit_code": 1,
+      "seconds": 3.4228375451639295,
+      "passed": false
+    }
+  ],
+  "error": "engineering-safety-tests unexpected exit code",
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_framework_tests": "a75b1db4cd05b72532bb09a06698349c86350a06bf29e430783454ec8a5d9346",
+    "r7_crypto_tests": "a4953967ae224e856f08d4e6b34ac05a34aab493eac001d1f4212d48c8e16b4d",
+    "r7_local_prover": "ab3ce594aa2f02812af63ad0edd76b519d97f9d4bde4a65698fa6a3fcdea1143",
+    "r7_local_verifier": "7f5b9b381b109adf5cc9e979ea4d610baf18b1d17ee539011b6861c34dedd794",
+    "r7_oneblock_prove": "9912ae12c6e20a3fe0534e250c31a0f7f0b62318fd96305b31453352f3cc1d10",
+    "r7_oneblock_verify": "7db437b7de184adc0ce95b3449a8fa21cbf3c4d3abad5c70c72457f8fd110353"
+  },
+  "cmake_cache_sha256": "c2c2aa212a4305ffa84461177cb82dca607756ecb013e68e3bfcdf2cf8782d7f",
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "deps/cnpy/include/cnpy.h": "68a34a847cfed2dfcc1dc8bcd495cdb51477061536d670161a62c5103547ae93",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097"
+  },
+  "mcl_submodule_commit": "dd66a53a4dce2ab27f9d028846bc1b1cdbf050f5"
+}

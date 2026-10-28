@@ -1,0 +1,1 @@
+First measurement launcher set CPU hard limit60s, inherited by V. C1 harden attempted its fixed120s and OS correctly rejected raising the hard limit before READY. No proof ran or accepted. Align new launcher to inherited120s CPU cap; keep60s wall cap and512MiB AS. Original failure logs retained.

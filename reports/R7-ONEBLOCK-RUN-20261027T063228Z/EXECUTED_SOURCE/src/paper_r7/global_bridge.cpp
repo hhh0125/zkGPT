@@ -1,0 +1,12 @@
+#include "global_bridge.hpp"
+namespace zkgpt::r7::masterB {
+std::vector<std::size_t> globalMap(const Layout&l,std::size_t N,bool real){validate(l);auto map=l.projection;if(!real){for(std::size_t j=0;j<map.size();++j)map[j]=(7+5*j)%N;}else need(N==l.padded,"B1 real global map needs complete Base Master");for(auto i:map)need(i<std::min<std::size_t>(N,l.actual),"B1 global source outside actual Base Master");return map;}
+SparsePublicKernel kernelFor(const std::vector<std::size_t>&map,const std::vector<Fr>&point,std::size_t N){need(map.size()==2050 && point.size()==12,"B1 projection gather dimensions");auto w=r1::weights(point);SparsePublicKernel k;for(std::size_t j=0;j<map.size();++j){need(map[j]<N,"B1 gather index bounds");k.try_emplace(map[j],Fr(0)).first->second+=w[j];}return k;}
+Fr sparseMLE(const SparsePublicKernel&k,const std::vector<Fr>&point){Fr sum=0;for(auto&t:k){Fr w=1;for(unsigned j=0;j<point.size();++j)w*=((t.first>>j)&1)?point[j]:Fr(1)-point[j];sum+=w*t.second;}return sum;}
+void globalBridge(IO&io,const Registered&full,const Registered&projection,const Layout&l,const Secret*secret,const Secret*projectSecret,Random*rng,const std::string&attack){
+ const auto&m=full.get(io);const auto&p=projection.get(io);need(p.spec.N==4096 && p.spec.actual==2050 && p.spec.scope=="FC-source-projection" && m.spec.scope=="Base-Master-prefix","B1 global object identity");auto map=globalMap(l,m.spec.N,m.spec.N==l.padded);Writer b;b.text("R7-STAGE3B1-GLOBAL-GATHER-v1");b.text(identity(m));b.text(identity(p));b.text(layoutDigest(l));b.number(map.size());for(auto i:map)b.number(i,8);bindPublic(io,"B1/global/trusted-map",b.b);
+ std::vector<Fr>q;for(unsigned j=0;j<12;++j)q.push_back(io.coin("B1/global/projection-query/"+std::to_string(j)));Hidden h;Bytes bytes;if(io.prover()){h=hide(io.session(),"B1/global/projection-evaluation",evaluate(*projectSecret,q),*rng);bytes=encode(h.handle);}bytes=io.message("B1/global/projection-handle",bytes);h.handle=decodeHandle(bytes);validate(h.handle,io.session(),"B1/global/projection-evaluation");projection.opening(io,{q,h.handle},projectSecret,io.prover()?&h:nullptr,rng,"global-projection");
+ auto k=kernelFor(map,q,m.spec.N);if(io.prover() && attack=="wrong-kernel")k.begin()->second+=Fr(1);auto read=[&](std::size_t i){return i<m.spec.actual?secret->value(i):Fr(0);};auto result=committedLinearSumcheck(io,m.spec.N,h,read,k,rng,"B1/global/linear-sumcheck");
+ full.opening(io,{result.second,result.first.handle},secret,io.prover()?&result.first:nullptr,rng,"global-full-terminal");
+}
+}

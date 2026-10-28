@@ -1,0 +1,103 @@
+[  3%] Built target mcl
+[  6%] Built target mclbn256
+[ 27%] Built target paper_r1
+[ 58%] Built target gpt_lib
+[ 68%] Built target paper_r2
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fixed_cw.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_opening.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_sumcheck.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/hyrax_a3.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/fixed_cw.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/stage2_opening.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/stage2_sumcheck.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/stage2_sumcheck.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.hpp:22:45: error: ‘PCSpec’ in namespace ‘zkgpt::r7::crypto::r1’ does not name a type
+   22 | void dotProductTrustedR6Basis(IO&,const r1::PCSpec&approved_spec,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);
+      |                                             ^~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.hpp:22:45: error: ‘PCSpec’ in namespace ‘zkgpt::r7::crypto::r1’ does not name a type
+   22 | void dotProductTrustedR6Basis(IO&,const r1::PCSpec&approved_spec,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);
+      |                                             ^~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/fixed_cw.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/stage2_opening.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/stage2_opening.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.hpp:22:45: error: ‘PCSpec’ in namespace ‘zkgpt::r7::crypto::r1’ does not name a type
+   22 | void dotProductTrustedR6Basis(IO&,const r1::PCSpec&approved_spec,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);
+      |                                             ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:88:47: error: ‘PCSpec’ in namespace ‘zkgpt::r7::crypto::r1’ does not name a type
+   88 | void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
+      |                                               ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp: In function ‘void zkgpt::r7::hyrax_a3::dotProductTrustedR6Basis(zkgpt::r7::crypto::IO&, const int&, const mcl::bn::G1&, const zkgpt::r7::crypto::Handle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const DotWitness*, zkgpt::r7::crypto::Random*)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:89:11: error: request for member ‘validate’ in ‘approved’, which is of non-class type ‘const int’
+   89 |  approved.validate();need(approved.layout==r1::Layout::ColumnMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 dimension/layout");
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:89:36: error: request for member ‘layout’ in ‘approved’, which is of non-class type ‘const int’
+   89 |  approved.validate();need(approved.layout==r1::Layout::ColumnMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 dimension/layout");
+      |                                    ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:89:48: error: ‘zkgpt::r7::crypto::r1::Layout’ has not been declared
+   89 |  approved.validate();need(approved.layout==r1::Layout::ColumnMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 dimension/layout");
+      |                                                ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:89:90: error: request for member ‘columns’ in ‘approved’, which is of non-class type ‘const int’
+   89 |  approved.validate();need(approved.layout==r1::Layout::ColumnMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 dimension/layout");
+      |                                                                                          ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:224: error: request for member ‘role’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:254: error: request for member ‘actual’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                                              ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:288: error: request for member ‘padded’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                                                                                ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:322: error: request for member ‘rows’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                                                                                                                  ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:354: error: request for member ‘columns’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                                                                                                                                                  ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:91:411: error: request for member ‘layout’ in ‘approved’, which is of non-class type ‘const int’
+   91 |  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+      |                                                                                                                                                                                                                                                                                                                                                                                                                           ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:95:19: error: ‘generators’ is not a member of ‘zkgpt::r7::crypto::r1’; did you mean ‘zkgpt::r7::hyrax_a3::generators’?
+   95 |  const auto&g=r1::generators(approved).g;
+      |                   ^~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.cpp:72:17: note: ‘zkgpt::r7::hyrax_a3::generators’ declared here
+   72 | std::vector<G1> generators(std::size_t n){
+      |                 ^~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:247: src/paper_r7/CMakeFiles/paper_r7.dir/stage2_sumcheck.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/fixed_cw.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/fixed_cw.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/hyrax_a3.hpp:22:45: error: ‘PCSpec’ in namespace ‘zkgpt::r7::crypto::r1’ does not name a type
+   22 | void dotProductTrustedR6Basis(IO&,const r1::PCSpec&approved_spec,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);
+      |                                             ^~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:205: src/paper_r7/CMakeFiles/paper_r7.dir/hyrax_a3.cpp.o] Error 1
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:233: src/paper_r7/CMakeFiles/paper_r7.dir/stage2_opening.cpp.o] Error 1
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:219: src/paper_r7/CMakeFiles/paper_r7.dir/fixed_cw.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3398: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4219: src/paper_r7/CMakeFiles/r7_oneblock_plan.dir/rule] Error 2
+gmake: *** [Makefile:1544: r7_oneblock_plan] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_oneblock_plan r7_oneblock_plan_tests r7_oneblock_model_tests r7_oneblock_lookup_tests -j4"
+	User time (seconds): 5.12
+	System time (seconds): 0.58
+	Percent of CPU this job got: 249%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.28
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 262340
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 200543
+	Voluntary context switches: 179
+	Involuntary context switches: 27
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 6288
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

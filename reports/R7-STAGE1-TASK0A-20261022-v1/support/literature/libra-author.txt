@@ -1,0 +1,1691 @@
+
+===== PDF PAGE 1 =====
+Libra: Succinct Zero-Knowledge Proofs with Optimal Prover
+Computation
+Tiancheng Xie∗ Jiaheng Zhang∗ Yupeng Zhang†
+Charalampos Papamanthou‡ Dawn Song∗
+Abstract
+We present Libra, the ﬁrst zero-knowledge proof system that has both optimal prover time
+and succinct proof size/veriﬁcation time. In particular, ifC is the size of the circuit being proved
+(i) the prover time is O(C) irrespective of the circuit type; (ii) the proof size and veriﬁcation
+time are both O(d logC) for d-depth log-space uniform circuits (such as RAM programs). In
+addition Libra features an one-time trusted setup that depends only on the size of the input
+to the circuit and not on the circuit logic. Underlying Libra is a new linear-time algorithm for
+the prover of the interactive proof protocol by Goldwasser, Kalai and Rothblum (also known as
+GKR protocol), as well as an eﬃcient approach to turn the GKR protocol to zero-knowledge
+using small masking polynomials. Not only does Libra have excellent asymptotics, but it is
+also eﬃcient in practice. For example, our implementation shows that it takes 200 seconds to
+generate a proof for constructing a SHA2-based Merkle tree root on 256 leaves, outperforming
+all existing zero-knowledge proof systems. Proof size and veriﬁcation time of Libra are also
+competitive.
+1 Introduction
+Zero-knowledge proofs (ZKP) are cryptographic protocols between two parties, a prover and a ver-
+iﬁer, in which the prover can convince the veriﬁer about the validity of a statement without leaking
+any extra information beyond the fact that the statement is true. Since they were ﬁrst introduced
+by Goldwasser et al. [32], ZKP protocols have evolved from pure theoretical constructs to practical
+implementations, achieving proof sizes of just hundreds of bytes and veriﬁcation times of several
+milliseconds, regardless of the size of the statement being proved. Due to this successful transition
+to practice, ZKP protocols have found numerous applications not only in the traditional compu-
+tation delegation setting but most importantly in providing privacy of transactions in deployed
+cryptocurrencies (e.g., Zcash [10]) as well as in other blockchain research projects (e.g., Hawk [38]).
+Despite such progress in practical implementations, ZKP protocols are still notoriously hard
+to scale for large statements, due to a particularly high overhead on generating the proof. For
+most systems, this is primarily because the prover has to perform a large number of cryptographic
+operations, such as exponentiation in an elliptic curve group. And to make things worse the
+∗University of California, Berkeley. Email: {tianc.x,jiaheng_zhang,dawnsong}@berkeley.edu.
+†University of California, Berkeley and Texas A&M University. Email: zhangyp@tamu.edu.
+‡University of Maryland. Email: cpap@umd.edu.
+1
+===== PDF PAGE 2 =====
+asymptotic complexity of computing the proof is typically more than linear, e.g., O(C logC) or
+evenO(C log2C), where C is the size of the statement.
+Unfortunately, as of today we are yet to construct a ZKP system whose prover time is optimal,
+i.e., linear in the size of the statement C (this is irrespective of whether the ZKP system has
+per-statement trusted setup, one-time trusted setup or no trusted setup at all). The only notable
+exception is the recent work by B¨ unz et al. [20] that however suﬀers from linear veriﬁcation time—
+for a detailed comparison see Table 1. Therefore designing ZKP systems that enjoy linear prover
+time as well as succinct 1 proof size and veriﬁcation time is an open problem, whose resolution can
+have signiﬁcant practical implications.
+Our contributions. In this paper we propose Libra, the ﬁrst ZKP protocol with linear prover time
+and succinct proof size and veriﬁcation time in the size of the arithmetic circuit representing the
+statementC, when the circuit is log-space uniform. Libra is based on the doubly eﬃcient interactive
+proof protocol proposed by Goldwasser et al. in [31] (referred as GKR protocol in this paper), and
+the veriﬁable polynomial delegation scheme proposed by Zhang et al. in [52]. As such it comes
+with one-time trusted setup (and not per-statement trusted setup) that depends only on the size
+of the input (witness) to the statement that is being proved. Not only does Libra have excellent
+asymptotic performance but also its prover outperforms in practice all other ZKP systems while
+veriﬁcation time and proof size are also very competitive—see Table 1. Our concrete contributions
+are:
+• GKR with linear prover time. Libra features a new linear-time algorithm to generate a GKR
+proof. Our new algorithm does not require any pattern in the circuit and our result subsumes all
+existing improvements on the GKR prover assuming special circuit structures, such as regular
+circuits in [44], data-parallel circuits in [44, 48], circuits with diﬀerent sub-copies in [53]. See
+related work for more details.
+• Adding zero-knowledge. We propose an approach to turnLibra into zero-knowledge eﬃciently.
+In particular, we show a way to mask the responses of our linear-time prover with small random
+polynomials such that the zero-knowledge variant of the protocol introduces minimal overhead
+on the veriﬁcation time compared to the original (unmasked) construction.
+• Implementation and evaluation. We implement Libra. Our implementation takes an arith-
+metic circuit with various types of gates (fan-in 2 and degree ≤ 2, such as +,−,×, AND, XOR,
+etc.) and compiles it into a ZKP protocol. We conduct thorough comparisons to all existing ZKP
+systems (see Section 1.1). We plan to release our system as an open-source implementation.
+1.1 Comparing to other ZKP Systems
+Table 1 shows a detailed comparison between Libra and existing ZKP systems. First of all, Libra
+is the best among all existing systems in terms of practical prover time. In terms of asymptotics,
+Libra is the only system with linear prover time and succinct veriﬁcation and proof size for log-
+space uniform circuits. The only other system with linear prover time is Bulletproofs [20] whose
+veriﬁcation time is linear, even for log-space uniform circuits . In the practical front, Bulletproofs
+prover time and veriﬁcation time are high, due to the large number of cryptographic operations
+required for every gate of the circuit.
+1In ZKP literature, “succinct” is poly-logarithmic in the size of the statement C.
+2
+===== PDF PAGE 3 =====
+Table 1: Comparison of Libra to existing ZKP systems, where (G,P,V,|π|) denote the trusted setup
+algorithm, the prover algorithm, the veriﬁcation algorithm and the proof size respectively. Also, C
+is the size of the log-space uniform circuit with depth d, andn is the size of its input. The numbers
+are for a circuit computing the root of a Merkle tree with 256 leaves (511 instances of SHA256). 3
+libSNARK Ligero Bulletproofs Hyrax libSTARK Aurora Libra
+[14] [6] [20] [50] [9] [12]
+O(C) O(n)
+G per-statement no trusted setup one-time
+trusted setup trusted setup
+P O(C logC) O(C logC) O(C) O(C logC) O(C log2C) O(C logC) O(C)
+V O(1) O(C) O(C) O(√n +d logC) O(log2C) O(C) O(d logC)
+|π| O(1) O(
+√
+C) O(logC) O(√n +d logC) O(log2C) O(log2C) O(d logC)
+G 1027s NA 210s
+P 360s 400s 13,000s 1,041s 2,022s 3199s 201s
+V 0.002s 4s 900s 9.9s 0.044s 15.2s 0.71s
+|π| 0.13KB 1,500KB 5.5KB 185KB 395KB 174.3KB 51KB
+The proof and veriﬁcation of Libra are also competitive to other systems. In asymptotic terms,
+our proof size is only larger than libSNARK [14] and Bulletproofs [20], and our veriﬁcation is slower
+than libSNARK [14] and libSTARK [9]. Compared to Hyrax [50], which is also based on similar
+techniques with our work, Libra improves the performance in all aspects (yet Hyrax does not have
+any trusted setup). One can refer to Section 5 for a detailed description of our experimental setting
+as well as a more detailed comparison.
+Finally, among all systems, libSNARK [14] requires a trusted setup for every statement, and
+Libra requires an one-time trusted setup that depends on the input size. See Section 5.3 for a
+discussion on removing trusted setup in Libra.
+Log-space uniform circuits. Though the prover time in Libra is optimal for all circuits, the
+veriﬁcation time is succinct only when the circuit is structured (log-space uniform with logarithmic
+depth). This is the best that can be achieved for all ZKP protocols without per-circuit setup, as
+the veriﬁer must read the entire circuit, which takes linear time in the worst case. We always refer
+to log-space uniform circuits when we say our scheme is succinct in this paper, to diﬀerentiate
+from schemes with linear veriﬁcation time on all circuits (irrespective of whether the circuits are
+log-space uniform or not). Schemes such as libSTARK [9], zkVSQL [51] and Hyrax [50] also have
+such property.
+In practice, with the help of auxiliary input and circuit squashing, most computations can be
+expressed as log-space uniform circuits with low depth, such as matrix multiplication, image scaling
+and Merkle hash tree in Section 5. Asymptotically, as shown in [9, 14, 53], all random memory
+access (RAM) programs can be validated by circuits that are log-space uniform with log-depth
+in the running time of the programs (but linear in the size of the programs) by RAM-to-circuit
+reduction, which justiﬁes the expressiveness of such circuits.
+2STARK is in the RAM model. To compare the performance, we convert a circuit of size C to a RAM program
+with T = Θ(C) steps.
+3
+===== PDF PAGE 4 =====
+1.2 Our Techniques
+Our main technical contributions are a GKR protocol with linear prover time and an eﬃcient
+approach to turn the GKR protocol into zero-knowledge. We summarize the key ideas behind
+these two contributions. The detailed protocols are presented in Section 3 and 4 respectively.
+GKR with linear prover. Goldwasser et al. [31] showed an approach to model the evaluation
+of a layered circuit as a sequence of summations on polynomials deﬁned by values in consecutive
+layers of the circuit. Using the famous sumcheck protocol (see Section 2.3.1), they developed a
+protocol (the GKR protocol) allowing the veriﬁer to validate the circuit evaluation in logarithmic
+time with a logarithmic size proof. However, the polynomials in the protocol are multivariate with
+2s variables, where S is the number of gates in one layer of the circuit and s = log S. Naively
+running the sumcheck protocol on these polynomials incurs S2 prover time, as there are at least
+22s = S2 monomials in a 2 s-variate polynomial. Later, Cormode et al. [24] observed that these
+polynomials are sparse, containing only S nonzero monomials and improved the prover time to
+S logS.
+In our new approach, we divide the protocol into two separate sumchecks. In each sumcheck,
+the polynomial only contains s variables, and can be expressed as the product of two multilinear
+polynomials. Utilizing the sparsity of the circuit, we develop new algorithms to scan through each
+gate of the circuit and compute the closed-form of all these multilinear polynomials explicitly,
+which takes O(S) time. With this new way of representation, the prover can deploy a dynamic
+programming technique to generate the proofs in each sumcheck in O(S) time, resulting in a total
+prover time of O(S).
+Eﬃcient zero-knowledge GKR. The original GKR protocol is not zero-knowledge, since the
+messages in the proof can be viewed as weighed sums of the values in the circuit and leak infor-
+mation. In [50,51], the authors proposed to turn the GKR protocol into zero-knowledge by hiding
+the messages in homomorphic commitments, which incurs a big overhead in the veriﬁcation time.
+In [23], Chiesa et al. proposed an alternative approach by masking the protocol with random poly-
+nomials. However, the masking polynomials are as big as the original ones and the prover time
+becomes exponential, making the approach mainly of theoretical interest.
+In our scheme, we ﬁrst show that in order to make the sumcheck protocol zero-knowledge, the
+prover can mask it with a “small” polynomial. In particular, the masking polynomial only contains
+logarithmically many random coeﬃcients. The intuition is that though the original polynomial
+has O(2𝓁) or more terms ( 𝓁 is the number of variables in the polynomial), the prover only sends
+O(𝓁) messages in the sumcheck protocol. Therefore, it suﬃces to mask the original polynomial
+with a random one with O(𝓁) coeﬃcients to achieve zero-knowledge. In particular, we set the
+masking polynomial as the sum of 𝓁 univariate random polynomials with the same variable-degree.
+In Section 4.1, we show that the entropy of this mask exactly counters the leakage of the sumcheck,
+proving that it is suﬃcient and optimal.
+Besides the sumcheck, the GKR protocol additionally leaks two evaluations of the polynomial
+deﬁned by values in each layer of the circuit. To make these evaluations zero-knowledge, we mask
+the polynomial by a special low-degree random polynomial. In particular, we show that after the
+mask, the veriﬁer in total learns 4 messages related to the evaluations of the masking polynomial
+and we can prove zero-knowledge by making these messages linearly independent. Therefore, the
+masking polynomial is of constant size: it consists of 2 variables with variable degree 2.
+4
+===== PDF PAGE 5 =====
+1.3 Related Work
+In recent years there has been signiﬁcant progress in eﬃcient ZKP protocols and systems. In this
+section, we discuss related work in this area, with the focus on those with sublinear proofs.
+QAP-based. Following earlier work of Ishai [35], Groth [34] and Lipmaa [39], Gennaro et al. [29]
+introduced quadratic arithmetic programs (QAPs), which forms the basis of most recent implemen-
+tations [11,15,19,25,28,43,49] including libSNARK [14]. The proof size in these systems is constant,
+and the veriﬁcation time depends only on the input size. Both these properties are particularly
+appealing and have led to real-world deployments, e.g., ZCash [10]. One of the main bottlenecks,
+however, of QAP-based systems is the high overhead in the prover running time and memory con-
+sumption, making it hard to scale to large statements. In addition, a separate trusted setup for
+every diﬀerent statement is required.
+IOPs. Based on “(MPC)-in-the-head” introduced in [22, 30, 36], Ames et al. [6] proposed a ZKP
+scheme called Ligero. It only uses symmetric key operations and the prover time is fast in practice.
+However, it generates proofs of sizeO(
+√
+C), which is several megabytes in practice for moderate-size
+circuits. In addition, the veriﬁcation time is quasi-linear to the size of the circuit. It is categorized
+as interactive PCP, which is a special case of interactive oracle proofs (IOPs). IOP generalizes the
+probabilistically checkable proofs (PCPs) where earlier works of Kilian [37] and Micali [42] are built
+on. In the IOP model, Ben-Sasson et al. built libstark [9], a zero-knowledge transparent argument
+of knowledge (zkSTARK).libstark does not rely on trusted setup and executes in the RAM model
+of computation. Their veriﬁcation time is only linear to the description of the RAM program, and
+succinct (logarithmic) in the time required for program execution. Recently, Ben-Sasson et al. [12]
+proposed Aurora, a new ZKP system in the IOP model with the proof size of O(log2C).
+Discrete log. Before Bulletproof [20], earlier discrete-log based ZKP schemes include the work of
+Groth [33], Bayer and Groth [8] and Bootle et al. [17]. The proof size of these schemes are larger
+than Bulletproof either asymptotically or concretely.
+Hash-based. Bootle et al. [18] proposed a ZKP scheme with linear prover time and veriﬁcation
+time. The veriﬁcation only requires O(C) ﬁeld additions. However, the proof size is O(
+√
+C) and
+the constants are large as mentioned in the paper [18].
+Interactive proofs. The line of work that relates to our paper the most is based on interactive
+proofs [32]. In the seminal work of [31], Goldwasser et al. proposed an eﬃcient interactive proof
+for layered arithmetic circuits. Later, Cormode et al. [24] improved the prover complexity of the
+interactive proof in [31] toO(C logC) using multilinear extensions instead of low degree extensions.
+Several follow-up works further reduce the prover time assuming special structures of the circuit. For
+regular circuits where the wiring pattern can be described in constant space and time, Thaler [44]
+introduced a protocol with O(C) prover time; for data parallel circuits with many copies of small
+circuits with size C′, a O(C logC′) protocol is presented in the same work, later improved to
+O(C +C′ logC) by Wahby et al. in [48]; for circuits with many non-connected but diﬀerent copies,
+Zhang et al. showed a protocol with O(C logC′) prover time.
+In [52], Zhang et al. extended the GKR protocol to an argument system using a protocol
+for veriﬁable polynomial delegation. Zhang et al. [53] and Wahby et al. [50] make the argument
+system zero-knowledge by putting all the messages in the proof into homomorphic commitments,
+as proposed by Cramer and Damgard in [26]. This approach introduces a high overhead on the
+veriﬁcation time compared to the plain argument system without zero-knowledge, as each addition
+becomes a multiplication and each multiplication becomes an exponentiation in the homomorphic
+5
+===== PDF PAGE 6 =====
+commitments. The multiplicative overhead is around two orders of magnitude in practice. Addi-
+tionally, the scheme of [50],Hyrax, removes the trusted setup of the argument system by introducing
+a new polynomial delegation, increasing the proof size and veriﬁcation time to O(√n) where n is
+the input size of the circuit.
+Lattice-based. Recently Baum et al. [7] proposed the ﬁrst lattice-based ZKP system with sub-
+linear proof size. The proof size is O(
+√
+C log3C), and the practical performance is to be explored.
+2 Preliminaries
+2.1 Notation
+In this paper, we use λ to denote the security parameter, and negl(λ) to denote the negligible
+function in λ. “PPT” stands for probabilistic polynomial time. We use f(),h () for polynomials,
+x,y,z for vectors of variables and g,u,v for vectors of values. xi denotes the i-th variable inx. We
+use bold letters such asA to represent arrays. For a multivariate polynomialf, its ”variable-degree”
+is the maximum degree of f in any of its variables.
+Bilinear pairings. Let G, GT be two groups of prime order p and let g∈ G be a generator.
+e : G× G→ GT denotes a bilinear map and we use bp = (p, G, GT,e,g )← BilGen(1λ) for the
+generation of parameters for the bilinear map. Our scheme relies on the q-Strong Bilinear Diﬃe-
+Hellman (q-SBDH) assumption and an extended version of the Power Knowledge of Exponent
+(PKE) assumption.
+Assumption 1 (q-Strong Bilinear Diﬃe-Hellman). For any PPT adversaryA, the following holds:
+Pr
+
+
+bp← BilGen(1λ)
+s R← Z∗p : (x,e (g,g ) 1s+x )←A (1λ,σ )
+σ = (bp,gs,...,g sq)
+
+≤ negl(λ)
+The second assumption is a generalization of the q-PKE assumption [34] to multivariate poly-
+nomials, proposed in [51, 52]. Let W𝓁,d be the set of all multisets of {1,...,𝓁} with the cardinality
+of each element being at most d.
+Assumption 2 ((d,𝓁 )-Extended Power Knowledge of Exponent). For any PPT adversaryA, there
+is a polynomial time algorithmE (takes the same randomness ofA as input) such that for all benign
+auxiliary inputs z∈{ 0, 1}poly(λ) the following probability is negligible:
+Pr
+
+
+bp← BilGen(1λ)
+s1,...,s 𝓁,s𝓁+1,α R←Z∗p,s 0 = 1
+σ1 = ({g
+∏
+i∈W si}W∈W𝓁,d,gs𝓁+1) e(h,gα) =e(˜h,g )
+σ2 = ({gα ∏i∈Wsi}W∈W𝓁,d,gαs𝓁+1) : ∏
+W∈W𝓁,d
+gaW
+∏
+i∈W sigbs𝓁+1⁄=h
+σ = (bp,σ 1,σ 2,gα)
+G× G∋ (h, ˜h)←A
+(
+1λ,σ,z)
+(
+a0,...,a |W𝓁,d|,b
+)
+←E
+(
+1λ,σ,z)
+
+≤ negl(λ)
+6
+===== PDF PAGE 7 =====
+2.2 Interactive Proofs and Zero-knowledge Arguments
+Interactive proofs. An interactive proof allows a proverP to convince a veriﬁerV the validity of
+some statement. The interactive proof runs in several rounds, allowing V to ask questions in each
+round based on P’s answers of previous rounds. We phrase this in terms of P trying to convince
+V that f(x) = 1. The proof system is interesting only when the running time of V is less than the
+time of directly computing the function f. We formalize interactive proofs in the following:
+Deﬁnition 1. Letf be a Boolean function. A pair of interactive machines ⟨P,V⟩ is an interactive
+proof for f with soundness ϵ if the following holds:
+• Completeness. For every x such that f(x) = 1 it holds that Pr[⟨P,V⟩(x) =accept] = 1.
+• ϵ-Soundness. For any x with f(x)⁄= 1 and anyP∗ it holds that Pr[⟨P∗,V⟩ =accept]≤ϵ
+Zero-knowledge arguments. An argument system for an NP relationshipR is a protocol between
+a computationally-bounded proverP and a veriﬁerV. At the end of the protocol, V is convinced
+byP that there exists a witness w such that (x;w)∈R for some input x. We focus on arguments
+of knowledge which have the stronger property that if the prover convinces the veriﬁer of the
+statement validity, then the prover must know w. We use G to represent the generation phase of
+the public key pk and the veriﬁcation key vk. Formally, consider the deﬁnition below, where we
+assume R is known toP andV.
+Deﬁnition 2. LetR be an NP relation. A tuple of algorithm (G,P,V) is a zero-knowledge argument
+of knowledge for R if the following holds.
+• Correctness. For every (pk, vk) output byG(1λ) and (x,w )∈R,
+⟨P(pk,w ),V(vk)⟩(x) = accept
+• Soundness. For any PPT prover P, there exists a PPT extractor ε such that for every
+(pk, vk) output byG(1λ) and any x, it holds that
+Pr[⟨P(pk),V(vk)⟩(x) = accept∧ (x,w ) /∈R|w←ε(pk,x )]≤ negl(λ)
+• Zero knowledge . There exists a PPT simulator S such that for any PPT adversary A,
+auxiliary input z∈{ 0, 1}poly(λ), (x;w)∈R, it holds that
+Pr
+[
+⟨P(pk,w ),A⟩ = accept : (pk, vk)←G (1λ); (x,w )←A (z, pk, vk)] =
+Pr
+[
+⟨S(trap,z, pk),A⟩ = accept : (pk, vk, trap)←S (1λ); (x,w )←A (z, pk, vk)]
+We say that (G,P,V) is a succinct argument system if the running time of V and the total com-
+munication betweenP andV (proof size) are poly(λ,|x|, log|w|).
+2.3 GKR Protocol
+In [31], Goldwasser et al. proposed an eﬃcient interactive proof protocol for layered arithmetic
+circuits, which we use as a building block for our new zero-knowledge argument and is referred as
+the GKR protocol. We present the detailed protocol here.
+7
+===== PDF PAGE 8 =====
+Protocol 1 (Sumcheck). The protocol proceeds in𝓁 rounds.
+• In the ﬁrst round, P sends a univariate polynomial
+f1(x1)
+def
+=
+∑
+b2,...,b𝓁∈{0,1}
+f(x1,b 2,...,b 𝓁),
+V checksH =f1(0) +f1(1). Then V sends a random challenge r1∈ F toP.
+• In the i-th round, where 2≤i≤l− 1,P sends a univariate polynomial
+fi(xi)
+def
+=
+∑
+bi+1,...,b𝓁∈{0,1}
+f(r1,...,r i−1,xi,bi+1,...,b 𝓁),
+V checksfi−1(ri−1) =fi(0) +fi(1), and sends a random challenge ri∈ F toP.
+• In the 𝓁-th round,P sends a univariate polynomial
+f𝓁(x𝓁)
+def
+= f(r1,r 2,...,r l−1,x𝓁),
+V checksf𝓁−1(r𝓁−1) =f𝓁(0) +f𝓁(1). The veriﬁer generates a random challenge r𝓁∈ F. Given oracle
+access to an evaluation f(r1,r 2,...,r 𝓁) of f,V will accept if and only if f𝓁(r𝓁) = f(r1,r 2,...,r 𝓁).
+The instantiation of the oracle access depends on the application of the sumcheck protocol.
+2.3.1 Sumcheck Protocol.
+The sumcheck problem is a fundamental problem that has various applications. The problem is to
+sum a polynomial f : F𝓁→ F on the binary hypercube
+∑
+b1,b2,...,b𝓁∈{0,1}
+f(b1,b 2,...,b 𝓁).
+Directly computing the sum requires exponential time in𝓁, as there are 2𝓁 combinations ofb1,...,b 𝓁.
+Lund et al. [40] proposed a sumcheck protocol that allows a veriﬁerV to delegate the computation
+to a computationally unbounded prover P, who can convince V that H is the correct sum. We
+provide a description of the sumcheck protocol in Protocol 1. The proof size of the sumcheck
+protocol is O(d𝓁), where d is the variable-degree of f, as in each round, P sends a univariate
+polynomial of one variable in f, which can be uniquely deﬁned by d + 1 points. The veriﬁer time
+of the protocol is O(d𝓁). The prover time depends on the degree and the sparsity of f, and we
+will give the complexity later in our scheme. The sumcheck protocol is complete and sound with
+ϵ = d𝓁|F|.
+2.3.2 GKR protocol
+Using the sumcheck protocol as a building block, Goldwasser et al. [31] showed an interactive proof
+protocol for layered arithmetic circuits.
+Deﬁnition 3 (Multi-linear Extension ). Let V :{0, 1}𝓁→ F be a function. The multilinear
+extension of V is the unique polynomial ˜V : Fl→ F such that ˜V (x1,x 2,...,x l) =V (x1,x 2,...,x l) for
+all x1,x 2,...,x l∈{ 0, 1}l.
+8
+===== PDF PAGE 9 =====
+˜V can be expressed as:
+˜V (x1,x 2,...,x l) =∑b∈{0,1}𝓁∏li=1[((1−xi)(1−bi) +xibi)·V (b)]
+wherebi is i-th bit of b.
+Multilinear extensions of arrays. Inspired by the close form equation of the multilinear exten-
+sion given above, we can view an array A = (a0,a 1,...,a n−1) as a function A :{0, 1}logn→ F such
+that∀i∈ [0,n− 1],A (i) = ai. Therefore, in this paper, we abuse the use of multilinear extension
+on an array as the multilinear extension ˜A of A.
+High Level Ideas. Let C be a layered arithmetic circuit with depth d over a ﬁnite ﬁeld F. Each
+gate in the i-th layer takes inputs from two gates in the (i + 1)-th layer; layer 0 is the output layer
+and layer d is the input layer. The protocol proceeds layer by layer. Upon receiving the claimed
+output fromP, in the ﬁrst round, V andP run the sumcheck protocol to reduce the claim about
+the output to a claim about the values in the layer above. In the i-th round, both parties reduce
+a claim about layer i− 1 to a claim about layer i through the sumcheck protocol. Finally, the
+protocol terminates with a claim about the input layer d, which can be checked directly by V, or
+is given as an oracle access. If the check passes, V accepts the claimed output.
+Notation. Before describing the GKR protocol, we introduce some additional notations. We
+denote the number of gates in the i-th layer as Si and let si =⌈logSi⌉. (For simplicity, we assume
+Si is a power of 2, and we can pad the layer with dummy gates otherwise.) We then deﬁne a
+function Vi :{0, 1}si→ F that takes a binary string b∈{ 0, 1}si and returns the output of gate
+b in layer i, where b is called the gate label. With this deﬁnition, V0 corresponds to the output
+of the circuit, and Vd corresponds to the input layer. Finally, we deﬁne two additional functions
+addi,multi :{0, 1}si−1+2si→{ 0, 1}, referred as wiring predicates in the literature. addi (multi)
+takes one gate label z∈{ 0, 1}si−1 in layer i− 1 and two gate labels x,y ∈{ 0, 1}si in layer i, and
+outputs 1 if and only if gate z is an addition (multiplication) gate that takes the output of gate
+x,y as input. With these deﬁnitions, Vi can be written as follows:
+Vi(z) =
+∑
+x,y∈{0,1}si+1
+(addi+1(z,x,y )(Vi+1(x) +Vi+1(y))
++multi+1(z,x,y )(Vi+1(x)Vi+1(y)))
+(1)
+for any z∈{ 0, 1}si.
+In the equation above, Vi is expressed as a summation, so V can use the sumcheck protocol to
+check that it is computed correctly. As the sumcheck protocol operates on polynomials deﬁned on
+F, we rewrite the equation with their multilinear extensions:
+˜Vi(g) =∑x,y∈{0,1}si+1fi(x,y )
+=
+∑
+x,y∈{0,1}si+1( ˜addi+1(g,x,y )( ˜Vi+1(x) + ˜Vi+1(y))
++ ˜multi+1(g,x,y )( ˜Vi+1(x) ˜Vi+1(y))), (2)
+where g∈ Fsi is a random vector.
+9
+===== PDF PAGE 10 =====
+Protocol. With Equation 2, the GKR protocol proceeds as follows. The prover P ﬁrst sends
+the claimed output of the circuit to V. From the claimed output, V deﬁnes polynomial ˜V0 and
+computes ˜V0(g) for a random g∈ Fs0. V andP then invoke a sumcheck protocol on Equation 2
+with i = 0. As described in Section 2.3.1, at the end of the sumcheck, V needs an oracle access to
+fi(u,v ), where u,v are randomly selected in Fsi+1. To compute fi(u,v ),V computes ˜addi+1(u,v )
+and ˜multi+1(u,v ) locally (they only depend on the wiring pattern of the circuit, but not on the
+values), asksP to send ˜V1(u) and ˜V1(v) and computes fi(u,v ) to complete the sumcheck protocol.
+In this way,V andP reduces a claim about the output to two claims about values in layer 1. V
+andP could invoke two sumcheck protocols on ˜V1(u) and ˜V1(v) recursively to layers above, but the
+number of claims and the sumcheck protocols would increase exponentially in d.
+Combining two claims: condensing to one claim. In [31], Goldwasser et al. presented a
+protocol to reduce two claims ˜Vi(u) and ˜Vi(v) to one as following. V deﬁnes a line γ : F→ Fsi such
+that γ(0) = u,γ (1) = v. V sends γ(x) to P. Then P sendsV a degree si univariate polynomial
+h(x) = ˜Vi(γ(x)). V checks that h(0) = ˜Vi(u),h (1) = ˜Vi(v). Then V randomly chooses r∈ F and
+computes a new claim h(r) = ˜Vi(γ(r)) = ˜Vi(w) on w = γ(r)∈ Fsi. V sends r,w toP. In this
+way, the two claims are reduced to one claim ˜Vi(w). Combining this protocol with the sumcheck
+protocol on Equation 2, V andP can reduce a claim on layer i to one claim on layer i + 1, and
+eventually to a claim on the input, which completes the GKR protocol.
+Combining two claims: random linear combination. In [23], Chiesa et al. proposed an
+alternative approach using random linear combinations. Upon receiving the two claims ˜Vi(u) and
+˜Vi(v),V selects αi,βi∈ F randomly and computes αi ˜Vi(u) +βi ˜Vi(v). Based on Equation 2, this
+random linear combination can be written as
+αi ˜Vi(u) +βi ˜Vi(v)
+=αi
+∑
+x,y∈{0,1}si+1
+( ˜addi+1(u,x,y )( ˜Vi+1(x) + ˜Vi+1(y)) + ˜multi+1(u,x,y )( ˜Vi+1(x) ˜Vi+1(y)))
++βi
+∑
+x,y∈{0,1}si+1
+( ˜addi+1(v,x,y )( ˜Vi+1(x) + ˜Vi+1(y)) + ˜multi+1(v,x,y )( ˜Vi+1(x) ˜Vi+1(y)))
+=
+∑
+x,y∈{0,1}si+1
+((αi ˜addi+1(u,x,y ) +βi ˜addi+1(v,x,y ))( ˜Vi+1(x) + ˜Vi+1(y))
++ (αi ˜multi+1(u,x,y ) +βi ˜multi+1(v,x,y ))( ˜Vi+1(x) ˜Vi+1(y))) (3)
+V andP then execute the sumcheck protocol on Equation 3 instead of Equation 2. At the end
+of the sumcheck protocol, V still receives two claims about ˜Vi+1, computes their random linear
+combination and proceeds to an layer above recursively until the input layer.
+In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using
+random linear combinations is given in Protocol 2.
+Theorem 1. [46] [44] [24] [31]. Let C : Fn→ Fk be a depth-d layered arithmetic circuit. Protocol
+2 is an interactive proof for the function computed by C with soundness O(d log|C|/|F|). It uses
+O(d log|C|) rounds of interaction and running time of the proverP isO(|C| log|C|). Let the optimal
+computation time for all ˜addi and ˜multi be T , the running time of V is O(n +k +d log|C| +T ).
+For log-space uniform circuits it is T = polylog|C|.
+10
+===== PDF PAGE 11 =====
+Protocol 2. Let F be a prime ﬁeld. Let C: Fn→ Fk be a d-depth layered arithmetic circuit. P wants to
+convince that out =C(in) where in is the input from V, and out is the output. Without loss of generality,
+assume n and k are both powers of 2 and we can pad them if not.
+• Deﬁne the multilinear extension of array out as ˜V0.V chooses a random g∈ Fs0 and sends it to P.
+Both parties compute ˜V0(g).
+• PandV run a sumcheck protocol on
+˜V0(g(0)) = ∑
+x,y∈{0,1}s1
+˜mult1(g(0),x,y )( ˜V1(x) ˜V1(y)) + ˜add1(g(0),x,y )( ˜V1(x) + ˜V1(y))
+At the end of the protocol, V receives ˜V1(u(1)) and ˜V1(v(1)). V computes˜mult1(g(0),u (1),v (1)), ˜add1(g(0),u (1),v (1)) and checks that ˜mult1(g(0),u (1),v (1)) ˜V1(u(1)) ˜V1(v(1)) +˜add1(g(0),u (1),v (1))( ˜V1(u(1)) + ˜V1(v(1))) equals to the last message of the sumcheck.
+• Fori = 1,...,d − 1:
+– V randomly selects α(i),β (i)∈ F and sends them to P.
+– P andV run the sumcheck on the equation
+α(i) ˙Vi(u(i)) +β(i) ˙Vi(v(i)) =
+∑
+x,y∈{0,1}si+1
+((α(i) ˜multi+1(u(i),x,y ) +β(i) ˜multi+1(v(i),x,y ))( ˜Vi+1(x) ˜Vi+1(y))
++(α(i) ˜addi+1(u(i),x,y ) +β(i) ˜addi+1(v(i),x,y ))( ˜Vi+1(x) + ˜Vi+1(y))
+– At the end of the sumcheck protocol, P sendsV ˜Vi+1(u(i+1)) and ˜Vi+1(v(i+1)).
+– V computes the following and checks if it equals to the last message of the sumcheck. For sim-
+plicity, let Multi+1(x) = ˜multi+1(x,u (i+1),v (i+1)) and Addi+1(x) = ˜addi+1(x,u (i+1),v (i+1)).
+(α(i)Multi+1(u(i)) +β(i)Multi+1(v(i))( ˜Vi+1(u(i+1)) ˜Vi+1(v(i+1)))+
+(α(i) ˜Addi+1(u(i)) +β(i) ˜Addi+1(v(i))( ˜Vi+1(u(i+1)) + ˜Vi+1(v(i+1)))
+If all checks in the sumcheck pass, V uses ˜Vi+1(u(i+1)) and ˜Vi+1(v(i+1)) to proceed to the (i+1)-
+th layer. Otherwise, V outputs reject and aborts.
+• At the input layer d,V has two claims ˜Vd(u(d)) and ˜Vd(v(d)). V queries the oracle of evaluations
+of ˜Vd at u(d) and v(d) and checks that they are the same as the two claims. If yes, output accept;
+otherwise, output reject.
+2.4 Zero-Knowledge Veriﬁable Polynomial Delegation Scheme
+Let F be a ﬁnite ﬁeld, F be a family of 𝓁-variate polynomial over F, and d be a variable-degree parameter.
+A zero-knowledge veriﬁable polynomial delegation scheme (zkVPD) for f ∈F and t∈ F𝓁 consists of the
+following algorithms:
+• (pp, vp)← KeyGen(1λ,𝓁,d ),
+• com← Commit(f,rf, pp),
+• {accept, reject}← CheckComm(com, vp),
+11
+===== PDF PAGE 12 =====
+• (y,π )← Open(f,t,r f, pp),
+• {accept, reject}← Verify(com,t,y,π, vp).
+A zkVPD scheme satisﬁes correctness, soundness and zero knowledge, which we formally deﬁne below.
+Deﬁnition 4. Let F be a ﬁnite ﬁeld,F be a family of 𝓁-variate polynomial over F, and d be a variable-degree
+parameter. A zero-knowledge veriﬁable polynomial delegation scheme (zkVPD) consists of the following
+algorithms: (pp, vp)← KeyGen(1λ,𝓁,d ), com← Commit(f,rf, pp),{accept, reject}← CheckComm(com, vp),
+(y,π )← Open(f,t,r f, pp),{accept, reject}← Verify(com,t,y,π, vp), such that
+• Perfect Completeness For any polynomial f∈F and value t, the following probability is 1.
+Pr
+rf
+
+
+(pp, vp)← KeyGen(1λ,𝓁,d )
+com← Commit(f,rf, pp) : CheckComm(com, vp) = accept ∧
+(y,π )← Open(f,t,r f, pp) Verify(com,t,y,π, vp) = accept
+
+
+• Binding For any PPT adversary A and benign auxiliary input z1,z 2 the following probability is
+negligible of λ:
+Pr
+
+
+(pp, vp)← KeyGen(1λ,𝓁,d ) CheckComm(com∗, vp) = accept ∧
+(π∗, com∗,y∗,state )←A (1λ,z 1, pp) : Verify(com∗,t∗,y∗,π∗, vp) = accept ∧
+(f∗,t∗,r∗f)←A (1λ,z 2,state, pp) com∗ = Commit(f∗,r∗f, pp) ∧
+(y∗,π∗) = Open(f∗,t∗,r∗f, pp) ∧
+f∗(t∗)⁄=y∗
+
+
+• Zero Knowledge For security parameter λ, polynomial f, adversary A, and simulator S, consider
+the following two experiments:
+RealA,f(1λ):
+1. (pp, vp)← KeyGen(1λ,𝓁,d )
+2. com← Commit(f,rf, pp)
+3. k←A (1λ, com, vp)
+4. For i = 1,...,k repeat
+(a) ti←A (1λ, com,y 1,...,y i−1,π 1,
+...,πi−1, vp)
+(b) (yi,πi)← Open(f,ti,rf, pp)
+5. b←A (1λ, com, (y1,...,y k,π 1,...,π k), vp)
+6. Output b
+IdealA,S(1λ):
+1. (com, pp, vp,σ )← Sim(1λ,𝓁,d )
+2. k←A (1λ, com, vp)
+3. For i = 1,...,k repeat:
+(a) ti←A (1λ, com,y 1,...,y i−1,π 1,
+...,πi−1, vp)
+(b) (yi,πi,σ )← Sim(ti,σ, pp)
+4. b←A (1λ, com, (y1,...,y k,π 1,...,π k), vp)
+5. Output b
+For any PPT adversary A and all polynomial f∈ F, there exists simulator S such that
+| Pr[RealA,f(1λ) = 1]− Pr[IdealA,S(1λ) = 1]|≤ negl(λ).
+3 GKR Protocol with Linear Prover Time
+In this section we present a new algorithm (see Algorithm 6) for the prover of the GKR protocol [31] that
+runs in linear time for arbitrary layered circuits. Before that, we present some necessary building blocks.
+12
+===== PDF PAGE 13 =====
+Algorithm 1F← FunctionEvaluations(f, A,r 1,...,r 𝓁)
+Input: Multilinear f on 𝓁 variables, initial bookkeeping table A, random r1,...,r 𝓁;
+Output: All function evaluations f(r1,...,r i−1,t,b i+1,...,b 𝓁);
+1: for i = 1,...,𝓁 do
+2: for b∈{ 0, 1}𝓁−i do // b is both a number and its binary representation.
+3: for t = 0, 1, 2 do
+4: Let f(r1,...,r i−1,t,b ) = A[b]· (1−t) + A[b + 2𝓁−i]·t
+5: A[b] = A[b]· (1−ri) + A[b + 2𝓁−i]·ri
+6: LetF contain all function evaluations f(.) computed at Step 4
+7: returnF
+3.1 Linear-time sumcheck for a multilinear function [44]
+In [44], Thaler proposed a linear-time algorithm for the prover of the sumcheck protocol on a multilinear
+function f on 𝓁 variables (the algorithm runs in O(2𝓁) time). We review this algorithm here. Recall that in
+the i-th round of the sumcheck protocol the prover sends the veriﬁer the univariate polynomial on xi
+∑
+bi+1,...,b𝓁,∈{0,1}
+f(r1,...,r i−1,xi,bi+1,...,b 𝓁),
+where r1,...,r i−1 are random values chosen by the veriﬁer in previous rounds. Since f is multilinear, it
+suﬃces for the prover to send two evaluations of the polynomial at points t = 0 and t = 1, namely the
+evaluations ∑
+bi+1,...,b𝓁,∈{0,1}
+f(r1,...,r i−1, 0,bi+1,...,b 𝓁) (4)
+and ∑
+bi+1,...,b𝓁,∈{0,1}
+f(r1,...,r i−1, 1,bi+1,...,b 𝓁). (5)
+To compute the above sums the prover maintains a bookkeeping table A for f. This table, at round i,
+has 2𝓁−i+1 entries storing the values
+f(r1,...,r i−1,bi,bi+1,...,b 𝓁)
+for all bi,...,b 𝓁∈{ 0, 1} and is initialized with evaluations of f on the hypercube. For every entry of A, the
+prover subsequently computes, as in Step 4 of Algorithm 1 FunctionEvaluations3 two values
+f(r1,...,r i−1, 0,bi+1,...,b 𝓁) and f(r1,...,r i−1, 1,bi+1,...,b 𝓁).
+Once these function evaluations are in place, the prover can easily sum over them and compute the required
+sumcheck messages as reguired by Relations 4 and 5. This is done in Algorithm 2 SumCheck4.
+Complexity analysis. Both Algorithms 1 and 2 run in O(2𝓁) time: The ﬁrst iteration takes O(2𝓁), the
+second O(2𝓁−1) and so on, and therefore the bound holds.
+3To be compatible with other protocols later, we use three values t = 0, 1, 2 in our evaluations instead of just two.
+4We note here that although these two steps can be performed together in a single algorithm and without the
+need to store function evaluations, we explicitly decouple them with two diﬀerent algorithms ( FunctionEvaluations
+and SumCheck) for facilitating the presentation of more advanced protocols later.
+13
+===== PDF PAGE 14 =====
+Algorithm 2{a1,...,a 𝓁}← SumCheck(f, A,r 1,...,r 𝓁)
+Input: Multilinear f on 𝓁 variables, initial bookkeeping table A, random r1,...,r 𝓁;
+Output: 𝓁 sumcheck messages for ∑x∈{0,1}𝓁f(x). Each message ai consists of 3 elements
+(ai0,ai1,ai2);
+1: F← FunctionEvaluations(f, A,r 1,...,r 𝓁)
+2: for i = 1,...,𝓁 do
+3: for t∈{ 0, 1, 2} do
+4: ait =∑b∈{0,1}𝓁−if(r1,...,r i−1,t,b ) // All evaluations needed are in F.
+5: return{a1,...,a 𝓁};
+Algorithm 3{a1,...,a 𝓁}← SumCheckProduct(f, Af,g, Ag,r 1,...,r 𝓁)
+Input: Multilinear f and g, initial bookkeeping tables Af and Ag, random r1,...,r 𝓁;
+Output: 𝓁 sumcheck messages for ∑x∈{0,1}𝓁f(x)g(x). Each message ai consists of 3 elements
+(ai0,ai1,ai2);
+1: F← FunctionEvaluations(f, Af,r 1,...,r 𝓁)
+2: G← FunctionEvaluations(g, Ag,r 1,...,r 𝓁)
+3: for i = 1,...,𝓁 do
+4: for t∈{ 0, 1, 2} do
+5: ait =∑b∈{0,1}𝓁−if(r1,...,r i−1,t,b )·g(r1,...,r i−1,t,b ) // All evaluations needed are in
+F andG.
+6: return{a1,...,a 𝓁};
+3.2 Linear-time sumcheck for products of multilinear functions [44]
+The linear-time sumcheck in the previous section can be generalized to a product of two multilinear functions.
+Let now f and g be two multilinear functions on 𝓁 variables each, we describe a linear-time algorithm to
+compute the messages of the prover for the sumcheck on the product f·g, as proposed in [44]. Note that we
+cannot use Algorithm 2 here since f·g is not multilinear. However, similarly with the single-function case,
+the prover must now send, at round i, the following evaluations at points t = 0, t = 1 and t = 2
+∑
+bi+1,...,b𝓁,∈{0,1}
+f(r1,...,r i−1,t,b i+1,...,b 𝓁)·g(r1,...,r i−1,t,b i+1,...,b 𝓁)
+The above can be easily computed by computing evaluations for functions f and g separately using Algo-
+rithm 1 and the combining the results using our new Algorithm 3 SumCheckProduct. We now have the
+following lemma:
+Lemma 1. Algorithm SumCheckProduct runs in time O(2𝓁)
+Proof. All loops in SumCheckProduct require time 2 𝓁 + 2𝓁−1 +... = O(2𝓁). Also SumCheckProduct calls
+FunctionEvaluations twice (one for f and one for g) and each such call takes O(2𝓁) time.
+14
+===== PDF PAGE 15 =====
+3.3 Linear-time sumcheck for GKR functions
+Let us now consider the sumcheck problem on a particular class of functions that are relevant for the GKR
+protocol (that is why we call them GKR functions). In particular we want to compute the sumcheck
+∑
+x,y∈{0,1}𝓁f1(g,x,y )f2(x)f3(y), (6)
+for a ﬁxed point g∈ F𝓁, where f2(x),f 3(x) : F𝓁→ F are multilinear extensions of arrays Af2, Af3 of size
+2𝓁, and function f1 : F3𝓁→ F is the multilinear extension of a sparse array with O(2𝓁) (out of 2 3𝓁 possible)
+nonzero elements. It is not hard to see that the sumcheck polynomials in GKR given by Equations 2 and 3
+satisfy these properties.
+We note here that applying Algorithm 1FunctionEvaluations for this particular class of polynomials would
+lead to quadratic prover time. This is because f1 has 2 2𝓁 variables to sum on yielding O(22𝓁) complexity.
+However, one could take advantage of the sparsity off1: the prover can store only the O(2𝓁) non-zero values
+of the bookkeeping table A. This is exactly the approach used in many prior work [24, 48, 53]. However,
+with this approach, the number of nonzero values that must be considered in Step 2 is always at most 2 𝓁,
+since it is not guaranteed that this number will reduce to half (i.e., to 2 𝓁−i) after every update in Step 5 of
+Algorithm 1 because it is sparse. Therefore, the overall complexity becomes O(𝓁· 2𝓁).
+In this section we eﬀectively reduce this bound to O(2𝓁). Our protocol divides the sumcheck into two
+phases: the ﬁrst 𝓁 rounds bounding the variables of x to a random point u, and the last 𝓁 rounds bounding
+the variables of y to a random point v. The central idea lies in rewriting Equation 6 as follows
+∑
+x,y∈{0,1}𝓁f1(g,x,y )f2(x)f3(y) =
+∑
+x∈{0,1}𝓁f2(x)
+∑
+y∈{0,1}𝓁f1(g,x,y )f3(y)
+=
+∑
+x∈{0,1}𝓁f2(x)hg(x),
+where hg(x) =∑y∈{0,1}𝓁f1(g,x,y )f3(y).
+3.3.1 Phase one.
+With the formula above, in the ﬁrst 𝓁 rounds, the prover and the veriﬁer are running exactly a sumcheck
+on a product of two multilinear functions f2·hg, since functions f2 and hg can be viewed as functions only
+in x—y can be considered constant (it is always summed on the hypercube). To compute the sumcheck
+messages for the ﬁrst 𝓁 rounds, given their bookkeeping tables, we can call
+SumCheckProduct(hg(x), Ahg,f 2(x), Af2,u 1,...,u 𝓁)
+in Algorithm 3. By Lemma 1 this will take O(2𝓁) time. We now show how to initialize the bookkeeping
+tables in linear time.
+Initializing the bookkeeping tables:
+Initializing the bookkeeping table for f2 in O(2𝓁) time is trivial, since f2 is a multilinear extension of an
+array and therefore the evaluations on the hypercube are known. Initializing the bookkeeping table for hg
+in O(2𝓁) time is more challenging but we can leverage the sparsity of f1. Consider the following lemma.
+Lemma 2. LetNx be the set of (z,y )∈{ 0, 1}2𝓁 such that f1(z,x,y ) is non-zero. Then for all x∈{ 0, 1}𝓁,
+it is hg(x) =∑(z,y)∈NxI(g,z )·f1(z,x,y )·f3(y), where I(g,z ) =∏𝓁i=1((1−gi)(1−zi) +gizi)).
+Proof. As f1 is a multilinear extension, as shown in [44], we have f1(g,x,y ) = ∑z∈{0,1}𝓁I(g,z )f1(z,x,y ),
+whereI is the multilinear extension of the identity polynomial, i.e.,I(w,z ) = 1 iﬀw =z for allw,z ∈{ 0, 1}𝓁.
+Therefore, we have
+hg(x) =
+∑
+y∈{0,1}𝓁
+f1(g,x,y )f3(y) =
+∑
+z,y∈{0,1}𝓁
+I(g,z )f1(z,x,y )f3(y) =
+∑
+(z,y)∈Nx
+I(g,z )·f1(z,x,y )·f3(y)
+15
+===== PDF PAGE 16 =====
+Algorithm 4 Ahg← Initialize PhaseOne(f1,f 3, Af3,g )
+Input: Multilinear f1 and f3, initial bookkeeping tables Af3, random g =g1,...,g 𝓁;
+Output: Bookkeeping table Ahg;
+1: procedure G← Precompute(g) // G is an array of size 2𝓁.
+2: Set G[0] = 1
+3: for i = 0,...,𝓁 − 1 do
+4: for b∈{ 0, 1}i do
+5: G[b, 0] = G[b]· (1−gi+1)
+6: G[b, 1] = G[b]·gi+1
+7: ∀x∈{ 0, 1}𝓁, set Ahg[x] = 0
+8: for every (z,x,y ) such that f1(z,x,y ) is non-zero do
+9: Ahg[x] = Ahg[x] + G[z]·f1(z,x,y )· Af3[y]
+10: return Ahg;
+Moreover,I(w,z ) =∏𝓁i=1((1−wi)(1−zi) +wizi)) is the unique polynomial that evaluates to 1 iﬀ w =z for
+allw,z ∈{ 0, 1}𝓁. As the multilinear extension is unique, we have I(g,z ) =∏𝓁i=1((1−gi)(1−zi) +gizi)).
+Lemma 3. The bookkeeping table Ahg can be initialized in time O(2𝓁).
+Proof. As f1 is sparse, ∑x∈{0,1}𝓁|Nx| = O(2𝓁). From Lemma 2, given the evaluations of I(g,z ) for all
+z∈{ 0, 1}𝓁, the prover can iterate all ( z,y )∈N x for all x to compute Ahg. The full algorithm is presented
+in Algorithm 4.
+Procedure Precompute(g) is to evaluate G[z] =I(g,z ) =∏𝓁i=1((1−gi)(1−zi)+gizi)) forz∈{ 0, 1}𝓁. By
+the closed-form of I(g,z ), the procedure iterates each bit of z, and multiples 1−gi for zi = 0 and multiples
+gi for zi = 1. In this way, the size of G doubles in each iteration, and the total complexity is O(2𝓁).
+Step 8-9 computeshg(x) using Lemma 2. When f1 is represented as a map of (z,x,y ),f 1(z,x,y ) for non-
+zero values, the complexity of these steps isO(2𝓁). In the GKR protocol, this is exactly the representation of
+a gate in the circuit, where z,x,y are labels of the gate, its left input and its right input, and f1(z,x,y ) = 1.
+With the bookkeeping tables, the prover runs SumCheckProduct(hg(x), Ahg,f 2(x), Af2,u 1,...,u 𝓁) in
+Algorithm 3 and the total complexity for phase one is O(2𝓁).
+3.3.2 Phase two.
+At this point, all variables in x have been bounded to random numbers u. In the second phase, the equation
+to sum on becomes ∑
+y∈{0,1}𝓁
+f1(g,u,y )f2(u)f3(y)
+Note here that f2(u) is merely a single value which we already computed in phase one. Both f1(g,u,y ) and
+f3(y) are polynomials on y with 𝓁 variables. Similar to phase one, to compute the messages for the last 𝓁
+rounds we can call
+SumCheckProduct(f1(g,u,y ), Af1,f 3(y)·f2(u), Af3·f2(u),,v 1,...,v 𝓁).
+Note here that Af1 is the bookkeeping table for f1(g,u,y ), not the original sparse function f1(g,x,y ).
+16
+===== PDF PAGE 17 =====
+Algorithm 5 Af1← Initialize PhaseTwo(f1,g,u )
+Input: Multilinear f1, random g =g1,...,g 𝓁 and u =u1,...,u 𝓁;
+Output: Bookkeeping table Af1;
+1: G← Precompute(g)
+2: U← Precompute(u)
+3: ∀y∈{ 0, 1}𝓁, set Af1[y] = 0
+4: for every (z,x,y ) such that f1(z,x,y ) is non-zero do
+5: Af1[y] = Af1[y] + G[z]· U[x]·f1(z,x,y )
+6: return Af1;
+Algorithm 6{a1,...,a 2𝓁}← SumCheckGKR(f1,f 2,f 3,u 1...,u 𝓁,v 1,...,v 𝓁,g )
+Input: Multilinear extensionsf1(z,x,y ) (withO(2𝓁) non-zero entries),f2(x),f 3(y) and their book-
+keeping tables Af2, Af3, randomness u =u1,...,u 𝓁 and v =v1,...,v 𝓁 and point g;
+Output: 2𝓁 sumcheck messages for ∑x,y∈{0,1}𝓁f1(g,x,y )f2(x)f3(y);
+1: Ahg← Initialize PhaseOne(f1,f 3, Af3,g )
+2: {a1,...,a 𝓁}← SumCheckProduct(∑y∈{0,1}𝓁f1(g,x,y )f3(y), Ahg,f 2, Af2,u 1,...,u 𝓁)
+3: Af1← Initialize PhaseTwo(f1,g,u )
+4: {a𝓁+1,...,a 2𝓁}← SumCheckProduct(f1(g,u,y ), Af1,f 3(y)·f2(u), Af3·f2(u),v 1,...,v 𝓁)
+5: return{a1,...,a 2𝓁}
+Initializing the bookkeeping table for f1:
+It now remains to initialize the bookkeeping table for f1(g,u,y ) eﬃciently. Similar to phase one, we have
+the following lemma:
+Lemma 4. LetNy be the set of (z,x )∈{ 0, 1}2𝓁 such that f1(z,x,y ) is non-zero. Then for all y∈{ 0, 1}𝓁,
+it is f1(g,u,y ) =∑(z,x)∈NyI(g,z )·I(u,x )·f1(z,x,y ).
+Proof. This immediately follows from the fact that f1 is a multilinear extension. We have f1(g,u,y ) =∑
+z,y∈{0,1}𝓁I(g,z )·I(u,x )·f1(z,x,y ), where the closed from of I is given in Lemma 2.
+Lemma 5. The bookkeeping table Af1 can be initialized in time O(2𝓁).
+Proof. Similar to Algorithm 4, he prover again iterates all non-zero indices of f1 to compute it using
+Lemma 4.The full algorithm is presented in Algorithm 5.
+We now summarize the ﬁnal linear-time algorithm for computing the prover messages for the sumcheck
+protocol on GKR functions. See Algorithm 6 SumCheckGKR.
+Theorem 2. Algorithm SumCheckGKR runs in O(2𝓁) time.
+Proof. Follows from Lemmata 1, 3 and 5.
+17
+===== PDF PAGE 18 =====
+3.3.3 Generalizations of our technique.
+Our technique can be extended to sumchecks of the general type
+∑
+x1,x2,...,xc∈{0,1}cf0(g,x 1,x 2,...,x c)f1(x1)f2(x2)...fc(xc),
+where c is a constant, functions fi are multilinear and f0() is sparse and consists of linearly-many nonzero
+monomials. We divide the protocol into c phases similarly as above. This generalization captures the
+sumcheck in the original GKR paper with identity polynomials (see [31]), and our new algorithms also
+improve the prover time of this to linear.
+3.4 Putting everything together
+The sumcheck protocol in GKR given by Equation 2 can be decomposed into several instances that have the
+form of Equation 6 presented in the previous section. The term
+∑
+x,y∈{0,1}si+1
+˜multi+1(g,x,y )( ˜Vi+1(x) ˜Vi+1(y))
+is exactly the same as Equation 6. The term ∑x,y∈{0,1}si+1 ˜addi+1(g,x,y )( ˜Vi+1(x) + ˜Vi+1(y)) can be viewed
+as: ∑
+x,y∈{0,1}si+1
+˜addi+1(g,x,y ) ˜Vi+1(x) + ∑
+x,y∈{0,1}si+1
+˜addi+1(g,x,y ) ˜Vi+1(y)
+The ﬁrst sum can be computed using the same protocol in Algorithm 6 without f3(y), and the second sum
+can be computed without f2(x). The complexity for both cases remains linear. Due to linearity of the
+sumcheck protocol, the prover can execute these 3 instances simultaneously in every round, and sum up the
+individual messages and send them to the veriifer.
+Combining two claims. After the sumcheck in the GKR protocol is completed, as described in Section 2.3,
+the prover and the veriﬁer need to combine the two claims about ˜Vi+1 received at the end of the sumcheck
+protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we
+show how to do each of them in linear time.
+The second approach using random linear combinations is rather straight forward. After the output
+layers,P andV execute sumcheck protocol on Equation 3 instead of Equations 2, which still satisﬁes the
+properties of Equation 6. One could view it as 6 instances of Equation 6 and the prover time is still linear.
+Moreover, there is a better way to further improve the eﬃciency. Taking∑x,y∈{0,1}si+1 (αi ˜multi+1(u,x,y ) +
+βi ˜multi+1(v,x,y )) ˜Vi+1(x) ˜Vi+1(y) as an example, in Algorithm 4, the prover runs Precompute twice onu and
+v to generate two arrays (G1 and G2), and sets G[b] =αiG1[b]+βiG2[b] for allb. The rest of the algorithms
+remains the same. This only incurs a small overhead in practice in our implementation, compared to the
+original algorithm on Equation 6.
+Though with the approach above we already have a linear prover GKR protocol, the technique to
+condense two points to one proposed in the original GKR protocol [31] may still be interesting in some
+scenarios (e.g., in our implementation, we use this approach in the last layer and only make one query to
+the multi-linear extension of the input, which is more eﬃcient practice). We present an algorithm to reduce
+the prover time of this approach to linear in Appendix A.
+4 Zero Knowledge Argument Protocols
+In this section, we present the construction of our new zero-knowledge argument system. In [52], Zhang
+et al. proposed to combine the GKR protocol with a veriﬁable polynomial delegation protocol, resulting
+in an argument system. Later, in [50, 51], the construction was extended to zero-knowledge, by sending all
+18
+===== PDF PAGE 19 =====
+the messages in the GKR protocol in homomorphic commitments and performing all the checks by zero-
+knowledge equality and product testing. This incurs a high overhead for the veriﬁer compared to the plain
+version without zero-knowledge, as each multiplication becomes an exponentiation and each equality check
+becomes a Σ-protocol, which is around 100× slower in practice.
+In this paper, we follow the same blueprint of combining GKR and VPD to obtain an argument system,
+but instead show how to extend it to be zero-knowledge eﬃciently. In particular, the prover masks the
+GKR protocol with special random polynomials so that the veriﬁer runs a “randomized” GKR that leaks no
+extra information and her overhead is small. A similar approach was used by Chiesa et al. in [23]. In the
+following, we present the zero-knowledge version of each building block, followed by the whole zero-knowledge
+argument.
+4.1 Zero Knowledge Sumcheck
+As a core step of the GKR protocol, P andV execute a sumcheck protocol on Equation 2, during which
+P sendsV evaluations of the polynomial at several random points chosen by V. These evaluations leak
+information about the values in the circuit, as they can be viewed as weighted sums of these values.
+To make the sumcheck protocol zero-knowledge, we take the approach proposed by Chiesa et al. in [23],
+which is masking the polynomial in the sumcheck protocol by a random polynomial. In this approach, to
+prove
+H =
+∑
+x1,x2,...,x𝓁∈{0,1}
+f(x1,x 2,...,x 𝓁),
+the prover generates a random polynomialg with the same variables and individual degrees off. She commits
+to the polynomial g, and sends the veriﬁer a claim G = ∑
+x1,x2,...,x𝓁∈{0,1}
+g(x1,x 2,...,x 𝓁). The veriﬁer picks a
+random number ρ, and execute a sumcheck protocol with the prover on
+H +ρG =
+∑
+x1,x2,...,x𝓁∈{0,1}
+(f(x1,x 2,...,x 𝓁) +ρg(x1,x 2,...,x 𝓁)).
+Construction 1. We assume the existence of a zkVPD protocol deﬁned in Section 2.4. For simplicity,
+we omit the randomness rf and public parameters pp, vp without any ambiguity. To prove the claim H =∑
+x1,x2,...,x𝓁∈{0,1}
+f(x1,x 2,...,x 𝓁):
+1. P selects a polynomial g(x1,...,x 𝓁) = a0 +g1(x1) +g2(x2) +... +gl(x𝓁), where gi(xi) = ai,1xi +
+ai,2x2i +... +ai,dxdi and all ai,js are uniformly random.P sendsH = ∑
+x1,x2,...,x𝓁∈{0,1}
+f(x1,x 2,...,x 𝓁),
+G = ∑
+x1,x2,...,x𝓁∈{0,1}
+g(x1,x 2,...,x 𝓁) and comg = Commit(g) toV.
+2. V uniformly selects ρ∈ F∗, computes H +ρG and sends ρ toP.
+3. P andV run the sumcheck protocol on
+H +ρG =
+∑
+x1,x2,...,x𝓁∈{0,1}
+(f(x1,x 2,...,x 𝓁) +ρg(x1,x 2,...,x 𝓁))
+4. At the last round of the sumcheck protocol, V obtains a claim h𝓁(r𝓁) = f(r1,r 2,...,r 𝓁) +
+ρg(r1,r 2,...,r 𝓁). P and V opens the commitment of g at r = ( r1,...,r 𝓁) by (g(r),π ) ←
+Open(g,r ), Verify(comg,g (r),r,π ). If Verify outputs reject,V aborts.
+5. V computesh𝓁(r𝓁)−ρg(r1,...,r 𝓁) and compares it with the oracle access of f(r1,...,r 𝓁).
+19
+===== PDF PAGE 20 =====
+At the last round of this sumcheck, the prover opens the commitment of g at g(r1,...,r 𝓁), and the veriﬁer
+computes f(r1,...,r l) by subtracting ρg(r1,...,r 𝓁) from the last message, and compares it with the oracle
+access off. It is shown that as long as the commitment and opening of g are zero-knowledge, the protocol is
+zero-knowledge. Intuitively, this is because all the coeﬃcients of f are masked by those of g. The soundness
+still holds because of the random linear combination of f and g.
+Unfortunately, the masking polynomial g is as big as f, and opening it to a random point later is
+expensive. In [23], the prover sends a PCP oracle of g, and executes a zero-knowledge sumcheck to open it to
+a random point, which incurs an exponential complexity for the prover. Even replacing it with the zkVPD
+protocol in [51], the prover time is slow in practice.
+In this paper, we show that it suﬃces to mask f with a small polynomial to achieve zero-knowledge. In
+particular, we setg(x1,...,x 𝓁) =a0+g1(x1)+g2(x2)+... +g𝓁(x𝓁), wheregi(xi) =ai,1xi+ai,2x2i +... +ai,dxdi
+is a random univariate polynomial of degree d (d is the variable degree of f). Note here that the size of g is
+only O(d𝓁), while the size of f is exponential in 𝓁.
+The intuition of our improvement is that the prover sends O(d𝓁) messages in total to the veriﬁer during
+the sumcheck protocol, thus a polynomial g with O(d𝓁) random coeﬃcients is suﬃcient to mask all the
+messages and achieve zero-knowledge. We present the full protocol in Construction 1.
+The completeness of the protocol holds obviously. The soundness follows the soundness of the sumcheck
+protocol and the random linear combination in step 2 and 3, as proven in [23]. We give a proof of zero
+knowledge here.
+Theorem 3 (Zero knowledge). For every veriﬁerV∗ and every 𝓁-variate polynomialf : F𝓁→ F with variable
+degreed, there exists a simulator S such that given access to H =∑x1,x2,...,x𝓁∈{0,1}f(x1,x 2,...,x 𝓁),S isable to simulate the partial view of V∗ in step 1-4 of Construction 1.
+Proof. We build the simulatorS as following.
+1. S selects a random polynomial g∗(x1,...,x 𝓁) = a∗0 +g∗1(x1) +g∗2(x2) +··· +g∗𝓁 (x𝓁), where g∗i (xi) =
+a∗i,1xi + a∗i,2x2i +··· + a∗i,dxdi . S sends H, G∗ = ∑
+x1,x2,···,x𝓁∈{0,1}
+g∗(x1,x 2,··· ,x𝓁) and comg∗ =
+Commit(g∗) toV.
+2. S receivesρ⁄= 0 fromV∗.
+3. S selects a polynomial f∗ : F𝓁 → F with variable degree d uniformly at random conditioning on∑
+x1,x2,···,x𝓁∈{0,1}
+f∗(x1,x 2,··· ,x𝓁) =H.S then engages in a sumcheck protocol with V on H +ρG∗ =
+∑
+x1,x2,···,xl∈{0,1}
+(f∗(x1,x 2,··· ,x𝓁) +ρg∗(x1,x 2,··· ,x𝓁))
+4. Let r∈ F𝓁 be the point chosen by V∗ in the sumcheck protocol. S runs (g∗(r),π )← Open(g∗,r ) and
+sends them toV.
+As both g and g∗ are randomly selected, and the zkVPD protocol is zero-knowledge, it is obvious that
+step 1 and 4 in S are indistinguishable from those in the real world of Construction 1. It remains to show
+that the sumchecks in step 3 of both worlds are indistinguishable.
+To see that, recall that in round i of the sumcheck protocol,V receives a univariate polynomial hi(xi) =∑
+bi+1,...,b𝓁∈{0,1}
+h(r1,...,r i−1,xi,bi+1,...,b 𝓁) where h =f +ρg. (The view of V∗ is deﬁned in the same way
+with h∗,f∗,g∗ and we omit the repetition in the following.) As the variable degree of f and g is d,P sends
+V hi(0),hi(1),...,h i(d) which uniquely deﬁnes hi(xi). These evaluations reveal d + 1 independent linear
+constraints on the coeﬃcients of h. In addition, note that when these evaluations are computed honestly
+byP, hi(0) +hi(1) = hi−1(ri−1), as required in the sumcheck protocol. Therefore, in all 𝓁 rounds of the
+sumcheck,V andV∗ receives𝓁(d + 1)− (𝓁− 1) =𝓁d + 1 independent linear constraints on the coeﬃcients of
+h and h∗.
+20
+===== PDF PAGE 21 =====
+As h and h∗ are masked by g and g∗, each with exactly 𝓁d + 1 coeﬃcients selected randomly, the two
+linear systems are identically distributed. Therefore, step 3 of the ideal world is indistinguishable from that
+of the real world.
+4.2 Zero knowledge GKR
+To achieve zero-knowledge, we replace the sumcheck protocol in GKR with the zero-knowledge version
+described in the previous section. However, the protocol still leaks additional information. In particular, at
+the end of the zero-knowledge sumcheck,V queries the oracle to evaluate the polynomial on a random point.
+When executed on Equation 2, this reveals two evaluations of the polynomial ˜Vi deﬁned by the values in the
+i-th layer of the circuit: ˜Vi(u) and ˜Vi(v).
+To prevent this leakage, Chiesa et al. [23] proposed to replace the multi-linear extension ˜Vi with a low
+degree extension, such that learning ˜Vi(u) and ˜Vi(v) does not leak any information about Vi. Deﬁne a low
+degree extension of Vi as
+˙Vi(z) def= ˜Vi(z) +Zi(z)∑w∈{0,1}λRi(z,w ), (7)
+whereZ(z) =∏sii=1zi(1−zi), i.e., Z(z) = 0 for all z∈{ 0, 1}si. Ri(z,w ) is a random low-degree polynomial
+and λ is the security parameter. With this low degree extension, Equation 2 becomes
+˙Vi(g) =∑x,y∈{0,1}si+1 ˜multi+1(g,x,y )( ˙Vi+1(x) ˙Vi+1(y)) (8)
++ ˜addi+1(g,x,y )( ˙Vi+1(x) + ˙Vi+1(y)) +Zi(g)∑w∈{0,1}λRi(g,w )
+=
+∑
+x,y∈{0,1}si+1,w∈{0,1}λ(I(⃗0,w )· ˜multi+1(g,x,y )( ˙Vi+1(x) ˙Vi+1(y)) (9)
++ ˜addi+1(g,x,y )( ˙Vi+1(x) + ˙Vi+1(y)) +I((x,y ),⃗0)Zi(g)Ri(g,w ))
+where I(⃗ a,⃗b) is an identity polynomial I(⃗ a,⃗b) = 0 iﬀ ⃗ a=⃗b. The ﬁrst equation holds because ˙Vi agrees with˜Vi on the Boolean hyper-cube {0, 1}si, as Zi(z) = 0 for binary inputs. The second equation holds because
+the mask in ˙Vi is in the form of a “sum” and can be moved into the sumcheck equation.
+When executing the zero-knowledge sumcheck protocol on Equation 8, at the end of the protocol, V re-
+ceives ˙Vi+1(u) and ˙Vi+1(v) for random pointsu,v∈ Fsi+1 chosen byV. They no longer leak information about
+Vi+1, as they are masked by Zi+1(z)∑w∈{0,1}λRi+1(z,w ) for z =u andz =v.V computes ˜multi+1(g,u,v )
+and ˜addi+1(g,u,v ) as before, computes Zi(g),I (⃗0,c ),I ((u,v ),⃗0) where c∈ Fλ is a random point chosen by
+V for variable w, opens Ri(g,w ) at c withP through a polynomial commitment, and checks that together
+with ˙Vi+1(u), ˙Vi+1(v) received fromP they are consistent with the last message of the sumcheck.V then uses˙Vi+1(u), ˙Vi+1(v) to proceed to the next round.
+Unfortunately, similar to the zero-knowledge sumcheck, the masking polynomial Ri is very large in [23].
+OpeningRi at a random point takes exponential time forP either using a PCP oracle as in [23] or potentially
+using a zkVPD, as R has si + 2si+1 +λ variables.
+In this section, we show that we can set Ri to be a small polynomial to achieve zero-knowledge. In
+particular, Ri has only two variables with variable degree 2. This is because in the ( i− 1)-th round, V
+receives two evaluations of Vi, ˙Vi(u) and ˙Vi(v), which are masked by ∑wRi(u,w ) and ∑wRi(v,w ); in
+the i-th sumcheck,V opens Ri at Ri(u,c ) and Ri(v,c ). It suﬃces to make these four evaluations linearly
+independent, assuming the commitment and opening of Ri are using a zkVPD. Therefore, we set the low-
+degree term in Equation 7 as Zi(z)∑w∈{0,1}Ri(z1,w ), i.e. Ri only takes two variables, the ﬁrst variable z1
+of z and an extra variable w∈{ 0, 1} instead of{0, 1}λ, with variable degree 2.
+The full protocol is presented in Construction 2. Here we use superscriptions (e.g.,u(i)) to denote random
+numbers or vectors for the i-th layer of the circuit.
+21
+===== PDF PAGE 22 =====
+Construction 2. 1. On a layered arithmetic circuit C with d layers and input in, the prover P
+sends the output of the circuit out to the veriﬁer V.
+2. P randomly selects polynomials R1(z1,w ),...,R d(z1,w ) : F2 → F with variable degree 2. P
+commits to these polynomials by sending comi← Commit(Ri) toV for i∈ [1,d ].
+3. V deﬁnes ˙V0(z) = ˜V0(z), where ˜V0(z) is the multilinear extension of out. ˙V0(z) can be viewed as
+a special case with R0(z1,w ) being the 0 polynomial. V evaluates it at a random point ˙V0(g(0))
+and sends g(0) toP.
+4. P andV execute the zero knowledge sumcheck protocol presented in Construction 1 on
+˙V0(g(0)) = ∑
+x,y∈{0,1}s1
+˜mult1(g(0),x,y )( ˙V1(x) ˙V1(y))
++ ˜add1(g(0),x,y )( ˙V1(x) + ˙V1(y))
+If u(1)1 =v(1)1 ,P aborts. At the end of the protocol, V receives ˙V1(u(1)) and ˙V1(v(1)).V computes˜mult1(g(0),u (1),v (1)), ˜add1(g(0),u (1),v (1)) and checks that
+˜mult1(g(0),u (1),v (1)) ˙V1(u(1)) ˙V1(v(1)) + ˜add1(g(0),u (1),v (1))( ˙V1(u(1)) + ˙V1(v(1)))
+equals to the last message of the sumcheck (evaluation oracle).
+5. For layer i = 1,...,d − 1:
+(a) V randomly selects α(i),β (i)∈ F and sends them to P.
+(b) Let Multi+1(x,y ) =α(i) ˜multi+1(u(i),x,y ) +β(i) ˜multi+1(v(i),x,y ) and
+Addi+1(x,y ) =α(i) ˜addi+1(u(i),x,y )+β(i) ˜addi+1(v(i),x,y ).P andV run the zero knowledge
+sumcheck on the equation
+α(i) ˙Vi(u(i)) +β(i) ˙Vi(v(i)) =
+∑
+x,y∈{0,1}si+1
+w∈{0,1}
+(I(⃗0,w )·Multi+1(x,y )( ˙Vi+1(x) ˙Vi+1(y))
++Addi+1(x,y )( ˙Vi+1(x) + ˙Vi+1(y))
++I((x,y ),⃗0)(α(i)Zi(u(i))Ri(u(i)1 ,w ) +β(i)Zi(v(i))Ri(v(i)1 ,w )))
+If u(i+1)1 =v(i+1)1 ,P aborts.
+(c) At the end of the zero-knowledge sumcheck protocol,P sendsV ˙Vi+1(u(i+1)) and ˙Vi+1(v(i+1)).
+(d) V computes
+ai+1 =α(i) ˜multi+1(u(i),u (i+1),v (i+1)) +β(i) ˜multi+1(v(i),u (i+1),v (i+1))
+and
+bi+1 =α(i) ˜addi+1(u(i),u (i+1),v (i+1)) +β(i) ˜addi+1(v(i),u (i+1),v (i+1))
+locally.V computesZi(u(i)),Zi(v(i)),I (⃗0,c (i)),I ((u(i+1),v (i+1)),⃗0) locally.
+(e) P andV openRi at two points Ri(u(i)1 ,c (i)) and Ri(v(i)1 ,c (i)) using Open and Verify.
+22
+===== PDF PAGE 23 =====
+(f) V computes the following as the evaluation oracle and uses it to complete the last step of
+the zero-knowledge sumcheck.
+I(⃗0,c (i))(ai+1( ˙Vi+1(u(i+1)) ˙Vi+1(v(i+1)))+
+bi+1( ˙Vi+1(u(i+1)) + ˙Vi+1(v(i+1))))+
+I((u(i+1),v (i+1)),⃗0)(α(i)Zi(u(i))Ri(u(i)1 ,c (i)) +β(i)Zi(v(i))Ri(v(i)1 ,c (i)))
+If all checks in the zero knowledge sumcheck and Verify passes,V uses ˙Vi+1(u(i+1)) and˙Vi+1(v(i+1)) to proceed to the (i + 1)-th layer. Otherwise, V outputs reject and aborts.
+6. At the input layer d,V has two claims ˙Vd(u(d)) and ˙Vd(v(d)).V opensRd at 4 points Rd(u(d)1 , 0),
+Rd(u(d)1 , 1),Rd(v(d)1 , 0),Rd(v(d)1 , 1) and checks that ˙Vd(u(d)) = ˜Vd(u(d))+Zd(u(d)) ∑
+w∈{0,1}
+Rd(u(d)1 ,w )
+and ˙Vd(v(d)) = ˜Vd(v(d)) +Zd(v(d)) ∑
+w∈{0,1}
+Rd(v(d)1 ,w ), given oracle access to two evaluates of ˜Vd
+at u(d) and v(d). If the check passes, output accept; otherwise, output reject.
+Theorem 4. Construction 2 is an interactive proof protocol per Deﬁnition 1, for a function f deﬁned by a
+layered arithmetic circuit C such that f(in, out) = 1 iﬀ C(in) = out. In addition, for every veriﬁer V∗ and
+every layered circuit C, there exists a simulator S such that given oracle access to out,S is able to simulate
+the partial view of V∗ in step 1-5 of Construction 2.
+The completeness follows from the construction explained above and the completeness of the zero knowl-
+edge sumcheck. The soundness follows the soundness of the GKR protocol with low degree extensions, as
+proven in [31] and [23]. We give the proof of zero knowledge here.
+Proof. With oracle access to out, and the simulator Ssc of the zero-knowledge sumcheck protocol in Sec-
+tion 4.1 as a subroutine, we construct the simulator S as following:
+1. S sends the out toV∗.
+2. S randomly selects polynomials R∗1(z1,w ),...,R ∗d(z1,w ) : F2→ F with variable degree 2. S commits
+to these polynomials by sending comi← Commit(R∗i ) toV∗ for i∈ [1,d ].
+3. S receivesg(0) fromV∗.
+4. S callsSsc to simulate the partial view of the zero knowledge sumcheck protocol on
+˙V0(g(0)) = ∑
+x,y∈{0,1}s1
+˜mult1(g(0),x,y )( ˙V1(x) ˙V1(y)) + ˜add1(g(0),x,y )( ˙V1(x) + ˙V1(y))
+If u(1)1 = v(1)1 ,S aborts. At the end of the sumcheck, S samples ˙V∗1 (u(1)) and ˙V∗1 (v(1)) such that˜mult1(g(0),u (1),v (1)) ˙V∗1 (u(1)) ˙V∗1 (v(1)) + ˜add1(g(0),u (1),v (1)) ( ˙V∗1 (u(1)) + ˙V∗1 (v(1))) equals to the last
+message of the sumcheck.
+5. For layer i = 1,...,d − 1:
+(a) S receivesα(i),β (i) fromV∗.
+(b) Let Multi+1(x,y ) =α(i) ˜multi+1(u(i),x,y ) +β(i) ˜multi+1(v(i),x,y ) and
+Addi+1(x,y ) = α(i) ˜addi+1(u(i),x,y ) +β(i) ˜addi+1(v(i),x,y ). S callsSsc to simulate the partial
+view of the zero knowledge sumcheck protocol on
+23
+===== PDF PAGE 24 =====
+α(i) ˙Vi(u(i)) +β(i) ˙Vi(v(i)) =
+∑
+x,y∈{0,1}si+1
+w∈{0,1}
+(I(⃗0,w )·Multi+1(x,y )( ˙Vi+1(x) ˙Vi+1(y))
++Addi+1(x,y )( ˙Vi+1(x) + ˙Vi+1(y))
++I((x,y ),⃗0)(α(i)Zi(u(i))Ri(u(i)1 ,w ) +β(i)Zi(v(i))Ri(v(i)1 ,w )))
+If u(i+1)1 =v(i+1)1 ,S aborts.
+(c) At the end of the zero-knowledge sumcheck protocol, if u(i+1)1 = v(i+1)1 ,S aborts. Otherwise,
+S samples ˙V∗i+1(u(i+1)) and ˙V∗i+1(v(i+1)) randomly such that the following equals to the last
+message of the sumcheck protocol.
+I(⃗0,c (i))(ai+1( ˙V∗i+1(u(i+1)) ˙V∗i+1(v(i+1))) +bi+1( ˙V∗i+1(u(i+1)) + ˙V∗i+1(v(i+1))))
++I((u(i+1),v (i+1)),⃗0)(α(i)Zi(u(i))R∗i (u(i)1 ,c (i)) +β(i)Zi(v(i))R∗i (v(i)1 ,c (i)))
+ai+1 =α(i) ˜multi+1(u(i),u (i+1),v (i+1)) +β(i) ˜multi+1(v(i),u (i+1),v (i+1)) and
+bi+1 = α(i) ˜addi+1(u(i),u (i+1),v (i+1)) +β(i) ˜addi+1(v(i),u (i+1),v (i+1)). S sends ˙Vi+1(u(i+1)) and˙Vi+1(v(i+1)) toV∗.
+(d) V∗ computes the corresponding values locally as in step 5(d) of Construction 2.
+(e) S opens R∗i at two points R∗i (u(i)1 ,c (i)) and R∗i (v(i)1 ,c (i)) using Open.
+(f) V∗ performs the checks as in step 5(f) of Construction 2.
+Note here that V∗ can actually behave arbitrarily in step 5(d) and 5(f) above. We include these steps
+to be consistent with the real world in Construction 2 for the ease of interpretation.
+To prove zero-knowledge, step 1,3, 5(a), 5(d) and 5(f) are obviously indistinguishable as S only receives
+messages from V∗. Step 2 and 5(e) of both worlds are indistinguishable because of the zero knowledge
+property of the zkVPD, and the fact that R∗ and R are sampled randomly in both worlds. Step 4 and 5(b)
+are indistinguishable as proven in Theorem 3 for Ssc.
+It remains to consider the messages received at the end of step 4 and in step 5(c), namely ˙Vi(u(i)), ˙Vi(v(i))
+and ˙V∗i (u(i)), ˙V∗i (v(i)) fori = 1,...,d . In the real world, ˙Vi(z) is masked by ∑
+w∈{0,1}
+Ri(z1,w ) (Z(z) is publicly
+known), thus ˙Vi(u(i)) and ˙Vi(v(i)) are masked by ∑
+w∈{0,1}
+Ri(u(i)1 ,w ) and ∑
+w∈{0,1}
+Ri(v(i)1 ,w ) correspondingly.
+In addition, in step 5(e), V∗ opens Ri at Ri(u(i)1 ,c (i)) and Ri(v(i)1 ,c (i)). To simplify the notation here,
+we consider only a particular layer and omit the subscription and superscription of i. Let R(z1,w ) =
+a0 +a1z1 +a2w +a3z1w +a4z21 +a5w2 +a6z21w2, where a0,...,a 6 are randomly chosen. We can write the
+four evaluations above as
+
+
+2 2 u1 1 u1 2u21 1 u21
+2 2 v1 1 v1 2v21 1 v21
+1 u1 c cu 1 u21 c2 c2u21
+1 v1 c cv 1 v21 c2 c2v21
+
+×[a0 a1 a2 a3 a4 a5 a6]T
+After row reduction, the left matrix is
+
+
+2 2 u1 1 u1 2u21 1 u21
+0 2( v1−u1) 0 v1−u1 2(u21−v21) 0 u21−v21
+0 0 2 c− 1 (2 c− 1)u1 0 2 c2− 1 (2 c2− 1)u21
+0 0 0 (2 c− 1)(v1−u1) 0 0 (2 c2− 1)(v21−u21)
+
+
+24
+===== PDF PAGE 25 =====
+As u1⁄=v1, the matrix has full rank if 2 c2− 1⁄= 0 mod p, where p is the prime that deﬁnes F. This holds
+if 2−1 is not in the quadratic residue of p, or equivalently p⁄≡ 1, 7 mod 8. 5 In case p≡ 1, 7 mod 8, we can
+add a check to both the protocol and the simulator to abort if 2 c2− 1 = 0. This does not aﬀect the proof
+of zero knowledge, and only reduces the soundness error by a small amount. 6
+Because of the full rank of the matrix, the four evaluations are linearly independent and uniformly
+distributed, as a0,...a 6 are chosen randomly. In the ideal world, R∗(u1,c ) and R∗(v1,c ) are independent
+and uniformly distributed, and ˙V∗(u), ˙V∗(v) are randomly selected subject to a linear constraint (step 5(c)),
+which is the same as the real world. Therefore, they are indistinguishable in the two worlds, which completes
+the proof.
+4.3 Zero knowledge VPD
+In this section, we present the instantiations of the zkVPD protocol, as deﬁned in Deﬁnition 4. For every
+intermediate layeri, we use the same zkVPD protocol as proposed by Zhang et al. in [51] to commit and open
+the masking polynomials gi(x),Ri(z1,w ). In fact, as we show in the previous sections, these polynomials
+are very small (gi is the sum of univariate polynomials and Ri has 2 variables with variable degree 2), the
+zkVPD protocols become very simple. The complexity of KeyGen, Commit, Open, Verify and proof size are all
+O(si) for gi and are all O(1) for Ri. We omit the full protocols due to space limit.
+For the zkVPD used for the input layer, we design a customized protocol based on the zkVPD protocol
+in [51]. Recall that at the end of the GKR protocol, V receives two evaluations of the polynomial ˙Vd(z) =˜Vd(z) +Zd(z)∑w∈{0,1}Rd(z1,w ) at z =u(d) andz =v(d). In our zero knowledge proof protocol, which will
+be presented in Section 4.4,P commits to ˙Vd(z) using the zkVPD at the beginning, and opens it to the two
+points selected byV.
+The protocol in [51] works for any polynomial with𝓁 variables and any variable degree, and is particularly
+eﬃcient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and
+preserve the eﬃciency. Note that though ˙Vd(z) is a low degree extension of the input, it can be decomposed
+to the sum of ˜Vd(z), a multilinear polynomial, andZd(z)∑w∈{0,1}Rd(z1,w ). Moreover, Zd(u(d)) andZd(v(d))
+can be computed directly byV. Therefore, in our construction, P commits to ˜Vd(z) and∑w∈{0,1}Rd(z1,w )
+separately, and later opens the sum together given Zd(u(d)) and Zd(v(d)), which is naturally supported
+because of the homomorphic property of the commitment. Another optimization is that unlike other layers
+of the circuit, Rd(z1,w ) itself is not opened at two points (V does not receive Rd(u(d),c (d)) andRd(v(d),c (d))
+in Construction 2). Therefore, it suﬃces to set ˙Vd(z) = ˜Vd(z) +Zd(z)Rd(z1), where Rd is a univariate linear
+polynomial. The full protocol is presented in Construction 3.
+Theorem 5. Construction 3 is a zero-knowledge veriﬁable polynomial delegation scheme as deﬁned by Def-
+inition 4, under Assumption 1 and 2.
+The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in [51].
+We only add an extra univariate linear polynomial R(x1), which does not aﬀect the proof. We omit the
+proof due to space limit. Using the same algorithms proposed in in [51, 53], the running time of KeyGen,
+Commit and Open is O(2𝓁), Verify takesO(𝓁) time and the proof size is O(𝓁).
+4.4 Putting Everything Together
+In this section, we present our zero knowledge argument scheme. At a high level, similar to [50–52], V can
+use the GKR protocol to verify the correct evaluation of a circuit C on input x and a witness w, given an
+5From the reduced matrix, we can see that setting a2 =a3 =a4 = 0 does not aﬀect the rank of the matrix, which
+simpliﬁes the masking polynomial R in practice.
+6If one is willing to perform a check like this, we can simplify the masking polynomial R to be multilinear. The
+reduced matrix will be the ﬁrst 4 columns of the matrix showed above, and it has full rank if c⁄= 2−1.
+25
+===== PDF PAGE 26 =====
+Construction 3. Let F be a prime-order ﬁnite ﬁeld. Let ˙V (x) : F𝓁→ F be an 𝓁-variate polynomial such
+that ˙V (x) = ˜V (x) + Z(x)R(x1), where ˜V (x) is a multilinear polynomial, Z(x) = ∏𝓁i=1xi(1−xi) and
+R(x1) =a0 +a1x1.
+• (pp, vp)← KeyGen(1λ,𝓁 ): Select α,t 1,t 2,··· ,tl,t𝓁+1∈ F uniformaly at random, run bp← BilGen(1λ)
+and compute pp = (bp,gα,gt𝓁+1,gαt𝓁+1,{g∏i∈W ti,gα ∏i∈W ti}W∈W𝓁), whereW𝓁 is the set of all subsets
+of{1,...,𝓁 }. Set vp = (bp,gt1,...,g t𝓁+1,gα).
+• com← Commit( ˙V,r V,rR, pp): Compute c1 =g ˜V (t1,t2,···,t𝓁)+rVt𝓁+1, c2 =gα( ˜V (t1,t2,···,t𝓁)+rVt𝓁+1), c3 =
+gR(t1)+rRt𝓁+1 and c4 =gα(R(t1)+rRt𝓁+1) output the commitment com = (c1,c 2,c 3,c 4).
+• {accept, reject}← CheckComm(com, vp): Output accept ife(c1,gα) =e(c2,g ) ande(c3,gα) =e(c4,g ).
+Otherwise, output reject.
+• (y,π )← Open( ˙V,r V,rR,u, pp): Choose r1,...,r 𝓁∈ F at random, and compute polynomials qi such
+that
+˜V (x) +rVx𝓁+1 +Z(u)(R(x1) +rRx𝓁+1)− ( ˜V (u) +Z(u)R(u1)) =
+𝓁∑
+i=1
+(xi−ui)(qi(xi,...,x 𝓁) +rix𝓁+1) +x𝓁+1(rV +rRZ(u)−
+𝓁∑
+i=1
+ri(xi−ui)).
+Set π = ( {gqi(ti...,t𝓁)+rit𝓁+1,gα(qi(ti...,t𝓁)+rit𝓁+1)}i∈[1,𝓁], g rV +rRZ(u)−∑𝓁i=1ri(ti−ui),
+gα(rV +rRZ(u)−∑𝓁i=1ri(ti−ui))) and y = ˜V (u) +Z(u)R(u1).
+• {accept, reject}← Verify(com,u,y,π, vp): Parse π as (πi,παi) for i∈ [1,𝓁 + 1]. Check e(πi,gα) =
+e(παi,g ) for i∈ [1,𝓁 + 1]. Check e(c1cZ(u)3 /gy,g ) =∏𝓁i=1e(πi,gti−ui)·e(gπ𝓁+1,gt𝓁+1). Output accept
+if all the checks pass, otherwise, output reject.
+oracle access to the evaluation of a polynomial deﬁned by x,w on a random point. We instantiate the oracle
+using the zkVPD protocol. Formally, we present the construction in Construction 4, which combines our
+zero knowledge GKR and zkVPD protocols. Similar to the protocols in [50, 51], Step 6 and 7 are to check
+thatP indeed uses x as the input to the circuit.
+Theorem 6. For an input size n and a ﬁnite ﬁeld F, Construction 4 is a zero knowledge argument for the
+relation
+R ={(C,x ;w) :C∈C F∧|x| +|w|≤ n∧C(x;w) = 1},
+as deﬁned in Deﬁnition 2, under Assumption 1 and 2. Moreover, for every (C,x ;w)∈R , the running time
+ofP is O(|C|) ﬁeld operations and O(n) multiplications in the base group of the bilinear map. The running
+time ofV is O(|x| +d· log|C|) if C is log-space uniform with d layers.P andV interactO(d log|C|) rounds
+and the total communication (proof size) is O(d log|C|). In case d is polylog(|C|), the protocol is a succinct
+argument.
+Proof Sketch. The correctness and the soundness follow from those of the two building blocks, zero
+knowledge GKR and zkVPD, by Theorem 4 and 5.
+To prove zero knowledge, consider a simulatorS that calls the simulatorSGKR of zero knowledge GKR
+given in Section 4.2 as a subroutine, which simulates the partial view up to the input layer. At the input layer,
+the major challenge is thatS committed to (a randomly chosen) ˙V∗d at the beginning of the protocol, before
+knowing the points u(d),v (d) to evaluate on. If S opens the commitment honestly, with high probability the
+evaluations are not consistent with the last message of the GKR (sumcheck in layer d− 1) and a malicious
+V∗ can distinguish the ideal world from the real world. In our proof, we resolve this issue by using the
+simulatorSVPD of our zkVPD protocol. Given the trapdoor trap used in KeyGen,SVPD is able to open the
+26
+===== PDF PAGE 27 =====
+Construction 4. Letλ be the security parameter, F be a prime ﬁeld, n be an upper bound on input size,
+and S be an upper bound on circuit size. We use VPD1, VPD2, VPD3 to denote the zkVPD protocols for
+input layer, masking polynomials gi and Ri described in Construction 2.
+• G(1λ,n,S ): run (pp1, vp1) ← VPD1.KeyGen(1λ, logn), (pp2, vp2) ← VPD2.KeyGen(1λ, logS),
+(pp3, vp3)← VPD3.KeyGen(1λ). Output pk = (pp1, pp2, pp3) and vk = (vp1, vp2, vp3).
+• ⟨P(pk,w ),V(vk)⟩(x): Let C be a layered arithmetic circuit over F withd layers, input x and witnessw
+such that|x|+|w|≤ n,|C|≤ S andC(x;w) = 1. Without loss of generality, assume |w|/|x| = 2m−1
+for some m∈ N.
+1. P selects a random bivariate polynomial Rd with variable degree 2 and commits to the input of
+C by sending comd← VPD1.Commit( ˙Vd,rV,rR, pp1) toV, where ˜Vd is the multilinear extension
+of array (x;w) and ˙Vd = ˜Vd +Rd
+2. V runs VPD1.CheckComm(comd, vp1). If it outputs reject,V aborts and outputs reject.
+3. P andV execute Step 1-5 of the zero knowledge GKR protocol in Construction 2, with the
+zkVPDs instantiated with VPD2 and VPD3. If Construction 2 rejects, V outputs reject and
+aborts. Otherwise, by the end of this step, V receives two claims of ˙Vd at u(d) and v(d).
+4. P runs (y1,π 1)← VPD1.Open( ˙V,r V,rR,u (d), pp1), (y2,π 2)← VPD1.Open( ˙V,r V,rR,v (d), pp1)
+and sends y1,π 1,y 2,π 2 toV.
+5. V runs Verify(comd,u (d),y 1,π 1, vp1) and Verify(comd,v (d),y 2,π 2, vp1) and output reject if either
+check fails. Otherwise, V checks ˙Vd(u(d)) =y1 and ˙Vd(v(d)) =y2, and rejects if either fails.
+6. V computes the multilinear extension of input x at a random point rx∈ Flog|x| and sends rx to
+P.
+7. P pads rx to r′x ∈ Flog|x| × 0log|w| with log|w| 0s and sends V (yx,πx) ←
+VPD1.Open( ˜Vd,rV,rR,r′x, pp1). V checks Verify(comd,r′x,yx,πx, vp1) and yx equals the eval-
+uation of the multilinear extension on x. V outputs reject if the checks fail. Otherwise, V
+outputs accept.
+commitment to any value in zero knowledge, and in particular it opens to those messages that are consistent
+with the GKR protocol in our scheme, which completes the construction of S.
+The complexity of our zero knowledge argument scheme follows from our new GKR protocol with linear
+prover time, and the complexity of the zkVPD protocol for the input layer analyzed in Section 4.3. The
+masking polynomials gi,Ri and their commitments and openings introduce no asymptotic overhead and are
+eﬃcient in practice.
+Removing interaction. Our construction can be made non-interactive in the random oracle model using
+Fiat—Shamir heuristic [27]. Though GKR protocol is not constant round, recent results [13, 21] show that
+applying Fiat-Shamir only incurs a polynomial soundness loss in the number of rounds in GKR. In our
+implementation, the GKR protocol is on a 254-bit prime ﬁeld matching the bilinear group used in the
+zkVPD. The non-interactive version of our system provides a security level of 100+ bits.
+5 Implementation and Evaluation
+Software. We fully implement Libra, our new zero knowledge proof system in C++. There are around
+3000 lines of code for the zkGKR protocol, 1000 lines for the zkVPD protocol and 700 lines for circuit
+generators. Our system provides an interface to take a generic layered arithmetic circuit and turn it into a
+zero knowledge proof. We implement a new class for large integers named u512, and use it together with
+27
+===== PDF PAGE 28 =====
+the GMP [2] library for large numbers and ﬁeld arithmetic. We use the ate-pairing [1] library on a 254-bit
+elliptic curve for the bilinear map used in zkVPD. We plan to open-source our system.
+Hardware. We run all of the experiments on Amazon EC2 c5.9xlarge instances with 70GB of RAM and
+Intel Xeon platinum 8124m CPU with 3GHz virtual core. Our current implementation is not parallelized
+and we only use a single CPU core in the experiments. We report the average running time of 10 executions.
+More gate types with no overhead. We ﬁrst present a concrete optimization we developed during the
+implementation to support various types of gates with no extra overhead. In our protocol in Section 3 and 4,
+we only consider addition and multiplication gates, as they are enough to represent all arithmetic circuits.
+However, in practice, the size of the circuit can be reduced signiﬁcantly if we introduce other types of gate.
+The GKR protocol still works with these new gates, but they incur an overhead on the prover time for a
+circuit of the same size. Therefore, in prior work such as [47,53], this is considered as a trade-oﬀ.
+Our protocol supports any gate with fan-in ≤ 2 and degree≤ 2 with no overhead on the prover. Recall
+that in the GKR protocol, the values in layer i is represented as a sumcheck of values in layer i + 1 and the
+wiring predicates, as shown in Equation 2. With a set of gate types T , we can write the polynomial in the
+sum as ∑
+j∈T
+˜gate(j)i (g,x,y )G(j)i ( ˜Vi+1(x), ˜Vi+1(x)),
+where G(j)i () is the computation of gate type j (e.g., for addition gates, G(j)i ( ˜Vi+1(x), ˜Vi+1(x)) = ˜Vi+1(x) +
+˜Vi+1(x)). As the gates have fan-in ≤ 2 and degree≤ 2,G(j)i has up to 2 variables and total degree at most 2
+for allj. Therefore, each G(j)i can be expressed explicitly as a0 +a1 ˜Vi+1(x)+a2 ˜Vi+1(y)+a3 ˜Vi+1(x) ˜Vi+1(y)+
+a4 ˜Vi+1(x)2+a5 ˜Vi+1(y)2, at most 6 nonzero monomials. The prover can then combine all the wiring predicates
+˜gate(j)i (g,x,y ) for the same monomial through a summation. With this approach, when generating the proof
+in Algorithm 4 and 5, the prover only allocates one array for each monomial, and initializes all 6 arrays with
+one scan through all the gates in Init PhaseOne and Init PhaseTwo. In this way, the prover time remains the
+same regardless of the number of gate types.
+In our experiments, useful types of gates include subtraction, relay, multiply by constant, x(1−x) for
+binary check, NOT,AND,OR,XOR, etc.
+5.1 Improvements on GKR protocols
+In this section, we compare the performace of our new GKR protocol with linear prover time with all variants
+of GKR in the literature on diﬀerent circuits.
+Methodology and benchmarks. For fair comparisons, we re-implement all of these variants in C++
+with the same libraries. The variants include: (1) O(C) for regular circuits, proposed in [44], where the two
+inputs of a gate can be described by two mapping functions with constant size in constant time. See [44] for
+the formal deﬁnition of regular circuits. (2) O(C +C′ logC′) for data-parallel circuits with a small copy of
+sizeC′, proposed in [48]. (3) O(C logC′) for circuits with non-connected diﬀerent copies of size C′, proposed
+in [53]. (4) O(C logC) for arbitrary circuits, proposed in [24].
+We compare our GKR protocol to these variants on the benchmarks below:
+• Matrix multiplication:P proves toV that it knows two matrices whose product equals a public matrix.
+The representation of this function with an arithmetic circuit is highly regular 7. We evaluate on diﬀerent
+dimensions from 4× 4 to 256× 256 and the elements in the matrices are 32-bit integers.
+• Image scaling: It computes a low-resolution image by scaling from a high-resolution image. We use
+the classic Lanczos re-sampling [45] method. It computes each pixel of the output as the convolution of
+the input with a sliding window and a kernel function deﬁned as: k(x) = sinc(x)/sinc(ax), if−a < x <
+a;k(x) = 0, otherwise, where a is the scaling parameter and sinc( x) = sin(x)/x. This function is data
+7We use the circuit representation of matrix multiplication with O(n3) gates for fair comparisons, not the special
+protocol proposed in [44].
+28
+===== PDF PAGE 29 =====
+Matrix
+multiplication
+Matrix size 4x4 16x16 64x64 256x256
+[44] 0.0003s 0.006s 0.390s 29.0s
+Ours 0.0004s 0.014s 0.788s 50.0s
+Image scaling
+#pixels 112x112 176x176 560x560 1072x1072
+[48] 0.445s 0.779s 7.54s 29.2s
+Ours 0.337s 1.25s 19.8s 79.2s
+Image scaling with
+diﬀerent parameters
+#pixels 112x112 176x176 560x560 1072x1072
+[52] 5.45s 21.8s 348s 1441s
+Ours 0.329s 1.22s 19.3s 77.2s
+Random circuit
+#gates per layer 28 212 216 220
+[24] 0.008s 0.179s 3.79s 83.1s
+Ours 0.002s 0.039s 0.635s 10.8s
+Table 2: Prover time of our linear GKR and previous GKR variants.
+parallel, where each sub-circuit computes the same function to generate one pixel of the output image.
+We evaluate by ﬁxing the window size as 16× 16 and increase the image size from 112x112 to 1072x1072.
+The pixels are 8-bit integers for greyscale images.
+• Image scaling of diﬀerent parameters: It is the same computation as above with diﬀerent scaling
+parameters in the kernel function for diﬀerent pixels. The circuit of this function consists of diﬀerent
+sub-copies. We evaluate it with the same image sizes as above.
+• Random circuit: It is randomly generated layered circuit. We randomly sample the type of each gate,
+input value and the wiring patterns. We ﬁx the depth as 3 and increase the number of gates per layer
+from 28 to 220.
+To be consistent with the next section, all the protocols are executed on a 254-bit prime ﬁeld. This does not
+aﬀect the comparison at all, as all the protocols are in the same ﬁeld. In Table 2, we report the prover time
+of the protocols. The proof size and the veriﬁcation time of all the variants are similar.
+Results. As shown in Table 2, the performance of our GKR protocol is comparable to those special protocols
+for structured circuits, and much better than the state-of-the-art on generic circuits. For example, for matrix
+multiplication, our protocol is slower by 1.3− 2.4×, because the protocol in [44] writes the wiring of matrix
+multiplication explicitly and does not need to compute ˜add and ˜mult. For image scaling, our protocol is
+slower by 2.5− 4×. This gap would become even smaller when the size of each sub-copy is larger. Here we
+use a small 16× 16 block, while the number of copies is 49–4489.
+For image scaling with diﬀerent parameters and generic random circuits, our protocol has a speedup of
+4− 8×, and the speedup will increase with the scale of the circuits, as indicated by the complexity.
+Besides the speedup on complicated circuits, a signiﬁcant advantage of our new GKR protocol is on the
+prover interface of the system. In prior work such as [48, 53], as the protocols are particularly eﬃcient for
+structured circuits, the circuits must be represented as small copies and the numbers of each copy. Even
+worse, the structure is explored per layer of the circuit, making the numbers of each copy potentially diﬀerent
+in diﬀerent layers. (E.g., 6 gates may be considered 3 copies with 2 gates and 2 copies with 3 gates in two
+diﬀerent layers for eﬃciency purposes.) This constraint makes the interface of these systems hard to use and
+generalize. Our result gives a uniﬁed solution for arbitrary circuits, and it is the main reason that our prover
+can take the description of any layered arithmetic circuit potentially generated by other tools like Verilog.
+5.2 Comparing to Other ZKP Schemes
+In this section, we show the performance of Libra as a whole and compare it with several state-of-the-art
+zero knowledge proof systems.
+29
+===== PDF PAGE 30 =====
+Methodology. We compare with the following systems: libSNARK [14], Ligero [6], libSTARK [9], Hyrax [50],
+Bulletproofs [20] and Aurora [12]. See Section 1 for more explanations of these systems and their asymptotic.
+• libSNARK: We use jsnark [4] to write the circuits (rank one constraint system (R1CS)), which compiles
+them to zero knowledge proofs using the libSNARK backend [5].
+• Ligero: As the system is not open-source, we use the same number reported in [6] on computing hashes.
+• libSTARK: After communications with the authors of [9], we obtain numbers for proving the same number
+of hashes in the 3rd benchmark below from the authors. The experiments are executed on a server with
+512GB of DDR3 RAM (1.6GHz) and 16 cores (2 threads per core) at speed of 3.2GHz.
+• Hyrax: We use the open-source implementation of the system at [3].
+• Bulletproofs: We use the system re-implemented by [50] at [3].
+• Aurora: As a recently accepted paper, the system is not available and we extrapolate its performance using
+the numbers reported in the paper [12] for circuits with 2 10− 220 R1CS constrains.
+Benchmarks. We evaluate the systems on three benchmarks: matrix multiplication, image scaling and
+Merkle Tree [41], which are used in [50]. Matrix multiplication and image scaling are the same as explained
+in Section 5.1. In the third benchmark, P proves toV that it knows the value of the leaves of a Merkle
+tree [41] that computes to a public root value [16]. We use SHA-256 for the hash function. We implement
+it with a ﬂat circuit where each sub-computation is one instance of the hash function. The consistency of
+the input and output of corresponding hashes are then checked by the circuit. There are 2 M− 1 SHA256
+invocations for a Merkle tree with M leaves. We increase the number of leaves from 16 to 256. We use the
+SHA-256 implemented by jsnark [4] in R1CS format to run libSNARK and estimate Aurora, and we use the
+SHA-256 arithmetic circuit implemented by Hyrax to run Hyrax, Bulletproofs and Libra. We only show the
+performance of Ligero and libSTARK on the third benchmark.
+We report the prover time, proof size and veriﬁcation time in Figure 1.
+Prover time. As shown in Figure 1(a)(b)(c), the prover in Libra is the fastest among all systems in all three
+benchmarks we tested. Ligero is one of the best existing ZKP systems on prover time as it is purely based
+on symmetric key operations. Comparing to Ligero, the prover time of Libra is 1.15× faster on a Merkle tree
+with 2 leaves and 2× faster with 256 leaves. Comparing to other systems, Libra improves the prover time by
+3.4− 8.9× vs. Hyrax, 7.1− 16.1× vs. Aurora, 10.1− 12.4× vs. libSTARK and 65− 166× vs. Bulletproof.
+Libra is also faster than libSNARK on general circuits by 5 − 10×, as shown in Figure 1(a) and 1(b).
+The performance of Libra is comparable to libSNARK on Merkle trees in Figure 1(c). This is because (1)
+most values in the circuit of SHA256 are binary, which is friendly to the prover of libSNARK as the time of
+exponentiation is proportional to the bit-length of the values; (2) The R1CS of SHA256 is highly optimized
+by jsnark [4] and real world products like Zcash [10]. There are only 26,000 constrains in one hash. In the
+arithmetic circuit used by Libra, there are 60,000 gates with 38,000 of them being multiplication gates. Even
+so, Libra is still as fast as libSNARK on a Merkle tree with 2 leaves and 2 × faster with 256 leaves. We plan
+to further optimize the implementation of SHA256 as an arithmetic circuit in the future.
+The gap between Libra and other systems will become bigger as the size of the circuit grows, as the prover
+time in these systems (other than Bulletproof) scales quasi-linearly with the circuit size. The evaluations
+justify that the prover time in Libra is both optimal asymptotically, and eﬃcient in practice.
+Veriﬁcation time. Figure 1(d)(e)(f) show the veriﬁcation time. Our veriﬁer is much slower than libSNARK
+and libSTARK, which runs in 1.8ms and 28-44ms respectively in all the benchmarks.
+Other than these two systems, the veriﬁcation time of Libra is faster, as it grows sub-linearly with the
+circuit size. In particular, our veriﬁcation time ranges from 0 .08− 1.15s in the benchmarks we consider.
+In Figure 1(f), the veriﬁcation time of Libra is 8× slower than Aurora when M = 2, and 15× faster when
+M = 256. Libra is 2.5× slower than Ligero with M = 2 and 4× faster with M = 256. Comparing to Hyrax
+and Bulletproof, our veriﬁcation is 1.2− 9× and 27− 900× faster respectively. Again, the gap increases with
+the scale of the circuits as our veriﬁcation is succinct.
+30
+===== PDF PAGE 31 =====
+24 25 26 27 28
+#matrix column
+10−2
+10−1
+100
+101
+102
+103
+104
+prover time(s)
+(a)P time: MatMul.
+104 105 106
+#pixel
+100
+101
+102
+103
+104
+prover time(s) (b)P time: 16x Lanczos
+21 22 23 24 25 26 27 28
+#leave
+100
+101
+102
+103
+104
+prove time(s)
+ (c)P time: Merkle tree
+24 25 26 27 28
+#matrix column
+10−3
+10−2
+10−1
+100
+101
+102
+103
+veriﬁcation time(s)
+(d)V time: MatMul.
+104 105 106
+#pixel
+10−3
+10−2
+10−1
+100
+101
+102
+103
+veriﬁcation time(s) (e)V time: 16x Lanczos
+21 22 23 24 25 26 27 28
+#leave
+10−3
+10−2
+10−1
+100
+101
+102
+103
+veriﬁcation time(s)
+ (f)V time: Merkle tree
+24 25 26 27 28
+#matrix column
+10−1
+100
+101
+102
+proof size(kB)
+(g) Proof size: MatMul.
+104 105 106
+#pixel
+10−1
+100
+101
+102
+proof size(kB) (h) Proof size: 16x Lanczos
+21 22 23 24 25 26 27 28
+#leave
+10−1
+100
+101
+102
+103
+proof size(kB)
+ (i) Proof size: Merkle tree
+Ours
+Hyrax
+Bulletproofs
+Ligero
+libSNARK
+libSTARK
+Aurora
+Figure 1: Comparisons of prover time, proof size and veriﬁcation time between Libra and existing
+zero knowledge proof systems.
+Proof size. We report the proof size in Figure 1(g)(h)(i). Our proof size is much bigger than libSNARK,
+which is 128 bytes for all circuits, and Bulletproof, which ranges in 2− 5.5KBs. The proof size in Libra is in
+the range of 30-60KBs, except for the matrix multiplications where it reduces to 5 − 9KBs. This is better
+than Aurora, Hyrax and libSTARK, which also have poly-logarithmic proof size to the circuit. Finally, the
+proof size in Ligero is O(
+√
+C) and grows to several megabytes in practice.
+Setup time. Among all the systems, only Libra and libSNARK require trusted setup. Thanks to the
+optimization described in the beginning of this section, it only takes 202s to generate the public parameters
+in our largest instance with n = 224. Libra only needs to perform this setup once and it can be used for all
+benchmarks and all circuits with no more inputs. libSNARK requires a per-circuit setup. For example, it
+takes 1027s for the Merkle tree with 256 leaves, and takes 210s for 64 × 64 matrix multiplications.
+31
+===== PDF PAGE 32 =====
+5.3 Discussions
+In this section, we discuss some potential improvements for Libra.
+Improving veriﬁcation time. As shown in the experiments above, the veriﬁcation time in Libra is already
+fast in practice compared to other systems, yet it can be further improved by 1-2 orders of magnitude.
+Within the veriﬁcation of Libra, most of the time (more than 95% in the evaluations above) is spent on
+our zkVPD protocols using bilinear pairings. In our current protocol, we use the pairing-based zkVPD both
+for the input layer and for the masking polynomials gi,Ri in each intermediate layer. Although the masking
+polynomials are small, the veriﬁcation of our zkVPD still requires O(si) pairings per layer for gi, which is
+asymptotically the same as the input layer. For example, for the SHA256 circuit with 12 layers, the zkVPD
+veriﬁcation of each gi is around 46ms, 116 of the total veriﬁcation time.
+However, there are many zkVPD candidates for these masking polynomials. Recall that the size of gi is
+onlyO(si), logarithmic on the size of the circuit. We could use any zkVPD with up to linear commitment size,
+prover time, proof size and veriﬁcation time while still maintaining the asymptotic complexity of Libra. The
+only property we need is zero knowledge. Therefore, we can replace our pairing-based zkVPD with any of the
+zero knowledge proof systems we compare with as a black-box. Ligero and Aurora are of particular interest as
+their veriﬁcation requires no cryptographic operations. If we use the black-box of these two systems for the
+zkVPD ofgi,Ri, the prover time and proof size would be aﬀected minimally, and the veriﬁcation time would
+be improved by almost d times, as only the zkVPD of the input layer requires pairings after the change.
+This is a 1-2 orders-of-magnitude improvement depending on the depth of the circuit. In addition, it also
+removes the trusted setup in the zkVPD for the masking polynomials. We plan to integrate this approach
+into our system when the implementations of Ligero and Aurora become available.
+Removing trusted setup. After the change above, the only place that requires trusted setup is the
+zkVPD for the input layer. However, replacing our pairing-based zkVPD with other systems without trusted
+setup may aﬀect the succinctness of our veriﬁcation time on structured circuits. For example, using Ligero,
+Bulletproof and Aurora as a black-box would increase the veriﬁcation time to O(n), and using Hyrax would
+increase the proof size and veriﬁcation time to O(√n). Using libSTARK may keep the same complexity, as
+polynomial evaluation is a special function with short description, but the prover time and memory usage
+is high in STARK as shown in the experiments. Designing an eﬃcient zkVPD protocol with logarithmic
+proof size and veriﬁcation time without trusted setup is left as an interesting future work and we believe
+this paper serves as an important step towards the goal of eﬃcient succinct zero knowledge proof without
+trusted setup.
+Acknowledgments
+This material is in part based upon work supported by DARPA under Grant No. N66001-15-C-4066 and
+Center for Long-Term Cybersecurity (CLTC). Any opinions, ﬁndings, and conclusions or recommendations
+expressed in this material are those of the author(s) and do not necessarily reﬂect the views of DARPA or
+CLTC. Charalampos Papamanthou’s work was supported by NSF grants #1652259 and #1514261 and by
+a NIST grant.
+References
+[1] Ate-pairing. https://github.com/herumi/ate-pairing
+[2] The GNU multiple precision arithmetic library. https://gmplib.org/
+[3] Hyrax reference implementation. https://github.com/hyraxZK/hyraxZK
+[4] jsnark. https://github.com/akosba/jsnark
+[5] libsnark. https://github.com/scipr-lab/libsnark
+32
+===== PDF PAGE 33 =====
+[6] Ames, S., Hazay, C., Ishai, Y., Venkitasubramaniam, M.: Ligero: Lightweight sublinear arguments
+without a trusted setup. In: Proceedings of the ACM SIGSAC Conference on Computer and Commu-
+nications Security (2017)
+[7] Baum, C., Bootle, J., Cerulli, A., Del Pino, R., Groth, J., Lyubashevsky, V.: Sub-linear lattice-based
+zero-knowledge arguments for arithmetic circuits. In: Annual International Cryptology Conference. pp.
+669–699. Springer (2018)
+[8] Bayer, S., Groth, J.: Eﬃcient zero-knowledge argument for correctness of a shuﬄe. In: Annual Interna-
+tional Conference on the Theory and Applications of Cryptographic Techniques. pp. 263–280. Springer
+(2012)
+[9] Ben-Sasson, E., Bentov, I., Horesh, Y., Riabzev, M.: Scalable, transparent, and post-quantum secure
+computational integrity. Cryptology ePrint, 2018
+[10] Ben-Sasson, E., Chiesa, A., Garman, C., Green, M., Miers, I., Tromer, E., Virza, M.: Zerocash: Decen-
+tralized anonymous payments from bitcoin. In: Proceedings of the Symposium on Security and Privacy
+SP, 2014 (2014)
+[11] Ben-Sasson, E., Chiesa, A., Genkin, D., Tromer, E., Virza, M.: SNARKs for C: Verifying program
+executions succinctly and in zero knowledge. In: CRYPTO 2013
+[12] Ben-Sasson, E., Chiesa, A., Riabzev, M., Spooner, N., Virza, M., Ward, N.P.: Aurora: Transparent
+Succinct Arguments for R1CS. Cryptology ePrint, 2018
+[13] Ben-Sasson, E., Chiesa, A., Spooner, N.: Interactive oracle proofs. In: Theory of Cryptography Con-
+ference. pp. 31–60. Springer (2016)
+[14] Ben-Sasson, E., Chiesa, A., Tromer, E., Virza, M.: Succinct Non-Interactive Zero Knowledge for a von
+Neumann Architecture. In: Proceedings of the USENIX Security Symposium, 2014
+[15] Ben-Sasson, E., Chiesa, A., Tromer, E., Virza, M.: Scalable zero knowledge via cycles of elliptic curves.
+In: CRYPTO 2014, pp. 276–294 (2014)
+[16] Blum, M., Evans, W., Gemmell, P., Kannan, S., Naor, M.: Checking the correctness of memories.
+Algorithmica 12(2-3), 225–244 (1994)
+[17] Bootle, J., Cerulli, A., Chaidos, P., Groth, J., Petit, C.: Eﬃcient zero-knowledge arguments for arith-
+metic circuits in the discrete log setting. In: International Conference on the Theory and Applications
+of Cryptographic Techniques (2016)
+[18] Bootle, J., Cerulli, A., Ghadaﬁ, E., Groth, J., Hajiabadi, M., Jakobsen, S.K.: Linear-time zero-
+knowledge proofs for arithmetic circuit satisﬁability. In: International Conference on the Theory and
+Application of Cryptology and Information Security. pp. 336–365. Springer (2017)
+[19] Braun, B., Feldman, A.J., Ren, Z., Setty, S.T.V., Blumberg, A.J., Walﬁsh, M.: Verifying computations
+with state. In: ACM SIGOPS 24th Symposium on Operating Systems Principles, SOSP, 2013
+[20] B¨ unz, B., Bootle, J., Boneh, D., Poelstra, A., Wuille, P., Maxwell, G.: Bulletproofs: Short proofs for
+conﬁdential transactions and more. In: Proceedings of the Symposium on Security and Privacy (SP),
+2018. vol. 00, pp. 319–338
+[21] Canetti, R., Chen, Y., Holmgren, J., Lombardi, A., Rothblum, G.N., Rothblum, R.D.: Fiat-shamir
+from simpler assumptions. Tech. rep., IACR Cryptology ePrint Archive, 2018: 1004 (2018)
+[22] Chase, M., Derler, D., Goldfeder, S., Orlandi, C., Ramacher, S., Rechberger, C., Slamanig, D., Za-
+verucha, G.: Post-quantum zero-knowledge and signatures from symmetric-key primitives. In: Proceed-
+ings of the 2017 ACM SIGSAC Conference on Computer and Communications Security. pp. 1825–1842.
+ACM (2017)
+33
+===== PDF PAGE 34 =====
+[23] Chiesa, A., Forbes, M.A., Spooner, N.: A Zero Knowledge Sumcheck and its Applications. CoRR
+abs/1704.02086 (2017), http://arxiv.org/abs/1704.02086
+[24] Cormode, G., Mitzenmacher, M., Thaler, J.: Practical Veriﬁed Computation with Streaming Interactive
+Proofs. In: Proceedings of the 3rd Innovations in Theoretical Computer Science Conference. ITCS ’12
+[25] Costello, C., Fournet, C., Howell, J., Kohlweiss, M., Kreuter, B., Naehrig, M., Parno, B., Zahur, S.:
+Geppetto: Versatile veriﬁable computation. In: S&P 2015
+[26] Cramer, R., Damg˚ ard, I.: Zero-knowledge proofs for ﬁnite ﬁeld arithmetic, or: Can zero-knowledge be
+for free? In: Annual International Cryptology Conference, 1998
+[27] Fiat, A., Shamir, A.: How to prove yourself: Practical solutions to identiﬁcation and signature problems.
+In: Conference on the Theory and Application of Cryptographic Techniques. pp. 186–194. Springer
+(1986)
+[28] Fiore, D., Fournet, C., Ghosh, E., Kohlweiss, M., Ohrimenko, O., Parno, B.: Hash ﬁrst, argue later:
+Adaptive veriﬁable computations on outsourced data. In: Proceedings of the ACM SIGSAC Conference
+on Computer and Communications Security (2016)
+[29] Gennaro, R., Gentry, C., Parno, B., Raykova, M.: Quadratic span programs and succinct NIZKs without
+PCPs. In: EUROCRYPT 2013. pp. 626–645 (2013)
+[30] Giacomelli, I., Madsen, J., Orlandi, C.: Zkboo: Faster zero-knowledge for boolean circuits. In: USENIX
+Security Symposium. pp. 1069–1083 (2016)
+[31] Goldwasser, S., Kalai, Y.T., Rothblum, G.N.: Delegating Computation: Interactive Proofs for Muggles.
+J. ACM 62(4), 27:1–27:64 (Sep 2015)
+[32] Goldwasser, S., Micali, S., Rackoﬀ, C.: The knowledge complexity of interactive proof systems. SIAM
+Journal on computing 18(1), 186–208 (1989)
+[33] Groth, J.: Linear algebra with sub-linear zero-knowledge arguments. In: Advances in Cryptology-
+CRYPTO 2009, pp. 192–208. Springer (2009)
+[34] Groth, J.: Short pairing-based non-interactive zero-knowledge arguments. In: International Conference
+on the Theory and Application of Cryptology and Information Security. pp. 321–340. Springer (2010)
+[35] Ishai, Y., Kushilevitz, E., Ostrovsky, R.: Eﬃcient arguments without short pcps. In: 22nd Annual IEEE
+Conference on Computational Complexity (CCC 2007)
+[36] Ishai, Y., Kushilevitz, E., Ostrovsky, R., Sahai, A.: Zero-knowledge from secure multiparty computation.
+In: Proceedings of the annual ACM symposium on Theory of computing. pp. 21–30. ACM (2007)
+[37] Kilian, J.: A note on eﬃcient zero-knowledge proofs and arguments (extended abstract). In: Proceedings
+of the ACM Symposium on Theory of Computing (1992)
+[38] Kosba, A., Miller, A., Shi, E., Wen, Z., Papamanthou, C.: Hawk: The blockchain model of cryptography
+and privacy-preserving smart contracts. In: Proceedings of Symposium on security and privacy (SP),
+2016
+[39] Lipmaa, H.: Progression-free sets and sublinear pairing-based non-interactive zero-knowledge argu-
+ments. In: Theory of Cryptography Conference (2012)
+[40] Lund, C., Fortnow, L., Karloﬀ, H., Nisan, N.: Algebraic Methods for Interactive Proof Systems. J.
+ACM 39(4), 859–868 (Oct 1992)
+[41] Merkle, R.C.: A digital signature based on a conventional encryption function. In: Conference on the
+theory and application of cryptographic techniques (1987)
+[42] Micali, S.: Computationally sound proofs. SIAM J. Comput. (2000)
+34
+===== PDF PAGE 35 =====
+[43] Parno, B., Howell, J., Gentry, C., Raykova, M.: Pinocchio: Nearly practical veriﬁable computation. In:
+S&P 2013. pp. 238–252 (2013)
+[44] Thaler, J.: Time-Optimal Interactive Proofs for Circuit Evaluation. In: Canetti, R., Garay, J.A. (eds.)
+Advances in Cryptology – CRYPTO 2013 (2013)
+[45] Turkowski, K.: Filters for common resampling tasks. In: Graphics gems. pp. 147–165. Academic Press
+Professional, Inc. (1990)
+[46] Vu, V., Setty, S., Blumberg, A.J., Walﬁsh, M.: A Hybrid Architecture for Interactive Veriﬁable Com-
+putation. In: Proceedings of the 2013 IEEE Symposium on Security and Privacy. SP ’13 (2013)
+[47] Wahby, R.S., Howald, M., Garg, S., Shelat, A., Walﬁsh, M.: Veriﬁable asics. In: Security and Privacy
+(SP), 2016 IEEE Symposium on. pp. 759–778. IEEE (2016)
+[48] Wahby, R.S., Ji, Y., Blumberg, A.J., Shelat, A., Thaler, J., Walﬁsh, M., Wies, T.: Full accounting
+for veriﬁable outsourcing. In: Proceedings of the 2017 ACM SIGSAC Conference on Computer and
+Communications Security. ACM (2017)
+[49] Wahby, R.S., Setty, S.T., Ren, Z., Blumberg, A.J., Walﬁsh, M.: Eﬃcient ram and control ﬂow in
+veriﬁable outsourced computation. In: NDSS (2015)
+[50] Wahby, R.S., Tzialla, I., Shelat, A., Thaler, J., Walﬁsh, M.: Doubly-eﬃcient zkSNARKs without trusted
+setup. In: 2018 IEEE Symposium on Security and Privacy (SP). pp. 926–943. IEEE (2018)
+[51] Zhang, Y., Genkin, D., Katz, J., Papadopoulos, D., Papamanthou, C.: A Zero-Knowledge version of
+vSQL. Cryptology ePrint, 2017
+[52] Zhang, Y., Genkin, D., Katz, J., Papadopoulos, D., Papamanthou, C.: vSQL: Verifying arbitrary SQL
+queries over dynamic outsourced databases. In: Security and Privacy (SP), 2017 IEEE Symposium on.
+pp. 863–880. IEEE (2017)
+[53] Zhang, Y., Genkin, D., Katz, J., Papadopoulos, D., Papamanthou, C.: vRAM: Faster veriﬁable RAM
+with program-independent preprocessing. In: Proceeding of IEEE Symposium on Security and Privacy
+(S&P) (2018)
+35
+===== PDF PAGE 36 =====
+A Condensing to One Point in Linear Time
+In this section, we present an algorithm to reduce two claims about ˜Vi+1 to one in linear time. Recall that
+as described in Section 2.3, in the i-th layer, after the sumcheck, the veriﬁer receives two claims ˜V (u), ˜V (v).
+(Again we omit the superscript and subscript of i for the ease of interpretation.) She then deﬁnes a line
+γ(x) : F→ Fs such that γ(0) = u,γ (1) = v and the prover needs to provide ˜V (γ(x)), a degree s univariate
+polynomial, to V. If the prover computes it naively, which was done in all prior papers, it incurs O(s2s)
+time, as it is equivalent to evaluating ˜V () at s + 1 points.
+Algorithm 7 Compute ˜V (γ(x)) =∑y∈{0,1}sI(γ(x),y ) ˜V (y)
+1: Initialize a binary tree T with s levels. We use Tj[b] to denote the b-th node at level j.
+2: for b∈{ 0, 1}s do
+3: Ts[b] = ˜V (b).
+4: Multiply Ts[b] with bs(csx +ds) + (1−bs)(1−csx−ds).
+5: for j =s− 1,..., 1 do
+6: for b∈{ 0, 1}j do
+7: Tj[b] =Tj+1[b, 0] +Tj+1[b, 1].
+8: Tj[b] =Tj[b]· (bj(cjx +dj) + (1−bj)(1−cjx−dj)).
+9: Output T1[0].
+In our new algorithm, we write ˜V (γ(x)) = ∑y∈{0,1}sI(γ(x),y ) ˜V (y), where I(a,b ) is an identity poly-
+nomial I(a,b ) = 0 iﬀ a = b. This holds by inspection of both sides on the Boolean hypercube. We then
+evaluate the right side in linear time with a binary tree structure. The key observation is that the identity
+polynomial can be written as I(a,b ) =∏sj=1(ajbj +(1−aj)(1−bj)), and we can process one variable (aj,bj)
+at a time and multiply them together to get the ﬁnal result.
+We construct a binary tree with 2s leaves and initialize each leafb∈{ 0, 1}s with ˜V (b). As γ(x) is a linear
+polynomial, we write it as γ(x) = [c1,...,c s]Tx + [d1,...,d s]T . At the leaf level, we only consider the last
+variable ofI(γ(x),y ). For each leafb∈{ 0, 1}s, we multiply the value withbs(csx+ds)+(1−bs)(1−csx−ds),
+the result of which is a linear polynomial. For a node b∈{ 0, 1}j in the intermediate level j, we add the
+polynomials from its two children, and multiply it with bj(cjx +dj) + (1−bj)(1−cjx−dj), the part in I
+that corresponds to the j-th variable. In this way, each node in the j-th level stores a degree j polynomial.
+Eventually, the root is the polynomial on the right side of degree s, which equals to ˜V (γ(x)). The algorithm
+is given in Algorithm 7.
+To see the complexity of Algorithm 7, both the storage and the polynomial multiplication at level j is
+O(s−j + 1) in each node. So the total time is O(∑sj=1 2j(s−j + 1)) =O(2s), which is linear to the number
+of gates in the layer.
+An alternative way to interpret this result is to add an additional layer for each layer of the circuit in
+GKR relaying the values. That is,
+˜Vi(g) = ∑
+x∈{0,1}si
+I(g,x ) ˜Vi+1(x),
+where ˜Vi = ˜Vi+1. Then when using the random linear combination approach, the sumcheck is executed on
+α ˜Vi(u) +β ˜Vi(v) = ∑
+x∈{0,1}si
+(αI(u,x ) +βI(v,x )) ˜Vi+1(x).
+36
+===== PDF PAGE 37 =====
+At the end of the sumcheck, the veriﬁer receives a single claim on ˜Vi+1 = ˜Vi. The sumcheck can obviously
+run in linear time, and the relay layers do not change the result of the circuit. This approach is actually the
+same as the condensing to one point in linear time above conceptually.
+37

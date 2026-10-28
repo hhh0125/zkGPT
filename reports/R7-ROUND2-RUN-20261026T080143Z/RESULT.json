@@ -1,0 +1,156 @@
+{
+  "local_git_commit": "3febc273e77fa9e29e69fdb8f3c7f96e9d8cbb9c",
+  "payload_sha256": "a22f19901cca0835cb1da71a6ffd938b3e789fc84c8140d47e3184c9ca855943",
+  "remote_code_version": "a22f19901cca0835cb1da71a6ffd938b3e789fc84c8140d47e3184c9ca855943",
+  "status": "LOCAL_CRYPTO_TESTED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "label": "engineering-safety-tests",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/engineering-safety-tests.log",
+      "exit_code": 0,
+      "seconds": 3.422587108798325,
+      "passed": true
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/configure.log",
+      "exit_code": 0,
+      "seconds": 1.017307153902948,
+      "passed": true
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_crypto_tests",
+        "r7_local_prover",
+        "r7_local_verifier",
+        "r7_framework_tests",
+        "r7_oneblock_prove",
+        "r7_oneblock_verify",
+        "r6_builder_tests",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_model_plan",
+        "r5b_gkr_tests",
+        "r6_resources_tests",
+        "-j4"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/build.log",
+      "exit_code": 0,
+      "seconds": 21.91964118508622,
+      "passed": true
+    },
+    {
+      "label": "crypto-arithmetic",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_crypto_tests"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/crypto-arithmetic.log",
+      "exit_code": 0,
+      "seconds": 2.221847528591752,
+      "passed": true
+    },
+    {
+      "label": "interactive-crypto",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_interactive_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ROUND2-RUN-20261026T080143Z/sessions",
+        "--real"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/interactive-crypto.log",
+      "exit_code": 0,
+      "seconds": 61.72019537817687,
+      "passed": true
+    },
+    {
+      "label": "round1-and-r6-regressions",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "-V",
+        "--output-on-failure",
+        "-R",
+        "^(r7_framework|r6_builder_oneblock|r6_entry_guards|r5b_FC_GKR_coupling|r6_system_resources)$"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND2-RUN-20261026T080143Z/round1-and-r6-regressions.log",
+      "exit_code": 0,
+      "seconds": 7.837311235256493,
+      "passed": true
+    }
+  ],
+  "r6_preservation": true,
+  "oneblock_status": "INCOMPLETE",
+  "joint_extraction": "PARTIAL",
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_framework_tests": "a75b1db4cd05b72532bb09a06698349c86350a06bf29e430783454ec8a5d9346",
+    "r7_crypto_tests": "ff8a3fd996ce6273ac8da711436ff2a88f0f981904b496a5cd48f14938c2ca41",
+    "r7_local_prover": "2afbf370941195326348fa08d4a93db12362ec09954b1702175610376c5af0e4",
+    "r7_local_verifier": "e03e04639a716bcb8d6866055b4685459555f773394a9bce69bb037964889f1a",
+    "r7_oneblock_prove": "9912ae12c6e20a3fe0534e250c31a0f7f0b62318fd96305b31453352f3cc1d10",
+    "r7_oneblock_verify": "7db437b7de184adc0ce95b3449a8fa21cbf3c4d3abad5c70c72457f8fd110353"
+  },
+  "cmake_cache_sha256": "c2c2aa212a4305ffa84461177cb82dca607756ecb013e68e3bfcdf2cf8782d7f",
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "deps/cnpy/include/cnpy.h": "68a34a847cfed2dfcc1dc8bcd495cdb51477061536d670161a62c5103547ae93",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097"
+  },
+  "mcl_submodule_commit": "dd66a53a4dce2ab27f9d028846bc1b1cdbf050f5"
+}

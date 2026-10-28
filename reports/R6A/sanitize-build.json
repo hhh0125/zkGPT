@@ -1,0 +1,40 @@
+{
+  "id": "sanitize-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/r5b-sanitize",
+    "--target",
+    "r6_witness_tests",
+    "r6_builder_tests",
+    "r6_trust_tests",
+    "r6_resources_tests",
+    "r5b_tests",
+    "r5b_gkr_tests",
+    "r5b_model_prove",
+    "r5b_mapping_tests",
+    "r5b_trust_tests",
+    "r5a_host_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:47:23.585080+00:00",
+  "seconds": 98.20849850680679,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 480,
+  "address_space_limit_gib": 12,
+  "RSS_group_limit_gib": 12,
+  "observed_process_group_peak_bytes": 1893621760,
+  "stop_reason": null,
+  "binary_sha256": null,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/sanitize-build.log",
+  "time": "logs/R6A/sanitize-build.time"
+}

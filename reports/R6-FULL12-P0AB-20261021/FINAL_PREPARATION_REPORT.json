@@ -1,0 +1,480 @@
+{
+  "status": "AWAITING_EXACT_NEW_SCOPE_APPROVAL",
+  "full12": {
+    "prover_started": false,
+    "prover_success": false,
+    "independent_verifier_ACCEPT": false,
+    "prover_wall_seconds": null,
+    "prover_user_CPU_seconds": null,
+    "prover_system_CPU_seconds": null,
+    "prover_peak_RSS": null,
+    "verifier_wall_seconds": null,
+    "verifier_user_CPU_seconds": null,
+    "verifier_system_CPU_seconds": null,
+    "verifier_peak_RSS": null,
+    "proof_bytes": null,
+    "proof_sha256": null,
+    "statement_bytes": null,
+    "statement_sha256": null,
+    "protocol_stage_timings": null
+  },
+  "compatibility_smoke_only": {
+    "blocks": 1,
+    "prover": {
+      "user_CPU_seconds": 331.52,
+      "system_CPU_seconds": 11.92,
+      "peak_RSS_KiB": 4592296.0,
+      "wall_seconds": 317.7,
+      "limiter_wall_seconds": 317.9235013821162,
+      "group_RSS_peak_bytes": 4703637504,
+      "exit_code": 0,
+      "stop_reason": null
+    },
+    "verifier": {
+      "user_CPU_seconds": 60.86,
+      "system_CPU_seconds": 1.24,
+      "peak_RSS_KiB": 1101848.0,
+      "wall_seconds": 54.03,
+      "limiter_wall_seconds": 54.11767052579671,
+      "group_RSS_peak_bytes": 1129181184,
+      "exit_code": 0,
+      "stop_reason": null
+    },
+    "independent_ACCEPT": true
+  },
+  "registered_tests": "70/70 PASS (schema excluded to preserve history), identical relocated full12 schema:26 negative checks PASS",
+  "gate_tests": {
+    "success": true,
+    "tests_run": 26,
+    "seconds": 14.416943668853492,
+    "utc": "2026-10-21T14:42:47.244547+00:00",
+    "cases": [
+      {
+        "test": "test_approval_tools.ApprovalTools.test_generation_never_creates_execution_approval_and_same_path_refuses",
+        "status": "PASS"
+      },
+      {
+        "test": "test_approval_tools.ApprovalTools.test_unapproved_or_wrong_scope_pin_does_not_generate_any_permit",
+        "status": "PASS"
+      },
+      {
+        "test": "test_artifacts.Artifacts.test_changed_X_padding_context_W_shape_and_corruption_rejected",
+        "status": "PASS"
+      },
+      {
+        "test": "test_artifacts.Artifacts.test_real_trusted_decoder_and_all_full12_schema_inputs",
+        "status": "PASS"
+      },
+      {
+        "test": "test_artifacts.Artifacts.test_trusted_proof_decoder_rejects_malformed_proof_without_crypto_verification",
+        "status": "PASS"
+      },
+      {
+        "test": "test_contracts.Contracts.test_every_permit_budget_and_identity_is_checked",
+        "status": "PASS"
+      },
+      {
+        "test": "test_contracts.Contracts.test_unapproved_manual_record_or_different_binding_is_rejected",
+        "status": "PASS"
+      },
+      {
+        "test": "test_r6b_gate.InputAndEnvironment.test_ambient_input_library_python_and_secret_overrides_never_reach_child",
+        "status": "PASS"
+      },
+      {
+        "test": "test_r6b_gate.InputAndEnvironment.test_complete_frozen_X_and_any_active_change_rejected",
+        "status": "PASS"
+      },
+      {
+        "test": "test_r6b_gate.InputAndEnvironment.test_padding_length_type_and_signed64_domain_rejected",
+        "status": "PASS"
+      },
+      {
+        "test": "test_resources.Resources.test_each_resource_deficit_refuses_before_dispatch",
+        "status": "PASS"
+      },
+      {
+        "test": "test_resources.Resources.test_process_names_containing_spaces_are_parsed_without_losing_resource_fields",
+        "status": "PASS"
+      },
+      {
+        "test": "test_resources.Resources.test_visible_parallel_proof_cannot_be_waived_by_generic_competing_PID_acknowledgement",
+        "status": "PASS"
+      },
+      {
+        "test": "test_review_regressions.ReviewRegressions.test_pinned_draft_cannot_be_replaced_by_manual_record_between_hash_and_parse",
+        "status": "PASS"
+      },
+      {
+        "test": "test_review_regressions.ReviewRegressions.test_prover_uses192GiB_budget_and_does_not_launch_at160GiB_available",
+        "status": "PASS"
+      },
+      {
+        "test": "test_review_regressions.ReviewRegressions.test_signal_during_cleanup_cannot_leave_TERM_ignoring_descendant",
+        "status": "PASS"
+      },
+      {
+        "test": "test_state_machine.StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child",
+        "status": "PASS"
+      },
+      {
+        "test": "test_state_machine.StateMachine.test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier",
+        "status": "PASS"
+      },
+      {
+        "test": "test_state_machine.StateMachine.test_same_ID_and_same_approval_never_dispatch_again",
+        "status": "PASS"
+      },
+      {
+        "test": "test_state_machine.StateMachine.test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified",
+        "status": "PASS"
+      },
+      {
+        "test": "test_supervisor.Supervisor.test_clean_environment_real_child_and_existing_output_rejected",
+        "status": "PASS"
+      },
+      {
+        "test": "test_supervisor.Supervisor.test_exception_in_existing_limiter_still_kills_complete_group",
+        "status": "PASS"
+      },
+      {
+        "test": "test_supervisor.Supervisor.test_timeout_terminates_descendant_group",
+        "status": "PASS"
+      },
+      {
+        "test": "test_this_run_competition.ThisRunCompetition.test_other_user_proof_name_is_warn_but_own_proof_is_refused",
+        "status": "PASS"
+      },
+      {
+        "test": "test_this_run_competition.ThisRunCompetition.test_other_user_warn_is_scoped_and_default_remains_strict",
+        "status": "PASS"
+      },
+      {
+        "test": "test_this_run_competition.ThisRunCompetition.test_warn_never_waives_memory_disk_pids_cpu_or_address_space",
+        "status": "PASS"
+      }
+    ],
+    "subcases": [
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='X')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='padding')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='context')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='W')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='shape')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='truncated')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_changed_X_padding_context_W_shape_and_corruption_rejected (test_artifacts.Artifacts) (name='trailing')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='mode')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='blocks')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='profile-sha256')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='circuit')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='anchor-sha256')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='manifest-sha256')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='binary-sha256')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='memory-gib')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='wall-seconds')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='disk-reserve-gib')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_every_permit_budget_and_identity_is_checked (test_contracts.Contracts) (field='cpu-limit')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='kind')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='origin')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='scope_evidence')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='permit_evidence')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='allowed_attempts')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='order')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_unapproved_manual_record_or_different_binding_is_rejected (test_contracts.Contracts) (key='binding')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) (size=32767)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) (size=32769)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) (size=32768)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) (size=32768)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_padding_length_type_and_signed64_domain_rejected (test_r6b_gate.InputAndEnvironment) (size=32768)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='effective_memory_bytes')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='disk_free_bytes')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='PID_room')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='affinity')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='RLIMIT_AS')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_each_resource_deficit_refuses_before_dispatch (test_resources.Resources) (key='visible_large_jobs')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079de170>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079de560>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079df010>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079def80>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079df5b0>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.<lambda> at 0x7f64079df640>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (test_state_machine.StateMachine) (mutation=<function StateMachine.test_budget_binary_permit_approval_and_existing_paths_refuse_before_child.<locals>.log_collision at 0x7f6408257f40>)",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='nonzero')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='timeout')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='resource')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='missing')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='empty')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='corrupt')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (test_state_machine.StateMachine) (case='corrupt-proof')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_warn_never_waives_memory_disk_pids_cpu_or_address_space (test_this_run_competition.ThisRunCompetition) (key='effective_memory_bytes')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_warn_never_waives_memory_disk_pids_cpu_or_address_space (test_this_run_competition.ThisRunCompetition) (key='disk_free_bytes')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_warn_never_waives_memory_disk_pids_cpu_or_address_space (test_this_run_competition.ThisRunCompetition) (key='PID_room')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_warn_never_waives_memory_disk_pids_cpu_or_address_space (test_this_run_competition.ThisRunCompetition) (key='affinity')",
+        "status": "PASS"
+      },
+      {
+        "test": "test_warn_never_waives_memory_disk_pids_cpu_or_address_space (test_this_run_competition.ThisRunCompetition) (key='RLIMIT_AS')",
+        "status": "PASS"
+      }
+    ],
+    "failures": 0,
+    "errors": 0,
+    "full12_witness_executed": false,
+    "full12_proof_generated": false,
+    "full12_independent_verifier_executed": false,
+    "valid_full12_permits_generated": false,
+    "simulation_success_is_not_crypto_acceptance": true
+  },
+  "identity": {
+    "A": "UNAPPROVED_CURRENT_DRAFT_READY",
+    "B": "NOT_GENERATED_PENDING_A_EXACT_SIGNATURE",
+    "C": "NOT_APPROVED",
+    "D": "NOT_STARTED",
+    "binaries": {
+      "prover": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_prove",
+        "sha256": "ee36bccdffff57f7d1cdd8e7d9cb63bc05a33a7a35dad5e572d100b31b675974"
+      },
+      "verifier": {
+        "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_verify",
+        "sha256": "bb0a8d978b1950ecd13f0a105d5dcf9341528c45c2d42ce2a683995aafcdf78c"
+      }
+    },
+    "full12_prover_success": false,
+    "full12_verifier_accept": false,
+    "gate_sha256": "e4e6096988dd33a9225b114f4581bd56288b8e51865985b790bfc0483abba862",
+    "preview_sha256": "7fe739c5937c97f4aa1f5d136a0ff69717db44d6511a506725af71bbb430892e",
+    "scope_draft_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/SCOPE_DRAFT.json",
+    "scope_draft_sha256": "98ec102dd2ee7fe3c649f33c5201a211344707a82dde07291be724357029a1e0",
+    "source_sha256": "5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416"
+  },
+  "frozen_model": {
+    "shape": [
+      32,
+      12,
+      12,
+      64,
+      768,
+      3072
+    ],
+    "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+    "profile": "r5b-engineering-candidate-v1",
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "GKR_layers": 277,
+    "terminals": 612,
+    "master_actual": 199348640,
+    "master_padded": 268435456,
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "anchor_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+    "anchor_sha256": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+    "manifest_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+    "manifest_sha256": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+    "X_signed64LE_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "Y_identity": "Full12 output coordinates frozen by plan; actual full12 Y values not yet generated. No oneblock Y substituted. Future statement Y must be signed64 with zero padding and cryptographically constrained by all 12 blocks.",
+    "Exp": "Frozen LegacyClampOne with unchanged table, canonical u32LE8192 SHA 062c686f919b356c9f8c47acada933bc2683c13ac8886a0cb881239e807f21dc",
+    "parameter_files": 120,
+    "trust": "OPERATOR-TRUSTED candidate, original semantics retained"
+  },
+  "memory_budget_estimate_only": {
+    "P0A_P0B_workspace_change": "group validation changes no master ownership; mapped kernel remains blockwise with O(rows) base storage; formula conservatively retained",
+    "artifact_disk_budget_bytes": 210546944,
+    "basis": "new actual-builder plan and newly linked current schema resource estimator; frozen OPT2 phases equal",
+    "classification": "ESTIMATE; NOT full12 measured RSS",
+    "full12_measured_peak_RSS": null,
+    "limits": {
+      "CPU_affinity_count": 4,
+      "disk_reserve_GiB": 64,
+      "effective_memory_reserve_GiB": 32,
+      "prover_GiB": 96,
+      "prover_timeout_seconds": 28800,
+      "supervisor_cleanup_seconds": 60,
+      "verifier_GiB": 96,
+      "verifier_timeout_seconds": 14400
+    },
+    "phase_bytes": {
+      "artifact_disk_bytes": 210546944,
+      "commit_bytes": 24965439488,
+      "full12_execution": false,
+      "graph_bytes": 6368537600,
+      "prove_bytes": 90534151680,
+      "serialize_bytes": 90677589760,
+      "verify_bytes": 66339897920,
+      "witness_bytes": 19012388608
+    },
+    "proof_upper_bytes": 35859520,
+    "prover_peak_estimate_GiB": 84.45008635520935,
+    "timeouts_are_not_predictions": true,
+    "verifier_peak_estimate_GiB": 61.78384453058243
+  },
+  "approval_reason": "r6b_approval_tools.verify_scope requires MANUAL-USER-CONFIRMED exact current Scope; render_unapproved_permits rejects draft. Separate C permit SHA approval and execution record remain mandatory.",
+  "remote_stage": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021",
+  "remote_logs": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/logs/R6-FULL12-P0AB-20261021",
+  "remote_build": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021",
+  "Windows_archive_root": "C:/Users/tanyt/Desktop/program/phase_b3_r6_full12_p0ab_20261021",
+  "preparation_failures": {
+    "parser_relative_path_error": "one old auxiliary decoder overwritten during preparation; wrong output retained; exact original bytes restored from verified historical archive; all 955 protected file SHA rechecked",
+    "decoder_build_log_collision": "subsequent preparation stopped before compiler due to existing log; resumed with unique v2 log",
+    "evidence": "PARSER_PATH_FAILURE_AND_RESTORE.json, PARSER_PATH_RED/GREEN.json, engineering-commands/*.remote.log",
+    "cryptographic_full12_failure_or_retry": false
+  }
+}

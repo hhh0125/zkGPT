@@ -1,0 +1,75 @@
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 22%] Built target paper_r1
+[ 51%] Built target gpt_lib
+[ 62%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Built target r7_classified_layout_tests
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 22%] Built target paper_r1
+[ 51%] Built target gpt_lib
+[ 62%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Built target r7_classified_crypto_tests
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Built target r7_oneblock_lookup_tests
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_classified_prover.dir/classified_probe_main.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_probe_main.cpp: In function ‘int main(int, char**)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_probe_main.cpp:23:70: error: reference to ‘suite’ is ambiguous
+   23 |  PipeIO io(isP,"classified-probe",attack=="challenge"?"challenge":"",suite,PipeIO::Profile::OneblockV1,audit);SessionRandom random;Random*rng=isP?&random:nullptr;Value base;if(isP)base=[](std::size_t i){return Fr(int(i%29)-7);};
+      |                                                                      ^~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/lookup_prepare.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_probe_main.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_layout.hpp:6:29: note: candidates are: ‘constexpr const char* const zkgpt::r7::oneblock::classified::suite’
+    6 | inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-v2";
+      |                             ^~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/streaming_master.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_bridge.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_registration.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_layout.hpp:2:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:8:30: note:                 ‘constexpr const char* const zkgpt::r7::crypto::suite’
+    8 | inline constexpr const char* suite="R7-MCL-BN254-H-PC-CSIPA-AUDIT-RESEARCH-v1";
+      |                              ^~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_classified_prover.dir/build.make:79: src/paper_r7/CMakeFiles/r7_classified_prover.dir/classified_probe_main.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:4766: src/paper_r7/CMakeFiles/r7_classified_prover.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4773: src/paper_r7/CMakeFiles/r7_classified_prover.dir/rule] Error 2
+gmake: *** [Makefile:1726: r7_classified_prover] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_classified_layout_tests r7_classified_crypto_tests r7_oneblock_lookup_tests r7_classified_prover r7_classified_verifier r7_complete_prover r7_complete_verifier r7_legacy_oneblock_prover r7_legacy_oneblock_verifier -j4"
+	User time (seconds): 2.28
+	System time (seconds): 0.36
+	Percent of CPU this job got: 103%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 287780
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 116193
+	Voluntary context switches: 585
+	Involuntary context switches: 21
+	Swaps: 0
+	File system inputs: 64
+	File system outputs: 8088
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

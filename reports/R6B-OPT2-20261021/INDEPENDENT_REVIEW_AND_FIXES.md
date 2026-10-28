@@ -1,0 +1,7 @@
+# Read-only review and fixes
+
+Reviewer /root/r6b_opt2_review independently read every changed source and all16 frozen original files; originals match baseline. No Critical. Important postpublication diagnostic string allocation could throw after oldowner destruction: fixed with enabled guard and catch-all around optional diagnostics. Real bad_alloc injection after cc.w changes confirms successfulreturn and validnewowner. Minor legacy-only alive flag fixed to shared/legacy flags plus vectorcapacity. Follow-up read-only review finds fixes sufficient, no further productionissue. The fixture initially enabled environment too late (cached enabled()); corrected using separate process mode enabled before fixture construction. Allfailed logs retained.
+
+The allocation assertion initially confused extra small diagnostic strings with Master-sized objects; corrected counter distinguishes both. Final disabled-diagnostics path removes tinylabels entirely:10→9 requests, exactly1024bytes on tiny realcommit fixture. Counter is atomic and covers ordinarynew/new[] only, not directmalloc/alignedalloc or wholeoneblockprocess. Address/owner evidence records actual oneblock Masterobjects3→2; no claim of globaloneblock malloccount.
+
+Review supports P96 planning: retains two extraGraphcapacities,2GiB other and25%; GKR retainedbeta explicitly consumes thirdincrementalMaster. Final executed tests and proofverification are recorded separately; reviewer didnot independently rerunprover. No claim of full12runtimevalidation.

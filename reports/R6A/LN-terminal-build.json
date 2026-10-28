@@ -1,0 +1,35 @@
+{
+  "id": "LN-terminal-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_integration_tests",
+    "r6_builder_tests",
+    "r6_model_plan",
+    "r6_model_prove",
+    "r6_model_verify",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:35:31.300368+00:00",
+  "seconds": 19.43430473189801,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 8,
+  "RSS_group_limit_gib": 8,
+  "observed_process_group_peak_bytes": 361897984,
+  "stop_reason": null,
+  "binary_sha256": null,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/LN-terminal-build.log",
+  "time": "logs/R6A/LN-terminal-build.time"
+}

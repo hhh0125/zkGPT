@@ -3,7 +3,7 @@ from pathlib import Path
 import os,sys,json,subprocess,struct
 from r7_process import start_interactive_child
 from r7_sync_safety import no_links
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-ONEBLOCK-RUN-')
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith(('R7-ONEBLOCK-RUN-','R7-CLASSIFIED-RUN-'))
 binary=ROOT/'build/release/src/paper_r7/r7_complete_verifier';out=stage/'full-verifier-guards';out.mkdir();cases=[]
 for option in ['--challenge=1','--import-receipt']:
  p=subprocess.run([str(binary),'run',option],stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=30)

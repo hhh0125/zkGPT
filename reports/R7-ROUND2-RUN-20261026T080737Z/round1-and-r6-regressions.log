@@ -1,0 +1,163 @@
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+UpdateCTestConfiguration  from :/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/DartConfiguration.tcl
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 29
+    Start 29: r5b_FC_GKR_coupling
+
+29: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/r5b_gkr_tests
+29: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src
+29: Test timeout computed to be: 10000000
+29: Circuit Initiation finished
+29: ++++++++++++++++++++++Proving Service started+++++++++++++++++++++++
+29: GKR proof-builder consistency checks passed
+29: GKR Lasso public input-mapping evaluation time: 0.000028 s
+29: GKR input-commitment MLE opening time: proof generation 0.002793 s
+29: =========================Our results:================================
+29: Matrix multiplication Prover time: 0.014324s
+29: Total Prover time(GKR+range):0.0179972=0.0179972+0s
+29: GKR proof-builder local consistency-check time: 0.000213384s
+29: Proof size(old): 1.57812KB
+29: PASS actual R5B rounding with four FC GKR parents, signed half-ties and 16 authenticated matrix terminal claims
+1/5 Test #29: r5b_FC_GKR_coupling ..............   Passed    0.07 sec
+test 65
+    Start 65: r6_builder_oneblock
+
+65: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_builder_tests "1"
+65: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+65: Environment variables: 
+65:  ZKGPT_THREADS=4
+65:  MALLOC_ARENA_MAX=2
+65: Test timeout computed to be: 300
+65: input size: 2^24
+65: ++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++
+65: Total input size: 2^24
+65: layer_id: 24
+65: Circuit Builder time (including structure-only witness construction, subset and validation): 0.536517s
+65: PASS actual graph,all block/FC/Range/Exp coordinates,public final output,zero metadata witness,residual tamper rejection and old guard; fingerprint=1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a
+2/5 Test #65: r6_builder_oneblock ..............   Passed    1.45 sec
+test 70
+    Start 70: r6_entry_guards
+
+70: Test command: /usr/local/bin/python3.10 "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_entry_tests.py" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_prove" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_verify" "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_plan"
+70: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+70: Environment variables: 
+70:  ZKGPT_THREADS=4
+70:  MALLOC_ARENA_MAX=2
+70: Test timeout computed to be: 300
+70: PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/must-not-exist', '--blocks', '12'] separately authorized
+70: PASS r6_model_verify ['reports/R5B/normal-v2/model.statement', 'reports/R5B/normal-v2/model.proof', '--blocks', '12'] separately authorized
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '2'] exactly 1 or 12
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--blocks', '12'] duplicate
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--cpu-limit', '1844674407370955161600000000001'] bound
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--memory-gib', '-1'] unsigned
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--memory-gib', '0'] positive
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--numerical-profile', 'modified-profile'] frozen
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks', '1', '--unknown-option'] unknown
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/invalid.json', '--blocks'] usage
+70: PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/oneblock.json', '--blocks', '1', '--plan-only'] no private witness/proof
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/inherited-cap.json', '--blocks', '1', '--memory-gib', '8'] inherited
+70: PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-by4bno96/too-small.json', '--blocks', '12', '--memory-gib', '1'] bad_alloc
+70: PASS 13 R6 entry cases; no proof/statement or full12 private witness
+3/5 Test #70: r6_entry_guards ..................   Passed    3.15 sec
+test 71
+    Start 71: r6_system_resources
+
+71: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_resources_tests
+71: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2
+71: Test timeout computed to be: 10000000
+71: PASS effective memory/PID headroom including saturation
+4/5 Test #71: r6_system_resources ..............   Passed    0.00 sec
+test 72
+    Start 72: r7_framework
+
+72: Test command: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_framework_tests
+72: Working Directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work
+72: Environment variables: 
+72:  ZKGPT_THREADS=4
+72:  MALLOC_ARENA_MAX=2
+72: Test timeout computed to be: 180
+72: input size: 2^24
+72: Total input size: 2^24
+72: layer_id: 24
+72: PASS valid real R6 oneblock schema
+72: PASS wrong version
+72: PASS wrong circuit
+72: PASS wrong layout
+72: PASS wrong model
+72: PASS wrong profile
+72: PASS Full12 forbidden
+72: PASS wrong base master
+72: PASS wrong X size
+72: PASS wrong Y semantics
+72: PASS X padding
+72: PASS Y padding
+72: PASS unsigned signed64 overflow
+72: PASS signed64 endpoints allowed
+72: PASS signed64 lower overflow rejected
+72: PASS canonical statement roundtrip
+72: PASS trailing bytes rejected
+72: PASS truncated statement rejected
+72: PASS oversize statement rejected
+72: PASS deterministic transcript
+72: PASS transcript binds public hidden Y
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS missing component fails closed
+72: PASS forged complete envelope cannot accept
+72: PASS cross statement proof rejected
+72: PASS base master never flattened to 2^30
+72: PASS independent auxiliary object identities
+72: PASS Exp index range binds original t source
+72: PASS Exp helper range binds correct helper
+72: PASS Exp memory binds canonical index helper
+72: PASS proof envelope roundtrip
+72: PASS trailing proof envelope rejected
+72: PASS private witness error values never exported
+72: TESTS_PASSED 39 FRAMEWORK_CONNECTED production_gate=BLOCKED_CRYPTOGRAPHIC_DESIGN may_enter_stage2=false
+5/5 Test #72: r7_framework .....................   Passed    4.05 sec
+
+The following tests passed:
+	r5b_FC_GKR_coupling
+	r6_builder_oneblock
+	r6_entry_guards
+	r6_system_resources
+	r7_framework
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   8.73 sec
+	Command being timed: "ctest --test-dir build/release -V --output-on-failure -R ^(r7_framework|r6_builder_oneblock|r6_entry_guards|r5b_FC_GKR_coupling|r6_system_resources)$"
+	User time (seconds): 12.34
+	System time (seconds): 1.13
+	Percent of CPU this job got: 153%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.80
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 816728
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 662820
+	Voluntary context switches: 184
+	Involuntary context switches: 138
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

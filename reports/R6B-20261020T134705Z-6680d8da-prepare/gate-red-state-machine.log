@@ -1,0 +1,100 @@
+test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (__main__.StateMachine) ... FAIL
+test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) ... test_same_ID_and_same_approval_never_dispatch_again (__main__.StateMachine) ... FAIL
+test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified (__main__.StateMachine) ... FAIL
+
+======================================================================
+FAIL: test_budget_binary_permit_approval_and_existing_paths_refuse_before_child (__main__.StateMachine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 64, in test_budget_binary_permit_approval_and_existing_paths_refuse_before_child
+    g=self.load()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) (case='nonzero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 62, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) (case='timeout')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 62, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) (case='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 62, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) (case='empty')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 62, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier (__main__.StateMachine) (case='corrupt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 62, in test_nonzero_timeout_missing_empty_corrupt_do_not_dispatch_verifier
+    root,p,result,_=self.run_case(case);self.assertEqual((root/'dispatch.log').read_text(),'prover\n');self.assertEqual(result['state'],'ABORTED');self.assertFalse(result['full12_verified'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_same_ID_and_same_approval_never_dispatch_again (__main__.StateMachine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 72, in test_same_ID_and_same_approval_never_dispatch_again
+    g=self.load();root,p,result,args=self.run_case();pm,pn,j,af,ah,rt,admit=args
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+======================================================================
+FAIL: test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified (__main__.StateMachine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 57, in test_success_is_serial_empty_cwd_and_explicitly_not_full12_verified
+    root,p,result,_=self.run_case();self.assertEqual((root/'dispatch.log').read_text(),'prover\nverifier\n');self.assertEqual(result['state'],'VERIFIED');self.assertFalse(result['full12_verified']);self.assertEqual((root/'verified-cwd').read_text(),p['verifier_cwd'])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 39, in run_case
+    g=self.load();from r6b_supervisor import LimitedSupervisor
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_state_machine.py", line 37, in load
+    self.assertTrue(hasattr(g,'execute_serial'),'Missing serial admission state machine');return g
+AssertionError: False is not true : Missing serial admission state machine
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.002s
+
+FAILED (failures=8)

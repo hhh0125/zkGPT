@@ -1,0 +1,30 @@
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+    Start 63: r6_entry_guards
+1/1 Test #63: r6_entry_guards ..................***Failed    4.70 sec
+PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/must-not-exist', '--blocks', '12'] separately authorized
+PASS r6_model_verify ['reports/R5B/normal-v2/model.statement', 'reports/R5B/normal-v2/model.proof', '--blocks', '12'] separately authorized
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '2'] exactly 1 or 12
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--blocks', '12'] duplicate
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--cpu-limit', '1844674407370955161600000000001'] bound
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--memory-gib', '-1'] unsigned
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--memory-gib', '0'] positive
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--numerical-profile', 'modified-profile'] frozen
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks', '1', '--unknown-option'] unknown
+PASS r6_model_plan ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/invalid.json', '--blocks'] usage
+PASS r6_model_prove ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/oneblock.json', '--blocks', '1', '--plan-only'] no private witness/proof
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_entry_tests.py", line 15, in <module>
+    check([plan,str(root/'inherited-cap.json'),'--blocks','1','--memory-gib','8'],1,'inherited',inherited_gib=2)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_entry_tests.py", line 8, in check
+    assert p.returncode==code and reason in out,(args,p.returncode,out[-1000:])
+AssertionError: (['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r6_model_plan', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/r6a-entry-xpu5s0m5/inherited-cap.json', '--blocks', '1', '--memory-gib', '8'], 0, 'input size: 2^24\n++++++++++++++++++++++++++Start initiating circuit+++++++++++++++++++++++++++++++\nTotal input size: 2^24\nlayer_id: 24\nCircuit Builder time (including structure-only witness construction, subset and validation): 0.672903s\nPASS R6 actual builder metadata,zero field witness,no proof\n')
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   4.70 sec
+
+The following tests FAILED:
+	 63 - r6_entry_guards (Failed)
+Errors while running CTest

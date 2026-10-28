@@ -1,0 +1,106 @@
+[
+  {
+    "id": "sanitize-configure",
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/r5b-sanitize",
+      "-DCMAKE_BUILD_TYPE=Debug",
+      "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+      "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -O1",
+      "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+      "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:48:53.334598+00:00",
+    "pid": 645895,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-configure.log",
+    "time": "logs/R5B/sanitize-configure.time",
+    "exit_code": 0,
+    "seconds": 1.4799179690890014,
+    "finished_utc": "2026-10-20T08:48:54.814755+00:00",
+    "max_rss_kib": 29848
+  },
+  {
+    "id": "sanitize-build",
+    "command": [
+      "cmake",
+      "--build",
+      "build/r5b-sanitize",
+      "--target",
+      "r5b_tests",
+      "r5b_trust_tests",
+      "r5b_model_prove",
+      "r5a_host_tests",
+      "-j6"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {},
+    "started_utc": "2026-10-20T08:48:54.815339+00:00",
+    "pid": 645895,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-build.log",
+    "time": "logs/R5B/sanitize-build.time",
+    "exit_code": 0,
+    "seconds": 149.93844567332417,
+    "finished_utc": "2026-10-20T08:51:24.754094+00:00",
+    "max_rss_kib": 679952
+  },
+  {
+    "id": "sanitize-targeted-tests",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/r5b-sanitize",
+      "--output-on-failure",
+      "-R",
+      "r5b_|r5a_host_",
+      "-j1"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "started_utc": "2026-10-20T08:51:24.754830+00:00",
+    "pid": 645895,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-targeted-tests.log",
+    "time": "logs/R5B/sanitize-targeted-tests.time",
+    "exit_code": 0,
+    "seconds": 4.17367170099169,
+    "finished_utc": "2026-10-20T08:51:28.928905+00:00",
+    "max_rss_kib": 1712936
+  },
+  {
+    "id": "sanitize-real-witness",
+    "command": [
+      "build/r5b-sanitize/src/paper_r2/r5b_model_prove",
+      "reports/R5B/witness-sanitize-v1",
+      "--witness-only"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "environment_overrides": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "started_utc": "2026-10-20T08:51:28.929994+00:00",
+    "pid": 645895,
+    "status": "PASS",
+    "expected_exit": 0,
+    "log": "logs/R5B/sanitize-real-witness.log",
+    "time": "logs/R5B/sanitize-real-witness.time",
+    "exit_code": 0,
+    "seconds": 31.35285052191466,
+    "finished_utc": "2026-10-20T08:52:00.283534+00:00",
+    "max_rss_kib": 3630444
+  }
+]

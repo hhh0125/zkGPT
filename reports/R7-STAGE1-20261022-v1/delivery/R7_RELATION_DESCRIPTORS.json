@@ -1,0 +1,72 @@
+{
+  "schema": "R7-INTEGER-RELATION-DESCRIPTORS-v1",
+  "canonicalization": "ASCII json.dumps(descriptor,sort_keys=True,separators=(comma,colon),ensure_ascii=True); no floats; SHA256(prefix||canonical), prefix ASCII zkGPT/R7/integer-relation/v1 followed by NUL",
+  "relations": {
+    "full12": {
+      "descriptor": {
+        "arithmetic_spec": "R7-frozen-R6-integer-v1",
+        "purpose": "formal-full12",
+        "source_sha256": "5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416",
+        "field_modulus": "16798108731015832284940804142231733909759579603404752749028378864165570215949",
+        "shape": [
+          32,
+          12,
+          12,
+          64,
+          768,
+          3072
+        ],
+        "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+        "exp_table_sha256": "062c686f919b356c9f8c47acada933bc2683c13ac8886a0cb881239e807f21dc",
+        "circuit_fingerprint": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+        "frozen_plan_sha256": "881784c92f12c86a71d706af1eafec861ef52629c52453fe70f556554466268a",
+        "master_actual": 199348640,
+        "master_padded": 268435456,
+        "W_actual": 163749888,
+        "W_padded": 268435456,
+        "layers_including_master": 277,
+        "terminals": 612,
+        "range_values": 35598080,
+        "exp_actual": 76032,
+        "input_encoding": "signed64LE-padded32x1024",
+        "output_semantics": "post-second-residual-hidden-block12",
+        "auxiliary_semantics": "preserve-R6-existential-LN-padding-freedom",
+        "anchor_policy": "independently-registered-hiding-full12"
+      },
+      "relation_id": "e30539ff145a01930645c3c178af285dc56c9b55ff2bff0406bd417c52fbd2b8"
+    },
+    "test_oneblock": {
+      "descriptor": {
+        "arithmetic_spec": "R7-frozen-R6-integer-v1",
+        "purpose": "test-oneblock-only",
+        "source_sha256": "5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416",
+        "field_modulus": "16798108731015832284940804142231733909759579603404752749028378864165570215949",
+        "shape": [
+          32,
+          1,
+          12,
+          64,
+          768,
+          3072
+        ],
+        "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+        "exp_table_sha256": "062c686f919b356c9f8c47acada933bc2683c13ac8886a0cb881239e807f21dc",
+        "circuit_fingerprint": "1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a",
+        "frozen_plan_sha256": "f2e63e8bb7f2c25129410bced2997d241feb647f003bec2c118191b1c085c48f",
+        "master_actual": 16642424,
+        "master_padded": 16777216,
+        "W_actual": 13645824,
+        "W_padded": 16777216,
+        "layers_including_master": 24,
+        "terminals": 51,
+        "range_values": 2996544,
+        "exp_actual": 6336,
+        "input_encoding": "signed64LE-padded32x1024",
+        "output_semantics": "post-second-residual-hidden-block1",
+        "auxiliary_semantics": "preserve-R6-existential-LN-padding-freedom",
+        "anchor_policy": "independently-registered-hiding-test-first-block-subset"
+      },
+      "relation_id": "679d3f7a17965df4c35a6e9b41e5fc94e2e686fa70f0054e63768ab14a2773a6"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "trust-red-build",
+  "command": [
+    "cmake",
+    "--build",
+    "build/release",
+    "--target",
+    "r6_trust_tests",
+    "-j4"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:12:32.367362+00:00",
+  "seconds": 2.0718677546828985,
+  "exit_code": 2,
+  "expected_exit": 0,
+  "PASS": false,
+  "timeout_seconds": 240,
+  "address_space_limit_gib": 8,
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4"
+  },
+  "log": "logs/R6A/trust-red-build.log",
+  "time": "logs/R6A/trust-red-build.time"
+}

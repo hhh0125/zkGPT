@@ -1,0 +1,66 @@
+{
+  "local_git_commit": "08f7a3ab5e6651beee176ecc8267c88b5208b5d8",
+  "payload_sha256": "e5d0236630e9c0438ca9aa2b6e1773e9a27cfcc55e3521efd35e48d18225590d",
+  "remote_code_version": "e5d0236630e9c0438ca9aa2b6e1773e9a27cfcc55e3521efd35e48d18225590d",
+  "status": "FAILED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T035026Z/configure.log",
+      "exit_code": 0,
+      "seconds": 1.2174680870957673,
+      "passed": true
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_framework_tests",
+        "r7_oneblock_prove",
+        "r7_oneblock_verify",
+        "r6_builder_tests",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_model_plan",
+        "r5b_gkr_tests",
+        "r6_resources_tests",
+        "-j4"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T035026Z/build.log",
+      "exit_code": 2,
+      "seconds": 3.4229744421318173,
+      "passed": false
+    }
+  ],
+  "error": "build unexpected exit code",
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {},
+  "cmake_cache_sha256": "c2c2aa212a4305ffa84461177cb82dca607756ecb013e68e3bfcdf2cf8782d7f"
+}

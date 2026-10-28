@@ -1,0 +1,150 @@
+{
+  "schema": "ZKGPT-R7-STAGE1-GATE-v1",
+  "stage_id": "R7-STAGE1-20261022-v1",
+  "date_timezone": "2026-10-22 Asia/Shanghai",
+  "scope": "stage1 source inspection, integer relation, trust model, protocol design and conditional implementation plan only",
+  "overall_status": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "stage1_documentation_delivered": true,
+  "stage1_security_acceptance": "BLOCKED",
+  "may_enter_stage2": false,
+  "r7_zero_knowledge_implemented": false,
+  "r7_zero_knowledge_proven": false,
+  "new_full12_authorized": false,
+  "new_full12_started": false,
+  "new_proof_or_malicious_proof_generated": false,
+  "production_source_edited": false,
+  "frozen_parameters_changed": false,
+  "baseline": {
+    "id": "R6-FULL12-P0AB-20261021-v1",
+    "source_sha256": "5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416",
+    "proof_sha256": "d088e55ace3c31f510afbb589022d6f2b8dedfd6725444de37be6f70b18762bd",
+    "statement_sha256": "6a73f7a6d71a0c8b4f9d19a08ef4cbf68e4730491d4bf5377b0ae170c7e52958",
+    "historical_verifier_result": "ACCEPT R6 blocks=12",
+    "historical_acceptance_rerun": false,
+    "frozen_source_files_freshly_checked": 575,
+    "source_differences_before": []
+  },
+  "specifications_fixed": {
+    "integer_relation": "frozen R6; 32x768 quantized activation to block12 post-second-residual hidden state; padded32x1024",
+    "profile_parameters_checkpoint_exp_unchanged": true,
+    "public_statement_and_secret_witness": "R7_PROOF_RELATION.md sections2-6",
+    "operator_trusted_registration": "R7_TRUST_MODEL.md",
+    "expected_X_gate": "mandatory verifier-owned ExpectedRequest, complete signed64LE identity and padding",
+    "model_anchor": "new hiding R7 anchor; no new registration generated",
+    "legacy_R6_auxiliary_freedoms_preserved": true,
+    "proof_wire_identity": "new R7 magic/version/suite/domain; design-only suite cannot accept production proofs",
+    "allowed_leakage": "public statement, authenticated linkable model identity/hiding anchor, public structure/length, X/Y, explicitly known prior information"
+  },
+  "concrete_designs": [
+    {
+      "id": "D-PC",
+      "status": "LOCALLY_DERIVED_NOT_SYSTEM_PROVEN",
+      "description": "Pedersen blinded vector rows plus explicit linear Sigma committed evaluation equations; O(N) response candidate"
+    },
+    {
+      "id": "D-ARITH",
+      "status": "LOCALLY_DERIVED_NOT_SYSTEM_PROVEN",
+      "description": "committed scalar linear and multiplication Sigma relations"
+    },
+    {
+      "id": "D-CAC",
+      "status": "DESIGN_CANDIDATE_NOT_APPROVED_FOR_IMPLEMENTATION",
+      "description": "hide GKR, sumcheck, Lasso roots/counts/openings and mapped-input scalar messages using committed arithmetic; exact FS composition unresolved"
+    },
+    {
+      "id": "D-BIND",
+      "status": "DESIGN_SPECIFIED",
+      "description": "same hiding master, authenticated W child, public X/Y, all gather terminals/lookup/zero-tail; optional two-hiding-PC equality bridge"
+    },
+    {
+      "id": "D-TRUST",
+      "status": "DESIGN_SPECIFIED_NOT_EXECUTED",
+      "description": "new registration record, independent W+rho row recomputation, approved anchor pin, randomness ownership and multi-proof reuse policy"
+    }
+  ],
+  "unresolved_security_issues": [
+    {
+      "id": "O-GKR-NATIVE",
+      "blocking": true,
+      "issue": "no exact compact masking scheme and joint simulator for active ordinary/matrix GKR plus internal aggregation and shared openings",
+      "required": "exact mask relations, rank/degree/terminal proof or a fully justified chosen alternative"
+    },
+    {
+      "id": "O-LASSO",
+      "blocking": true,
+      "issue": "no complete exact-code malicious count/address multiset reduction and hidden memory/product composition theorem",
+      "required": "original-protocol condition mapping or versioned safe replacement with proof"
+    },
+    {
+      "id": "O-SCHEMA",
+      "blocking": true,
+      "issue": "full active-message classification/WireId/count/byte ledger not complete",
+      "required": "every secret scalar and every verifier check covered, bounded parser schedule"
+    },
+    {
+      "id": "O-ZK",
+      "blocking": true,
+      "issue": "fixed external model anchor and adaptive multi-proof joint simulation not established",
+      "required": "exact chosen-suite simulator with distribution and RO-programming analysis"
+    },
+    {
+      "id": "O-KNOW",
+      "blocking": true,
+      "issue": "complete shared-witness extractor and extraction runtime/success bound absent",
+      "required": "extractor for PC, all subprotocol relations and complete composition"
+    },
+    {
+      "id": "O-FS",
+      "blocking": true,
+      "issue": "multi-stage Fiat-Shamir composition for chosen native/CAC protocol not established",
+      "required": "precise classical ROM theorem applicability or full reduction with query/forking losses"
+    },
+    {
+      "id": "O-ERR",
+      "blocking": true,
+      "issue": "concrete degree/count/error ledger and suite security target not finalized",
+      "required": "all lookup digits, product trees, sumchecks, batches, bridge, group and FS terms accounted"
+    },
+    {
+      "id": "O-FEASIBILITY",
+      "blocking": true,
+      "issue": "conservative linear Sigma opening may require GiB-scale responses per opening; no bounded oneblock plan",
+      "required": "static resource budget for selected proved protocol before any implementation/proving"
+    }
+  ],
+  "original_components_reusable": [
+    "frozen integer arithmetic graph and matrix constraints",
+    "Range digit and Exp table/query relations",
+    "verifier-owned affine gather and mapped-input kernel mathematics",
+    "144 W regions and120parameter layout",
+    "independent integer reference and numerical tests"
+  ],
+  "components_not_safe_to_reuse_unchanged_as_ZK": [
+    "nonhiding PC and raw IPA opening",
+    "raw sumcheck/GKR/matrix/terminal transcripts",
+    "raw memory roots/count openings/product tree messages",
+    "old bridge and mapped-input scalar wire",
+    "R6 proof and statement acceptance formats"
+  ],
+  "first_stage2_module_after_unblocking": "new src/paper_r7 hiding PC, committed opening, scalar linear/multiplication proof primitives and new transcript/types",
+  "next_permitted_work": "stage1 theoretical/source-message-ledger work to close blockers; no stage2 implementation",
+  "design_review": "independent builder review completed; oneblock relation/anchor issue resolved in specification; not a cryptographic security proof",
+  "verification_receipts": [
+    "BASELINE_BEFORE.json",
+    "BASELINE_SUPPLEMENT.json",
+    "PRESERVATION_AFTER.json",
+    "../WINDOWS_ARCHIVE_VERIFICATION.json (external receipt after final tar download)"
+  ],
+  "deliverables": [
+    "R7_PROOF_RELATION.md",
+    "R7_TRUST_MODEL.md",
+    "R7_ZK_PROTOCOL_DESIGN.md",
+    "R7_SECURITY_OBLIGATIONS.md",
+    "R7_IMPLEMENTATION_PLAN.md",
+    "R7_STAGE1_GATE.json"
+  ],
+  "relation_descriptors": {
+    "full12": "e30539ff145a01930645c3c178af285dc56c9b55ff2bff0406bd417c52fbd2b8",
+    "test_oneblock": "679d3f7a17965df4c35a6e9b41e5fc94e2e686fa70f0054e63768ab14a2773a6"
+  }
+}

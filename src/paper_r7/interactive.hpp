@@ -7,7 +7,7 @@ class PipeIO final:public IO{
  void send(const std::string&,const Bytes&);Bytes receive(const std::string&);
  void audit(const Bytes&);
  public:
- enum class Profile{Default,MasterChunkedV1,OneblockV1};
+ enum class Profile{Default,MasterChunkedV1,OneblockV1,ClassifiedV2};
  PipeIO(bool prover,const std::string&mode,const std::string&attack="",const std::string&protocol_suite=crypto::suite,Profile=Profile::Default,int audit_fd=-1);
  bool prover()const override{return prover_;}std::string session()const override{return sid_;}
  Bytes message(const std::string&,const Bytes& = {})override;Fr coin(const std::string&)override;

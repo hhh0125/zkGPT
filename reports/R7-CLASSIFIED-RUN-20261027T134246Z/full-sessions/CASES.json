@@ -1,0 +1,87 @@
+[
+  {
+    "case": "wrong-internal",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 408.9681988572702,
+    "passed": true,
+    "wire": {
+      "bytes": 543129203,
+      "parts": 130,
+      "sha256": "7cb51ce0e2d7d2eb8f64d40f9b46a4037100c61412bd3235b1be0ff752d193d6"
+    },
+    "expected_reasons": [
+      "compressed linear relation failed"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-weight",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 412.3442249568179,
+    "passed": true,
+    "wire": {
+      "bytes": 543298259,
+      "parts": 130,
+      "sha256": "d54db362c755078036805e911ffa30b7a08ebc457ff2b55a75ade3c35081e3f5"
+    },
+    "expected_reasons": [
+      "compressed linear relation failed"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-commitment",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 337.5259639569558,
+    "passed": true,
+    "wire": {
+      "bytes": 441793501,
+      "parts": 106,
+      "sha256": "65216ff90e34c70b2340cc8442a9600b334565c63158f828061563ae3a023fbd"
+    },
+    "expected_reasons": [
+      "binding mismatch",
+      "equation failed"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nREJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch\n"
+  },
+  {
+    "case": "wrong-lookup",
+    "P_exit": -15,
+    "V_exit": 2,
+    "timeout": false,
+    "P_stopped_after_verified_rejection": true,
+    "actual_P_exit": -15,
+    "actual_V_exit": 2,
+    "seconds": 783.4837413858622,
+    "passed": true,
+    "wire": {
+      "bytes": 721242202,
+      "parts": 172,
+      "sha256": "df4065b9a9c1bcadbd2e802e7f8966cf5a722f49d738db7d940410bd1dfb116d"
+    },
+    "expected_reasons": [
+      "compressed linear relation failed"
+    ],
+    "P_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\nPHASE_COMPLETE all-native-GKR\n",
+    "V_reason": "PHASE_COMPLETE frozen-witness-and-prechallenge-lookup\nPHASE_COMPLETE all-classified-roots-prechallenge-seal\nPHASE_COMPLETE complete-classified-base-knowledge-and-tail\nPHASE_COMPLETE classified-public-X-Y-constants\nPHASE_COMPLETE all-native-GKR\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  }
+]

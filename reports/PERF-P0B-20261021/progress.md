@@ -1,0 +1,8 @@
+Plan:IMPLEMENTATION_PLAN.md. Task1 freeze done; source574files,P0Aexactidentity2961...,frozen binaries/deps and protected parameter/history/P0A hashes captured. No source edits or newproof/realoneblock yet.
+P0Aisolatedkernelbaseline finished before any production source edit; originalDP+entrycounter only,51publicterminal layout and syntheticpoints,NOT end-to-end. All originalsource unchanged.
+Task2 RED: exact-field/span/fullkernel/dense/bias/bounds math passes on P0A; only expected fastpath-counter assertion fails. No productionkernel optimization yet.
+Task2 GREEN: scopedpoint-copy/split tables,singleton/direct/dyadic<=32blockpaths,frozenDPbodybyte-identicalfallback; all differential math anddispatch counters pass. No protocol/claim-order/serialization/G1/Profile changes, no realoneblock.
+Task3:3 isolated P0Bkernelruns match frozenP0A32-byte result; layout hash unchanged. Fullreleasebuild succeeds; selected foundation/smallfixtures regressions pass. No realR5Boneblock entry executed.
+Smallcross-verifier harness correction: prior20-small-* missed required --fixture and never reachedcrypto; preserved invalidlogs,excluded fromevidence. Corrected21-fixture-* runvalidfirst; all expectedACCEPT/REJECT checks pass,proofbytesidentical. No arithmetic/FS/protocol incompatibility detected, no actualoneblock executed.
+
+Completed all authorized small-development tasks, read-only review minor tests corrected and3902assertions release/ASan/UBSan PASS. Correctedsmallcross56runs expected,4ACCEPT52REJECT. RealoneblockNOTAUTHORIZED; nofull12/P1/permit/scopeinheritance. Finalidentities/protectedhistoryverified; Windowsarchiveverificationpending.

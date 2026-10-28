@@ -1,0 +1,70 @@
+{
+  "binding": {
+    "allowed_attempts": 1,
+    "allowed_competing_PIDs": [],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C",
+      "MALLOC_ARENA_MAX": "2",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "TZ": "UTC",
+      "ZKGPT_THREADS": "4"
+    },
+    "frozen": {
+      "anchor": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-operator-trust-v1.anchor",
+      "anchor_sha": "754efd1a61622e2d92a2057ccbb7ef7b026cb9bdfc58e67805ed68abf9bff306",
+      "binaries": {
+        "prover": {
+          "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_prove",
+          "sha256": "ee36bccdffff57f7d1cdd8e7d9cb63bc05a33a7a35dad5e572d100b31b675974"
+        },
+        "verifier": {
+          "path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021/src/paper_r2/r6_model_verify",
+          "sha256": "bb0a8d978b1950ecd13f0a105d5dcf9341528c45c2d42ce2a683995aafcdf78c"
+        }
+      },
+      "circuit": "ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7",
+      "identity_record_sha256": "816fdf970381d310feee3d60c357cd96c5863cbbd30a4679f67ecc657bc7d174",
+      "manifest": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6A/full12-model-manifest-v1.txt",
+      "manifest_sha": "b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1",
+      "profile": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+      "source_sha": "5c7053817202c418cd63947e8b75d83e7d04f4279abfe6b9f64cda708a6ae416"
+    },
+    "gate_code_sha256": "e4e6096988dd33a9225b114f4581bd56288b8e51865985b790bfc0483abba862",
+    "input_sha256": "a1871e2f9731ed73e1b5db9655ee760d3e5435a06d793c09f1dc1eb5f6655edb",
+    "input_shape": [
+      32,
+      768,
+      1024
+    ],
+    "limits": {
+      "prover": {
+        "memory": 96,
+        "wall": 28800
+      },
+      "verifier": {
+        "memory": 96,
+        "wall": 14400
+      }
+    },
+    "order": [
+      "prover",
+      "verifier"
+    ],
+    "output": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-full12",
+    "permit_paths": {
+      "prover": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/future-permits/prover.permit",
+      "verifier": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021/future-permits/verifier.permit"
+    },
+    "resource_policy": "OTHER_USERS_WARN_THIS_RUN",
+    "root": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "run_id": "R6-FULL12-P0AB-20261021-v1",
+    "simulation": false,
+    "verifier_cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6-FULL12-P0AB-20261021-v1-independent-empty"
+  },
+  "kind": "R6B-SCOPE-APPROVAL-v1",
+  "origin": "MANUAL-USER-CONFIRMED",
+  "scope_evidence": "\u6211\u660e\u786e\u6279\u51c6 R6-FULL12-P0AB-20261021 \u7684 A Scope \u8bb0\u5f55\u53ca B \u9636\u6bb5\u672a\u6279\u51c6 permit \u751f\u6210\u3002\n\n\u6279\u51c6\u7684 SCOPE_DRAFT.json SHA256\uff1a\n\n98ec102dd2ee7fe3c649f33c5201a211344707a82dde07291be724357029a1e0\n\n\u8bf7\u5148\u91cd\u65b0\u8ba1\u7b97\u5b9e\u9645\u6587\u4ef6 SHA256\uff0c\u5e76\u6838\u5bf9\u6e90\u7801\u3001Prover\u3001Verifier\u3001gate\u3001Profile\u3001\u53c2\u6570\u3001W anchor\u3001manifest\u548c\u6267\u884c\u8303\u56f4\u3002\u5b8c\u5168\u5339\u914d\u540e\uff1a\n\n1. \u8bb0\u5f55 A Scope \u6279\u51c6\u53ca\u672c\u6761\u6279\u51c6\u4f9d\u636e\uff0c\u4e0d\u5f97\u4f2a\u9020\u72ec\u7acb\u6570\u5b57\u7b7e\u540d\u3002\n2. \u8fdb\u5165 B \u9636\u6bb5\uff0c\u751f\u6210\u4e24\u4efd\u672a\u6279\u51c6\u7684 permit\u3002\n3. \u8ba1\u7b97\u5e76\u62a5\u544a\u4e24\u4efd permit \u5404\u81ea\u7684\u7cbe\u786e SHA256\u3001\u6587\u4ef6\u8def\u5f84\u53ca\u7ed1\u5b9a\u7684\u6267\u884c\u8eab\u4efd\u3002\n4. \u68c0\u67e5\u4e24\u4efd permit \u5747\u5bf9\u5e94\u5f53\u524d\u7248\u672c\u7684\u771f\u5b9e R6 full12\u300112 blocks\u3001277 layers\u3001612 terminals\u3001P/V\u540496GiB\u30014 CPU\u53ca\u65e2\u5b9a\u8d85\u65f6\u548c\u8d44\u6e90\u7ea6\u675f\u3002\n5. \u4fdd\u7559\u5df2\u7ecf\u6279\u51c6\u7684\u672c\u6b21\u7ade\u4e89\u8fdb\u7a0b WARN \u7b56\u7565\uff0c\u4f46\u4e0d\u5f97\u653e\u5bbd\u786c\u8d44\u6e90\u9650\u5236\u3002\n6. \u4e0d\u4fee\u6539\u65e7 Scope\u3001\u65e7 permit\u3001\u5386\u53f2\u8bc1\u660e\u6587\u4ef6\u6216\u51bb\u7ed3\u53c2\u6570\u3002\n\n\u751f\u6210 permit \u540e\u7acb\u5373\u505c\u6b62\uff0c\u63d0\u4ea4\u4e24\u4efd SHA \u4f9b\u6211\u4e0b\u4e00\u8f6e\u8fdb\u884c C \u9636\u6bb5\u786e\u8ba4\u3002\n\n\u672c\u6b21\u4e0d\u6279\u51c6 C\uff0c\u4e0d\u6279\u51c6 D\uff0c\u4e0d\u542f\u52a8 full12 Prover/Verifier\uff0c\u4e0d\u81ea\u52a8\u91cd\u8bd5\uff0c\u4e0d\u5b9e\u65bd\u65b0\u7684\u6027\u80fd\u6216\u534f\u8bae\u4f18\u5316\u3002\u82e5\u5b9e\u9645 Scope SHA \u6216\u5173\u952e\u8eab\u4efd\u4e0d\u5339\u914d\uff0c\u7acb\u5373\u505c\u6b62\u5e76\u62a5\u544a\u5dee\u5f02\u3002"
+}

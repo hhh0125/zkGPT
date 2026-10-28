@@ -1,0 +1,38 @@
+test_clean_environment_real_child_and_existing_output_rejected (__main__.Supervisor) ... FAIL
+test_exception_in_existing_limiter_still_kills_complete_group (__main__.Supervisor) ... FAIL
+test_timeout_terminates_descendant_group (__main__.Supervisor) ... FAIL
+
+======================================================================
+FAIL: test_clean_environment_real_child_and_existing_output_rejected (__main__.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 32, in test_clean_environment_real_child_and_existing_output_rejected
+    m=self.load();root=Path(tempfile.mkdtemp(prefix='environment-',dir=HERE/'test-runs'));script=root/'env.py';script.write_text('import os,json;print(json.dumps(dict(os.environ)))')
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 7, in load
+    self.assertTrue((HERE/'r6b_supervisor.py').exists(),'Missing exception-safe reused limiter')
+AssertionError: False is not true : Missing exception-safe reused limiter
+
+======================================================================
+FAIL: test_exception_in_existing_limiter_still_kills_complete_group (__main__.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 24, in test_exception_in_existing_limiter_still_kills_complete_group
+    m=self.load();root,p,pid=self.fixture()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 7, in load
+    self.assertTrue((HERE/'r6b_supervisor.py').exists(),'Missing exception-safe reused limiter')
+AssertionError: False is not true : Missing exception-safe reused limiter
+
+======================================================================
+FAIL: test_timeout_terminates_descendant_group (__main__.Supervisor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 20, in test_timeout_terminates_descendant_group
+    m=self.load();root,p,pid=self.fixture();sup=m.LimitedSupervisor(root,HERE.parent/'R6A/helper.py','14c6207100a29a00aa0bcc6795ec0a2ddb120eca0edc0e6f149713b936875351')
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_supervisor.py", line 7, in load
+    self.assertTrue((HERE/'r6b_supervisor.py').exists(),'Missing exception-safe reused limiter')
+AssertionError: False is not true : Missing exception-safe reused limiter
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (failures=3)

@@ -1,0 +1,38 @@
+test_ambient_input_library_python_and_secret_overrides_never_reach_child (__main__.InputAndEnvironment) ... FAIL
+test_complete_frozen_X_and_any_active_change_rejected (__main__.InputAndEnvironment) ... FAIL
+test_padding_length_type_and_signed64_domain_rejected (__main__.InputAndEnvironment) ... FAIL
+
+======================================================================
+FAIL: test_ambient_input_library_python_and_secret_overrides_never_reach_child (__main__.InputAndEnvironment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 24, in test_ambient_input_library_python_and_secret_overrides_never_reach_child
+    g=gate_module();env=g.child_environment({'ZKGPT_PUBLIC_EMBEDDING':'evil','ZKGPT_RANDOM_INPUT_ABS':'1','ZKGPT_PARAMETER_DIR':'evil','ZKGPT_FC_WEIGHT_DIR':'evil','LD_PRELOAD':'evil','LD_LIBRARY_PATH':'evil','PYTHONPATH':'evil','PATH':'/evil','SECRET_TOKEN':'secret'})
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 9, in gate_module
+    assert path.is_file(),'Missing external execution gate (feature not implemented)'
+AssertionError: Missing external execution gate (feature not implemented)
+
+======================================================================
+FAIL: test_complete_frozen_X_and_any_active_change_rejected (__main__.InputAndEnvironment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 14, in test_complete_frozen_X_and_any_active_change_rejected
+    g=gate_module();values=json.loads((HERE/'test-data/public_X.json').read_text())
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 9, in gate_module
+    assert path.is_file(),'Missing external execution gate (feature not implemented)'
+AssertionError: Missing external execution gate (feature not implemented)
+
+======================================================================
+FAIL: test_padding_length_type_and_signed64_domain_rejected (__main__.InputAndEnvironment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 20, in test_padding_length_type_and_signed64_domain_rejected
+    g=gate_module();values=json.loads((HERE/'test-data/public_X.json').read_text())
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R6B-20261020T134705Z-6680d8da-prepare/test_r6b_gate.py", line 9, in gate_module
+    assert path.is_file(),'Missing external execution gate (feature not implemented)'
+AssertionError: Missing external execution gate (feature not implemented)
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (failures=3)

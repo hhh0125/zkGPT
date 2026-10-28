@@ -1,0 +1,30 @@
+{
+  "id": "watchdog-disk-fixture-driver",
+  "command": [
+    "/usr/bin/python3",
+    "reports/R6A/run_limited.py",
+    "reports/R6A/watchdog-disk-fixture.job.json"
+  ],
+  "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+  "started_utc": "2026-10-20T12:56:12.372892+00:00",
+  "seconds": 0.27763016521930695,
+  "exit_code": 0,
+  "expected_exit": 0,
+  "PASS": true,
+  "timeout_seconds": 60,
+  "address_space_limit_gib": 2,
+  "RSS_group_limit_gib": 2,
+  "observed_process_group_peak_bytes": 1134592,
+  "stop_reason": null,
+  "disk_reserve_gib": 8,
+  "shared_memory_reserve_gib": 32,
+  "binary_sha256": "a2f33a6e006989270f4340528eb61f8f97366e00a5d1b602ac8672ea44fc56ae",
+  "environment_overrides": {
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "ZKGPT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2"
+  },
+  "log": "logs/R6A/watchdog-disk-fixture-driver.log",
+  "time": "logs/R6A/watchdog-disk-fixture-driver.time"
+}

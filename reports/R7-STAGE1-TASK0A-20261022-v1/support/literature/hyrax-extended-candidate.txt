@@ -1,0 +1,2160 @@
+
+===== PDF PAGE 1 =====
+Doubly-eﬃcient zkSNARKs without trusted setup
+Riad S. Wahby⋆
+rsw@cs.stanford.edu
+Ioanna Tzialla◦
+iontzialla@gmail.com
+abhi shelat†
+abhi@neu.edu
+Justin Thaler‡
+justin.thaler@georgetown.edu
+Michael Walﬁsh◦
+mwalfish@cs.nyu.edu
+⋆Stanford ◦NYU †Northeastern ‡Georgetown
+Abstract. We present a zero-knowledge argument for NP with
+low communication complexity, low concrete cost for both the
+prover and the veriﬁer, and no trusted setup, based on standard
+cryptographic assumptions. Communication is proportional to
+d·log(G) (for d the depth andG the width of the verifying circuit)
+plus the square root of the witness size. When applied to batched
+or data-parallel statements, the prover’s runtime is linear and the
+veriﬁer’s is sub-linear in the verifying circuit size, both with good
+constants. In addition, witness-related communication can be
+reduced, at the cost of increased veriﬁer runtime, by leveraging
+a new commitment scheme for multilinear polynomials, which
+may be of independent interest. These properties represent a
+new point in the tradeoﬀs among setup, complexity assumptions,
+proof size, and computational cost.
+We apply the Fiat-Shamir heuristic to this argument to produce
+a zero-knowledge succinct non-interactive argument of knowl-
+edge (zkSNARK) in the random oracle model, based on the
+discrete log assumption, which we call Hyrax. We implement
+Hyrax and evaluate it against ﬁve state-of-the-art baseline sys-
+tems. Our evaluation shows that, even for modest problem sizes,
+Hyrax gives smaller proofs than all but the most computationally
+costly baseline, and that its prover and veriﬁer are each faster
+than three of the ﬁve baselines.
+1 Introduction
+A zero-knowledge proof convinces a veriﬁer of a statement while
+revealing nothing but its own validity. Since they were introduced
+by Goldwasser, Micali, and Rackoﬀ [50], zero-knowledge (ZK)
+proofs have found applications in domains as diverse as authenti-
+cation and signature schemes [85, 90], secure encryption [40, 89],
+and emerging blockchain technologies [12].
+A seminal result in the theory of interactive proofs and cryp-
+tography is that any problem solvable by an interactive proof
+(IP) is also solvable by a computational zero-knowledge proof
+or perfect zero-knowledge argument [8]. This means that, given
+an interactive proof for any NP-complete problem, one can
+construct zero-knowledge proofs or arguments for any NP state-
+ment. But existing instantiations of this paradigm have large
+overheads: early techniques [22, 48] require many repetitions
+to achieve negligible soundness error, and incur polynomial
+blowups in prover work and communication. More recent work
+[24, 27, 28, 30, 51, 52, 55] avoids those issues, but generally
+entails many expensive cryptographic operations.1
+Several other recent lines of work have sought to avoid these
+overheads. As detailed in Section 2, however, these works still
+yield costly protocols or come with signiﬁcant limitations. In
+particular, state-of-the-art, general-purpose ZK protocols suﬀer
+1Some works avoid these overheads by targeting speciﬁc problems with algebraic
+structure and cryptographic signiﬁcance, most notably Schnorr-style proofs [90]
+for languages related to statements about discrete logarithms of group elements.
+from one or more of the following problems: (a) they require proof
+size that is linear or super-linear in the size of the computation
+verifying an NP witness; (b) they require the prover or veriﬁer to
+perform work that is super-linear in the time to verify a witness;
+(c) they require a complex parameter setup to be performed
+by a trusted party; (d) they rely on non-standard cryptographic
+assumptions; or (e) they have very high concrete overheads.
+These issues have limited the use of such general-purpose ZK
+proof systems in many contexts.
+Our goal in this work is to address the limitations of existing
+general-purpose ZK proofs and arguments. Speciﬁcally, we would
+like to take any computation for verifying an NP statement and
+turn it into a zero-knowledge proof of the statement’s validity. In
+addition to concrete eﬃciency, our desiderata are that:
+• the proof should be succinct, that is, sub-linear in the size of
+the statement and the witness to the statement’s validity;
+• the veriﬁer should run in time linear in input plus proof size;
+• the prover, given a witness to the statement’s validity, should
+run in time linear in the cost of the NP veriﬁcation procedure;
+• the scheme should not require a trusted setup phase or common
+reference string; and
+• soundness and zero-knowledge should each be either statistical
+or based on standard cryptographic assumptions. Pragmatically,
+security in the random oracle model [7] suﬃces.
+Our approach transforms a state-of-the-art interactive proof
+for arithmetic circuit (AC) satisﬁability into a zero-knowledge
+argument by composing new ideas with existing techniques.
+Ben-Or et al. [8] and Cramer and Damgård [37] show how to
+transform IPs into computationally ZK proofs or perfectly ZK
+arguments, using cryptographic commitment schemes. At a high
+level, rather than sending its messages in the clear, the prover
+sends cryptographic commitments corresponding to its messages.
+These commitments are binding, ensuring that the prover cannot
+cheat by equivocating about its messages. They are alsohiding,
+meaning that the veriﬁer cannot learn the committed value and
+thus ensuring zero-knowledge. Finally, the commitment scheme
+has a homomorphism property (§3.1) that allows the veriﬁer to
+check the prover’s messages “underneath the commitments.”
+Accepted wisdom is that such transformations introduce large
+overheads (e.g., [33, §1.1]). In this paper, we challenge that
+wisdom by constructing a protocol that meets our desiderata for
+many cases of interest.
+Our starting point is the Giraﬀe interactive proof [104] with
+an optimization, adapted from Chiesa et al. [33], that reduces
+communication complexity (§3.2). We transform this IP into a
+ZK argument through a straightforward (but careful) applica-
+tion of Cramer-Damgård techniques (§4). This argument uses
+cryptographic operations (required by the commitment schemes)
+926
+2018 IEEE Symposium on Security and Privacy
+© 2018, Riad S. Wahby. Under license to IEEE.
+DOI 10.1109/SP.2018.00060
+
+===== PDF PAGE 2 =====
+only for the witness and for the prover’s messages, which are
+sub-linear in the size of the AC. (In contrast, many recent works
+invoke cryptographic primitives for each gate in the verifying
+circuit [12, 13, 16, 24, 30, 46, 79]; §2.) But the argument is not
+succinct, and it has high concrete costs, especially for the veriﬁer.
+We slash these costs with two key reﬁnements. First, we
+exploit the IP’s structure by tightly integrating the veriﬁcation
+procedure with a multi-commitment scheme and a Schnorr-style
+proof [90] (§5); this reduces communication and computational
+costs by 3–5× compared to the naive approach. Second, we
+devise a new witness commitment scheme (§6), yielding a
+succinct argument and asymptotically reducing the veriﬁer’s cost
+associated with the witness.
+Our protocol is public coin; we compile it into Hyrax,a
+zero-knowledge succinct non-interactive argument of knowledge
+(zkSNARK) [20] in the random oracle model [7], via the Fiat-
+Shamir heuristic [41] (§7). We evaluateHyrax and ﬁve state-of-
+the-art baselines (BCCGP-sqrt[24], Bulletproofs[30], Ligero [1],
+ZKB++ [32], and libSTARK [11]; §8). For modest problem sizes,
+Hyrax gives smaller proofs than all but the most computationally
+costly baseline; its prover and veriﬁer are each faster than three
+of the ﬁve baselines; and its reﬁnements yield multiple-orders-
+of-magnitude savings in proof size and veriﬁer runtime.
+Contributions. We design, implement, and evaluate Hyrax,
+a “doubly” (meaning for both prover and veriﬁer) concretely
+eﬃcient zkSNARK. For input x, witness w,a nA CC of width G
+and depth d, and a design parameterι ≥ 2 that controls a tradeoﬀ
+between proof length and veriﬁer time:
+• Hyrax ’s proofs are succinct, i.e., sub-linear in|C| and|w|: they
+require≈10d log G + |w|
+1/ι group elements;
+• its veriﬁer runs in time sub-linear in |C|,i f C has suﬃcient
+parallelism:2 O(|x| + d log G + |w|
+(ι−1)/ι), with good constants;
+• its prover runs in time linear in |C|, with good constants, if
+C has suﬃcient parallelism (practically, a few tens of paral-
+lel instances suﬃces), and it requires only O(d log G + |w|)
+cryptographic operations, also with good constants; and
+• it requires no trusted setup, and it is secure under the discrete
+log assumption in the random oracle model.
+We also give a new commitment scheme tailored to multilinear
+polynomials (§6), which may be of independent interest. This
+scheme allows the prover to commit to a multilinear polynomial
+m over F, and later to reveal (a commitment to) m(r) for any r
+chosen by the veriﬁer. Forι ≥ 2, if |m| denotes the number of
+monomials in m, then the commitment has size O(|m|
+1/ι), and
+the time to verify a purported evaluation is O(|m|
+(ι−1)/ι).
+2 Related work
+ZK proofs. Over the past several years there has been signiﬁcant
+interest in implementing ZK proof systems. In this section, we
+discuss those eﬀorts, focusing on the theoretical underpinnings
+and associated cryptographic assumptions; we compare Hyrax
+with several of these works empirically in Section 8.
+Gennaro et al. [46] present a linear probabilistically checkable
+2Even without parallelism, the veriﬁer runs in time sub-linear in|C| if C’s wiring
+pattern satisﬁes a technical “regularity” condition [35, 49] (Thm. 1, §3.2).
+proof (PCP) 3 and ZK transform that form the basis of many
+recent zkSNARK implementations [4, 5, 12, 13, 15, 16, 29, 34,
+36, 39, 42–44, 64, 76, 79, 105], including systems deployed in ap-
+plications like ZCash [12, 107]. These implementations build on
+theoretical work by Ishai et al. [59], Groth [53], Lipmaa [69], and
+Bitansky et al. [21], as well as implementations and reﬁnements
+in the non-ZK context [29, 91–93]. Such zkSNARKs give small,
+constant-sized proofs (hundreds of bytes), and veriﬁer runtime
+depends only on input size. But ZK systems in this line rely on
+non-standard, non-falsiﬁable cryptographic assumptions, require
+a trusted setup, and have massive prover overhead: runtime is
+quasi-linear in the verifying circuit size, including a few public
+key operations per gate, and memory consumption limits the
+statement sizes these systems can handle in practice [105].
+A line of work by Ben-Sasson et al. builds non-interactive ZK
+arguments from short PCPs, following the seminal work of Kil-
+ian [62, 63] and Micali [73], the landmark result of Ben-Sasson
+and Sudan [17], and recent generalizations of PCPs [9, 14, 87].
+The authors reduce the concrete overheads associated with these
+approaches [10] and implement zero-knowledge scalable trans-
+parent arguments of knowledge (zkSTARKs) [11]. zkSTARKs
+need no trusted setup and no public-key cryptography, but their
+soundness rests on a non-standard conjecture related to Reed-
+Solomon codes [11, Appx. B]. Further, zkSTARKs are heavily
+optimized for statements whose verifying circuits are expressed
+as a sequence of state-machine transitions; this captures all of NP,
+but can introduce signiﬁcant overhead in practice [105]. Both
+proof size and veriﬁer runtime are logarithmic in circuit size
+(hundreds of kilobytes and tens of milliseconds, respectively, in
+practice), and prover runtime is quasi-linear.
+Another approach due to Ishai, Kushilevitz, Ostrovsky, and
+Sahai [60] (IKOS) transforms a secure multi-party computation
+protocol into a ZK argument. Giacomelli et al. reﬁne this ap-
+proach and construct ZKBoo [47], a ZK argument system for
+Boolean circuits with no trusted setup from collision-resistant
+hashes; ZKB++, by Chase et al. [32], reduces proof size by con-
+stant factors. Both schemes are concretely inexpensive for small
+circuits, but their costs scale linearly with circuit size. Ames et
+al. [1] further reﬁne the IKOS transform and apply it to a more
+sophisticated secure computation protocol. Their scheme, Ligero,
+makes similar security assumptions to ZKBoo but proves an AC
+C’s satisﬁability with proof size ˜O(√|C|) and prover and veriﬁer
+work quasi-linear in|C| (where ˜O ignores polylog factors).
+Bootle et al. [24] give two ZK arguments for AC satisﬁability
+from the hardness of discrete logarithms, building on the work
+of Groth [52] and of Bayer and Groth [6]. The ﬁrst has proof size
+O(
+√
+M) and quasi-linear prover and veriﬁer runtime for an AC
+with M multiplications. The second reduces this to O(logM) at
+the cost of concretely longer prover and veriﬁer runtimes. Bünz et
+al. [30] reduce proof size and runtimes in the log scheme by≈3×.
+Bootle et al. [25] give a ZK argument with proof size O(
+√
+|C|)
+whose veriﬁer uses O(|C|) additions (which are less expensive
+than multiplications), but the authors state that the constants are
+large and do not recommend implementing as-is.
+Most similar to our work, Zhang et al. [108] show how to com-
+3The observation that the quadratic span programsof GGPR [46] can be viewed
+as linear PCPs is due to Bitansky et al. [21] and Setty et al. [91].
+927
+===== PDF PAGE 3 =====
+bine an interactive proof [35, 49, 97] and a veriﬁable polynomial
+delegation scheme [61, 78] to construct a succinct, non-ZK inter-
+active argument. A follow-up work [109] (concurrent with and
+independent from ours) achieves ZK using the same commit-and-
+prove approach that we use, with several key diﬀerences. First,
+their commitment to the witnessw has communication O(log|w|),
+but has a trusted setup phase and relies on non-standard, non-
+falsiﬁable assumptions. In contrast, our commitment protocol
+(§6) has no trusted setup and is based on the discrete log as-
+sumption, but has communication O(|w|
+1/ι),ι ≥ 2. Second, their
+argument uses an IP that requires more communication than
+ours (§3.2). Finally, our method of compiling the IP into a ZK
+argument uses additional reﬁnements (§5) that reduce costs. Both
+our IP and our reﬁnements apply to their work; we estimate that
+they would reduce proof size by≈3× andV runtime by≈5×.
+Polynomial commitment schemes were introduced by Kate et
+al. [61], who gave a construction for univariate polynomials based
+on pairing assumptions. Several follow-up works [78, 108–110]
+extend this construction to multivariate polynomials; Libert et
+al. [65] give a construction based on constant-size assumptions;
+and Fujisaki et al. [45] give a construction for polynomial evalua-
+tion based on the RSA problem that can be immediately adapted
+to polynomial commitment. None of these schemes meet our
+desiderata (§1) because of some combination of high cost, trusted
+setup, and non-standard assumptions. Bootle et al. [25] and Boo-
+tle and Groth [26] describe univariate polynomial commitment
+schemes based on the discrete log assumption; our scheme is
+closely related to these ideas and extends them to multilinear
+polynomials. The second of these also presents a general frame-
+work for proving simple relations between commitments and ﬁeld
+elements; exploring these ideas in our context is future work.
+3 Background
+3.1 Deﬁnitions
+We use⟨A(za), B(zb)⟩(x) to denote the random variable represent-
+ing the (local) output of machineB when interacting with machine
+A on common input x, when the random tapes for each machine
+are uniformly and independently chosen, andA and B has auxil-
+iary inputs za and zb respectively. We usetr⟨A(za), B(zb)⟩(x) to
+denote the random variable representing the entire transcript of
+the interaction between A and B, and View(⟨A(za), B(zb)⟩(x)) to
+denote the distribution of the transcript. The symbol≈c denotes
+that two ensembles are computationally indistinguishable.
+Arithmetic circuits
+Section 3.2 considers the arithmetic circuit (AC) evaluation
+problem. In this problem, one ﬁxes an arithmetic circuit C,
+consisting of addition and multiplication gates over a ﬁnite ﬁeld
+F. We assume throughout thatC is layered, with all gates having
+fan-in at most 2 (any arithmetic circuit can be made layered while
+increasing the number of gates by a factor of at most the circuit
+depth). C has depth d and input x with length |x|. The goal is
+to evaluateC on input x. In an interactive proof or argument for
+this problem, the prover sends the claimed outputs y of C on
+input x, and must prove thaty = C( x).
+Our end goal in this work is to give eﬃcient protocols for the
+arithmetic circuit satisﬁability problem. LetC(·,·) be a layered
+arithmetic circuit of fan-in two. Given an inputx and outputs y,
+the goal is to determine whether there exists a witness w such
+that C(x, w) = y. The corresponding witness relation for this
+problem is the natural one: R(x,y) = {w : C(x, w) = y}.
+Interactive protocols and zero-knowledge
+Deﬁnition 1 (Interactive arguments and proofs). A pair of prob-
+abilistic interactive machines ⟨P,V⟩ is called an interactive
+argument system for a language L if there exists a negligible
+functionη such that the following two conditions hold:
+1. Completeness: For every x ∈ L there exists a string w s.t. for
+every z ∈{ 0, 1}∗, Pr[⟨P( w),V( z)⟩(x)=1]≥ 1−η(| x|).
+2. Soundness: For every x /nelement L, every interactive PPTP∗, and
+every w, z ∈{ 0, 1}∗, Pr[⟨P∗(w),V( z)⟩(x)=1]≤ η(| x|).
+If soundness holds against computationally unbounded cheating
+proversP∗, then ⟨P,V⟩ is called an interactive proof (IP).
+Deﬁnition 2 (Zero-knowledge (ZK)). Let L ⊂{ 0, 1}∗ be a
+language and for each x ∈ L,l e t Rx ⊂{ 0, 1}∗ denote a cor-
+responding set of witnesses for the fact that x ∈ L.L e t RL
+denote the corresponding language of valid (input, witness) pairs,
+i.e., RL = {(x, w): x ∈ L and w ∈ Rx}. An interactive proof or
+argument system⟨P,V⟩ for L is computational zero-knowledge
+(CZK) with respect to an auxiliary input if for every PPT inter-
+active machineV∗, there exists a PPT algorithm S, called the
+simulator, running in time polynomial in the length of its ﬁrst
+input, such that for every x ∈ L, w ∈ Rx, and z ∈{ 0, 1}∗,
+View(⟨P(w),V∗(z)⟩(x)) ≈c S(x, z) (1)
+when the distinguishing gap is considered as a function of|x|.I f
+the statistical distance between the two distributions is negligible,
+then the interactive proof or argument system is said to be
+statistical zero-knowledge (SZK). If the simulator is allowed to
+abort with probability at most 1/2, but the distribution of its
+output conditioned on not aborting isidentically distributed to
+View(⟨P(w),V∗(z)⟩(x)), then the interactive proof or argument
+system is called perfect zero-knowledge (PZK).
+The left term in Equation (1) denotes the distribution of
+transcripts afterV∗ interacts withP on common inputx; the right
+term denotes the distribution of simulator S’s output on x.F o r
+any CZK (resp., SZK or PZK) protocol, Deﬁnition 2 requires the
+simulator to produce a distribution that is computationally (resp.,
+statistically or perfectly) indistinguishable from the distribution
+of transcripts of the ZK proof or argument system.
+Our zero-knowledge arguments also satisfy a proof of knowl-
+edge property. Intuitively, this means that in order to produce a
+convincing proof of a statement, the prover mustknow a witness
+to the validity of the statement. To deﬁne this notion formally, we
+follow Groth and Ishai [54] who borrow the notion of statistical
+witness-extended emulation from Lindell [68]:
+Deﬁnition 3 (Witness-extended emulation [54]). Let L be a lan-
+guage and RL corresponding language of valid (input, witness)
+pairs as in Deﬁnition 2. An interactive argument system⟨P,V⟩
+for L has witness-extended emulation if for all deterministic
+polynomial time P∗ there exists an expected polynomial time
+emulator E such that for all non-uniform polynomial time adver-
+saries A and all zV ∈{ 0, 1}∗, the following probabilities diﬀer
+928
+===== PDF PAGE 4 =====
+by at most a negligible function in the security parameterλ:
+Pr
+[
+(x, zP)← A(1λ); t ← tr⟨P∗(zP),V( zV)⟩(x) : A(t) = 1]
+and Pr
+[
+(x, zP)← A(1λ);(t, w)← EP∗(zP)(x) : A(t) = 1∧
+if t is an accepting transcript, then(x, w)∈ RL.
+]
+Here, the oracle called byE permits rewinding the prover to a
+speciﬁc point and resuming with fresh randomness for the veriﬁer
+from this point onwards.
+Commitment schemes
+Informally, a commitment scheme allows asender to produce
+a message C = Com(m) that hides m from a receiver but binds
+the sender to the valuem. In particular, when the senderopens C
+and reveals m, the receiver is convinced that this was indeed the
+sender’s original value. We say thatCompp(m; r) is a commitment
+to m with opening r with respect to public parameters pp. The
+sender chooses r at random; to open the commitment, the sender
+reveals(m, r). We frequently leave the public parameters implicit,
+and sometimes do the same for the opening, e.g.,Com(m).
+Deﬁnition 4 (Collection of non-interactive commitments [57]).
+We say that a tuple of PPT algorithms(Gen, Com) is a collection
+of non-interactive commitments if the following conditions hold:
+• Computational binding: For every (non-uniform) PPT A,
+there is a negligible functionη such that for everyn ∈ N,
+Pr
+⎡⎢⎢⎢⎢⎢⎢⎣ pp ← Gen(1n) ;(m0, r0),(m1, r1)← A(1n, pp) :m0 /nequal m1,|m0| = |m1| = n,Compp(m0; r0) = Compp(m1; r1) ⎤⎥⎥⎥⎥⎥⎥⎦ ≤η(n)
+• Perfect hiding: For anypp ∈{ 0, 1}∗ and m0, m1 ∈{ 0, 1}∗
+where |m0| = |m1|, the ensembles {Compp(m0)}n∈N and
+{Compp(m1)}n∈N are identically distributed.
+Collections of non-interactive commitments can be constructed
+based on any one-way function [56, 75], but we require a ho-
+momorphism property (deﬁned below) that these commitments
+do not provide. (The Pedersen commitment [80], described in
+Appx. A, provides this property.)
+Deﬁnition 5 (Additive homomorphism). Given Com(x; sx) and
+Com(y; sy), there is an operator⊙ such that
+Com(x; sx)⊙ Com(y; sy) = Com(x + y; sx + sy) and
+Com(x; sx)k ≜ Com(x; sx)⊙···⊙ Com(x; sx) (k times)
+In a multi-commitment scheme, x and y are vectors, and this
+additive homomorphism is vector-wise.
+3.2 Our starting point: Gir ++ (Giraﬀe, with a tweak)
+The most eﬃcient known IPs for the AC evaluation problem (§3.1)
+follow a line of work starting with the breakthrough result of
+Goldwasser, Kalai, and Rothblum (GKR) [49]. Cormode, Mitzen-
+macher, and Thaler (CMT) [35] and Vu et al. [102] reﬁne this
+result, giving O(|C| log|C|) prover and O(|x| + |y| + d log|C|)
+veriﬁer runtimes, for ACC with depth d, input x, and output y.
+Further reﬁnements are possible in the case whereC is data
+parallel, meaning it consists of N identical sub-computations
+run on diﬀerent inputs. (We refer to each sub-computation as a
+sub-AC of C, and we assume for simplicity that all layers of the
+sub-AC have widthG,s o|C| = d· N· G.) Thaler [97] reduced the
+prover’s runtime in the data-parallel case from O(|C| log|C|) to
+O(|C| log G). Very recently, Wahby et al. introduced Giraﬀe [104],
+which reduces the prover’s runtime to O (|C| + d · G · log G).
+Since |C| = d · N · G, observe that when N ≥ log G, the time
+reduces to O(|C||), which is asymptotically optimal. That is, for
+suﬃcient data parallelism, the prover’s runtime is just a constant
+factor slower than evaluating the circuit gate-by-gate without
+providing any proof of correctness.
+Our work builds onGir++, which reduces Giraﬀe’s communica-
+tion via an optimization due to Chiesa et al. [33]; our description
+of Gir++ borrows notation from Wahby et al. [104]. Assume for
+simplicity that N and G are powers of 2, and let bN = log2 N
+and bG = log2 G. Within a layer ofC, each gate is labeled with a
+pair (i, j)∈{ 0, 1}bN ×{ 0, 1}bG . Number the layers ofC from 0
+to d in reverse execution order, so that 0 refers to the output layer,
+and d refers to the input layer. Each layer i is associated with
+an evaluator function Vi : {0, 1}bN ×{ 0, 1}bG → F that maps a
+gate’s label to the output of that gate when C is evaluated on
+input x. For example,V0(i, j) is the j’th output of thei’th sub-AC,
+and Vd(i, j) is the jth input to the ith sub-AC.
+At a high level, the protocol proceeds in iterations, one for
+each layer of the circuit. At the start of the protocol, the proverP
+sends the claimed outputs y ofC (i.e., all the claimed evaluations
+of V0). The ﬁrst iteration of the protocol reduces the claim about
+V0 to a claim about V1, in the sense that it is safe for the veriﬁer
+V to believe the former claim as long asV is convinced of the
+latter. ButV cannot directly check the claim aboutV1, because
+doing so would require evaluating all of the gates inC other than
+the outputs themselves. Instead, the second iteration reduces the
+claim about V1 to a claim about V2, and so on, untilP makes a
+claim about Vd (i.e., the inputs toC), whichV checks itself.
+To describe how the reduction from a claim aboutVi to a claim
+about Vi+1 is performed, we ﬁrst introducemultilinear extensions,
+the sum-check protocol, and wiring predicates.
+Multilinear extensions. An extension of a function
+f : {0, 1}𝓁 → F is a𝓁-variate polynomial g over F such that
+g(x) = f(x) for all x ∈{ 0, 1}𝓁. Any such function f has a
+unique multilinear extension (MLE)—a multilinear polynomial—
+denoted ˜f . Given a vector z ∈ Fm with m = 2𝓁, we will often
+view z as a function z : {0, 1}𝓁 → F mapping indices to vector
+entries, and use ˜z to denote the MLE of z.
+The sum-check protocol. Fix an𝓁-variate polynomial g over
+F, and let degi(g) denote the degree of g in variable i. The
+sum-check protocol [70] is an interactive proof that allows P
+to convinceV of a claim about the value of /summationtext.1x∈{0,1}𝓁 g(x) by
+reducing it to a claim about the value of g(r), where r ∈ F𝓁 is
+a point randomly chosen by V. There are𝓁 rounds, and V’s
+runtime is O(/summationtext.1𝓁i=1 degi(g)) plus the cost of evaluatingg(r). The
+mechanics are detailed in Section 4.
+Wiring predicates capture the wiring information of the sub-
+ACs. Deﬁne the wiring predicate addi : {0, 1}3bG →{ 0, 1},
+where addi(g, h0, h1) returns 1 if (a) within each sub-AC, gateg
+at layer i − 1 is an add gate and (b) the left and right inputs ofg
+are, respectively, h0 and h1 at layer i (and 0 otherwise). multi is
+929
+===== PDF PAGE 5 =====
+deﬁned analogously for multiplication gates. Deﬁne the equality
+predicate eq : {0, 1}2bN →{ 0, 1} as eq(a, b) = 1i ﬀ a = b.
+Thaler [ 97, 98] and Wahby et al. [ 104] show how to
+express ˜Vi−1 in terms of ˜Vi:f o r (q′, q)∈ FbN × FbG , let
+Pq′,q,i : FbN × FbG × FbG → F denote the polynomial
+Pq′,q,i(h′, hL, hR) =
+˜eq(q′, h′)· [ ˜addi(q, hL, hR) ( ˜Vi(h′, hL) + ˜Vi(h′, hR)) +
+˜multi(q, hL, hR) ( ˜Vi(h′, hL)· ˜Vi(h′, hR)) ]
+Then we have
+˜Vi−1(q′, q) = /summationdisplay.1
+h′∈{0,1}b N
+/summationdisplay.1
+hL,hR ∈{0,1}bG
+Pq′,q,i(h′, hL, hR). (2)
+Protocol overview
+Step 1. At the start of the protocol,P sends the claimed output
+y, thereby specifying a functionVy : {0, 1}bG +bN → F mapping
+the label of each output gate to the corresponding entry ofy. The
+veriﬁer wishes to check thatVy = V0 (i.e., that the claimed outputs
+equal the correct outputs ofC on input x); to accomplish this, it
+would be enough to check that ˜Vy = ˜V0. In principle,V could do
+that by choosing a random pair(q′, q)∈ FbN × FbG and checking
+that ˜Vy(q′, q) = ˜V0(q′, q); if that check passes, then ˜Vy = ˜V0
+with high probability, by the Schwartz-Zippel lemma. On the
+one hand,V can and does compute ˜Vy(q′, q); this takes O(NG)
+time [104, §3.3]. But on the other hand, V cannot compute
+˜V0(q′, q) directly—this would requireV to evaluateC.
+Step 2 (iterated). Instead,V outsources evaluation of ˜V0(q′, q)
+toP, via the sum-check protocol; this is motivated by Equation(2).
+At the end of the sum-check protocol,V must evaluatePq′,q,1 at a
+random input(r′, rL, rR), which requires the values˜V1(r′, rL) and
+˜V1(r′, rR).V does not evaluate these points directly; that would
+be too costly. Instead,P sends v0 and v1, which it claims are the
+required values.V uses these to evaluate Pq′,q,1, then checks v0
+and v1 using a mini-protocol, which we describe shortly. At a
+high level, the mini-protocol transformsP’s claims about v0, v1
+into a claim about ˜V2.V checks this claim with a sum-check and
+mini-protocol invocation, yielding a claim about ˜V3. P and V
+iterate, layer by layer, untilV has a claim about ˜Vd.
+Final step. V checksP’s ﬁnal claim about ˜Vd by evaluating ˜Vx
+(since ˜Vd = ˜Vx); it can do this in O(NG) time [104, §3.3].
+Mini-protocols: reducing from ˜Vi to ˜Vi+1
+Gir++ diﬀers from Giraﬀe only in that they use diﬀerent mini-
+protocols to reduce P’s claims at the end of one sum-check
+invocation (i.e., v0 = ˜Vi(r′, rL) and v1 = ˜Vi(r′, rR)) into the
+expression thatV and P use for the next sum-check invocation.
+Reducing from two points to one point. This approach is
+used in Giraﬀe and prior work [35, 49, 97, 102–104]. P sends
+V the restriction of ˜Vi to the unique line H in FbN +bG passing
+through the points(r′, rL) and(r′, rR) by specifying the univariate
+polynomial fH(t) = ˜Vi(r′,(1−t)· rL +t·rR), which has degreebG.
+V should believe this claim as long as fH(0) = v0, fH(1) = v1,
+and fH(υ) = ˜Vi(r′, rυ), where rυ = (1−υ)· rL +υ · rR andυ is
+chosen byV. By Equation (2),V can check this latter equality
+by engagingP in a sum-check protocol overPr′,rυ,i+1.
+Alternative: Random linear combination. Each invocation
+of the prior mini-protocol requires P to send bG + 1 ﬁeld
+elements specifying fH . The following technique, due to Chiesa
+et al. [33], eliminates this requirement. Instead,V checks v0 and
+v1 by checking a random linear combination, via a sum-check
+invocation over a polynomial we deﬁne below.
+In more detail,V samples two ﬁeld elementsμ0 andμ1, and
+sends them toP. Mechanically,V next checks that
+μ0 · ˜Vi(r′, rL) +μ1 · ˜Vi(r′, rR) =μ0 · v0 +μ1 · v1 (3)
+since, by the Schwartz-Zippel lemma, this implies that
+v0 = ˜Vi(r′, rL) and v1 = ˜Vi(r′, rR) with high probability (formal-
+ized in Thm. 1, below).V checks Equation (3) by exploiting the
+fact that its LHS can be written as
+μ0 · ˜Vi(q′, qL) +μ1 · ˜Vi(q′, qR)
+=
+/summationdisplay.1
+hL,hR ∈{0,1}bG
+/summationdisplay.1
+h′∈{0,1}b N
+[
+μ0 · Pq′,qL,i+1(h′, hL, hR) +
+μ1 · Pq′,qR,i+1(h′, hL, hR)]
+=
+/summationdisplay.1
+hL,hR ∈{0,1}bG
+/summationdisplay.1
+h′∈{0,1}b N
+Qq′,qL,qR,μ0,μ1,i+1(h′, hL, hR)
+where Qq′,qL,qR,μ0,μ1,i : FbN × FbG × FbG → F is given by:
+Qq′,qL,qR,μ0,μ1,i(h′, hL, hR) ≜ ~eq(q′, h′)·[ (μ0 · ˜addi(qL, hL, hR) +μ1 · ˜addi(qR, hL, hR))·( ˜Vi(h′, hL) + ˜Vi(h′, hR))
++(μ0 · ˜multi(qL, hL, hR) +μ1 · ˜multi(qR, hL, hR))·( ˜Vi(h′, hL)· ˜Vi(h′, hR)) ]
+This means thatV can check that Equation(3) holds by engaging
+P in a sum-check protocol overQr′,rL,rR,μ0,μ1,i+1.
+Giraﬀe vs. Gir++ Gir++ uses the Alternative above. This re-
+duces communication cost in Gir++ compared to Giraﬀe by a
+small factor that depends on the amount of data parallelism. We
+are motivated to reduce communication because communication
+will translate into proof size and more cryptographic cost (§4).
+As an exception, Gir++ uses the “reducing from two points
+to one point” technique after the ﬁnal sum-check (i.e., the one
+over Q..., d−1); this is to avoid increasingV’s computational costs
+compared to Giraﬀe. Recall that in the ﬁnal step of Gir ++, V
+checksP’s claim about ˜Vd by evaluating ˜Vx (which is equal to
+˜Vd). Thus, to check the LHS of Equation(3),V would require
+two evaluations of ˜Vx; the “reducing from two points to one point”
+technique requires only one. Since evaluating ˜Vx is typically a
+bottleneck for the veriﬁer [104, §3.3], eliminating the second
+evaluation is worthwhile even though it slightly increases the
+size ofP’s ﬁnal message (and thus the proof size; see §4).
+We give pseudocode for Gir++ in the full version [106, Appx. E].
+Gir++’s eﬃciency and security are formalized in the following
+theorem, which can be proved via a standard analysis [49].
+Theorem 1. The interactive proof Gir++ satisﬁes the following
+properties when applied to a layered arithmetic circuit C of
+fan-in two, consisting of N identical sub-computations, each
+of depth d, with all layers of each sub-computation having
+930
+===== PDF PAGE 6 =====
+width at most G. It has perfect completeness, and soundness
+error at most ((1 + 2 log G + 3 log N)· d + log G)/|F|.A f t e r
+a pre-processing phase taking time O(dG), the veriﬁer runs
+in time O(| x| + |y| + d log NG), and the prover runs in time
+O(|C| + d · G · log G). If the sub-AC has a regular wiring pattern
+as deﬁned in [35], then the pre-processing phase is unnecessary.
+4 Compiling Gir ++ into a ZK argument
+In this section, we describe a straightforward application of
+“commit-and-prove” techniques [8, 37] (§1) to Gir++ (§3.2). The
+result is a public coin, perfect ZK argument “of knowledge”
+for AC satisﬁability (the knowledge property is formalized via
+witness-extended emulation; §3.1). In Sections 5 and 6, we
+develop substantial eﬃciency improvements; in Section 7, we
+apply the Fiat-Shamir heuristic [41] to make it non-interactive.
+Building blocks. This section uses abstract commitments having
+a homomorphism property (§3.1). We also make black-box use
+of three sub-protocols, which operate on commitments:
+• proof-of-opening(C) convincesV that P can open C.
+• proof-of-equality(C0, C1) convincesV that C0 and C1 commit
+to the same value, and thatP can open both.
+• proof-of-product(C0, C1, C2) convincesV that C2 commits to
+the product of the values committed inC0 and C1, and thatP
+can open all three.
+In Appendix A, we give concrete deﬁnitions of the above protocols
+in terms of Pedersen commitments [80].
+Protocol overview. This protocol diﬀers from Gir ++ in three
+ways. First, it adds an initial step in which P commits to w
+such thatC( x, w) = y. Second,P replaces all of its messages in
+Gir++ with commitments to those messages. Third,P convinces
+V that its committed values pass all of V’s checks in Gir++
+using the homomorphism property of the commitments and the
+above sub-protocols. The steps below correspond to the steps of
+Gir++ (§3.2); we describe only how the protocols diﬀer.
+Step 0. (This is a new step.) P sends commitments to each
+element of w ∈ F𝓁. P and V execute proof-of-opening for each.
+Step 1. As in Gir ++, V computes ˜Vy(q′, q). Afterwards, V
+computes C0 = Com( ˜Vy(q′, q);0).
+Step 2. As in Gir ++, this step comprises one sum-check and
+one mini-protocol per layer ofC. We now review the sum-check
+protocol, and then describe howP andV execute the sum-check
+and mini-protocols “underneath the commitments.”
+Review of the sum-check protocol.We begin by describing the
+ﬁrst layer sum-check protocol in Gir++ (others are similar), which
+reduces ˜Vy(q′, q) to a claim about ˜V1(·). In the ﬁrst round of the
+sum-check protocol, P sends a univariate polynomial s1(·) of
+degree 3.V checks that s1(0) + s1(1) = ˜Vy(q′, q), and then sends
+a random ﬁeld element r1 to P. In general, in round j of the
+sum-check protocol,P sends a univariate polynomial sj (which
+is degree 3 in the ﬁrst bN rounds and degree 2 in the remaining
+rounds [97, 104]).V checks that sj(0) + sj(1) = sj−1(rj−1), then
+sends a random ﬁeld element rj to P.
+We write the vector of all rj’s chosen by V in the jlast =
+bN + 2bG rounds of the sum-check protocol as(r1,..., rjlast)∈
+FbN +2bG ; let r′ denote the ﬁrst bN entries of this vector, rL
+denote the next bG entries, and rR denote the ﬁnal bG entries.
+In the last round,P sends v0 and v1 (which it claims are equal
+to ˜V1(r′, rL) and ˜V1(r′, rR); §3.2).V ﬁrst checks that
+sjlast(rjlast) = ˜eq(q′, r′)· [ ˜add1(q, rL, rR)· (v0 + v1) +
+˜mult1(q, rL, rR)· v0 · v1]
+V then checksP’s claims about v0 and v1 by invoking a mini-
+protocol (§3.2) and engagingP in another sum-check at layer 2.
+ZK sum-check protocol. In round j of the sum-check, P com-
+mits to sj(t) = c0, j + c1, j t + c2, j t2 + c3, j t3, viaδc0, j ←Com(c0, j),
+δc1, j ←Com(c1, j),δc2, j ←Com(c2, j), andδc3, j ←Com(c3, j), and
+P and V execute proof-of-opening for each one. NowP con-
+vincesV that sj(0) + sj(1) = sj−1(rj−1). Notice that ifV holds
+commitments Com(sj−1(rj−1)) and Com(sj(0)+ sj(1)),P can use
+proof-of-equality to convinceV that the above equation holds.
+Further,V can use the homomorphism property to compute the
+required commitments: forsj(0) + sj(1) = 2c0, j + c1, j + c2, j + c3, j,
+V computesδ2c0, j ⊙δc1, j ⊙δc2, j ⊙δc3, j . Similarly, forsj−1(rj−1)
+V computesδc0, j ⊙δrjc1, j ⊙δr2jc2, j ⊙δr3jc3, j .
+The ﬁrst sum-check round (j = 1) is an exception to the above:
+rather than a commitment to s0, V holds a commitment to a
+value that purportedly equals s1(0) + s1(1). For the sum-check
+invocation at layer 1, this value isC0, whichV computed in Step
+1. For subsequent layers, the value is the result of the preceding
+mini-protocol invocation, which we discuss below.
+In the ﬁnal round jlast, V computes a commitment W
+to sjlast (rjlast) as described above. P then sends commit-
+ments X, Y, and Z to v0, v1, and v0 · v1, and uses
+proof-of-product to convince V that the committed val-
+ues satisfy this product relation. Finally, V computes
+Ω←(X ⊙ Y) ˜eq(q′,r′)· ˜add1(q,r1,r2) ⊙ Z ˜eq(q′,r′)· ˜mult1(q,r1,r2) andP uses
+proof-of-equality to convince V that W and Ω commit to the
+same value.
+ZK mini-protocols.For random-linear-combination,V computes
+Com(μ0v0 +μ1v1) = Xμ0 ⊙Yμ1 ; this is the purportedCom(s1(0)+
+s1(1)) for the next sum-check invocation.
+To execute reducing-from-two-points-to-one-point,P commits
+to the coeﬃcients of fH and invokes proof-of-opening for each;
+V computes commitments to fH(0) and fH(1), and P uses
+proof-of-equality to show that these commit to the same values
+as X and Y; and V samplesυ and computes a commitment to
+fH(υ), which it uses in the ﬁnal step.
+Final step. P now convincesV that Com( fH(υ)), the result of
+the ﬁnal mini-protocol invocation (which is a commitment to
+˜Vd(r′, rυ); §3.2), is consistent with x and w.
+We let m = (x, w) denote the concatenation of the input x and
+the witness w; assume for simplicity that|x| = |w| = 2𝓁; interpret
+x, w, and m as functions (§3.2, “Multilinear extensions”); and
+let(r0,..., r𝓁) = (r′, rυ). Then by the deﬁnitions of ˜m, ˜x, and ˜w,
+˜m(r0,..., r𝓁) = (1− r0)· ˜x(r1,..., r𝓁) + r0 · ˜w(r1,..., r𝓁).
+By analogy to Gir ++’s ﬁnal step, V’s task is to check that
+˜Vd(r′, rυ) is equal to ˜m(r0,..., r𝓁).V does this by ﬁrst computing
+Com( ˜m(r0,..., r𝓁)) using the commitments to w that P sent in
+Step 0 (above), and then engaging P in proof-of-equality on
+Com( fH(υ)) and Com( ˜m(r0,..., r𝓁)).
+931
+===== PDF PAGE 7 =====
+To compute Com( ˜m(·)), V exploits the following expres-
+sion [35] for the multilinear extension ofw : {0, 1}𝓁 → F:
+˜w(r1,..., r𝓁) =
+/summationdisplay.1
+b∈{0,1}𝓁
+w(b)·
+/productdisplay.1
+k∈{1,...,𝓁 }
+χbk (rk)
+=
+/summationdisplay.1
+b∈{0,1}𝓁
+w(b)· χb (4)
+whereχbk (rk) = rk bk +(1− rk)(1− bk),χb = /producttext.1k χbk (rk), and
+bk is the (1-indexed)kth bit of b. In more detail,V ﬁrst evaluates
+eachχb in linear time [102], and then computes
+F =
+/circledotdisplay.1
+b∈{0,1}𝓁
+Com(w(b))r0·χb(r1,..., r𝓁)
+which is Com(r0 · ˜w(r1,..., r𝓁)). It then computes, in the
+clear, F′ = (1 − r0)· ˜x(r1,..., r𝓁). Finally, V computes
+Com( ˜m(r0,..., r𝓁)) = F ⊙ Com(F′;0). Invoking proof-of-
+equality as described above completes the protocol.
+The following theorem formalizes the eﬃciency of the argu-
+ment of this section. We leave a formal statement of security
+properties to the ﬁnal protocol (§7).
+Theorem 2. Let C(·,·) be a layered arithmetic circuit of fan-in
+two, consisting of N identical sub-computations, each of depth
+d, with all layers of each sub-computation having width at most
+G. Assuming the existence of computationally binding, perfectly
+hiding homomorphic commitment schemes that support proof-
+of-opening, proof-of-equality, and proof-of-product (Appx. A)
+with running times upper-bounded by κ, there exists a PZK
+argument for the NP relation “∃w such thatC( x, w) = y.” The
+protocol requires d log(G) rounds of communication, and has
+communication complexity Θ(| y| + (|w| + d log G)· λ), where
+λ is a security parameter. Given a w such that C( x, w) = y,
+the prover runs in timeΘ(dNG + G log G +(|w| + d log G)· κ).
+Veriﬁer runtime is Θ(|x| + |y| + dG +(|w| + d log(NG))·κ).
+The above follows from the more general Theorem 3.1 of [8].
+5 Reducing the cost of sum-checks
+In the PZK argument from Section 4, the prover sends a separate
+commitment for every message element of Gir ++ (§3.2), and
+then independently proves knowledge of how to open each
+commitment. This leads to long proofs and many expensive
+cryptographic operations for the veriﬁer.
+In this section, we explain how to reduce this communication
+and the number of cryptographic operations for the veriﬁer by
+exploiting multi-commitment schemes, in which a commitment
+to a vector of elements has the same size as a commitment to
+a single element. The Pedersen commitment [ 80] (Appx. A)
+supports multi-commitments.
+Dot-product proof protocol. Our starting point is an existing
+protocol for multi-commitments, which we call proof-of-dot-
+prod. With this protocol, a prover that knows the openings of two
+commitments, one to a vector/vecx = (x1,..., xn)∈ Fn and one to a
+scalar y ∈ F, can prove in zero-knowledge thaty = ⟨/veca, /vecx⟩ for a
+public /veca ∈ Fn. The protocol is deﬁned in Appendix A.2.
+SquashingV’s checks. To exploit proof-of-dot-prod, we ﬁrst
+recall from Section 4 that in each round j of each sum-
+check invocation in Gir ++, P sends commitments to c0, j,
+c1, j, c2, j, and (only in the ﬁrst bN rounds) c3, j. Next, P
+proves toV that 2c0, j + c1, j + c2, j + c3, j = sj−1(rj−1) (i.e., that
+sj(0) + sj(1) = sj−1(rj−1)). Finally,V computes a commitment
+to sj(rj) = c0, j + c1, j rj + c2, j r2j + c3, j r3j for the next round.
+Combining the above equations yieldsc3, j+1 + c2, j+1 + c1, j+1 +
+2c0, j+1 −( c3, j r3j + c2, j r2j + c1, j rj + c0, j) = 0. V’s ﬁnal check
+can likewise be expressed as a linear equation in terms of
+v0, v1, c2,n, c1,n, c0,n, and wiring predicate evaluations (§3.2)
+(n = bN + 2bG). We can thus write V’s checks during the
+rounds of the sum-check protocol as the matrix-vector product
+⎡⎢⎢⎢⎢⎢⎣ M1...MbN +2bG +1 ⎤⎥⎥⎥⎥⎥⎦ · /vecπ = ⎡⎢⎢⎢⎢⎢⎣ s00... ⎤⎥⎥⎥⎥⎥⎦ (5)
+Each Mk i sar o wi nF4bN +6bG +3 encoding one of V’s checks
+and /vecπ is a column in F4bN +6bG +3 comprising P’s messages.
+(4bN +6bG +3 accounts for bN rounds with cubic sj,2 bG rounds
+with quadratic sj, and the ﬁnal values v0, v1, and v0v1; §4.)
+Now we can combine all of the linear equality checks encoded
+in Equation (5) into a single check, namely, by multiplying each
+row k by a random coeﬃcientρk and summing the rows.
+Lemma 3. For any /vecπ ∈ F𝓁, and any matrix M ∈ Fn+1×𝓁 with
+rows M1,..., Mn+1 for which Eq.(5) does not hold, then
+Pr
+ρ
+[⟨( /summationdisplay.1
+ρk · Mk
+)
+, /vecπ
+⟩
+=ρ1 · s0
+]
+≤ 1/|F|
+Proof. Observe that ⟨(/summationtext.1ρk · Mk), /vecπ⟩ is a polynomial in
+ρ1,...,ρ n+1 of total degree 1 (i.e., a linear function in
+ρ1,...,ρ n+1). Call this linear polynomial φ. The coeﬃcients
+ofφ are the entries of M · /vecπ. Similarly,ρ1 · s0 is a linear poly-
+nomialψ inρ1,...,ρ n+1, whose coeﬃcients are the entries of
+[s0, 0,..., 0]. Note that if Equation(5) does not hold, thenφ and
+ψ are distinct polynomials, each of total degree 1. The lemma
+now follows from the Schwartz-Zippel lemma. □
+Putting the pieces together. Lemma 3 implies that, once P
+has committed to /vecπ, it can use proof-of-dot-prod to convince
+V of the sum-check result in one shot. For soundness in Gir++,
+however,P must commit to c3, j, c2, j, c1, j, c0, j before the Veriﬁer
+sends rj. This means thatP cannot send Com(/vecπ) all at once.
+Instead, we observe that P can send the commitment to /vecπ
+incrementally, using one group element per round of the sum-
+check. That is, in each round of the sum-check protocol, P
+commits to a vector encoding the coeﬃcients of that round’s
+polynomial, andV responds with its random coin rj. After P
+has committed to all of its messages for the sum-check,P andV
+engage in the protocol of Figure 1, which encodesV’s checks
+for all rounds of the sum-check protocol at once. This protocol
+replaces V’s checks in Step 2 of the protocol of Section 4.
+Lemma 4. The protocol of Figure 1 is a complete, honest-veriﬁer
+perfect ZK argument, with witness-extended emulation under the
+discrete log assumption, that its inputs constitute an accepting
+sum-check relation: on input a commitment C0, commitments
+{αj} to polynomials{sj} in a sum-check invocation, rows{Mk} of
+the matrix of Equation (5), and commitments X = Com(v0), Y =
+Com(v1), and Z, where{rj} areV’s coins from the sum-check
+932
+===== PDF PAGE 8 =====
+proof-of-sum-check(C0,{αj},{Mk}, X, Y, Z)
+Inputs: C0 = Com(s0; rC0).
+{αj} are all ofP’s messages from a sum-check invocation: at
+each round j of the sum-check protocol,P has sent
+αj ← Com((c3, j, c2, j, c1, j, c0, j); rαj )
+{Mk} is deﬁned as in Equation (5) and Lemma 3. (These
+vectors encodeV’s random coins{rj} from the sum-check.)
+X = Com(v0; rX), Y = Com(v1; rY), Z = Com(v0v1; rZ).
+Deﬁnitions: n = bN + 2bG; /vecπ is deﬁned as in Equation (5);
+{ρk} are chosen byV (see below); /vecJ = /summationtext.1ρk · /vecMk; (JX, JY, JZ)
+are the last 3 elements of /vecJ; /vecπ∗ and /vecJ∗ are all but the last three
+elements of /vecπ and /vecJ, respectively.
+1. P and V execute proof-of-product (§4) on X, Y, and Z.
+2. P picks rδ1,..., rδn ∈R F and /vecd ∈R F4bN +6bG where
+/vecd = (dc3,1, dc2,1, dc1,1, dc0,1,..., dc0, n−1, dc2, n, dc1, n, dc0, n).
+P computes and sends
+δj ← Com((dc3, j, dc2, j, dc1, j, dc0, j ); rδj ), j ∈{ 1,..., n}
+3. V chooses and sendsρ1,...,ρ n+1 ∈R F.
+4. P picks rC ∈R F, then computes and sends
+C ← Com(⟨/vecJ∗, /vecd⟩; rC)
+5. V chooses and sends challenge c ∈R F.
+6. P computes and sends /vecz ← c · /vecπ∗ + /vecd,
+zδj ← c · rαj + rδj, j ∈{ 1,..., n}, and
+zC ← c · (ρ1rC0 − JX rX − JY rY − JZ rZ ) + rC
+7. V rejects unless the following holds, where we denote
+/vecz = (zc3,1, zc2,1, zc1,1, zc0,1,..., zc0, n−1, zc2, n, zc1, n, zc0, n):
+Com((zc3, j, zc2, j, zc1, j, zc0, j ); zδj )
+?
+=αcj ⊙δj j ∈{ 1,..., n}
+(Cρ10 ⊙ X−JX ⊙ Y−JY ⊙ Z−JZ )c ⊙ C ?= Com(⟨/vecJ∗,/vecz⟩; zC)
+Figure 1—This protocol proves the statement derived by applying
+Lemma 3 to Equation(5), i.e., that the sum-check whose transcript is
+encoded in the protocol’s inputs is accepting. Values corresponding to
+c3, j are elided for all sum-check rounds j having quadratic sj.
+and n=bN +2bG, the protocol proves thatC0=Com(s1(0)+s1(1));
+sj(0)+sj(1)=sj−1(rj−1), j∈{2,..., n}; and sn(rn)=Q...,i evalu-
+ated with v0, v1 (per §3.2).
+Lemma 4’s proof is standard; we leave it to the full version [106,
+Appx. A.4]. Relative to Step 2 of Section 4, the protocol of Figure 1
+reduces sum-check communication by≈3×. It also reducesP’s
+andV’s cryptographic costs by≈4× and≈5×, respectively.
+6 Reducing the cost of the witness
+In the protocol of Section 4,P sends a separate commitment to
+each element w1,..., w𝓁 of the witness w (§4, “Step 0.”). This
+means that handling a circuit relation with|w| witness elements
+requires a proof whose size is at least proportional to|w|. In this
+section, we describe a new commitment scheme for multilinear
+polynomials that reduces witness commitment size (and thus
+proof size) to sub-linear in|w|; it also reducesV’s computation
+cost to sub-linear in|w| (§6.1). To begin, we require each sub-
+AC to have separate input and witness elements; we relax this
+restriction by introducing a redistribution layer that allows input
+and witness sharing among sub-ACs (§6.2).
+6.1 A commitment scheme for multilinear polynomials
+In Section 4,V’s ﬁnal step checks thatP’s commitments tow are
+consistent with its other messages by evaluating ˜w (the MLE of
+w; §3.2, “Multilinear extensions”). Zhang et al. [108] show, in the
+non-ZK setting, thatV can outsource this evaluation toP.W e
+apply their idea to the ZK setting,4 reducing communication and
+savingV computation, by devising a polynomial commitment
+scheme [61] tailored to multilinear polynomials. Informally, such
+schemes are hiding and binding (§3.1, Def. 4); they also allow
+the sender to evaluate a committed polynomial at any point and
+prove that the evaluation is consistent with the commitment.
+Our commitment scheme builds on a matrix commitment
+idea due to Groth [ 52] and an inner-product argument due to
+Bünz et al. [30]. We begin by describing a simpliﬁed version of
+the scheme that gives O(
+√
+|w|) communication andV runtime;
+we then generalize this to O (Sp) communication and O (Ti)
+V runtime, Ti ≥
+√
+|w|, Sp · Ti = |w|. We assume WLOG for
+notational convenience that 2𝓁 = |x| = |w|.
+Square-root commitment scheme. In its ﬁnal check,V evalu-
+ates ˜w(r1,..., r𝓁) by computing a commitment to the dot product
+⟨(w0,..., w2𝓁−1),(χ0,...,χ 2𝓁−1)⟩ (Eq. (4), §4). Consider the fol-
+lowing strawman protocol for computing this commitment: in
+Step 0 (§4),P sends one multi-commitment tow. Later,P sends
+a commitmentω, andP andV execute proof-of-dot-prod (§5)
+on Com(w),ω, and (χ0,... ). This protocol convinces V that
+ω = Com( ˜w(·)), but does not reduce communication: proof-of-
+dot-prod requiresP to send O(|w|) messages (Appx. A.2).
+To reduce communication, we exploit the structure of the
+polynomial ˜w and a matrix commitment due to Groth [52]. At
+a high level, this works as follows (details below). In Step 0,
+P encodes w as a matrix T, then sends commitments {Tk} to
+the rows of T. Then, in the ﬁnal step,P sends a commitmentω
+that it claims is to ˜w(r1,..., r𝓁); V uses {Tk} to compute one
+multi-commitment T′; andP andV execute proof-of-dot-prod
+on T′ andω. In total, communication cost is O(2𝓁/2).
+In more detail: T is the 2
+𝓁/2 × 2𝓁/2 matrix whose column-major
+order is w, i.e., Ti+1, j+1 = wi+2𝓁/2·j. Before deﬁning T′ and the
+proof-of-dot-prod invocation, we deﬁne
+ˇχb =
+𝓁/2/productdisplay.1
+k=1
+χbk (rk) ˆχb =
+𝓁/productdisplay.1
+k=𝓁/2+1
+χbk (rk)
+L = ( ˇχ0, ˇχ1,..., ˇχ2𝓁/2−1) R = ( ˆχ0, ˆχ2𝓁/2,..., ˆχ2𝓁/2·(2𝓁/2−1))
+To computeT′ from commitments{Tk} to the rows ofT,V
+evaluates L (in time O(2
+𝓁/2) [104, §3.3]) and uses it to compute
+T′ =
+2𝓁/2−1/circledotdisplay.1
+k=0
+T ˇχkk+1 = Com(L · T) (6)
+Finally,P sends a commitmentω and uses proof-of-dot-prod to
+convinceV that the dot product of R with the vector committed
+in T′ equals the value committed inω.
+4In concurrent and independent work, Zhang et al. extend to ZK [109]; see §2.
+933
+===== PDF PAGE 9 =====
+The above proves toV thatω = Com( ˜w(r0,..., r𝓁)),a sw e
+now argue. For 1-indexedL and R,w eh a v e
+Li+1 · Rj+1 = ˇχi · ˆχ2𝓁/2·j =χi+2𝓁/2·j
+This is true because ˇχb comprehends the lower𝓁/2 bits of b, and
+ˆχb the upper𝓁/2 bits. Then by the deﬁnition ofT,w eh a v e
+L · T · RT =
+2𝓁/2−1/summationdisplay.1
+i=0
+2𝓁/2−1/summationdisplay.1
+j=0
+Ti+1, j+1 · Li+1 · Rj+1
+=
+2𝓁/2−1/summationdisplay.1
+i=0
+2𝓁/2−1/summationdisplay.1
+j=0
+wi+2𝓁/2·j ·χi+2𝓁/2·j =
+2𝓁−1/summationdisplay.1
+k=0
+wk ·χk
+If V accepts P’s proof-of-dot-prod on T′,ω, and R, then by
+Equation (6),ω = Com(L· T· RT) = Com(/summationtext.12𝓁−1k=0 wk ·χk), which
+equals Com( ˜w(r0,..., r𝓁)) (Eq. (4), §4) as claimed.
+In total, communication is O(2
+𝓁/2) (for{Tk} plus the proof-of-
+dot-prod invocation), andV’s computational cost is O(2
+𝓁/2) (for
+computing L, R, and T′, and executing proof-of-dot-prod).
+Reducing the cost of proof-of-dot-prod. In the above protocol,
+proof-of-dot-prod establishes a lower bound on communication
+cost. To reduce proof-of-dot-prod’s cost, we use an idea due to
+Bünz et al. [30], who give a dot-product protocol that has cost
+logarithmic in the length of the vectors. Their protocol works
+over two committed vectors; we require one that works over one
+committed and one public vector. In Appendix A.3, we adapt their
+protocol to the syntax of proof-of-dot-prod; we refer to the result
+as prooflog-of-dot-prod. Whereas proof-of-dot-prod requiresP to
+send 4+n elements for vectors of lengthn, prooflog-of-dot-prod
+requires only 4+2 log n. In both protocols, V’s computational
+cost is dominated by a multi-exponentiation [83] of lengthn.
+The full commitment scheme diﬀers from the square-root one
+in thatP andV invoke prooflog-of-dot-prod (rather than proof-
+of-dot-prod) on T′, R, and ω.F o r T, L, R, ˇχb, ˆχb as deﬁned
+above,P sends 4+2
+𝓁/2+2 log 2𝓁/2 elements, andV’s runtime is
+dominated by two multi-exponentiations of length 2
+𝓁/2, one to
+compute T′ and the other to executeprooflog-of-dot-prod. This
+gives the same asymptotics as the square-root scheme with≈2×
+less communication (but with≈3× more computation forP).
+More importantly, prooflog-of-dot-prod gives the freedom to
+reduce communication in exchange for increasedV runtime. For
+a parameterι, we redeﬁne T to be the 2
+𝓁/ι × 2𝓁−𝓁/ι matrix whose
+column-major order is w; redeﬁne ˇχb to comprehend the lower
+𝓁/ι bits of b, and ˆχb the upper𝓁 −𝓁/ι bits; and redeﬁne
+L = ( ˇχ0, ˇχ1,..., ˇχ2𝓁/ι−1) R = ( ˆχ0, ˆχ2𝓁/ι,..., ˆχ2𝓁/ι·(2𝓁−𝓁/ι−1))
+T has 2
+𝓁/ι rows and T′ is a vector of 2𝓁−𝓁/ι elements, soP sends
+2
+𝓁/ι commitments in Step 0 and 4+ log 2𝓁−𝓁/ι elements for prooflog-
+of-dot-prod, which is O(2
+𝓁/ι) in total. Computing T′ costs V
+one multi-exponentiation of length 2
+𝓁/ι , and executing prooflog-
+of-dot-prod costs one of length 2𝓁−𝓁/ι , which is O(2𝓁/ι +2𝓁−𝓁/ι)
+in total. Since this is at least O (2
+𝓁/2), V’s runtime is at least
+O(
+√
+|w|). We formalize immediately below.
+Lemma 5. Suppose WLOG that w ∈ F2ι·𝓁′ forι ≥ 2, and thatP
+commits to w as described above using 2𝓁′ = |w|1/ι multi-com-
+mitments. Then for any(r1,..., rι·𝓁′), P can send a commitment
+ω and argue that it commits to ˜w(r1,..., rι·𝓁′) in communication
+O(|w|
+1/ι), whereV runs in O(|w|(ι−1)/ι) steps. This is a complete,
+honest-veriﬁer perfect zero-knowledge argument with witness-
+extended emulation under the discrete log assumption.
+Completeness and ZK follow from the analysis in Ap-
+pendix A.3. We leave analysis of witness-extended emulation
+to the full version [106, Appx. A.5] for space reasons. We have
+described this protocol in terms of the multilinear extension of
+w, but it generalizes to any multilinear polynomialf using the
+fact that T comprises the evaluations of f at all binary inputs.
+6.2 Sharing witness elements in the data-parallel setting
+We have thus far regarded the computation as having one large
+input and one large witness. When evaluating a data-parallel
+computation, this means that the sub-ACs’ inputs must be disjoint
+slices of the full input (and similarly for the witness). However,
+this is not suﬃcient in many cases of interest.
+Consider a case whereP wants to convinceV that it knows
+leaves of a Merkle tree corresponding to a supplied root. Verifying
+a witness with M leaves requires 2M−1 invocations of a hash
+function. We encode this as a computation with 2M−1 sub-ACs
+laid side-by-side, each encoding the hash function.5 Then, for
+sub-ACb processing sub-ACa’s output,P supplies the purported
+output to both, andsub-ACa just checksthat value and outputs a bit
+indicating correctness. This is necessary for zero-knowledge: all
+AC outputs are public, whereassub-ACa’s output (an intermediate
+value in the computation) must not be revealed toV.
+This arrangement requires sub-ACs to share witness elements—
+but duplicating entries in the matrix T (§6.1) is not a solution,
+becauseV cannot detect if a cheatingP produces T that gives
+diﬀerent values to diﬀerent sub-ACs. One possibility is a hybrid
+vector-scalar scheme:P supplies scalar commitments for each
+shared witness element and matrix commitment{Tk} for the rest.
+Then, for a scalar commitmentδ, V “injects” the committed
+value into input index b by multiplying the commitment to
+˜Vd(r′, rυ) (§4, “Final step”) byδ−r0·χb .6 (In contrast, the protocol
+of Section 6.1 maps each entry ofT to a ﬁxed input index.)
+This approach works when the number of shared witness
+elements is small, but it is ineﬃcient when there are many shared
+elements: each shared element requires a separate commitment
+and proof-of-opening invocation. For such cases, we enable
+sharing of witness elements by modifying the arithmetic circuit
+encoding the NP relation. Speciﬁcally, after constructing a data-
+parallel AC corresponding to the computation, we add one
+non-data-parallel redistribution layer (RDL) whose inputs are
+the full input and witness, and whose outputs feed the input layers
+of each sub-AC. Since the RDL is not data parallel, there are
+no restrictions on how its inputs connect to its outputs, meaning
+5The sub-ACs could instead be arranged sequentially. This would avoid the issues
+described in this subsection, but would dramatically increase circuit depth, and
+thus the proof length and associated costs when applying our argument.
+6In fact, this approach works generally for computations over values to which
+V holds a commitment whose openingP knows. It also applies to committed
+vectors:i f V holds a commitment ξ = Com(/vecx), it can inject the committed
+values into a list of indices(b1,... ) as follows:P produces a commitmentδ and
+proves to V that it commits to Com(⟨( x1,... ),(χb1,... )⟩) with prooflog-of-
+dot-prod; then V multiplies Com( ˜Vd(r′, rυ)) by δ−r0 . This approach requires
+more communication and V computation than the protocol of Section 6.1,
+because it does not assume any particular structure for(b1,... ).
+934
+===== PDF PAGE 10 =====
+thatV can use it to ensure that the same witness element feeds
+multiple sub-ACs: the sum-check protocol forcesP to respect
+the wiring of the RDL, soP cannot equivocate about w.
+Moreover, since the RDL only “re-wires” its inputs, the sum-
+check invocation corresponding to this layer of the AC can be
+optimized to require fewer rounds and a simpliﬁed ﬁnal check.
+Observe that the redistribution layer only requires one-input
+“pass” gates that copy their input to their output. Thus, following
+a simpliﬁcation of the CMT protocol [35, 98], we have that
+˜Vd−1(q′, q) = /summationdisplay.1
+h∈{0,1}log(|m|)
+˜pass((q′, q), h)· ˜Vd(h)
+where ˜pass((q′, q), h) is the MLE of a wiring predicate (§3.2)
+that is 1 when the RDL connects from the AC input with indexh
+to input q in sub-AC q′, and 0 otherwise. A sum-check over
+RDL(q′,q)(h) = ˜pass((q′, q), h)· ˜Vd(h)
+requires log(|m|) = log(|x| +|w|) rounds, at the end of whichV
+evaluatesRDL(q′,q) at a random point. This requiresV to evaluate
+˜pass, but in contrast to P...,i or Q...,i (§3.2), it only requiresone
+evaluation of ˜Vd, whichV can check (via the protocol of §6.1)
+without invoking a mini-protocol (§3.2).
+By a standard analysis [35], P’s costs are O(NG log|m|);V’s
+primary cost related to the RDL is evaluating ˜pass at one point,
+which costs O(|m| + NG) via known techniques [104, §3.3]. We
+formalize in Theorem 6 (§7).
+7 Hyrax: a zkSNARK based on Gir ++
+We refer to the honest-veriﬁer PZK argument obtained by ap-
+plying the reﬁnements of Sections 5 and 6 to the protocol of
+Section 4 as Hyrax-I; pseudocode is given in Appendix B. Since
+Hyrax-I is a public-coin protocol, we apply the Fiat-Shamir
+heuristic [41] to produce a zkSNARK that we callHyrax whose
+properties we now formalize:
+Theorem 6. LetC(·,·) be a layered AC of fan-in two, consisting of
+N identical sub-computations, each havingd layers whose width
+is at most G. Under the discrete log assumption in the random
+oracle model, for every Sp, Ti with Ti ≥
+√
+|w| and Sp · Ti =
+|w|, there exists a perfectly complete, perfect zero-knowledge,
+non-interactive argument with witness-extended emulation for
+the NP relation “∃w such that C( x, w) = y.” V runs in time
+O(| x| + |y| + dG +(Ti + d log(NG))·κ) forκ a bound on the
+time to compute a commitment; when using an RDL (§6.2),V
+incurs an additional O(| x| + |w| + NG) cost. P’s messages have
+size O((Sp + d log(NG))·λ) forλ a security parameter.
+We leave proof to the full version [106, Appx. B].
+Implementation. Our implementation of Hyrax is based on
+Giraﬀe’s code [81, 104]. It uses Pedersen commitments (Appx. A)
+in an elliptic curve group of orderqG and works with ACs over
+FqG . We instantiate the random oracle with SHA-256.
+The prover takes as input a high-level description of an AC (in
+the format produced by Giraﬀe’s C compiler), the public inputs,
+and an auxiliary executable that generates the witness from the
+public inputs; the prover’s output is a proof. The veriﬁer takes as
+input the same computation description and public inputs plus
+the proof, and outputs “accept” or “reject.”
+We implement Gir ++, the techniques of Sections 5 and 6,
+the random oracle, and proof serialization and deserialization
+by adding 2800 lines of Python and 300 lines of C to the
+Giraﬀe code. We also implemented a library for fast multi-
+exponentiation comprising 750 lines of C that uses the MIRACL
+Crypto SDK [74] for elliptic curve operations and selects between
+Straus’s [95] and Pippenger’s [19, 83] methods, depending on
+the problem size. Our library supports Curve25519 [18], M221,
+M191, and M159 [2]. Python code calls this library via CFFI [31].
+We produce random group elements by hashing, implemented in
+200 lines of Sage [88] adapted from a script by Samuel Neves [2].
+We have released full source code [58].
+8 Evaluation
+In this section we ask:
+• How does Hyrax compare to several baseline systems, con-
+sidering proof size andV and P execution time?
+• How do Hyrax’s reﬁnements (§5–6) improve its costs?
+• What is the overall eﬀect of trading greater witness-related
+V computation for smaller witness commitments (§6.1)?
+A careful comparison of built systems shows that, even for modest
+problem sizes, Hyrax’s proofs are smaller than all but the most
+computationally costly of the baselines; and that its V and P
+execution times are each faster than three of ﬁve baselines. We also
+ﬁnd thatHyrax’s reﬁnements yield multiple-orders-of-magnitude
+savings in proof size andV time, and a small constant savings
+in P time. Finally, we ﬁnd that tuning the witness commitment
+costs gives much smaller proofs, with little eﬀect on totalV time
+for a computation using an RDL (§6.2).
+8.1 Comparison with prior work
+Baselines. We compare Hyrax with ﬁve state-of-the-art zero-
+knowledge argument systems with similar properties, detailed
+below. We also consider Hyrax-naive, which implements the
+protocol of Section 4 without our reﬁnements (§5–6). We do not
+compare to systems that require trusted setup (see §2, second
+paragraph), but we discuss them brieﬂy in Section 8.3.
+Like Hyrax (and Hyrax-naive), two of the baselines rely on
+elliptic curve primitives; but their existing implementations use a
+diﬀerent elliptic curve thanHyrax. To evaluate like-for-like, we re-
+implemented them using the Python scaﬀolding, C cryptographic
+library, and elliptic curves that Hyrax uses (§7).
+The other three baselines do not use elliptic curves, so some
+mismatch in implementations is unavoidable. For those systems,
+we used existing implementations written in C or C++.
+• BCCGP-sqrt is the square-root-communication argument due
+to Bootle et al. [24]. We implemented this protocol usingHyrax’s
+libraries, as described above. In addition, this protocol uses poly-
+nomial multiplication, for which we used NTL [94]. Finally, we
+wrote a compiler that converts from Hyrax’s AC description
+format to the required constraint format, with rudimentary op-
+timizations like constant folding and common subexpression
+elimination. Our implementation comprises 1200 lines of Python
+and 160 lines of C, which we include in our released code [58].
+• Bulletproofs is the argument due to Bünz et al. [30] (we also
+adapted the inner-product argument from this work in §6). We
+implemented this protocol in 300 lines of Python on top of our
+BCCGP-sqrt code, which we also include in our release.
+935
+===== PDF PAGE 11 =====
+2 4 6 8
+log2 N, number of copies
+1
+10
+100
+103
+104
+105
+proof size, kiB
+(lower is better)
+(a) Proof size: 64×64 matrix multiplication.
+2 4 6 8
+log2 N, number of copies
+1
+10
+100
+103
+104
+prover time, seconds
+(lower is better)
+(b) P time: 64×64 matrix multiplication
+2 4 6 8
+log2 N, number of copies
+0.1
+1
+10
+100
+103
+104
+veriﬁer time, seconds
+(lower is better)
+(c)V time: 64×64 matrix multiplication
+103 104 105
+high-resolution image size, pixels
+1
+10
+100
+103
+104
+105
+proof size, kiB
+(lower is better)
+(d) Proof size: 16× Lanczos scaling
+103 104 105
+high-resolution image size, pixels
+1
+10
+100
+103
+104
+prover time, seconds
+(lower is better)
+(e) P time: 16× Lanczos scaling
+103 104 105
+high-resolution image size, pixels
+0.1
+1
+10
+100
+103
+104
+veriﬁer time, seconds
+(lower is better)
+(f) V time: 16× Lanczos scaling
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+1
+10
+100
+103
+104
+105
+proof size, kiB
+(lower is better)
+(g) Proof size: SHA-256 Merkle tree
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+1
+10
+100
+103
+104
+prover time, seconds
+(lower is better)
+(h) P time: SHA-256 Merkle tree
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+0.1
+1
+10
+100
+103
+104
+veriﬁer time, seconds
+(lower is better)
+(i)V time: SHA-256 Merkle tree
+Hyrax-1/2 Hyrax-1/3 Hyrax-naive BCCGP-sqrt Bulletproofs ZKB++ Ligero libSTARK
+Figure 2—Comparison of concrete costs between the baseline systems andHyrax (§8.1). Hyrax-1/2 is Hyrax where P’s witness commitments have
+size |w|
+1/2, and likewise Hyrax-1/3 has commitments of size|w|1/3 (§6.1). Hyrax-naive is Hyrax without our reﬁnements (§5–6). BCCGP-sqrt [24],
+Bulletproofs [30], ZKB++ [32], Ligero [1], and libSTARK [11] are prior work. Where the BCCGP-sqrt, Bulletproofs, and libSTARK data are
+truncated, their provers exceeded available RAM (§8.1). We evaluate ZKB++, Ligero, and libSTARK only on Merkle trees (we discuss in §8.3).
+• Ligero [1]: we report on the authors’ C++ implementation.
+• ZKB++ [32]: we report runtime of the C implementation of
+ZKBoo [47, 111]; per the ZKB++ authors, these systems have
+similar performance [32, §3.2].7 We report extrapolated proof
+sizes (which are linear with AC size) from ZKB++ [32, §3.2.1].
+• libSTARK [11]: we report on the authors’ C++ implementa-
+tion [67] and SHA-256 primitive [11, Fig. 4], which we adapt to
+the Merkle tree benchmark (described below).
+This implementation supports multi-threading, but we restrict
+it to a single thread for consistency with the other baselines and
+to focus on total prover work; we discuss in Section 8.3.
+Benchmarks. We evaluate Hyrax, Hyrax-naive, BCCGP-sqrt,
+and Bulletproofs on all benchmarks below, but Ligero, ZKB++,
+and libSTARK only on Merkle trees; we discuss in Section 8.3.
+• Matrix factoring (i.e., matrix multiplication) proves toV that
+P knows two matrices whose product equals the public input.
+We evaluate on 16×16, 32×32, 64×64, and 128×128 matrices,
+and for each we varyN, the number of parallel executions.
+7We run ZKBoo because there is no standalone ZKB++ implementation that can
+run our benchmarks, only one tailored to the Picnic signature scheme [82].
+• Image scaling establishes that V’s input, a low-resolution
+image, is a scaled version of a high-resolution image that P
+knows. For scaling, we use Lanczos resampling [100], a standard
+image transformation in which each output pixel is the result of
+convolving a two-dimensional windowed sinc function [77] with
+the input image. We evaluate on 4×,1 6×,6 4×, and 256× scaling,
+varying the number of pixels.
+This is a data-parallel computation where each sub-AC eval-
+uates one pixel of the low-resolution image, but because of the
+windowed sinc function, sub-ACs for adjacent pixels must share
+inputs from the high-resolution image. To accommodate this, we
+use a redistribution layer (RDL; §6.2).
+• Merkle tree proves to V that P knows an assignment to
+the leaves of a Merkle tree [72] corresponding to a root thatV
+provides [23].8 We use SHA-256 for the hash, varying the number
+of leaves in the tree; we implement a data-parallel computation
+in which each sub-computation is one invocation of SHA-256;
+8In related applications (e.g., [107]), P convinces V that it knows apath from a
+supplied Merkle root to a leaf. For these systems, a path of length 2M−1 has
+essentially the same cost as an M-leaf Merkle tree. We evaluate the full-tree
+benchmark because it demonstrates a wider range of computation sizes.
+936
+===== PDF PAGE 12 =====
+and we connect outputs at one level of the tree to inputs at the
+next level using an RDL. ForM leaves, the benchmark comprises
+2M−1 sub-computations.
+To implement SHA-256 eﬃciently in an arithmetic circuit,
+we use an approach from prior work [12] for eﬃcient addition
+modulo 232. We describe the approach, and an optimization that
+may be of independent interest, in the full version [106, Appx. C].
+Testbed. We run experiments on Amazon EC2 [3]. For Hyrax,
+Hyrax-naive, Ligero, and ZKB++, we use c3.4xlarge instances
+(30 GiB of RAM, 8 Xeon E5-2680v2 cores, 2 threads per core,
+2.8 GHz). TheBCCGP-sqrt, Bulletproofs, and libSTARK provers
+are memory intensive (“P cost,” below), so for these we use
+c3.8xlarge instances (60 GiB of RAM, 16 cores at 2.8 GHz).
+Only RAM is relevant because we run all tests single threaded.
+All testbed machines run Debian GNU/Linux 9 [38]. We run
+all Python code using PyPy [86], a fast JIT-compiling interpreter.
+Security parameters. For Hyrax, Hyrax-naive, BCCGP-sqrt,
+and Bulletproofs,G is M191 [2], an elliptic curve over a base ﬁeld
+modulo 2191−19 with a subgroup of order qG = 2188+293+... ,
+giving ≈90-bit security. We run Ligero, ZKB++, and libSTARK
+at 2−80 soundness error.9 ACs are overFqG and group elements
+and scalars are 24 bytes, except that Ligero and libSTARK work
+over smaller ﬁelds and ZKB++ works over Boolean circuits.
+Method. For each benchmark, we construct a set of arithmetic
+circuits (and, for image scaling and Merkle trees, RDLs) for a
+range of computation sizes. We then run each system’s prover,
+feeding the resulting proof into its veriﬁer. We record proof size,
+and measure time using the high-resolution system clock.
+For matrix factoring and image scaling, we setHyrax’s com-
+munication andV runtime to |w|
+1/2 (§6.1). For Merkle trees, we
+optimize proof size versusV runtime by setting witness-related
+communication to |w|
+1/3 and V runtime to |w|2/3; we explore the
+eﬀect of this setting in Section 8.2.
+Results. Figure 2 compares costs for the benchmarks. For matrix
+factoring and image scaling we show only 64×64 matrices and
+16× scaling, respectively; other values give similar results. For
+an ACC,M denotes the number of multiplication gates.
+Proof size (Figs. 2a, 2d, 2g):
+• Hyrax has much larger proofs thanBulletproofs, both asymp-
+totically and concretely.
+• Hyrax ’s proofs are smaller thanBCCGP-sqrt’s when the cost
+of the witness commitment dominates the cost of P’s mes-
+sages in Gir++ (i.e., for large enough computations). Speciﬁcally,
+Hyrax’s cost tracks|w|
+1/2 (|w|1/3 for Merkle trees; Fig. 2g), while
+BCCGP-sqrt’s tracks M
+1/2. Thus, on matrix factoring (where
+|w|≪M) Hyrax has much smaller proofs.
+• Hyrax ’s Merkle tree proofs are asymptotically and concretely
+smaller than Ligero’s: the latter’s cost tracks|C|
+1/2.
+• libSTARK’s proof size is asymptotically smaller thanHyrax’s,
+but its proofs are concretely≈5× larger at these problem sizes.
+• ZKB++’s cost is linear in the number of AND gates, and
+Hyrax-naive’s cost tracks|w|; both are large.
+9ZKB++, Ligero, and libSTARK give statistical security in the random oracle
+model, while the other systems make computational assumptions; this makes
+direct comparison diﬃcult. We have chosen security parameters to give all
+systems roughly equivalent cost to prove a false statement.
+P cost (Figs. 2b, 2e, 2h):
+• BCCGP-sqrt and Bulletproofs require a number of crypto-
+graphic operations proportional toM. Hyrax has lowerP time
+than these systems because it uses cryptographic operations only
+forP’s messages in Gir++ and for w (§4–§6).
+• The provers in bothBCCGP-sqrt and Bulletproofs ran out of
+memory for the largest benchmarks (Figs. 2b and 2h) despite
+having twice as much RAM asHyrax (“Testbed,” above). This is
+because they operate, roughly speaking, over all wire values in the
+AC at once. In contrast,Hyrax’sP works layer-by-layer (§3.2).10
+• Hyrax ’sP is more expensive than either ZKB++’s or Ligero’s,
+because those systems do not use any public-key cryptography.
+• While Ligero’sP is asymptotically more costly thanHyrax’s
+P, this is not apparent at the problem sizes we consider.
+• libSTARK’sP is 12–40× more expensive than Hyrax’s for
+these problem sizes. It is also memory intensive: for the largest
+problem, it exceeded available RAM despite having twice as
+much as Hyrax (“Testbed,” above).
+• Hyrax ’s reﬁnements compared toHyrax-naive (§5–6) yield a
+constant factor lowerP cost, at most≈3×.
+V time (Fig. 2c, 2f, 2i):
+• For matrix factoring, Hyrax’s V bottleneck is sum-check
+invocations for smallN, and ˜Vy evaluation for largeN (§3.2). The
+RDL (§6.2) dominatesV’s costs in the other two benchmarks.
+• Hyrax ’sV cost is lower than BCCGP-sqrt for large enough
+problems: the latter requires O(M) ﬁeld operations.
+• Hyrax ’s V cost is much less than Bulletproofs’s: the latter
+requires a multi-exponentiation of length 2 M (which can be
+computed using O(M/logM) cryptographic operations [83]).
+• ZKB++ has veriﬁcation cost linear in the problem size, so
+Hyrax wins on large enough problems.
+• Ligero’sV amortizes its bottleneck computation over repeated
+SHA-256 instances [1, §5.4], so over this range of problem sizes
+it has sublinear scaling and concretely fast veriﬁcation time.
+• libSTARK’sV has the best asymptotics among all systems
+and extremely low concrete costs.
+• Hyrax-naive requires cryptographic operations proportional
+to |w|; Hyrax’s reﬁnements give more than 100× savings.
+8.2 Eﬀect of trading V runtime for smaller proofs
+Method. We run the Merkle tree benchmark using the same
+setup as in Section 8.1, except that we vary the size ofP’s witness
+commitment (§6.1). We experiment with commitments of size
+log|w|, |w|
+1/3, and|w|1/2.V’s witness-related work at these three
+settings is O(|w|),O (|w|
+2/3), and O(|w|1/2), respectively.
+Results. Figure 3 shows proof size and runtime for the speciﬁed
+commitment sizes. ForHyrax-1/2, proof sizes are large butP and
+V runtimes are small; Hyrax-log is the opposite. Hyrax-1/3 has
+similar runtimes to Hyrax-1/2: P’s costs are dominated by Gir++,
+V’s by the RDL (§6.2). Meanwhile, its proof sizes are not much
+larger than Hyrax-log, because the Gir++-related proof costs are
+the same in both cases, and because the constants hidden in the
+asymptotic notation mean that the log and cube-root protocols
+10It is probably possible to engineer theBCCGP-sqrt and Bulletproofs provers
+to reduce memory requirements, e.g., by streaming from disk. We attempted a
+standard approach—paging memory to an array of fast SSDs—but this caused
+thrashing and dramatically worsened runtimes.
+937
+===== PDF PAGE 13 =====
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+60
+75
+90
+110
+130
+proof size, kiB
+(lower is better)
+Hyrax-1/3
+Hyrax-1/2
+Hyrax-log
+(a) Proof size: SHA-256 Merkle tree
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+10
+100
+103
+104
+prover time, seconds
+(lower is better)
+Hyrax-1/3
+Hyrax-1/2
+Hyrax-log
+(b) P time: SHA-256 Merkle tree
+2 4 6 8
+log2 M, number of leaves in Merkle tree
+1
+10
+100
+veriﬁer time, seconds
+(lower is better)
+Hyrax-1/3
+Hyrax-1/2
+Hyrax-log
+(c)V time: SHA-256 Merkle tree
+Figure 3—Proof size andP and V runtime for diﬀerent sizes ofP’s witness commitment (§6.1; §8.2). Hyrax-1/2 has commitment size |w|1/2,
+Hyrax-1/3 has commitment size|w|1/3, and Hyrax-log has commitment size log|w|. Hyrax-1/2 gives the largest proofs but has the fastest runtimes.
+Hyrax-log gives the smallest proofs but has the longest runtimes. Hyrax-1/3 gets essentially the best of both for this application.
+have similar concrete costs at these problem sizes. In other words,
+Hyrax-1/3 gets very nearly the best of both worlds.
+8.3 Discussion
+Our results show that Hyrax is competitive with the baselines,
+and that the reﬁnements of Sections 5 and 6 give substantial im-
+provements.Hyrax gives smaller proofs than all butBulletproofs,
+which pays for its smaller proofs with very high computational
+costs. Meanwhile, for problem sizes of practical interest, only
+Ligero is faster for bothP andV; ZKB++ has fasterP but often
+slowerV; libSTARK has fasterV but much slowerP; and all
+three systems produce larger proofs than Hyrax.
+On the other hand, there are several limitations to this analysis.
+First, because Gir++ is geared to data-parallel computations (§3.2;
+Thm. 1), Hyrax is competitive with prior work primarily when
+computations contain suﬃcient parallelism or are amenable to
+batching; this is evident in the wayHyrax’s performance relative
+to the baselines improves as parallelism increases in Figure 2.
+While an RDL (§6.2) lets Hyrax take advantage of parallelism
+within one computation (as it did in the Merkle tree and image
+scaling benchmarks), not all applications ﬁt these paradigms.
+Moreover, the RDL is asymptotically and concretely costly for
+V; eliminating this bottleneck is future work.
+Second, we compare ZKB++, Ligero, and libSTARK only
+on the SHA-256 Merkle tree benchmark. This makes sense for
+ZKB++ because it is geared to Boolean circuits, where SHA-256
+is a natural benchmark; similarly, Ligero’s primary evaluation is
+on SHA-256 [1, §6]. For libSTARK, however, a hash function
+that is more eﬃcient in F264 would improve performance [11,
+Fig. 4]; future work is to compare Hyrax and all baselines on
+Merkle trees using hash functions tailored to each system (e.g.,
+[11, Appx. E; 15, §5.2; 29, §3.2]). Furthermore, Ligero and
+libSTARK can in principle work over large ﬁelds, but the current
+implementations do not [11, 101], so we could not evaluate on
+matrix factoring or image scaling; future work is to do so.11
+Third, our comparison does not consider multi-threaded per-
+formance because, to our knowledge, libSTARK is the only
+baseline with a multi-threaded implementation [11, 67]. Prior
+work [99, 103, 104] suggests that Gir++ is highly parallelizable;
+exploring this in Hyrax is future work.
+11We note that, since Hyrax’s proof size is primarily due to witness size |w|
+rather than arithmetic circuit size |C|, we expect it to outperform Ligero on
+applications like matrix factoring where|w| ≪ |C|.
+Finally, our comparison does not consider argument systems
+like libsnark [16, 66] that require trusted setup and non-standard,
+non-falsiﬁable assumptions (§2, paragraph 2); Hyrax’s goal is
+to avoid these requirements. Ignoring this, Hyrax’s proofs are
+bigger: libsnark’s proofs are a constant≈300-bytes, independent
+of the AC C. Hyrax’s P cost is concretely and asymptotically
+smaller: libsnark has a logarithmic overhead in |C|, and it re-
+quires cryptographic operations per AC gate, whileHyrax’sP is
+essentially linear in computation size and requires cryptographic
+operations only forP’s Gir++ messages and for w (§4–§6). For
+V, libsnark’s oﬄine setup is very expensive [105, §5.4], and it
+must be performed by V or someone V trusts; but libsnark’s
+online V costs are essentially always cheaper thanHyrax’s (and
+roughly comparable to libSTARK’s, in practice).
+9 Conclusion
+We have described a succinct zero-knowledge argument for NP
+with no trusted setup and low concrete cost for both the prover and
+the veriﬁer, based on standard cryptographic assumptions. This
+scheme is practical because it tightly integrates three components:
+a state-of-the-art interactive proof (IP), which we tweak to reduce
+communication complexity; a highly optimized transformation
+from IPs to zero-knowledge arguments following the approach
+of Ben-Or et al. [ 8] and Cramer and Damgård [ 37]; and a
+new cryptographic commitment scheme tailored to multilinear
+polynomials that adapts prior work [30, 52] to allow a sender
+to commit to a log G-variate multilinear polynomial and later
+to open it at one point, with O(G
+1/ι) total communication and
+O(G
+(ι−1)/ι) receiver runtime for anyι ≥ 2. A careful comparison
+with prior work shows that our argument system is competitive
+on both proof size and computational costs. Key future work is
+to further reduce proof size without increasing veriﬁer runtime.
+More broadly, ours and other recent work [108–110] suggest
+that the applicability of the GKR interactive proof [ 49] has
+been underestimated. In particular, GKR seemingly requires
+deterministic arithmetic circuits, and saves work for the veriﬁer
+(relative to computing the circuit) only when those circuits have
+low depth. Zhang et al. sidestep these issues, extending GKR
+to non-deterministic, low-depth computations [108] and more
+recently to arbitrary RAM programs [110], in both cases saving
+work asymptotically for the veriﬁer. But even those enhanced
+protocols fall short of state-of-the-art work-saving zkSNARKs [4,
+5, 12, 13, 15, 16, 29, 34, 36, 39, 42–44, 64, 76, 79, 105], because
+938
+===== PDF PAGE 14 =====
+they fail to address zero-knowledge applications. This work (and
+concurrent work by Zhang et al. [109]) closes that gap—and, in
+our view, attests to the power and versatility of the GKR protocol.
+We have releasedHyrax’s source code and ourBCCGP-sqrt and
+Bulletproofs implementations as open-source software [58].
+Acknowledgments
+This work was funded by DARPA grant HR0011-15-2-0047 and
+NSF grants CNS-1423249, TWC-1646671, and TWC-1664445;
+and by Nest Labs and a Google Research Fellowship. Justin
+Thaler was supported by a Research Seed Grant from Georgetown
+University’s Massive Data Institute. The authors thank Muthu
+Venkitasubramaniam for help with Ligero, and Eli Ben-Sasson,
+Iddo Bentov, and Michael Riabzev for help with libSTARK.
+References
+[1] S. Ames, C. Hazay, Y. Ishai, and M. Venkitasubramaniam. Ligero:
+Lightweight sublinear arguments without a trusted setup. InACM CCS,
+Oct. 2017.
+[2] D. F. Aranha, P. S. L. M. Barreto, G. C. C. F. Pereira, and J. E. Ricardini.
+A note on high-security general-purpose elliptic curves. Cryptology
+ePrint Archive, Report 2013/647, 2013.
+[3] AWS EC2. https://aws.amazon.com/ec2/instance-types/.
+[4] M. Backes, M. Barbosa, D. Fiore, and R. M. Reischuk. ADSNARK:
+Nearly practical and privacy-preserving proofs on authenticated data. In
+IEEE S&P, May 2015.
+[5] M. Backes, D. Fiore, and R. M. Reischuk. Veriﬁable delegation of
+computation on outsourced data. In ACM CCS, Nov. 2013.
+[6] S. Bayer and J. Groth. Eﬃcient zero-knowledge argument for correctness
+of a shuﬄe. In EUROCRYPT, Apr. 2012.
+[7] M. Bellare and P. Rogaway. Random oracles are practical: a paradigm for
+designing eﬃcient protocols. In ACM CCS, Nov. 1993.
+[8] M. Ben-Or, O. Goldreich, S. Goldwasser, J. Håstad, J. Kilian, S. Micali,
+and P. Rogaway. Everything provable is provable in zero-knowledge. In
+CRYPTO, Aug. 1990.
+[9] E. Ben-Sasson, I. Ben-Tov, A. Chiesa, A. Gabizon, D. Genkin,
+M. Hamilis, E. Pergament, M. Riabzev, M. Silberstein, E. Tromer, and
+M. Virza. Computational integrity with a public random string from
+quasi-linear PCPs. In EUROCRYPT, Apr. 2017.
+[10] E. Ben-Sasson, I. Bentov, Y. Horesh, and M. Riabzev. Fast
+Reed-Solomon interactive oracle proofs of proximity.Electronic
+Colloquium on Computational Complexity (ECCC), 24:134, 2017.
+[11] E. Ben-Sasson, I. Bentov, Y. Horesh, and M. Riabzev. Scalable,
+transparent, and post-quantum secure computational integrity.
+Cryptology ePrint Archive, Report 2018/046, 2018.
+[12] E. Ben-Sasson, A. Chiesa, C. Garman, M. Green, I. Miers, E. Tromer,
+and M. Virza. Decentralized anonymous payments from Bitcoin. In
+IEEE S&P, May 2014.
+[13] E. Ben-Sasson, A. Chiesa, D. Genkin, E. Tromer, and M. Virza.
+SNARKs for C: Verifying program executions succinctly and in zero
+knowledge. In CRYPTO, Aug. 2013.
+[14] E. Ben-Sasson, A. Chiesa, and N. Spooner. Interactive oracle proofs. In
+IACR TCC, Oct. 2016.
+[15] E. Ben-Sasson, A. Chiesa, E. Tromer, and M. Virza. Scalable zero
+knowledge via cycles of elliptic curves. InCRYPTO, Aug. 2014.
+[16] E. Ben-Sasson, A. Chiesa, E. Tromer, and M. Virza. Succinct
+non-interactive zero knowledge for a von Neumann architecture. In
+USENIX Security, Aug. 2014.
+[17] E. Ben-Sasson and M. Sudan. Short PCPs with polylog query complexity.
+SIAM J. Computing, 38(2):551–607, May 2008.
+[18] D. J. Bernstein. Curve25519: new Diﬃe-Hellman speed records. In PKC,
+Apr. 2006.
+[19] D. J. Bernstein, J. Doumen, T. Lange, and J.-J. Oosterwijk. Faster batch
+forgery identiﬁcation. Dec. 2012.
+[20] N. Bitansky, R. Canetti, A. Chiesa, and E. Tromer. From extractable
+collision resistance to succinct non-interactive arguments of knowledge,
+and back again. In ITCS, Jan. 2012.
+[21] N. Bitansky, A. Chiesa, Y. Ishai, R. Ostrovsky, and O. Paneth. Succinct
+non-interactive arguments via linear interactive proofs. InIACR TCC,
+Mar. 2013.
+[22] M. Blum. How to prove a theorem so no one else can claim it. In ICM,
+Aug. 1986.
+[23] M. Blum, W. Evans, P. Gemmell, S. Kannan, and M. Naor. Checking the
+correctness of memories. In FOCS, Oct. 1991.
+[24] J. Bootle, A. Cerulli, P. Chaidos, J. Groth, and C. Petit. Eﬃcient
+zero-knowledge arguments for arithmetic circuits in the discrete log
+setting. In EUROCRYPT, Apr. 2016.
+[25] J. Bootle, A. Cerulli, E. Ghadaﬁ, J. Groth, M. Hajiabadi, and S. Jakobsen.
+Linear-time zero-knowledge proofs for arithmetic circuit satisﬁability. In
+ASIACRYPT, Dec. 2017.
+[26] J. Bootle and J. Groth. Eﬃcient batch zero knowledge arguments for low
+degree polynomials. In PKC, Mar. 2018.
+[27] X. Boyen and B. Waters. Compact group signatures without random
+oracles. In EUROCRYPT, May 2006.
+[28] X. Boyen and B. Waters. Full-domain subgroup hiding and constant-size
+group signatures. In PKC, Apr. 2007.
+[29] B. Braun, A. J. Feldman, Z. Ren, S. Setty, A. J. Blumberg, and
+M. Walﬁsh. Verifying computations with state. InSOSP, Nov. 2013.
+[30] B. Bünz, J. Bootle, D. Boneh, A. Poelstra, P. Wuille, and G. Maxwell.
+Bulletproofs: Eﬃcient range proofs for conﬁdential transactions. InIEEE
+S&P, May 2018.
+[31] Cﬃ. https://bitbucket.org/cffi/cffi.
+[32] M. Chase, D. Derler, S. Goldfeder, C. Orlandi, S. Ramacher,
+C. Rechberger, D. Slamanig, and G. Zaverucha. Post-quantum
+zero-knowledge and signatures from symmetric-key primitives. InACM
+CCS, Oct. 2017.
+[33] A. Chiesa, M. A. Forbes, and N. Spooner. A zero knowledge sumcheck
+and its applications. CoRR, abs/1704.02086, 2017.
+[34] A. Chiesa, E. Tromer, and M. Virza. Cluster computing in zero
+knowledge. In EUROCRYPT, Apr. 2015.
+[35] G. Cormode, M. Mitzenmacher, and J. Thaler. Practical veriﬁed
+computation with streaming interactive proofs. InITCS, Jan. 2012.
+[36] C. Costello, C. Fournet, J. Howell, M. Kohlweiss, B. Kreuter, M. Naehrig,
+B. Parno, and S. Zahur. Geppetto: Versatile veriﬁable computation. In
+IEEE S&P, May 2015.
+[37] R. Cramer and I. Damgård. Zero-knowledge proofs for ﬁnite ﬁeld
+arithmetic, or: Can zero-knowledge be for free? InCRYPTO, Aug. 1998.
+[38] Debian, the unversal operating system. https://www.debian.org.
+[39] A. Delignat-Lavaud, C. Fournet, M. Kohlweiss, and B. Parno. Cinderella:
+Turning shabby X.509 certiﬁcates into elegant anonymous credentials
+with the magic of veriﬁable computation. In IEEE S&P, May 2016.
+[40] D. Dolev, C. Dwork, and M. Naor. Non-malleable cryptography. In
+STOC, 1991.
+[41] A. Fiat and A. Shamir. How to prove yourself: Practical solutions to
+identiﬁcation and signature problems. In CRYPTO, Aug. 1986.
+[42] D. Fiore, C. Fournet, E. Ghosh, M. Kohlweiss, O. Ohrimenko, and
+B. Parno. Hash ﬁrst, argue later: Adaptive veriﬁable computations on
+outsourced data. In ACM CCS, Oct. 2016.
+[43] D. Fiore, R. Gennaro, and V. Pastro. Eﬃciently veriﬁable computation on
+encrypted data. In ACM CCS, Nov. 2014.
+[44] M. Fredrikson and B. Livshits. ZØ: An optimizing distributing
+zero-knowledge compiler. In USENIX Security, Aug. 2014.
+[45] E. Fujisaki and T. Okamoto. Statistical zero knowledge protocols to prove
+modular polynomial relations. In CRYPTO, Aug. 1997.
+[46] R. Gennaro, C. Gentry, B. Parno, and M. Raykova. Quadratic span
+programs and succinct NIZKs without PCPs. In EUROCRYPT, 2013.
+[47] I. Giacomelli, J. Madsen, and C. Orlandi. ZKBoo: Faster zero-knowledge
+for Boolean circuits. In USENIX Security, Aug. 2016.
+[48] O. Goldreich, S. Micali, and A. Wigderson. Proofs that yield nothing but
+their validity or all languages in NP have zero-knowledge proof systems.
+J. ACM, 38(3):690–728, 1991.
+[49] S. Goldwasser, Y. T. Kalai, and G. N. Rothblum. Delegating computation:
+Interactive proofs for muggles. J. ACM, 62(4):27:1–27:64, Aug. 2015.
+Preliminary version STOC 2008.
+[50] S. Goldwasser, S. Micali, and C. Rackoﬀ. The knowledge complexity of
+interactive proof systems. SIAM J. Computing, 18(1):186–208, 1989.
+[51] J. Groth. Simulation-sound nizk proofs for a practical language and
+constant size group signatures. In ASIACRYPT, Dec. 2006.
+[52] J. Groth. Linear algebra with sub-linear zero-knowledge arguments. In
+939
+===== PDF PAGE 15 =====
+CRYPTO, Aug. 2009.
+[53] J. Groth. Short pairing-based non-interactive zero-knowledge arguments.
+In ASIACRYPT, 2010.
+[54] J. Groth and Y. Ishai. Sub-linear zero-knowledge argument for
+correctness of a shuﬄe. In EUROCRYPT, Apr. 2008.
+[55] J. Groth and A. Sahai. Eﬃcient non-interactive proof systems for bilinear
+groups. In EUROCRYPT, Apr. 2008.
+[56] J. Håstad, R. Impagliazzo, L. A. Levin, and M. Luby. A pseudorandom
+generator from any one-way function.SIAM J. Computing,
+28(4):1364–1396, 1999.
+[57] S. Hohenberger, S. Myers, R. Pass, and abhi shelat. ANONIZE: A
+large-scale anonymous survey system. InIEEE S&P, May 2014.
+[58] Hyrax reference implementation. https://github.com/hyraxZK.
+[59] Y. Ishai, E. Kushilevitz, and R. Ostrovsky. Eﬃcient arguments without
+short PCPs. In IEEE CCC, June 2007.
+[60] Y. Ishai, E. Kushilevitz, R. Ostrovsky, and A. Sahai. Zero-knowledge
+from secure multiparty computation. In STOC, 2007.
+[61] A. Kate, G. M. Zaverucha, and I. Goldberg. Constant-size commitments
+to polynomials and their applications. In ASIACRYPT, Dec. 2010.
+[62] J. Kilian. A note on eﬃcient zero-knowledge proofs and arguments
+(extended abstract). In STOC, May 1992.
+[63] J. Kilian. Improved eﬃcient arguments (preliminary version). In
+CRYPTO, pages 311–324, Aug. 1995.
+[64] A. E. Kosba, D. Papadopoulos, C. Papamanthou, M. F. Sayed, E. Shi, and
+N. Triandopoulos. TrueSet: Faster veriﬁable set computations. In
+USENIX Security, Aug. 2014.
+[65] B. Libert, S. Ramanna, and M. Yung. Functional commitment schemes:
+From polynomial commitments to pairing-based accumulators from
+simple assumptions. In ICALP, July 2016.
+[66] libsnark. https://github.com/scipr-lab/libsnark.
+[67] libSTARK. https://github.com/elibensasson/libSTARK.
+[68] Y. Lindell. Parallel coin-tossing and constant-round secure two-party
+computation. J. Cryptology, 16(3):143–184, 2003.
+[69] H. Lipmaa. Progression-free sets and sublinear pairing-based
+non-interactive zero-knowledge arguments. InIACR TCC, 2011.
+[70] C. Lund, L. Fortnow, H. J. Karloﬀ, and N. Nisan. Algebraic methods for
+interactive proof systems. J. ACM, 39(4):859–868, Oct. 1992.
+[71] U. Maurer. Unifying zero-knowledge proofs of knowledge. In
+AFRICACRYPT, June 2009.
+[72] R. C. Merkle. A digital signature based on a conventional encryption
+function. In CRYPTO, Aug. 1987.
+[73] S. Micali. Computationally sound proofs. SIAM J. Computing,
+30(4):1253–1298, 2000.
+[74] MIRACL crypto SDK. https://libraries.docs.miracl.com/.
+[75] M. Naor. Bit commitment using pseudorandomness. J. Cryptology,
+4(2):151–158, 1991.
+[76] A. Naveh and E. Tromer. PhotoProof: Cryptographic image
+authentication for any set of permissible transformations. InIEEE S&P,
+May 2016.
+[77] A. V. Oppenheim and A. S. Willsky.Signals and Systems. Pearson, 1996.
+[78] C. Papamanthou, E. Shi, and R. Tamassia. Signatures of correct
+computation. In IACR TCC, Mar. 2013.
+[79] B. Parno, C. Gentry, J. Howell, and M. Raykova. Pinocchio: Nearly
+practical veriﬁable computation. In IEEE S&P, May 2013.
+[80] T. P. Pedersen. Non-interactive and information-theoretic secure
+veriﬁable secret sharing. In CRYPTO, Aug. 1991.
+[81] Pepper project. https://github.com/pepper-project.
+[82] Reference implementation of the Picnic post-quantum signature scheme.
+https://github.com/Microsoft/Picnic.
+[83] N. Pippenger. On the evaluation of powers and monomials. SIAM J.
+Computing, 9(2):230–250, 1980.
+[84] A. Poelstra. Updates on conﬁdential transactions eﬃciency. Sent to the
+bitcoin-dev email list.
+https://lists.linuxfoundation.org/pipermail/bitcoin-
+dev/2017-December/015346.html.
+[85] D. Pointcheval and J. Stern. Security proofs for signature schemes. In
+EUROCRYPT, May 1996.
+[86] PyPy. https://pypy.org.
+[87] O. Reingold, G. N. Rothblum, and R. D. Rothblum. Constant-round
+interactive proofs for delegating computation. InSTOC, June 2016.
+[88] SageMath. http://www.sagemath.org/.
+[89] A. Sahai. Non-malleable non-interactive zero knowledge and adaptive
+chosen-ciphertext security. In FOCS, Oct. 1999.
+[90] C. P. Schnorr. Eﬃcient signature generation by smart cards. J.
+Cryptology, 4(3):161–174, 1991.
+[91] S. Setty, B. Braun, V. Vu, A. J. Blumberg, B. Parno, and M. Walﬁsh.
+Resolving the conﬂict between generality and plausibility in veriﬁed
+computation. In EuroSys, Apr. 2013.
+[92] S. Setty, R. McPherson, A. J. Blumberg, and M. Walﬁsh. Making
+argument systems for outsourced computation practical (sometimes). In
+NDSS, Feb. 2012.
+[93] S. Setty, V. Vu, N. Panpalia, B. Braun, A. J. Blumberg, and M. Walﬁsh.
+Taking proof-based veriﬁed computation a few steps closer to practicality.
+In USENIX Security, Aug. 2012.
+[94] V. Shoup. NTL: A library for doing number theory.
+http://www.shoup.net/ntl/.
+[95] E. G. Straus. Addition chains of vectors (problem 5125). Amer. Math.
+Monthly, 70:806–808, 1964.
+[96] O. Tange. GNU Parallel: The command-line power tool. ;login: The
+USENIX Magazine, 36(1):42–47, 2011.
+[97] J. Thaler. Time-optimal interactive proofs for circuit evaluation. In
+CRYPTO, Aug. 2013. Full version:
+https://arxiv.org/abs/1304.3812.
+[98] J. Thaler. A note on the GKR protocol.
+http://people.seas.harvard.edu/~jthaler/GKRNote.pdf,
+2015.
+[99] J. Thaler, M. Roberts, M. Mitzenmacher, and H. Pﬁster. Veriﬁable
+computation with massively parallel interactive proofs. InUSENIX
+HotCloud Workshop, June 2012.
+[100] K. Turkowski. Filters for common resampling tasks. In Graphics Gems,
+pages 147–165. Academic Press, 1990.
+[101] M. Venkitasubramaniam. Personal communication, 2018.
+[102] V. Vu, S. Setty, A. J. Blumberg, and M. Walﬁsh. A hybrid architecture for
+interactive veriﬁable computation. In IEEE S&P, May 2013.
+[103] R. S. Wahby, M. Howald, S. Garg, abhi shelat, and M. Walﬁsh. Veriﬁable
+ASICs. In IEEE S&P, May 2016.
+[104] R. S. Wahby, Y. Ji, A. J. Blumberg, abhi shelat, J. Thaler, M. Walﬁsh, and
+T. Wies. Full accounting for veriﬁable outsourcing. InACM CCS, Oct.
+2017. Full version: https://eprint.iacr.org/2017/242/.
+[105] R. S. Wahby, S. Setty, Z. Ren, A. J. Blumberg, and M. Walﬁsh. Eﬃcient
+RAM and control ﬂow in veriﬁable outsourced computation. InNDSS,
+Feb. 2015.
+[106] R. S. Wahby, I. Tzialla, abhi shelat, J. Thaler, and M. Walﬁsh. Doubly
+eﬃcient zkSNARKs without trusted setup. Cryptology ePrint Archive,
+Report 2017/1132, 2017.
+[107] ZCash. https://z.cash.
+[108] Y. Zhang, D. Genkin, J. Katz, D. Papadopoulos, and C. Papamanthou.
+vSQL: Verifying arbitrary SQL queries over dynamic outsourced
+databases. In IEEE S&P, May 2017.
+[109] Y. Zhang, D. Genkin, J. Katz, D. Papadopoulos, and C. Papamanthou. A
+zero-knowledge version of vSQL. Cryptology ePrint Archive, Report
+2017/1146, 2017.
+[110] Y. Zhang, D. Genkin, J. Katz, D. Papadopoulos, and C. Papamanthou.
+vRAM: Faster veriﬁable RAM with program-independent preprocessing.
+In IEEE S&P, May 2018.
+[111] ZKBoo. https://github.com/Sobuno/ZKBoo.
+A Instantiations of commitment schemes
+In this section, we review the Pedersen commitment scheme [80]
+(Fig. 4) and related protocols.
+Theorem 7 ([80]). The Pedersen commitment scheme is a non-
+interactive commitment scheme assuming the hardness of the
+discrete logarithm problem inG.
+Knowledge of opening. Schnorr [90] shows howP can give a
+ZK proof that it knows anx, r such that C0 = Com(x; r).
+Theorem 8 ([90]). proof-of-opening is complete, honest-veriﬁer
+perfect ZK, and special sound under the discrete log assumption.
+Commitment to the same value. Using similar ideas, P can
+show in ZK that C1 = Com(v1; s1) and C2 = Com(v2; s2) are
+940
+===== PDF PAGE 16 =====
+Pedersen Commitment Scheme
+Deﬁnitions: Let G be a (multiplicative) cyclic group of prime
+order qG with group operation⊙ and inverse⊘. V publishes
+generators g, h ∈G .
+Com(m): P picks s $←{ 1,..., qG} and sends gm ⊙ hs.
+Open(α): P sends(m, s). V checksα
+?
+= gm ⊙ hs.
+Multi-commitments: For commitments to vectors,V publishes
+generators g1,..., gn, h ∈ G and P sends
+Com((m1,..., mn)) = hs ⊙ /circledotdisplay.1
+i
+gmii
+Figure 4—The Pedersen commitment scheme.
+proof-of-product(X, Y, Z)
+Inputs: X = gx ⊙ hrX , Y = gy ⊙ hrY , and Z = gx·y ⊙ hrZ .
+P knows x,y,rX,rY , and rZ .
+1. P picks b1,..., b5 $←{ 1,..., qG} and sends
+α ← gb1 ⊙ hb2 β ← gb3 ⊙ hb4 δ ← Xb3 ⊙ hb5
+2. V sends a challenge c $←{ 1,..., qG}
+3. P sends
+z1 ← b1 + c · xz 2 ← b2 + c · rx z3 ← b3 + c · y
+z4 ← b4 + c · ry z5 ← b5 + c(rz − rx y)
+4. V checks that
+α ⊙ Xc ?= gz1 ⊙ hz2 (7)
+β ⊙ Y c ?= gz3 ⊙ hz4 (8)
+δ ⊙ Zc ?= Xz3 ⊙ hz5 (9)
+Figure 5—ZK proof of knowledge for a product relationship (§A.1).
+commitments to the same value, i.e., v1 = v2. Given Cu =
+Com(u; su) and a value v, P can also convinceV that u = v.
+Theorem 9 (Folklore). proof-of-equality is complete, honest-
+veriﬁer perfect zero-knowledge, and special sound under the
+discrete log assumption.
+A.1 Proving a product relationship
+Figure 5 gives a protocol in which P convinces V that it has
+openings to three Pedersen commitments having a product rela-
+tionship. This is folklore; for example, we know that Maurer [71]
+describes a very similar protocol.
+Theorem 10. Given commitments X, Y, and Z, proof-of-product
+proves that Z is a commitment to the product of the values
+committed in X and Y. This protocol is complete, honest-veriﬁer
+perfect zero-knowledge, and special sound under the discrete log
+assumption.
+The proof of Theorem 10 is standard; we leave it to the full
+version [106] because of space constraints.
+proof-of-dot-prod(ξ,τ, /veca)
+Inputs: Commitmentsξ = Com(/vecx; rξ),τ = Com(y; rτ), and a
+vector /veca, where /vecx, /veca ∈ ZnqG and y = ⟨/vecx, /veca⟩∈ ZqG .
+P knows /vecx, rξ , y, and rτ.
+1. P samples the vector /vecd $←{ 1,..., qG}n and the values
+rβ, rδ $←{ 1,..., qG} and sends
+δ ← Com( /vecd; rδ) = hrδ ⊙ /circledotdisplay.1
+i
+gdii (10)
+β ← Com(⟨/veca, /vecd⟩; rβ) = g⟨/veca, /vecd⟩ ⊙ hrβ (11)
+2. V sends a challenge c $←{ 1,..., qG}.
+3. P sends
+/vecz ← c · /vecx + /vecd, zδ ← c · rξ + rδ, zβ ← c · rτ + rβ
+4. V checks that
+ξc ⊙δ ?= Com(/vecz; zδ) = hzδ ⊙ /circledotdisplay.1
+i
+gzii (12)
+τc ⊙β ?= Com(⟨/vecz, /veca⟩; zβ) = g⟨/vecz,/veca⟩ ⊙ hzβ (13)
+Figure 6—ZK vector dot-product proof (§A.2).
+A.2 Proving a dot-product relationship
+In the protocol of Figure 6,P convincesV that it has openings to
+one multi-commitmentξ = Com(/vecx; rξ) and one scalar commit-
+mentτ = Com(y; rτ) such that, for a supplied vector/veca it holds
+that y = ⟨/vecx, /veca⟩. Intuitively, this protocol works because
+⟨/vecz, /veca⟩ = ⟨c/vecx + /vecd, /veca⟩ = c⟨/vecx, /veca⟩ + ⟨ /vecd, /veca⟩ = cy + ⟨ /vecd, /veca⟩
+The above identity is veriﬁed in the exponent in Equation (13).
+Theorem 11. The protocol of Figure 6 is complete, honest-
+veriﬁer perfect zero-knowledge, and special sound under the
+discrete log assumption.
+The proof of Theorem 11 is standard; we leave it to the full
+version [106] because of space constraints.
+A.3 Dot-product argument from Bulletproofs
+The dot-product argument of Appendix A.2 has communication
+4+n elements for a vector of lengthn. By adapting the Bulletproof
+recursive reduction of Bünz et al. [30], we reduce this to 4+2 log n.
+Figures 7 and 8 detail this protocol.
+As in Appendix A.2, we have/vecx, /veca, and y = ⟨/vecx, /veca⟩, where n =
+|/vecx| = |/veca|. Given /veca and Υ = Com/vecg(/vecx)⊙ Com(y), each recursive
+call to bullet-reduce produces/veca′ and Υ′ = Com/vecg′(/vecx′)⊙ Com(y′)
+such that y′ = ⟨/vecx′, /veca′⟩.
+After log n such recursive calls, we are left with a scalarˆa and
+a commitment ˆΥ = ˆg ˆx gˆy hˆrΥ . P can now use a Schnorr proof to
+convinceV that ˆy = ˆx · ˆa. Expanding Equation (14) (Fig. 8),
+(
+ˆΥc ⊙β) ˆa ⊙δ = ( ˆgc· ˆx ⊙ gc· ˆy ⊙ hc· ˆrΥ ⊙ gd ⊙ hrβ )/veca ⊙δ
+=
+(
+ˆgc· ˆx ⊙ gc· ˆy+d ⊙ hc· ˆrΥ+rβ
+)/veca
+⊙ ˆgd ⊙ hrδ
+= ˆgc· ˆx· ˆa+d ⊙ g ˆa(c· ˆy+d) ⊙ h ˆa(c·rΥ+rβ)+rδ
+= ˆgc· ˆy+d ⊙ g ˆa(c· ˆy+d) ⊙ hz2
+=
+(
+ˆg ⊙ g ˆa
+)z1
+⊙ hz2
+941
+===== PDF PAGE 17 =====
+bullet-reduce(Υ, /veca, /vecg)
+Inputs: Υ = hrΥ ⊙ gy ⊙ /circledottext.1ni=1 gxii , /vecx, /veca ∈ ZnqG , y, rΥ ∈ ZqG .
+P knows /vecx,y, and rΥ.
+Deﬁne /vecx1 = (x1,..., xn/2), /vecx2 = (x1+n/2,..., xn) and similarly
+for /veca1, /veca2, /vecg1, and /vecg2; and deﬁne
+(g1, g2... )k◦(g1+n/2, g2+n/2... )𝓁 = (gk1 ⊙g𝓁1+n/2, gk2 ⊙g𝓁2+n/2,... )
+1. If n = 1, return(Υ, a1, g1).
+2. P samples rΥ−1, rΥ1 $←{ 1,..., qG} and sends
+Υ−1 ← hrΥ−1 ⊙ g⟨/vecx1, /veca2⟩ ⊙
+n/2/circledotdisplay.1
+i=1
+gxii+n/2
+Υ1 ← hrΥ1 ⊙ g⟨/vecx2, /veca1⟩ ⊙
+n/2/circledotdisplay.1
+i=1
+g
+xi+n/2
+i
+3. V chooses and sends c $←{ 1,..., qG}.
+4. P and V both compute
+Υ′ ← Υc2−1 ⊙ Υ ⊙ Υc−21
+/veca′ ← c−1 · /veca1 + c · /veca2
+/vecg′ ← /vecg1c−1 ◦ /vecg2c = (g1,..., gn/2)c−1 ◦( g1+n/2,..., gn)c
+P computes
+/vecx′ ← c · /vecx1 + c−1 · /vecx2
+y′ ← c2 ·⟨ /vecx1, /veca2⟩ + y + c−2 ·⟨ /vecx2, /veca1⟩
+r′Υ ← rΥ−1 · c2 + rΥ + rΥ1 · c−2
+5. Return bullet-reduce(Υ′, /veca′, /vecg′).
+If y = ⟨/vecx, /veca⟩, then y′ = ⟨/vecx′, /veca′⟩, andP knows /vecx′, y′, r′Υ.
+Figure 7—Reduction step for the protocol of Figure 8.
+In total,P sends 2log n elements during the bullet-reduce calls
+and 4 elements for the ﬁnal Schnorr proof. Adapting suggestions
+by Poelstra [84],V’s work computing ˆg can be reduced to one
+multi-exponentiation of length n and one ﬁeld inversion, and
+computing ˆΥ costs one multi-exponentiation of length 1+ 2 log n.
+Lemma 12. The protocol of Figures 7–8 is complete, honest-
+veriﬁer perfect ZK, and has witness-extended emulation under
+the discrete log assumption.
+Completeness follows from the derivation of Equation (14)
+above and the completeness of bullet-reduce [ 30, Thm. 2,
+Appx. A], and ZK follows from standard reverse-ordering tech-
+niques. Witness-extended emulation follows from the properties
+of Schnorr protocols and an argument similar to the proof of [30,
+Thm. 2, Appx. A]. In total, the extractor requiresn +2 transcripts.
+B Hyrax-I pseudocode
+In this section, we provide pseudocode forHyrax-I. Figure 10
+details V’s work; Figures 9 and 11 detailP’s. Our presentation
+borrows from Wahby et al. [104].
+prooflog-of-dot-prod(ξ,τ, /veca)
+Inputs:ξ = Com/vecg(/vecx; rξ) = hrξ ⊙ /circledottext.1ni=1 gxii ,
+τ = Com(y; rτ) = gy ⊙ hrτ . /vecx, /veca ∈ ZnqG , y, rξ, rτ ∈ ZqG .
+P knows /vecx, y, rξ , and rτ.
+1. Let Υ =ξ ⊙τ = hrΥ ⊙ gy ⊙ /circledottext.1ni=1 gxii where rΥ = rτ + rξ .
+( ˆΥ, ˆa, ˆg)← bullet-reduce(Υ, /veca, /vecg) (see Fig. 7).
+At this point, n = 1 and ˆΥ = ˆg ˆx ⊙ gˆy ⊙ hˆrΥ where ˆy = ˆx · ˆa.
+2. P samples d, rδ, rβ $←{ 1,..., qG} and sends
+δ ← Com ˆg(d; rδ) = ˆgd ⊙ hrδ
+β ← Comg(d; rβ) = gd ⊙ hrβ
+3. V chooses and sends c $←{ 1,..., qG}.
+4. P sends z1 ← d + c · ˆy and z2 ← ˆa (c · ˆrΥ + rβ ) + rδ.
+5. V checks that(
+ˆΥc ⊙β) ˆa ⊙δ ?= ( ˆg ⊙ g ˆa )z1 ⊙ hz2 (14)
+Figure 8—Protocol for dot-product relation based on Bulletproofs [30].
+Com/vecg indicates a multi-commitment over generators/vecg.
+1: function Hyrax-Prove(ArithCircuit c, input x, witness w, parameterι)
+2: // Commit to the rows of T via commitmentsT1,..., T|w|1/k
+3: SendToVeriﬁer(T0,..., T|w|1/k−1) // see Line 3 of Figure 10
+4: bN ← log N, bG ← log G
+5: (q′0, q0, L)← ReceiveFromVeriﬁer() // see Line 8 of Figure 10
+6: μ0,0 ← 1, μ0,1 ← 0, q0, R ← q0, L
+7: a0 ← Com( ˜Vy(q′0, q0, L);0)
+8: d ← c.depth
+9:
+10: for i=1,..., d do
+11: (X, Y, q′i, qi, L, qi, R)← ZK-SumCheckP(c, i, ai−1,μ i−1,0,μ i−1,1,
+12: q′i−1, qi−1, L, qi−1, R)
+13: if i<d then
+14: (μi,0,μ i,1)← ReceiveFromVeriﬁer() // see Line 21 of Figure 10
+15: ai ← Xμi,0 ⊙ Yμi,1
+16:
+17: // Compute Coeﬃcients of the degree bG polynomial H: H0,..., Hlog G
+18: SendToVeriﬁer(Com(H0),..., Com(HbG )) // see Line 21 of Figure 10
+19: for i = 0,..., bG do
+20: proof-of-opening (Com(Hi))
+21: proof-of-equality (Com(H0), X)
+22: proof-of-equality (Com(HbG )⊙ ... ⊙ Com(H0), Y)
+23: τ ← ReceiveFromVeriﬁer() // see Line 30 of Figure 10
+24: qd ←( q′d,(1−τ)· qd, L +τ · qd, R)
+25: ζ = Com(HbG )τlog G ⊙ Com(HbG−1)τlog G−1 ⊙ ... ⊙ Com(H0)
+26: T′ ← /circledottext.1|w|1/k−1i=0 T ˇχii // ˆχb is deﬁned in Section 6
+27: R ←( ˆχ0, ˆχ|w|1/ι,..., ˆχ|w|1/ι·(|w|1/ι−1)) // ˆχb is deﬁned in Section 6
+28: prooflog-of-dot-prod (T′qd[0],ζ ⊘ g(1−qd[0]) ˜Vx(qd[1,..., b N +bG−1]), R)
+Figure 9—Pseudocode for P in Hyrax-I (§7). The ZK-SumCheckP
+subroutine is deﬁned in Figure 11.V’s work is described in Figure 10.
+For notational convenience, we assume|x| = |w|, as in Section 6.1.
+942
+===== PDF PAGE 18 =====
+1: function Hyrax-Verify(ArithCircuit c, input x, output y, parameterι)
+2: // Receive commitments to the rows of the matrixT
+3: (T0,..., T|w|1/ι)← ReceiveFromProver() // see Line 3 of Figure 9
+4: bN ← log N, bG ← log G
+5: (q′0, q0, L) R← −Fb N × FbG
+6: μ0,0 ← 1, μ0,1 ← 0, q0, R ← q0, L
+7: a0 ← Com( ˜Vy(q′0, q0,0);0)
+8: SendToProver((q′0, q0,0)) // see Line 5 of Figure 9
+9: d ← c.depth
+10:
+11: for i=1,..., d do
+12: (X, Y, r′, rL, rR)← ZK-SumCheckV(i, ai−1, q′i−1, qi−1, L, qi−1, R)
+13: // X = Com(v0), Y = Com(v1)
+14:
+15: if i<d then
+16: // Pick the next randomμi,0, μi,1 and
+17: // compute random linear combination (§3.2)
+18: μi,0,μ i,1
+R
+← −F
+19: ai ← Xμi,0 ⊙ Yμi,1
+20: (q′i, qi, L, qi, R)←( r′, rL, rR)
+21: SendToProver(μi,0, μi,1) // see Line 14 of Figure 9
+22:
+23: // For the ﬁnal check, reduce from two points to one point (§3.2)
+24: (Com(H0),..., Com(HbG )) ←ReceiveFromProver() // see Line 18 of Figure 9
+25: for i = 0,..., bG do
+26: proof-of-opening (Com(Hi))
+27: proof-of-equality (Com(H0), X)
+28: proof-of-equality (Com(HbG )⊙ ... ⊙ Com(H0), Y)
+29: τ
+R
+← −F
+30: SendToProver(τ) // see Line 23 of Figure 9
+31: qd ←( r′,(1−τ)· rL +τ · rR)
+32: ζ = Com(HbG )τlog G ⊙ Com(HbG−1)τlog G−1 ⊙ ... ⊙ Com(H0)
+33: T′ ← /circledottext.1|w|1/ι−1i=0 T ˇχii // ˇχb is deﬁned in Section 6
+34: R ←( ˆχ0, ˆχ|w|1/ι,..., ˆχ|w|1/ι·(|w|1/ι−1)) // ˆχb is deﬁned in Section 6
+35: prooflog-of-dot-prod (T′qd[0],ζ ⊘ g(1−qd[0]) ˜Vx(qd[1,..., b N +bG−1]), R)
+36: return accept
+37:
+38: function ZK-SumCheckV(layer i,ai−1, q′i−1, qi−1, L, qi−1, R )
+39: (r′, rL, rR) R← −Flog N × Flog G × Flog G
+40: r ←( r′, rL, rR)
+41: for j = 1,..., log N + 2 logG do
+42: αj ← ReceiveFromProver() // αj is Com(sj); see Lines 19,47 of Figure 11
+43: SendToProver(r[j]) // see Lines 20,48 of Figure 11
+44: (X, Y, Z)← ReceiveFromProver() // see Line 52 of Figure 11
+45: // X = Com(v0), Y = Com(v1), Z = Com(v0 v1)
+46: // V computes {Mj } as deﬁned in Equation (5)
+47: proof-of-sum-check (ai−1, {αj }, {Mj }, X, Y, Z) // see Figure 1
+48: return (Com(v0), Com(v1), r′, rL, rR )
+Figure 10—Pseudocode forV in Hyrax-I (§7).P’s work is described
+in Figures 9 and 11. For notational convenience, we assume|x| = |w|,
+as in Section 6.1.
+1: function ZK-SumcheckP(ArithCircuit c,l a y e ri, ai−1,)
+2: μi−1,0,μ i−1,1, q′i−1, qi−1, L, qi−1, R
+3: for j = 1,..., bN do
+4: // In these rounds, prover sends commitment to degree-3 polynomialsj
+5: for all σ ∈{ 0, 1}b N− j and g ∈{ 0, 1}bG and k ∈{ −1, 0, 1, 2} do
+6: s ←( g, gL, gR) // gL, gR are labels of g’s layer-i inputs in sub-circuit.
+7: termP ← ~eq(q′i−1, r′[1],..., r′[j − 1], k,σ [1],...,σ [bN − j]) ·
+8: (μi−1,0 · χg(qi−1, L) +μi−1,1 · χg(qi−1, R))
+9: termL ← ˜Vi (r′[1],..., r′[j − 1], k,σ [1],...,σ [bN − j], gL)
+10: termR ← ˜Vi (r′[1],..., r′[j − 1], k,σ [1],...,σ [bN − j], gR)
+11:
+12: if g is an add gatethen sj[σ, g][k]← termP ·( termL + termR)
+13: else if g is a mult gatethen sj[σ, g][k]← termP · termL · termR
+14:
+15: for k ∈{ −1, 0, 1, 2} do
+16: sj[k]← /summationtext.1σ∈{0,1}b N− j /summationtext.1g∈{0,1}bG sj[σ, g][k]
+17:
+18: // Compute coeﬃcients of sj and create a multi-commitment (§5)
+19: SendToVeriﬁer(Com(sj)) // see Line 42 of Figure 10
+20: r′[j]← ReceiveFromVeriﬁer() // see Line 43 of Figure 10
+21:
+22: r′ ←( r′[1],..., r′[bN]) // notation
+23:
+24: for j = 1,..., 2bG do
+25: // In these rounds, prover sends commitment to degree-2 polynomialsb N + j .
+26: for all gates g ∈{ 0, 1}bG and k ∈{ −1, 0, 1} do
+27: s ←( g, gL, gR) // gL, gR are labels of g’s layer-i inputs in subcircuit
+28: uk,0 ←( qi−1, L[1],..., qi−1, L[bG], r[1],..., r[j−1], k)
+29: uk,1 ←( qi−1, R[1],..., qi−1, R[bG], r[1],..., r[j−1], k)
+30: termP ← ~eq(q′i−1, r′)· (μi,0 · /producttext.1bG + j𝓁=1 χs[𝓁](uk,0[𝓁]) +
+31: μi,1 · /producttext.1bG + j𝓁=1 χs[𝓁](uk,1[𝓁]))
+32:
+33: if j ≤ bG then
+34: termL ← ˜Vi (r′, r[1],..., r[j − 1], k, gL[j+1],..., gL[bG])
+35: termR ← ˜Vi (r′, gR)
+36: else // bG < j ≤ 2bG
+37: termL ← ˜Vi(r′, r[1],..., r[bG])
+38: termR ← ˜Vi (r′, r[bG +1],..., r[j−1], k, gR[j−bG +1],..., gR[bG])
+39:
+40: if g is an add gatethen sb N + j[g][k]← termP ·( termL + termR)
+41: else if g is a mult gatethen sb N + j[g][k]← termP · termL · termR
+42:
+43: for k ∈{ −1, 0, 1} do
+44: sb N + j[k]← /summationtext.1g∈{0,1}bG sb N + j[g][k]
+45:
+46: // Compute coeﬃcients of sb N + j and create a multi-commitment (§5)
+47: SendToVeriﬁer(Com(sb N + j)) // see Line 42 of Figure 10
+48: r[j]← ReceiveFromVeriﬁer() // see Line 43 of Figure 10
+49:
+50: r0 ←( r[1],..., r[bG]) r1 ←( r[bG + 1],..., r[2bG]) // notation
+51: v0 ← ˜Vi(r′, r0) v1 ← ˜Vi(r′, r1) // X = Com(v0), Y = Com(v1), Z = Com(v0 v1)
+52: SendToVeriﬁer(X, Y, Z) // see Line 44 of Figure 10
+53: // P computes {Mk } as deﬁned in Equation (5).
+54: proof-of-sum-check (ai−1, {Com(sj)}, {Mk }, X, Y, Z) // see Figure 1
+55:
+56: return(Com(v0), Com(v1), r′, r0, r1)
+Figure 11—P’s side of the zero-knowledge sum-check protocol in
+Hyrax-I (§7).
+943

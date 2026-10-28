@@ -1,0 +1,178 @@
+{
+  "status": "FAILED",
+  "local_git_commit": "e5b3a122d1b636575ab8417df8a6ccb757e2c7dc",
+  "local_git_status": "M src/paper_r7/CMakeLists.txt\n M src/paper_r7/committed_sumcheck.cpp\n M src/paper_r7/sigma.hpp\n M tools/r7_sync_safety.py\n M tools/remote_hyrax_a3.py\n M tools/run_remote.py\n?? HYRAX_A3_STAGE2_PLAN.md\n?? src/paper_r7/fixed_cw.cpp\n?? src/paper_r7/fixed_cw.hpp\n?? src/paper_r7/stage2_driver.cpp\n?? src/paper_r7/stage2_driver.hpp\n?? src/paper_r7/stage2_fixture.cpp\n?? src/paper_r7/stage2_fixture.hpp\n?? src/paper_r7/stage2_fixture_main.cpp\n?? src/paper_r7/stage2_main.cpp\n?? src/paper_r7/stage2_opening.cpp\n?? src/paper_r7/stage2_opening.hpp\n?? src/paper_r7/stage2_sumcheck.cpp\n?? src/paper_r7/stage2_sumcheck.hpp\n?? src/paper_r7/stage2_tests.cpp\n?? tools/hyrax_a3_stage2_red.py\n?? tools/hyrax_a3_stage2_setup.py\n?? tools/hyrax_a3_stage2_tests.py",
+  "payload_sha256": "481c37e4f28a30e2c3de279e63f1a43b7970d7fd9d9eb9d4e2fad7b7b04fb37f",
+  "remote_code_version": "481c37e4f28a30e2c3de279e63f1a43b7970d7fd9d9eb9d4e2fad7b7b04fb37f",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "oneblock_status": "INCOMPLETE",
+  "r6_parameter_manifest_pin": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+  "error": "stage2-independent failed",
+  "events": [
+    {
+      "label": "engineering",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/engineering.log",
+      "exit_code": 0,
+      "seconds": 3.4226415143348277,
+      "passed": true
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/configure.log",
+      "exit_code": 0,
+      "seconds": 0.9169644708745182,
+      "passed": true
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_a3_tests",
+        "r7_a3_prover",
+        "r7_a3_verifier",
+        "r7_crypto_tests",
+        "r7_local_prover",
+        "r7_local_verifier",
+        "r7_framework_tests",
+        "r7_oneblock_prove",
+        "r7_oneblock_verify",
+        "r6_builder_tests",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_model_plan",
+        "r5b_gkr_tests",
+        "r6_resources_tests",
+        "r7_s2_fixture",
+        "r7_s2_prover",
+        "r7_s2_verifier",
+        "r7_s2_tests",
+        "-j4"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/build.log",
+      "exit_code": 0,
+      "seconds": 9.991561873815954,
+      "passed": true
+    },
+    {
+      "label": "stage2-unit",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_s2_tests"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/stage2-unit.log",
+      "exit_code": 0,
+      "seconds": 0.5681555308401585,
+      "passed": true
+    },
+    {
+      "label": "stage2-fixture",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/hyrax_a3_stage2_setup.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/stage2-fixture.log",
+      "exit_code": 0,
+      "seconds": 19.41674938471988,
+      "passed": true
+    },
+    {
+      "label": "stage2-independent",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/hyrax_a3_stage2_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/stage2-sessions"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-HYRAX-A3-STAGE2-RUN-20261026T100221Z/stage2-independent.log",
+      "exit_code": 1,
+      "seconds": 18.511215202976018,
+      "passed": false
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_crypto_tests": "880e9b6935ced03bcdd054e70a30495a08cad32a2a846cee0cf29540489ad00d",
+    "r7_oneblock_prove": "37c4e288833a4b102784816792d8bbf7ec1db315c4bc49943cc9ceab4980554a",
+    "r7_local_prover": "d367822c2923f056e2191dbf8c3e11ea643c96a8d76736ba888c823ffb8c7e2e",
+    "r7_local_verifier": "8f787da06e0b5d11e700fc196ef4af016e6e70f060d569456bddf44dc10abda4",
+    "r7_s2_verifier": "98856316cc3ffe2f308ffc5d7e263c3793af77daa1908eb8a245ac3de8a9966a",
+    "r7_framework_tests": "64f3b69e025450c00a65c68a74ba5d99fe4f2a28f0b1ec849a6a7666d2c37740",
+    "r7_s2_fixture": "1ef9116f05376f37662f2b138bc67f95814f07371de9754f30ad965cd804e0dd",
+    "r7_a3_prover": "0a61e4628a4a5fc55fa35808402a5a9946689905c2fed2d709b8aa27464f283e",
+    "r7_a3_verifier": "e54d8f0cc0db82dee01c6e9608621c19b7bd2594ecfe10f5b4862a1240bb193c",
+    "r7_s2_prover": "171930ef4c7c6d32584eca66db24362a0c1ed35bd946df7db102c01e9e59f222",
+    "r7_s2_tests": "9f655d9d382cd0bf83f0db310fa12cd980314d710336be9f3558bb012244a899",
+    "r7_a3_tests": "a22347959a83a1eed5fcd324f551a63b52b1ab870eb4c3b93ebd0f132d10f409",
+    "r7_oneblock_verify": "f616da61fe0143b1e1b871dd3dfbd9775bb94cacf63b2c75b3b9f524a31ab8d0"
+  },
+  "dependencies": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/lib/libmcl.so.1.74": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so.1.74": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384.so": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmclbn384_256.so.1": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097",
+    "build/release/lib/libmcl.so.1": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so.1": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384.so.1.74": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmclbn384.so.1": "93c4b97c2b13f1d66ce4ecf1cde5bb90ca89dff2ca81ba479fe1fd1e1321423e",
+    "build/release/lib/libmcl.so": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+    "build/release/lib/libmclbn256.so": "87fa2735b53b298fd8564acb087e0f2be9c4c2653c97bec8f889e6f4742e5269",
+    "build/release/lib/libmclbn384_256.so.1.74": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802",
+    "build/release/lib/libmclbn384_256.so": "2e5ba2cf6a537a3979f47ab9583878e5a7cb7e2b75fa62648e91f0caec32f802"
+  },
+  "mcl_submodule_commit": "dd66a53a4dce2ab27f9d028846bc1b1cdbf050f5"
+}

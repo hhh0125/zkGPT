@@ -1,0 +1,32 @@
+CLASSIFIED_SESSION joint-16-bench0
+FAIL joint-16-bench0
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/classified_tests.py", line 50, in <module>
+    for rep in range(3):run(f'{mode}-{n}-bench{rep}',['r7_classified_prover',str(n),mode],['r7_classified_verifier',str(n),mode])
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/tools/classified_tests.py", line 35, in run
+    cases.append(entry);(out/'CASES.json').write_text(json.dumps(cases,indent=2));print(('PASS ' if entry['passed'] else 'FAIL ')+name,flush=True);assert entry['passed'],entry
+AssertionError: {'case': 'joint-16-bench0', 'P_exit': 2, 'V_exit': 2, 'seconds': 0.008657730184495449, 'passed': False, 'wire': {'bytes': 0, 'parts': 0, 'sha256': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}, 'expected_reasons': None, 'P_reason': 'REJECT_OR_INCOMPLETE R7 streaming profile suite mismatch\n', 'V_reason': 'REJECT_OR_INCOMPLETE R7 streaming profile suite mismatch\n'}
+Command exited with non-zero status 1
+	Command being timed: "python3 -B tools/classified_tests.py /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CLASSIFIED-RUN-20261027T125030Z"
+	User time (seconds): 0.09
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 26580
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4158
+	Voluntary context switches: 8
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

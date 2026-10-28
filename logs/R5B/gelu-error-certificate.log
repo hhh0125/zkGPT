@@ -1,0 +1,31 @@
+interval-grid 0 of 32768
+interval-grid 8192 of 32768
+interval-grid 16384 of 32768
+interval-grid 24576 of 32768
+interval-grid 32768 of 32768
+{
+  "function": "R5B continuous engineering z-GELU F versus GPT-2 nominal tanh-GELU g",
+  "domain": "[-8,8]; outside this interval use the explicit analytic tail bound",
+  "method": "80-digit directed Decimal arithmetic, positive Taylor exp enclosure through degree 180 with geometric tail bound; alpha=sqrt(2/pi) bracket [0.7977,0.7980] from 333/106<pi<22/7; real-continuous piecewise derivative bound |(F-g)'|<7",
+  "grid_spacing": "1/4096",
+  "grid_points_nonnegative": 32769,
+  "symmetry": "F-g is even",
+  "max_grid_error_lower": "0.03658249576760959554279385910",
+  "max_grid_error_upper": "0.03664234575084858960844771249",
+  "max_upper_near_abs_x": "2.0390625",
+  "lipschitz_extension": "7/8192",
+  "continuous_error_upper_on_domain": "0.03749683793834858960844771249",
+  "tail_error_upper_abs_x_ge_8": "0.000025918373004973405347565714619316945257332379468798041652268291687385979498810262",
+  "output_quantization_error_upper": "5/1024 at fixed real input x=(5/512)q",
+  "quantized_error_upper_at_lattice_inputs": "0.04237965043834858960844771249",
+  "threshold_correction_exactly_zero": true,
+  "coefficient_fitting": "engineering continuity adjustment; not a new minimax fit or author original coefficient claim",
+  "excludes": [
+    "input quantization against arbitrary floating input",
+    "checkpoint/weight quantization",
+    "LayerNorm/root approximation",
+    "cross-block error propagation",
+    "floating executable bit equivalence"
+  ],
+  "seconds": 13.10118321934715
+}

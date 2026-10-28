@@ -1,0 +1,74 @@
+[
+  {
+    "case": "wrong-internal",
+    "attack": "wrong-internal",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 399.7758675031364,
+    "expected_reason": "compressed linear relation",
+    "wire": {
+      "bytes": 543513946,
+      "parts": 130,
+      "sha256": "350aabf3e97eba35f979feba6f559961cf526e4bc0a4d02d7ded4362dbdc5e84",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-weight",
+    "attack": "wrong-weight",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 401.20045734988526,
+    "expected_reason": "compressed linear relation",
+    "wire": {
+      "bytes": 543683002,
+      "parts": 130,
+      "sha256": "1109fba87525658802dfb6711030f8cfadb824e34feb30c44dc764009f4bdefe",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "wrong-Auxiliary",
+    "attack": "wrong-Auxiliary",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 430.2396817323752,
+    "expected_reason": "compressed linear relation",
+    "wire": {
+      "bytes": 544507856,
+      "parts": 130,
+      "sha256": "1cf930b2228e756eaf30c1615b8554ea3e4c478b92677562a75f9bac5633e4e4",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nPHASE_COMPLETE all-native-GKR\nALL_NATIVE_GKR_REDUCED 23 8 51 627\nPHASE_COMPLETE native-source-commitments\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nPHASE_COMPLETE all-native-GKR\nALL_NATIVE_GKR_REDUCED 23 8 51 627\nPHASE_COMPLETE native-source-commitments\nREJECT_OR_INCOMPLETE R7 Sigma compressed linear relation failed\n"
+  },
+  {
+    "case": "missing-constraint",
+    "attack": "missing-constraint",
+    "passed": true,
+    "V_exit": 2,
+    "P_exit": 2,
+    "timeout": false,
+    "seconds": 382.1394593208097,
+    "expected_reason": "EOF/transport",
+    "wire": {
+      "bytes": 541146109,
+      "parts": 130,
+      "sha256": "33a2aa010d249bdcaf626a3db57b40b7447c8f8fe833b36afd3994f7a276c57c",
+      "encoding": "concatenated exact framed duplex stream; 4MiB parts"
+    },
+    "V_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE R7 interactive EOF/transport failure\n",
+    "P_reason": "PHASE_COMPLETE model-authority-registration\nPHASE_COMPLETE frozen-witness-and-master-commitment\nPHASE_COMPLETE one-full-master-registration\nPHASE_COMPLETE public-X-Y-constants\nREJECT_OR_INCOMPLETE Oneblock deliberate missing constraint\n"
+  }
+]

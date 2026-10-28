@@ -1,0 +1,88 @@
+[
+  {
+    "tag": "configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+      "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "empty_cwd": false,
+    "expected": 0,
+    "exit": 0,
+    "seconds": 1.5687734358943999,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/configure.log"
+  },
+  {
+    "tag": "build",
+    "argv": [
+      "cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release",
+      "-j",
+      "8"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "empty_cwd": false,
+    "expected": 0,
+    "exit": 0,
+    "seconds": 73.99737384496257,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/build.log"
+  },
+  {
+    "tag": "regression",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release",
+      "--output-on-failure",
+      "-j",
+      "4"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "empty_cwd": false,
+    "expected": 0,
+    "exit": 0,
+    "seconds": 26.92567407619208,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/regression.log"
+  },
+  {
+    "tag": "oneblock-prove",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r2_model_integrated",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/oneblock-artifacts",
+      "--numerical-profile",
+      "r4-partial-candidate-v1",
+      "--memory-gib",
+      "32"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "empty_cwd": false,
+    "expected": 0,
+    "exit": 0,
+    "seconds": 1062.3468764368445,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/oneblock-prove.log"
+  },
+  {
+    "tag": "oneblock-independent",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r2_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/oneblock-artifacts/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/oneblock-artifacts/model.proof",
+      "--numerical-profile",
+      "r4-partial-candidate-v1"
+    ],
+    "cwd": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/independent-yl72v5km",
+    "empty_cwd": true,
+    "expected": 0,
+    "exit": 0,
+    "seconds": 296.84154996834695,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/migration-20261020/oneblock-independent.log"
+  }
+]

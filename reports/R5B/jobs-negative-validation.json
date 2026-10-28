@@ -1,0 +1,395 @@
+[
+  {
+    "id": "hostile-prove-v1",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/hostile-v1",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt",
+      "--hostile-range"
+    ],
+    "require_log": "GENERATED R5B combined proof"
+  },
+  {
+    "id": "hostile-independent-v1",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/hostile-v1/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/hostile-v1/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "cwd": "reports/R5B/empty-hostile-v1",
+    "empty_cwd": true,
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "generate-production-attacks",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r2_model_attack_artifacts",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1"
+    ],
+    "require_log": "PASS saved 11 real-proof attack artifacts"
+  },
+  {
+    "id": "rebuild-R5B-attack-tool",
+    "argv": [
+      "/usr/bin/c++",
+      "-pthread",
+      "-O3",
+      "-DNDEBUG",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/r5b_attack_artifacts.cpp",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_attack_artifacts",
+      "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib",
+      "libpaper_r2.a",
+      "../libgpt_lib.a",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+      "-lz",
+      "../paper_r1/libpaper_r1.a",
+      "../../lib/libmclbn256.so.1.74",
+      "../../lib/libmcl.so.1.74",
+      "-lpthread",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1",
+      "-std=gnu++17"
+    ],
+    "cwd": "build/release/src/paper_r2"
+  },
+  {
+    "id": "generate-R5B-attacks",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_attack_artifacts",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1"
+    ],
+    "require_log": "PASS 4 actual R5B"
+  },
+  {
+    "id": "reject-Exp-address",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-address.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-address.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-Exp-index-commitment",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-index-commitment.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-index-commitment.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-Exp-value-commitment",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-value-commitment.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-value-commitment.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-Exp-memory",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-memory.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-memory.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-Exp-profile",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-profile.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/Exp-profile.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-derived-map",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/derived-map.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/derived-map.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-missing-range",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/missing-range.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/missing-range.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-model-W",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/model-W.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/model-W.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-parent-commitment",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/parent-commitment.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/parent-commitment.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-public-Y",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/public-Y.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/public-Y.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-public-padding",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/public-padding.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-production-v1/public-padding.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-R5B-wrong-profile-context",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/wrong-profile-context.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/wrong-profile-context.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-R5B-rounding-closed-upper-bound",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/rounding-closed-upper-bound.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/rounding-closed-upper-bound.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-R5B-rounding-remainder-child",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/rounding-remainder-child.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/rounding-remainder-child.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-R5B-LN-positive-root-view",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/LN-positive-root-view.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/attacks-R5B-v1/LN-positive-root-view.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "REJECT"
+  },
+  {
+    "id": "reject-missing-external-anchor",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof"
+    ],
+    "expected_exit": 2,
+    "require_log": "requires an independently pinned"
+  },
+  {
+    "id": "reject-wrong-external-pin",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "independent operator anchor SHA256 mismatch"
+  },
+  {
+    "id": "reject-wrong-model-manifest",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/trust-negative-v1/wrong-model-manifest.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "trusted model manifest mismatch"
+  },
+  {
+    "id": "reject-wrong-profile-manifest",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/operator-trust-v2.anchor",
+      "--anchor-sha256",
+      "cd339d42738ef8ffd2bce5853d0bbbbae7a32c9e80332dafe93de5e93e0c25aa",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/trust-negative-v1/wrong-profile-manifest.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "model manifest numerical profile mismatch"
+  },
+  {
+    "id": "reject-wrong-profile-anchor",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_model_verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.statement",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/normal-v2/model.proof",
+      "--trusted-anchor",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/trust-negative-v1/wrong-profile.anchor",
+      "--anchor-sha256",
+      "af7642e9fc07e2e67c6d0b923b73e321bfe68cf2ae7ffca63be99d184fc3e28f",
+      "--model-manifest",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R5B/engineering-model-manifest-v1.txt"
+    ],
+    "expected_exit": 2,
+    "require_log": "trusted anchor numerical profile mismatch"
+  }
+]

@@ -1,0 +1,207 @@
+{
+  "local_git_commit": "8180a085020b71e2b9da03c7dabb23fc64a41547",
+  "payload_sha256": "78eb9874452da1a23a3d7a58719a04c51dc50dc29f899a7657a7215c47b3c6b2",
+  "remote_code_version": "78eb9874452da1a23a3d7a58719a04c51dc50dc29f899a7657a7215c47b3c6b2",
+  "status": "FRAMEWORK_CONNECTED",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "label": "engineering-safety-tests",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "python3",
+        "-B",
+        "tools/r7_engineering_tests.py"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/engineering-safety-tests.log",
+      "exit_code": 0,
+      "seconds": 1.7185458028689027,
+      "passed": true
+    },
+    {
+      "label": "configure",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/configure.log",
+      "exit_code": 0,
+      "seconds": 1.0673474329523742,
+      "passed": true
+    },
+    {
+      "label": "build",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_framework_tests",
+        "r7_oneblock_prove",
+        "r7_oneblock_verify",
+        "r6_builder_tests",
+        "r6_model_prove",
+        "r6_model_verify",
+        "r6_model_plan",
+        "r5b_gkr_tests",
+        "r6_resources_tests",
+        "-j4"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/build.log",
+      "exit_code": 0,
+      "seconds": 10.741901121102273,
+      "passed": true
+    },
+    {
+      "label": "framework-and-r6-tests",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "--output-on-failure",
+        "-V",
+        "-R",
+        "^(r7_framework|r6_builder_oneblock|r6_entry_guards|r5b_FC_GKR_coupling|r6_system_resources)$"
+      ],
+      "expected_exit_codes": [
+        0
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/framework-and-r6-tests.log",
+      "exit_code": 0,
+      "seconds": 7.686217894777656,
+      "passed": true
+    },
+    {
+      "label": "oneblock-prover",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_prove",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock",
+        "reports/R6A/oneblock-model-manifest-v1.txt",
+        "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+      ],
+      "expected_exit_codes": [
+        3
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock-prover.log",
+      "exit_code": 3,
+      "seconds": 19.01749464403838,
+      "passed": true
+    },
+    {
+      "label": "oneblock-independent-verifier",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_verify",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.statement",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.incomplete-envelope",
+        "reports/R6A/oneblock-model-manifest-v1.txt",
+        "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+        "365a707623de9f4bea1b7afdc502212cec2439bf14cce6c50d744259826eb794"
+      ],
+      "expected_exit_codes": [
+        3
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock-independent-verifier.log",
+      "exit_code": 3,
+      "seconds": 1.7695405660197139,
+      "passed": true
+    },
+    {
+      "label": "bad-statement-pin",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_verify",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.statement",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.incomplete-envelope",
+        "reports/R6A/oneblock-model-manifest-v1.txt",
+        "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+        "0000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected_exit_codes": [
+        2
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/bad-statement-pin.log",
+      "exit_code": 2,
+      "seconds": 0.03383432375267148,
+      "passed": true
+    },
+    {
+      "label": "bad-model-pin",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "build/release/src/paper_r7/r7_oneblock_verify",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.statement",
+        "reports/R7-ROUND1-RUN-20261026T040130Z/oneblock/oneblock.incomplete-envelope",
+        "reports/R6A/oneblock-model-manifest-v1.txt",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "365a707623de9f4bea1b7afdc502212cec2439bf14cce6c50d744259826eb794"
+      ],
+      "expected_exit_codes": [
+        2
+      ],
+      "log": "reports/R7-ROUND1-RUN-20261026T040130Z/bad-model-pin.log",
+      "exit_code": 2,
+      "seconds": 0.033440408762544394,
+      "passed": true
+    }
+  ],
+  "r6_preservation": true,
+  "framework": {
+    "status": "FRAMEWORK_CONNECTED",
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "integer_witness_validated": true,
+    "legacy_pc_called": false,
+    "cryptographic_proof_generated": false,
+    "base_master_actual": 16642424,
+    "base_master_padded": 16777216,
+    "auxiliary_and_source_objects": 331,
+    "statement_sha256": "365a707623de9f4bea1b7afdc502212cec2439bf14cce6c50d744259826eb794",
+    "profile_sha256": "399596084d9399bd4379c7d14e9c842d6f10ecb4aa2955cbf4a68bbc32e541a4",
+    "model_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073",
+    "layout_sha256": "f9c71951cc9e200528452a6b25f60cd5984a3439a1d47d51e92a10ccb1dfcb45"
+  },
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "binary_sha256": {
+    "r7_framework_tests": "799c907b5c6fcb253415898f242f20c736b1fb97721c06bac13622b2a9585e14",
+    "r7_oneblock_prove": "d15df04487cf853da00d11632a46e51aee779cc79729876d571ac250ee9e3188",
+    "r7_oneblock_verify": "67a29ab4be49199bac6f41d315d56e06ee5968e54bd7ff70c506035d44f14f03"
+  },
+  "cmake_cache_sha256": "c2c2aa212a4305ffa84461177cb82dca607756ecb013e68e3bfcdf2cf8782d7f",
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "deps/cnpy/include/cnpy.h": "68a34a847cfed2dfcc1dc8bcd495cdb51477061536d670161a62c5103547ae93",
+    "build/release/lib/libmcl.a": "b28809544e9a42c125cddc7d951f78d9dfdf9a7794519c90f196f844cbfa9097"
+  },
+  "mcl_submodule_commit": "dd66a53a4dce2ab27f9d028846bc1b1cdbf050f5"
+}

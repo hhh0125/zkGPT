@@ -1,0 +1,60 @@
+{
+  "snapshot": {
+    "utc": "2026-10-21T08:04:51.211370+00:00",
+    "effective_memory_bytes": 477160697856,
+    "cgroup_ancestors": {
+      "/sys/fs/cgroup/user.slice/user-1013.slice/session-135637.scope": {
+        "memory.max": "max",
+        "memory.high": "max",
+        "memory.current": "17309696",
+        "pids.max": "max",
+        "pids.current": "3"
+      },
+      "/sys/fs/cgroup/user.slice/user-1013.slice": {
+        "memory.max": "max",
+        "memory.high": "max",
+        "memory.current": "6557253632",
+        "pids.max": "1360373",
+        "pids.current": "1052"
+      },
+      "/sys/fs/cgroup/user.slice": {
+        "memory.max": "max",
+        "memory.high": "max",
+        "memory.current": "240141869056",
+        "pids.max": "max",
+        "pids.current": "5502"
+      },
+      "/sys/fs/cgroup": {}
+    },
+    "PID_room": 1359321,
+    "RLIMIT_AS": [
+      -1,
+      -1
+    ],
+    "RLIMIT_NPROC": [
+      2061171,
+      2061171
+    ],
+    "observed_own_threads": 1049,
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "disk_free_bytes": 1412113350656,
+    "visible_large_jobs": [
+      {
+        "pid": 3694800,
+        "uid": 1010,
+        "comm": "python3",
+        "RSS_bytes": 42101026816
+      }
+    ],
+    "visibility_limit": "Other-user executable details may be restricted; this snapshot is not exclusive reservation."
+  },
+  "decisions": {
+    "24": "REFUSED: unapproved visible competing large job",
+    "8": "REFUSED: unapproved visible competing large job"
+  }
+}

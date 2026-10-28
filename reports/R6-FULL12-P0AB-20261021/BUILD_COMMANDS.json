@@ -1,0 +1,26 @@
+[
+  {
+    "name": "configure",
+    "argv": [
+      "/usr/bin/cmake",
+      "-S",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+      "-B",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "build",
+    "argv": [
+      "/usr/bin/cmake",
+      "--build",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release-r6-full12-p0ab-20261021",
+      "-j4"
+    ],
+    "exit": 0
+  }
+]

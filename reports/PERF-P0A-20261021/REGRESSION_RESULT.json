@@ -1,0 +1,15 @@
+{
+  "command": [
+    "ctest",
+    "--test-dir",
+    "build/release",
+    "--output-on-failure",
+    "-j1",
+    "-E",
+    "^(r6_builder_full12|r6_finite_threeblock|r6_actual_schema|r6_trust_metadata)$"
+  ],
+  "exit": 0,
+  "excluded": "^(r6_builder_full12|r6_finite_threeblock|r6_actual_schema|r6_trust_metadata)$",
+  "reason": "no multi-block numerical witness/full12 metadata work needed for G1 optimization",
+  "log": "logs/PERF-P0A-20261021/11-release-regression.log"
+}

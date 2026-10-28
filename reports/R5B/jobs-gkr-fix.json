@@ -1,0 +1,21 @@
+[
+  {
+    "id": "real-gkr-only-v2",
+    "argv": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r2/r5b_real_gkr_probe",
+      "reports/R5B/real-gkr-only-v2.json"
+    ],
+    "require_log": "PASS real R5B GKR-only"
+  },
+  {
+    "id": "release-after-FC-bridge",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "--output-on-failure",
+      "-j4"
+    ],
+    "require_log": "100% tests passed"
+  }
+]

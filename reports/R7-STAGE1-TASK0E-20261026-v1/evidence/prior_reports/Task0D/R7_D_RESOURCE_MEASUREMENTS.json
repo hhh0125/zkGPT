@@ -1,0 +1,218 @@
+{
+  "classification": "TOY_TESTED",
+  "limits": {
+    "AS_MiB": 512,
+    "HPC_batch_K": 4,
+    "MSM_terms": 32,
+    "actual_trusted_table": 4,
+    "degree": 3,
+    "events": 2048,
+    "idle_seconds": 10,
+    "input_bytes": 16777216,
+    "message_bytes": 2097152,
+    "process_CPU_seconds": 120,
+    "query_N_shape": 512,
+    "session_wall_seconds": 60,
+    "table_shape": 64,
+    "vector": 1024
+  },
+  "operational_scope": "Measured fresh processes only N=4/8/16, n=N-1, table4. Shape ceiling does not promise completion within budgets, especially padding-heavy N512.",
+  "production_extrapolation": false,
+  "rss_note": "Linux ru_maxrss KiB separately for P and V; not their simultaneous RSS sum. P CPU is own CPU delta, V CPU is verifier process total.",
+  "runs": [
+    {
+      "N": 4,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 99833,
+      "name": "D_measure2_N4_r0",
+      "proof_bytes": 98166,
+      "prover_cpu_seconds": 2.211586,
+      "prover_rss_kib": 19772,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 244,
+        "components": 47,
+        "proof_digest": "9903549a816550d67092f94971357b1724013a05afe0803a088b68412e96affd",
+        "reason": "complete verified interactive session",
+        "sid": "0ccb23f027a0be5de7165746f84e808784d7d352f42caf9e3d2cc79944075fea",
+        "statement_digest": "2d8b072625561c276f95ed056f3e1b7f7490a11c8cb302efcedeed300a7be449",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 3.145241,
+        "verifier_rss_kib": 21068
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 211774,
+      "wall_seconds": 5.084336096886545,
+      "wire_by_direction": {
+        "P->V": 284966,
+        "V->P": 75970
+      },
+      "wire_bytes": 360936
+    },
+    {
+      "N": 4,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 99833,
+      "name": "D_measure2_N4_r1",
+      "proof_bytes": 98166,
+      "prover_cpu_seconds": 2.041658,
+      "prover_rss_kib": 19800,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 244,
+        "components": 47,
+        "proof_digest": "451b96962b2a2938ad4673899463c6aa27dc88f9d0615f20671dc7f3ba564e9e",
+        "reason": "complete verified interactive session",
+        "sid": "dec15068a535e855c9a78ce58c1fd6f8f630ecdeb13d7aece861b807258b9d44",
+        "statement_digest": "078add70b40fbe03437a8ced51a3aef9f0f130abc05cd60f107d9e4126d30719",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 3.0775040000000002,
+        "verifier_rss_kib": 21060
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 211800,
+      "wall_seconds": 4.866815698798746,
+      "wire_by_direction": {
+        "P->V": 284966,
+        "V->P": 75980
+      },
+      "wire_bytes": 360946
+    },
+    {
+      "N": 8,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 128479,
+      "name": "D_measure2_N8_r0",
+      "proof_bytes": 126676,
+      "prover_cpu_seconds": 2.7612639999999997,
+      "prover_rss_kib": 20440,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 314,
+        "components": 57,
+        "proof_digest": "5874b249a0c83f166096bc08783910f34c4ee85938b96b45054aaa8de10c7c4d",
+        "reason": "complete verified interactive session",
+        "sid": "753ecc27a8c52d678d3382620b7240b2d26f59104d43508660a5a979715e9173",
+        "statement_digest": "867c36d9a6275ca6ccb38548b032a8de5151e0e6e66168be2d112cf840c318ef",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 4.130299,
+        "verifier_rss_kib": 21612
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 211817,
+      "wall_seconds": 6.554965497925878,
+      "wire_by_direction": {
+        "P->V": 367304,
+        "V->P": 94686
+      },
+      "wire_bytes": 461990
+    },
+    {
+      "N": 8,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 128479,
+      "name": "D_measure2_N8_r1",
+      "proof_bytes": 126676,
+      "prover_cpu_seconds": 2.69172,
+      "prover_rss_kib": 20284,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 314,
+        "components": 57,
+        "proof_digest": "0179666fc17c10a21e983068bd449a8016f73e4d8eb52673f8a0b86c473fb0e9",
+        "reason": "complete verified interactive session",
+        "sid": "b12ea8a9d9914375794d544798d53cdb6da3ae8ae1edf6292c53c5919fa3200f",
+        "statement_digest": "822f074eb9146837993012fc1436dece0c7246613d270795b7c4b0da7dd481f8",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 4.011114,
+        "verifier_rss_kib": 21552
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 211959,
+      "wall_seconds": 6.381938200909644,
+      "wire_by_direction": {
+        "P->V": 367304,
+        "V->P": 94686
+      },
+      "wire_bytes": 461990
+    },
+    {
+      "N": 16,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 161889,
+      "name": "D_measure2_N16_r0",
+      "proof_bytes": 159948,
+      "prover_cpu_seconds": 4.425408000000001,
+      "prover_rss_kib": 21804,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 395,
+        "components": 67,
+        "proof_digest": "f6be807ca9f113827e570e91aa236555518ecbccf40b324bddb4f7f696553d2d",
+        "reason": "complete verified interactive session",
+        "sid": "bf7b6377ece141eacf2720384a8e9dd6a404927e9f9f9adb333573c3b5b59c29",
+        "statement_digest": "11efbe90b1c3a0bac2113acd36dee29c9264e4835c58e14494eb758bbaa31d62",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 5.824842,
+        "verifier_rss_kib": 22212
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 211979,
+      "wall_seconds": 9.753405394032598,
+      "wire_by_direction": {
+        "P->V": 463193,
+        "V->P": 115181
+      },
+      "wire_bytes": 578374
+    },
+    {
+      "N": 16,
+      "attack": null,
+      "fresh_prover_process": true,
+      "max_message_bytes": 161889,
+      "name": "D_measure2_N16_r1",
+      "proof_bytes": 159948,
+      "prover_cpu_seconds": 4.193563,
+      "prover_rss_kib": 21640,
+      "reason": "complete verified interactive session",
+      "status": "ACCEPT",
+      "table": 4,
+      "terminal": {
+        "challenges": 395,
+        "components": 67,
+        "proof_digest": "bf468808b6f968731dfcd0866e906e592121446c7a9164e3106206883c764770",
+        "reason": "complete verified interactive session",
+        "sid": "d2e3d4abfa0b0c8a91d73cd3034cd8f05dedae979ba2277448aad22e329d6141",
+        "statement_digest": "c13e261630101fe9a01b9e766a0b750cd72629e326bf79e33e297e595b410ad1",
+        "status": "ACCEPT",
+        "verifier_cpu_seconds": 5.725445,
+        "verifier_rss_kib": 21908
+      },
+      "verifier_exit": 0,
+      "verifier_pid": 212429,
+      "wall_seconds": 9.44352223398164,
+      "wire_by_direction": {
+        "P->V": 463193,
+        "V->P": 115181
+      },
+      "wire_bytes": 578374
+    }
+  ],
+  "schema": "R7-D-RESOURCE-v1",
+  "wire_note": "Canonical JSON line counts include both directions and final duplicate proof submission. Proof bytes are canonical completed proof JSON, not a compact binary production format."
+}
