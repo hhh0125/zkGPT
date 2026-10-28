@@ -6,7 +6,12 @@
 namespace zkgpt::r7::crypto {
 void need(bool ok,const char*m){if(!ok)throw std::runtime_error(m);}
 namespace {
-void curve(){need(mcl::bn::BN::param.cp.curveType==MCL_BN254 && Fr::getModulo()==r1::kModulus && mcl::bn::Fp::getModulo()=="16798108731015832284940804142231733909889187121439069848933715426072753864723" && G1::order_==Fr::getOp().mp && G1::a_.isZero() && G1::b_==G1::Fp(2) && !G1::Fp::isETHserialization() && G1::getSerializedByteSize()==32 && mcl::bn::getMapToMode()==MCL_MAP_TO_MODE_ORIGINAL,"R7 exact MCL BN254 curve/encoding/map mode required");}
+void curve(){
+ // Compare live moduli as integers; decimal conversion allocated on every draw.
+ static const mpz_class scalarMod=[](){mpz_class v;mcl::gmp::setStr(v,r1::kModulus);return v;}();
+ static const mpz_class baseMod=[](){mpz_class v;mcl::gmp::setStr(v,"16798108731015832284940804142231733909889187121439069848933715426072753864723");return v;}();
+ need(mcl::bn::BN::param.cp.curveType==MCL_BN254 && Fr::getOp().mp==scalarMod && mcl::bn::Fp::getOp().mp==baseMod && G1::order_==Fr::getOp().mp && G1::a_.isZero() && G1::b_==G1::Fp(2) && !G1::Fp::isETHserialization() && G1::getSerializedByteSize()==32 && mcl::bn::getMapToMode()==MCL_MAP_TO_MODE_ORIGINAL,"R7 exact MCL BN254 curve/encoding/map mode required");
+}
 void group(const G1&p){curve();need(p.isValid() && p.isValidOrder(),"R7 invalid curve/subgroup point");}
 G1 derive(const std::string&role){G1 p;mcl::bn::hashAndMapToG1(p,std::string(suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/"+role);group(p);need(!p.isZero(),"R7 identity generator");return p;}
 const Parameters& trusted(std::size_t n){curve();need(n && n<=64 && !(n&(n-1)),"R7 generator dimension bound");static std::map<std::size_t,Parameters>cache;auto it=cache.find(n);if(it!=cache.end())return it->second;Parameters p;p.scalar=derive("output/G");p.hiding=derive("blind/H");for(std::size_t i=0;i<n;++i)p.columns.push_back(derive("column/"+std::to_string(i)));auto all=p.columns;all.push_back(p.scalar);all.push_back(p.hiding);for(std::size_t i=0;i<all.size();++i)for(std::size_t j=0;j<i;++j)need(all[i]!=all[j] && all[i]!=-all[j],"R7 generator collision");return cache.emplace(n,std::move(p)).first->second;}
@@ -15,12 +20,12 @@ void spec(Writer&w,const PCSpec&s){w.text(s.suite);w.text(s.role);w.text(s.layou
 void Writer::number(std::uint64_t x,unsigned n){for(unsigned i=0;i<n;++i)b.push_back(std::uint8_t(x>>(8*i)));}
 void Writer::raw(const Bytes&x){need(x.size()<=4*1024*1024 && b.size()<=4*1024*1024-x.size(),"R7 crypto wire bound");b.insert(b.end(),x.begin(),x.end());}
 void Writer::text(const std::string&s){need(s.size()<=256,"R7 crypto string bound");number(s.size());raw(Bytes(s.begin(),s.end()));}
-void Writer::scalar(const Fr&f){need(f.isValid(),"R7 invalid scalar");raw(r1::encode(f));}
+void Writer::scalar(const Fr&f){need(f.isValid(),"R7 invalid scalar");need(b.size()<=4*1024*1024-32,"R7 crypto wire bound");auto at=b.size();b.resize(at+32);need(f.serialize(b.data()+at,32)==32,"Fr encoding");}
 void Writer::point(const G1&p){group(p);raw(r1::encode(p));}
 Bytes Reader::raw(std::size_t n){need(at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");Bytes out(b.begin()+at,b.begin()+at+n);at+=n;return out;}
-std::uint64_t Reader::number(unsigned n){auto x=raw(n);std::uint64_t v=0;for(unsigned i=0;i<n;++i)v|=std::uint64_t(x[i])<<(8*i);return v;}
+std::uint64_t Reader::number(unsigned n){need(n<=8 && at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");std::uint64_t v=0;for(unsigned i=0;i<n;++i)v|=std::uint64_t(b[at++])<<(8*i);return v;}
 std::string Reader::text(){auto n=number();need(n<=256,"R7 crypto string bound");auto x=raw(n);return {x.begin(),x.end()};}
-Fr Reader::scalar(){return r1::decodeFr(raw(32));}
+Fr Reader::scalar(){need(at<=b.size() && 32<=b.size()-at,"R7 crypto truncated wire");Fr f;need(f.deserialize(b.data()+at,32)==32,"noncanonical Fr");std::array<std::uint8_t,32>canonical{};need(f.serialize(canonical.data(),32)==32 && std::memcmp(canonical.data(),b.data()+at,32)==0,"noncanonical Fr roundtrip");at+=32;return f;}
 G1 Reader::point(){return decodePoint(raw(32));}
 void Reader::end(){need(at==b.size(),"R7 crypto trailing bytes");}
 G1 decodePoint(const Bytes&b){curve();auto p=r1::decodeG1(b);group(p);return p;}

@@ -1,0 +1,344 @@
+{
+  "status": "FS_SELECTED_TESTS_COMPLETED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.7741122818551958,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_fs_io_tests",
+        "r7_crypto_tests",
+        "r7_a3_tests",
+        "r7_opt1_perf_tests",
+        "r7_oneblock_vectors_tests",
+        "r7_classified_crypto_tests",
+        "r7_classified_layout_tests",
+        "r7_oneblock_gkr_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_oneblock_model_tests",
+        "r7_oneblock_public_tests",
+        "r7_lookup_prepare_tests",
+        "r7_fs_probe_prover",
+        "r7_fs_probe_verifier",
+        "r7_fs_oneblock_prover",
+        "r7_fs_oneblock_verifier",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "r7_classified_prover",
+        "r7_classified_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 28.832474106922746,
+      "passed": true
+    },
+    {
+      "name": "r7_fs_io_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_fs_io_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.04148596432060003,
+      "passed": true
+    },
+    {
+      "name": "r7_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_crypto_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 2.7724935030564666,
+      "passed": true
+    },
+    {
+      "name": "r7_a3_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_a3_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.06769103370606899,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_vectors_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_vectors_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 1.0200054259039462,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_crypto_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3180553368292749,
+      "passed": true
+    },
+    {
+      "name": "r7_classified_layout_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_layout_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 19.262730242218822,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_gkr_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_gkr_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 1.0192871638573706,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_lookup_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 42.34912621602416,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_model_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_model_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.6235549529083073,
+      "passed": true
+    },
+    {
+      "name": "r7_oneblock_public_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_public_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 2.726824649143964,
+      "passed": true
+    },
+    {
+      "name": "r7_lookup_prepare_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_lookup_prepare_tests"
+      ],
+      "exit_code": 0,
+      "seconds": 0.020226604770869017,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-copy-0",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-copy"
+      ],
+      "exit_code": 0,
+      "seconds": 2.325750106945634,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-owned-0",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-owned"
+      ],
+      "exit_code": 0,
+      "seconds": 2.326485793106258,
+      "passed": true
+    },
+    {
+      "name": "perf-random-0",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "random"
+      ],
+      "exit_code": 0,
+      "seconds": 0.21755456598475575,
+      "passed": true
+    },
+    {
+      "name": "perf-wire-0",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "wire"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4684265670366585,
+      "passed": true
+    },
+    {
+      "name": "perf-msm-0",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "msm"
+      ],
+      "exit_code": 0,
+      "seconds": 3.1252200631424785,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-copy-1",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-copy"
+      ],
+      "exit_code": 0,
+      "seconds": 2.3232943201437593,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-owned-1",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-owned"
+      ],
+      "exit_code": 0,
+      "seconds": 2.3234685086645186,
+      "passed": true
+    },
+    {
+      "name": "perf-random-1",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "random"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2174212420359254,
+      "passed": true
+    },
+    {
+      "name": "perf-wire-1",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "wire"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4688288629986346,
+      "passed": true
+    },
+    {
+      "name": "perf-msm-1",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "msm"
+      ],
+      "exit_code": 0,
+      "seconds": 3.1786556621082127,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-copy-2",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-copy"
+      ],
+      "exit_code": 0,
+      "seconds": 2.322967047803104,
+      "passed": true
+    },
+    {
+      "name": "perf-slab-owned-2",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "slab-owned"
+      ],
+      "exit_code": 0,
+      "seconds": 2.271492783445865,
+      "passed": true
+    },
+    {
+      "name": "perf-random-2",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "random"
+      ],
+      "exit_code": 0,
+      "seconds": 0.21741076931357384,
+      "passed": true
+    },
+    {
+      "name": "perf-wire-2",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "wire"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4679631842300296,
+      "passed": true
+    },
+    {
+      "name": "perf-msm-2",
+      "command": [
+        "build/release/src/paper_r7/r7_opt1_perf_tests",
+        "msm"
+      ],
+      "exit_code": 0,
+      "seconds": 2.373205655720085,
+      "passed": true
+    },
+    {
+      "name": "fs-reference",
+      "command": [
+        "python3",
+        "-B",
+        "tools/fs_reference.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T075937Z/r7_fs_io_tests.log"
+      ],
+      "exit_code": 0,
+      "seconds": 0.06701168604195118,
+      "passed": true
+    },
+    {
+      "name": "fs-small",
+      "command": [
+        "python3",
+        "-B",
+        "tools/opt1_tests.py",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T075937Z",
+        "--small"
+      ],
+      "exit_code": 0,
+      "seconds": 44.94667130894959,
+      "passed": true
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/src/paper_r7/r7_fs_probe_verifier": "a3b3052a4e284adbbed4e246de6ee1e7d4cb90aefd8214a27d2c7064a5fc0346",
+    "build/release/src/paper_r7/r7_fs_probe_prover": "3643d4b3d81d312cf22f6b298b17103ad49a6d4bae54bc1a2fe7730fd9953148",
+    "build/release/src/paper_r7/r7_fs_oneblock_prover": "c27772c7fa5ff79fa64d8324692809c5ea2875b60398b120dafb8c48efa04917",
+    "build/release/src/paper_r7/r7_fs_oneblock_verifier": "8927e53ccd3db004d852240fcda620cc9ac574dac64af904270236e8eb562104",
+    "build/release/src/paper_r7/r7_fs_io_tests": "2dd07e12d20b916a5356df1d95fd349cebc624ae46138d83819a3fd22ad0d84f"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

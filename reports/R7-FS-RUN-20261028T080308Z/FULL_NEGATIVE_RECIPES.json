@@ -1,0 +1,25 @@
+[
+  {
+    "case": "full-swapped-commitment-identities",
+    "base": "full.fsproof",
+    "operation": "replace identity bytes",
+    "offset": 2229749,
+    "original_hex": "435f6c6f6f6b75702f68656c706572732f30",
+    "replacement_hex": "435f6c6f6f6b75702f68656c706572732f31",
+    "sha256": "761073dbba1cbb491a26fc7a6582b055aaf11d2b981d20eb105a50642108976b"
+  },
+  {
+    "case": "full-tampered-proof-message",
+    "base": "full.fsproof",
+    "operation": "replace 32 point bytes with ff",
+    "offset": 2229799,
+    "sha256": "038a94bd07f1141ded20ac5a9cba66ffa5197fcf301a0c33dd28cf59a5972d8a"
+  },
+  {
+    "case": "full-appended-data",
+    "base": "full.fsproof",
+    "operation": "append hexadecimal58",
+    "sha256": "f022a33692c12ce3461997a140162dec53999f12e8ace93682c3554675dcc986",
+    "bytes": 675459863
+  }
+]

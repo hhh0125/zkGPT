@@ -23,9 +23,12 @@ void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.act
 void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
  std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");auto leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){auto next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);tree.push_back(next);}}
+ // The supplied root replaces the stored top level; only children are read.
+ if(io.prover() && n>1)tree.pop_back();
  Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
  for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t j){return w->at(j);};std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
   auto end=expressionSumcheck(io,width,carry,f,Expression{3,{{Fr(1),{0,1,2}}}},rng,name+"/sumcheck");need(end.endpoints.size()==3,"lookup Product endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);
+  if(io.prover())tree.at(d-layer-1).reset();
  }
  auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");
  // A layer is recorded only after the recursive chain reaches an actually

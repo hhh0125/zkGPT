@@ -1,7 +1,7 @@
 #pragma once
 #include "fixed_cw.hpp"
 namespace zkgpt::r7::stage2 {
-struct Phase {std::string name;double seconds=0;std::uint64_t p_wire_bytes=0,msm_calls=0,pc_total_N=0,folded_n=0;};
+struct Phase {std::string name;double seconds=0;std::uint64_t p_wire_bytes=0,msm_calls=0,pc_total_N=0,folded_n=0,rss_kib=0,peak_rss_kib=0;};
 std::vector<Phase>&openingMeasurements();
 class MaskLedger {
  std::set<std::string>seen_;

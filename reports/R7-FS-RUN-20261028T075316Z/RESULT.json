@@ -1,0 +1,60 @@
+{
+  "status": "EXPECTED_BUFFERING_TEST_RED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1198595901951194,
+      "passed": true
+    },
+    {
+      "name": "io-red-build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_fs_io_tests",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "seconds": 14.509333740919828,
+      "passed": true
+    },
+    {
+      "name": "io-red",
+      "command": [
+        "build/release/src/paper_r7/r7_fs_io_tests"
+      ],
+      "exit_code": 1,
+      "seconds": 0.07098790816962719,
+      "passed": true
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/src/paper_r7/r7_fs_probe_verifier": "2cd66b27f755dfd2622dd0e12b6d2802d9c338ab5a35cc254c112fda0ddcd430",
+    "build/release/src/paper_r7/r7_fs_probe_prover": "492293b2649ae58e47edb5620e5a2aa9dbd1c11f04cebd03a6e89298c4a74c85",
+    "build/release/src/paper_r7/r7_fs_oneblock_prover": "9e968f47fc0779fbf36a4786bb81ff69283df96c8c28f9363831bf60fedee022",
+    "build/release/src/paper_r7/r7_fs_oneblock_verifier": "aaaf26839c30d62486d3db064fb37bdf453bb05ab356cd9501c7870e7ce9433d",
+    "build/release/src/paper_r7/r7_fs_io_tests": "c6113f2b148ee74fa0919f63a19ae0030ad33e507fa8b750174123dd377d3e0b"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

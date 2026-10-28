@@ -5,7 +5,7 @@ REMOTE_TOOLS={'tools/classified_test_policy.py','tools/classified_policy_tests.p
 def sync_state_target(root):
  return no_links(Path(root),Path(root)/'reports/HYRAX_A3_LAST_SYNC.json')
 
-REMOTE_TOOLS.update({'tools/remote_fs.py','tools/fs_tests.py','tools/fs_reference.py'})
+REMOTE_TOOLS.update({'tools/opt1_tests.py','tools/remote_opt1.py','tools/remote_fs.py','tools/fs_tests.py','tools/fs_reference.py'})
 def no_links(root,target):
  root=Path(root);target=Path(target)
  if root.resolve()!=root:raise ValueError('root must be canonical')

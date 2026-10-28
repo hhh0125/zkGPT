@@ -13,6 +13,7 @@ Bytes encodeMaster(const Master&);
 Master decodeMaster(const Bytes&,const Spec&expected);
 std::string identity(const Master&);
 G1 masterMSM(const std::vector<G1>&,const std::vector<Fr>&);
+G1 masterMSM(const G1*,const Fr*,std::size_t);
 Secret commitMaster(const Spec&,const Value&);
 bool registrationSupported(const Spec&);
 void registerMaster(IO&,const Master&,const Secret*);

@@ -1,0 +1,56 @@
+{
+  "source_sha256": "2e5204bf8e924b271f21f6b10604128ed026c7b99e0f1f99d3823b0d53ff3453",
+  "binary_sha256": "cb9caabaa0b74753f0c91c5ac073b6139fa53bd4f2654af733fa708cba40e99d",
+  "commands": [
+    [
+      "/usr/bin/c++",
+      "-DMCLBN_NO_AUTOLINK",
+      "-DMCL_NO_AUTOLINK",
+      "-DMCL_USE_LLVM=1",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include",
+      "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1",
+      "-isystem",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src",
+      "-pthread",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++17",
+      "-c",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/opt1_msm_alloc.cpp",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/opt1_msm_alloc.o"
+    ],
+    [
+      "/usr/bin/c++",
+      "-pthread",
+      "-O3",
+      "-DNDEBUG",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/opt1_msm_alloc.o",
+      "-o",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/opt1_msm_alloc",
+      "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib",
+      "libpaper_r7.a",
+      "../paper_r2/libpaper_r2.a",
+      "../libgpt_lib.a",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+      "-lz",
+      "../paper_r1/libpaper_r1.a",
+      "../../lib/libmclbn256.so.1.74",
+      "../../lib/libmcl.so.1.74",
+      "-lpthread",
+      "/usr/lib/x86_64-linux-gnu/libcrypto.so"
+    ],
+    [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/opt1_msm_alloc"
+    ]
+  ],
+  "return_codes": [
+    0,
+    0,
+    0
+  ],
+  "test_only": true
+}

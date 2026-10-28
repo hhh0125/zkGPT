@@ -49,7 +49,7 @@ class Tracked final:public IO,public EvidenceSink {
 #endif
  public:Tracked(IO&b,const Coverage&p,std::string attack,std::function<std::uint64_t()>frames):base_(b),frames_(std::move(frames)),plan_(p),attack_(std::move(attack)){for(auto&r:p.required)expected_.insert(r.id);}
  bool prover()const override{return base_.prover();}std::string session()const override{return base_.session();}Digest prefix()const override{return base_.prefix();}
- Bytes message(const std::string&label,const Bytes&v={})override{last_=label;auto b=v;if(prover() && !changed_){
+ Bytes message(const std::string&label,const Bytes&v={})override{last_=label;if(!prover() || attack_.empty() || changed_)return base_.message(label,v);auto b=v;if(prover() && !changed_){
   if(attack_=="wrong-commitment" && label=="Classified/root/1/PC"){auto pc=decodeVector(b);pc.points[0]+=parameters(1).scalar;b=encodeVector(pc);changed_=true;}
   if(attack_=="missing-authentication" && label=="Classified/all-claims-fixed"){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
   if(attack_=="model-response" && label=="oneblock/model/register/0/responses"){auto x=r1::decodeFr(Bytes(b.begin(),b.begin()+32));auto c=r1::encode(x+Fr(1));std::copy(c.begin(),c.end(),b.begin());changed_=true;}
@@ -121,7 +121,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #endif
  tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
  Writer binding;binding.text(liveSuite);binding.text(identity(plan));binding.raw(R7Wire::encodeStatement(s));bindPublic(io,"Oneblock/statement-native-plan",binding.b);
- std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});std::cerr<<"PHASE_COMPLETE "<<id<<'\n';};
+ std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';};
  #ifndef R7_CLASSIFIED_V2
  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");

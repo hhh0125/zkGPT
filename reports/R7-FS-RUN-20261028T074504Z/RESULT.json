@@ -1,0 +1,51 @@
+{
+  "status": "EXPECTED_MISSING_FS_API_RED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "events": [
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1189351519569755,
+      "passed": true
+    },
+    {
+      "name": "fs-target-red",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_oneblock_vectors_tests",
+        "-j4"
+      ],
+      "exit_code": 2,
+      "seconds": 1.1676810160279274,
+      "passed": true
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/src/paper_r7/r7_fs_probe_verifier": "ad40d55e7c2581039aa42b0743d026f2e6f908044a49d6643dc21cce582fddb9",
+    "build/release/src/paper_r7/r7_fs_probe_prover": "513ae3a4a50dbea80e6170d7c3dd32f2709c4e41cb8862feb3f600ac9c5cbf1a",
+    "build/release/src/paper_r7/r7_fs_oneblock_prover": "6361127b4deee515b2ef23d104d7f86d335beb9a3af419001e9279ce1f17cef7",
+    "build/release/src/paper_r7/r7_fs_oneblock_verifier": "9422b470db249ba59dd89d4d206f386868ab36b1c017e930217c58c6f6576cae",
+    "build/release/src/paper_r7/r7_fs_io_tests": "3f4d9ad8f1d1c003b2b55002d7ff89b92be68867d3fd03aa47f54fc72de471be"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

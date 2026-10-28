@@ -1,0 +1,69 @@
+{
+  "status": "FAILED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "error": "build",
+  "events": [
+    {
+      "name": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        "build/release",
+        "-DZKGPT_BUILD_R7_FRAMEWORK=ON"
+      ],
+      "exit_code": 0,
+      "seconds": 1.0683791171759367,
+      "passed": true
+    },
+    {
+      "name": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_fs_io_tests",
+        "r7_opt1_perf_tests",
+        "r7_oneblock_vectors_tests",
+        "r7_classified_crypto_tests",
+        "r7_classified_layout_tests",
+        "r7_oneblock_gkr_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_oneblock_model_tests",
+        "r7_oneblock_public_tests",
+        "r7_lookup_prepare_tests",
+        "r7_fs_probe_prover",
+        "r7_fs_probe_verifier",
+        "r7_fs_oneblock_prover",
+        "r7_fs_oneblock_verifier",
+        "r7_complete_prover",
+        "r7_complete_verifier",
+        "r7_classified_prover",
+        "r7_classified_verifier",
+        "-j4"
+      ],
+      "exit_code": 2,
+      "seconds": 14.94512142939493,
+      "passed": false
+    }
+  ],
+  "toolchain": {
+    "cmake": "cmake version 3.31.4",
+    "c++": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0",
+    "python3": "Python 3.10.12"
+  },
+  "dependency_sha256": {
+    "deps/cnpy/lib/libcnpy.a": "abab707dafd4fee2d15988c98799688b367f4786b7a7e4c673a3c989592c48e8",
+    "3rd/mcl/include/mcl/bn.hpp": "ae3392bc2f4540456649d023eb78c2ea465858ceaa99c43162432e6cde735c01",
+    "build/release/src/paper_r7/r7_fs_probe_verifier": "2fb1e0fffdd21e7bf7ace83e185052ef2fc2de52f4bc193a63597763d8543771",
+    "build/release/src/paper_r7/r7_fs_probe_prover": "992bbba8c1adb70bfcba091e985c8c3e13576d8716b9ccde72d3cb61819fdc1e",
+    "build/release/src/paper_r7/r7_fs_oneblock_prover": "2098fc9402b629943bee4e764935bc156ea5cfbe2268f06d787d8747d81fab07",
+    "build/release/src/paper_r7/r7_fs_oneblock_verifier": "3f2e93ee00cbe85fff2f089216b90274746d2e88f30caa4562c867a53fa60248",
+    "build/release/src/paper_r7/r7_fs_io_tests": "ec5eaad180f71df0061307d521f93ce3d72e8984cfed060f7102823873b229bc"
+  },
+  "parameter_manifest_sha256": "3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073"
+}

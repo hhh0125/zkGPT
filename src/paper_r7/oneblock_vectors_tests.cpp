@@ -1,6 +1,8 @@
 #include "oneblock_vectors.hpp"
+#include "streaming_master.hpp"
 #include <algorithm>
 #include <iostream>
+using namespace zkgpt::r7;
 using namespace zkgpt::r7::crypto;
 using namespace zkgpt::r7::oneblock;
 namespace {
@@ -54,10 +56,35 @@ void inconsistentRow(){
  for(unsigned i=0;i<4;++i)vp.push_back(v.coin("bad-row/query/"+std::to_string(i)));
  auto vh=exchangeHidden(v,"bad-row/value",Fr(0),nullptr);openVector(v,pc,{vp,vh.handle},nullptr,nullptr,nullptr,"bad-row/open");
 }
+void ownedBuffer(){
+ // A full slab copy here would regress the intended peak-memory bound.
+ SessionRandom rng;auto values=std::make_shared<std::vector<Fr>>(16,Fr(1048576));
+ for(std::size_t i=0;i<13;++i)values->at(i)=Fr(i+3);
+ auto address=values->data();auto secret=commitVectorOwned("vectors/owned",13,16,std::move(values),rng);
+ need(!values && secret.values->data()==address,"owned commitment copied a slab");
+ for(std::size_t i=13;i<16;++i)need(secret.values->at(i)==Fr(1048576),"owned nonzero logical padding lost");
+ Tape p(true);std::vector<Fr>q{Fr(3),Fr(5),Fr(7),Fr(11)};
+ auto h=exchangeHidden(p,"owned/value",r1::mle(*secret.values,q),&rng);
+ openVector(p,secret.pc,{q,h.handle},&secret,&h,&rng,"owned/open");
+ Tape v(false);v.records=p.records;auto vh=exchangeHidden(v,"owned/value",Fr(0),nullptr);
+ openVector(v,secret.pc,{q,vh.handle},nullptr,nullptr,nullptr,"owned/open");
+ need(v.at==v.records.size(),"owned independent opening incomplete");
+ bool rejected=false;try{commitVectorOwned("vectors/short",13,16,std::make_shared<std::vector<Fr>>(15),rng);}catch(...){rejected=true;}
+ need(rejected,"owned malformed buffer accepted");
+}
+void msmSpan(){
+ auto g=hyrax_a3::generators(16);std::vector<Fr>x(16);G1 expected;expected.clear();
+ for(std::size_t i=0;i<x.size();++i){x[i]=Fr(i+3);if(i>1 && i<15)expected+=g[i]*x[i];}
+ auto original=g;auto scalars=x;
+ need(master3::masterMSM(g.data()+2,x.data()+2,13)==expected,"MSM span differs from independent scalar sum");
+ need(g==original && x==scalars,"MSM changed caller buffers");
+ bool rejected=false;try{master3::masterMSM(g.data(),x.data(),0);}catch(...){rejected=true;}
+ need(rejected,"MSM empty span accepted");
+}
 void rejects(const std::function<void()>&f,const char*name,const char*why){try{f();}catch(const std::exception&e){need(std::string(e.what()).find(why)!=std::string::npos,e.what());std::cout<<"REJECT "<<name<<": "<<e.what()<<'\n';return;}throw std::runtime_error(std::string("expected vector rejection: ")+name);}
 }
 int main(){try{
- r1::init();for(auto n:{std::size_t(1),std::size_t(16),std::size_t(4096)})replay(n,"");
+ r1::init();msmSpan();ownedBuffer();for(auto n:{std::size_t(1),std::size_t(16),std::size_t(4096)})replay(n,"");
  rejects([]{replay(16,"identity");},"wrong PC identity","wrong object identity");
  rejects([]{inconsistentRow();},"wrong committed row","vector knowledge equation");
  rejects([]{replay(16,"claim");},"wrong hidden evaluation","Schnorr equation");
