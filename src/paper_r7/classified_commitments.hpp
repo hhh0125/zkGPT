@@ -9,7 +9,25 @@ struct Root {
  std::function<void(IO&,const Query&,const Hidden*,Random*,const std::string&)>open;
  std::vector<G1>basis;std::vector<Fr>blinds;
 };
+struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0;};
 class Commitments {
+ friend struct AuthenticationTestAccess;
+ mutable AuthMetrics auth_metrics_;
+ class Weights {
+  std::vector<Fr>a_,b_;unsigned split_;
+  public:explicit Weights(const std::vector<Fr>&,AuthMetrics* =nullptr);
+  std::size_t bytes()const;Fr at(std::size_t)const;
+ };
+ struct Authentication {
+ struct Run {std::size_t begin,count;Coordinate first;};
+ struct Prepared {std::vector<Run>runs;bool frozen=false;std::unique_ptr<Weights>weights;};
+ static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
+ std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
+ explicit Authentication(std::size_t n):claims(n){}
+};
+ Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
+ std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
+ std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,base_registered_=false,authenticated_=false;
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
@@ -17,6 +35,7 @@ class Commitments {
  public:
  std::uint64_t registration_bytes=0,registered_rows=0;
  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
+ ~Commitments();
  void registerBase();
  VectorOracle view(const std::string&);
  void defer(Claim);

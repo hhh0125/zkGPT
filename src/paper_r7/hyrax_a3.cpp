@@ -8,7 +8,7 @@ void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimensio
 G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
  need(g.size()==x.size() && !g.empty() && g.size()<=maxTrustedR6Dot+1,"A3 MSM dimension");
  auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
- G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+ MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
 }
 void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
 Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
@@ -96,6 +96,9 @@ void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const 
  if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
  auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
+// Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
+// Interactive controllers call dotProduct / dotProductTrustedR6Basis through
+// openVector and model::opening. crypto::validate rejects any other layout tag.
 void opening(IO&io,const PC&pc,const Query&q,const PCSecret*secret,const Hidden*evaluation,Random*rng){
  validate(pc);validate(q.evaluation,io.session(),q.evaluation.role);need(q.point.size()==r1::log2exact(pc.spec.padded),"A3 PC query dimension");
  Writer b;b.text(suite);b.text(messageVersion);b.raw(encode(pc));b.raw(encode(q.evaluation));b.number(q.point.size());for(auto&f:q.point)b.scalar(f);publicBinding(io,"A3/PC-statement",b.b);

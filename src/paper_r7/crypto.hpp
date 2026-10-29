@@ -1,5 +1,6 @@
 #pragma once
 #include "paper_r1/core.hpp"
+#include "opt2_metrics.hpp"
 #include <map>
 #include <functional>
 namespace zkgpt::r7::crypto {

@@ -1,0 +1,75 @@
+PHASE_BEGIN frozen-witness-and-prechallenge-lookup
+MODEL_TIMING {"phase":"W-hiding-rerandomization","seconds":1.45232}
+PHASE_COMPLETE frozen-witness-and-prechallenge-lookup
+PHASE_BEGIN all-classified-roots-prechallenge-seal
+OPT1_ROOT {"phase":"pack-and-commit","id":"C_lookup/queries","seconds":12.1655,"cumulative_peak_rss_kib":3458216}
+OPT1_ROOT {"phase":"pack-and-commit","id":"C_aux","seconds":0.0831273,"cumulative_peak_rss_kib":3458216}
+OPT1_ROOT {"phase":"pack-and-commit","id":"C_lookup/helpers/0","seconds":34.9317,"cumulative_peak_rss_kib":3982520}
+OPT1_ROOT {"phase":"pack-and-commit","id":"C_lookup/helpers/1","seconds":38.332,"cumulative_peak_rss_kib":3988912}
+OPT1_ROOT {"phase":"pack-and-commit","id":"C_lookup/helpers/2","seconds":36.3511,"cumulative_peak_rss_kib":4381916}
+PHASE_COMPLETE all-classified-roots-prechallenge-seal
+PHASE_BEGIN complete-classified-base-knowledge-and-tail
+PHASE_COMPLETE complete-classified-base-knowledge-and-tail
+PHASE_BEGIN classified-public-X-Y-constants
+PHASE_COMPLETE classified-public-X-Y-constants
+PHASE_BEGIN all-native-GKR
+PHASE_COMPLETE all-native-GKR
+PHASE_BEGIN native-Range-Exp-Lasso-Memory-Product
+PHASE_COMPLETE native-Range-Exp-Lasso-Memory-Product
+PHASE_BEGIN all-source-original-handles
+PHASE_COMPLETE all-source-original-handles
+PHASE_BEGIN mandatory-classified-authentication-barrier
+OPT2_SCAN_PLAN {"claims":936,"root_only_claims":842,"multi_root_claims":94,"frozen_claims":922,"legacy_kernel_calls":12,"legacy_kernel_coordinates":1131051616,"legacy_weights_precomputations":2906,"map_cache_bytes":16600128,"weight_cache_bytes":19238656}
+OPT2_PARTIAL {"coordinates":232127081,"cpu_seconds":25.2574,"map_cache_bytes":16600128,"weight_cache_bytes":19238656}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_W","seconds":0.000993747,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_lookup/queries","seconds":0.000757921,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_aux","seconds":0.000762029,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_lookup/helpers/0","seconds":0.000782177,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_lookup/helpers/1","seconds":0.000767154,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"partial-exchange","id":"C_lookup/helpers/2","seconds":0.000724968,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":0,"coordinates":46584832,"cpu_seconds":3.60672}
+OPT1_ROOT {"phase":"opening","id":"C_W","seconds":3.68979,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_W","seconds":15.0119,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":1,"coordinates":16155968,"cpu_seconds":1.61611}
+OPT1_ROOT {"phase":"opening","id":"C_lookup/queries","seconds":2.18548,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_lookup/queries","seconds":5.75514,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":2,"coordinates":5668985,"cpu_seconds":0.54978}
+OPT1_ROOT {"phase":"opening","id":"C_aux","seconds":0.0332723,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_aux","seconds":0.653534,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":3,"coordinates":70680576,"cpu_seconds":5.22291}
+OPT1_ROOT {"phase":"opening","id":"C_lookup/helpers/0","seconds":8.15191,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_lookup/helpers/0","seconds":20.9996,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":4,"coordinates":61243392,"cpu_seconds":4.56851}
+OPT1_ROOT {"phase":"opening","id":"C_lookup/helpers/1","seconds":7.92233,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_lookup/helpers/1","seconds":20.1593,"cumulative_peak_rss_kib":4382404}
+OPT2_KERNEL {"root":5,"coordinates":60137648,"cpu_seconds":3.03286}
+OPT1_ROOT {"phase":"opening","id":"C_lookup/helpers/2","seconds":5.70629,"cumulative_peak_rss_kib":4382404}
+OPT1_ROOT {"phase":"authentication-and-opening","id":"C_lookup/helpers/2","seconds":13.67,"cumulative_peak_rss_kib":4382404}
+PHASE_COMPLETE mandatory-classified-authentication-barrier
+{"security_status":"FS_NIZK_CANDIDATE","suite":"R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2","session":"6ec6e331370b47898cba03489d6c641fc3488495c1b6c65b86c6d447e2cb7a91","complete":true,"proof_bytes":675472397,"proof_sha256":"f65c7d28d7266f67630bed816d14314b33b7ece09312b8c6d91430596854f758","transcript_digest":"363053c7faa8856230f21b344188054ecef172ae7010c977b314d9da6547bbd7","challenge_digest":"4cb7e70b8dd8452aa19645aec3a0f602e37aea75d9442dfcc868688f0fff0a27","challenges":99168,"prover_messages":316307,"events":415477,"field_rejections":584220,"hash_seconds":2.64396,"file_io_seconds":1.81171,"file_syscalls":2573,"file_buffer_bytes":65536,"max_message_payload_bytes":2626367,"production_gate":"BLOCKED_CRYPTOGRAPHIC_DESIGN","may_enter_stage2":false}
+{"status":"FS_PROOF_CREATED_CANDIDATE","suite":"R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2","required_count":5351,"coverage_sha256":"1fbb026de20ee3575557db61f37cbeb80de17fce1c30cad7389647b5014b4bfe","layout_id":"5414e0e3557eea5d58390fa487fb2657721ce759db2bcd3806616bda22909252","root_count":6,"claims":936,"registered_rows":8193,"registration_response_bytes":532819744,"GKR_rounds":627,"seconds":1346.25,"wire_bytes":675472397,"P_wire_bytes":675472397,"frames":415477,"peak_rss_kib":4382404,"MSM_calls":527657,"MSM_terms":72166749,"production_gate":"BLOCKED_CRYPTOGRAPHIC_DESIGN","may_enter_stage2":false,"phases":[{"name":"frozen-witness-and-prechallenge-lookup","seconds":83.4379,"P_wire_bytes":0,"MSM_calls":0,"rss_end_kib":3325952,"cumulative_peak_rss_kib":3325952},{"name":"all-classified-roots-prechallenge-seal","seconds":129.12,"P_wire_bytes":2391110,"MSM_calls":53249,"rss_end_kib":4381916,"cumulative_peak_rss_kib":4381916},{"name":"complete-classified-base-knowledge-and-tail","seconds":496.825,"P_wire_bytes":533468371,"MSM_calls":16254,"rss_end_kib":4382180,"cumulative_peak_rss_kib":4382180},{"name":"classified-public-X-Y-constants","seconds":0.325479,"P_wire_bytes":2627401,"MSM_calls":1,"rss_end_kib":4382180,"cumulative_peak_rss_kib":4382180},{"name":"all-native-GKR","seconds":50.8124,"P_wire_bytes":2032192,"MSM_calls":7843,"rss_end_kib":4382184,"cumulative_peak_rss_kib":4382404},{"name":"native-Range-Exp-Lasso-Memory-Product","seconds":431.804,"P_wire_bytes":129942016,"MSM_calls":448576,"rss_end_kib":3829336,"cumulative_peak_rss_kib":4382404},{"name":"all-source-original-handles","seconds":5.02035,"P_wire_bytes":18289,"MSM_calls":16,"rss_end_kib":3829336,"cumulative_peak_rss_kib":4382404},{"name":"mandatory-classified-authentication-barrier","seconds":127.269,"P_wire_bytes":2844582,"MSM_calls":1718,"rss_end_kib":3829340,"cumulative_peak_rss_kib":4382404}]}
+OPT2_AUTH {"map_calls":1872,"map_coordinates":480266976,"map_cpu_seconds":50.5642,"kernel_calls":6,"kernel_coordinates":260471401,"kernel_cpu_seconds":18.5963,"weights_precomputations":936,"weights_terms":601208,"weights_cpu_seconds":0.0599672,"weight_products":495857362,"partial_cpu_seconds":25.2573,"kernel_peak_bytes":536870912}
+OPT2_MSM {"cpu_seconds":415.923,"allocation_scope":"ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation","bins":[{"length":"1","calls":13,"terms":13,"cpu_seconds":0.000557002,"cpp_allocations":0},{"length":"2","calls":457988,"terms":915976,"cpu_seconds":37.0224,"cpp_allocations":0},{"length":"3-8","calls":24,"terms":144,"cpu_seconds":0.00369406,"cpp_allocations":0},{"length":"9-64","calls":36,"terms":1344,"cpu_seconds":0.0270697,"cpp_allocations":0},{"length":"65-1024","calls":69592,"terms":71236984,"cpu_seconds":378.727,"cpp_allocations":0},{"length":">1024","calls":4,"terms":12288,"cpu_seconds":0.142251,"cpp_allocations":0}]}
+	Command being timed: "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_prover prove /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-ROWMAJOR-OPT2-20261028-v1/full-opt2.fsproof zkGPT/R7/FS/test-request-20261028"
+	User time (seconds): 1265.48
+	System time (seconds): 95.22
+	Percent of CPU this job got: 101%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 22:26.50
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4382404
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2280398
+	Voluntary context switches: 2497
+	Involuntary context switches: 3373
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 1320360
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -1,0 +1,452 @@
+diff --git a/docs/superpowers/plans/2026-10-28-rowmajor-opt2.md b/docs/superpowers/plans/2026-10-28-rowmajor-opt2.md
+new file mode 100644
+index 0000000..e1e1891
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-28-rowmajor-opt2.md
+@@ -0,0 +1,12 @@
++# R7 RowMajor OPT2 implementation plan
++
++User-approved scope: R7-ROWMAJOR-FS-PERFORMANCE-OPT2, baseline a7003d3a5e02c6a2c9d6f57a577420e404e4eb8f. Implement directly; Windows is source authority, edits/builds/tests in fixed zkGPT-work, then restore exact source bytes to Windows. No other source copy or worktree, no full12, no deletion. Retain RowMajor anchor/pins, FS suite, RNG and challenge order, equations, six roots, 936 claims, 8193 rows, 627 GKR rounds, six openings, 5351 relations and blocked security state.
++
++1. Instrument baseline mapDigest/kernel/Weights and all four R7 MSM wrappers. Record bins, CPU and wall, coordinates and allocation telemetry. Save baseline binaries. Directed kernel reference and malicious mapping tests before optimizing.
++2. Build bounded, private immutable compressed mapping runs after the necessary digest revalidation, before each unchanged aggregation coin. Cache only public weights/indices within the authentication session. Limit maps to 16 MiB, weights to 32 MiB and use the checked old path if the cache cannot fit. Compute partial dot without building six kernels. Dense reference tests, mutation, root-only and budget fallback tests.
++3. Compare mulVec, two multiplies/add, and bounded public fixed-base precomputation with seven alternating samples. Replace scalarCommit only on measured win; preserve logical MSM counts. Deterministic full-width scalar equivalence and allocation tests. Never cache a scalar.
++4. Extract pure degree 0..3 polynomial computation with deterministic coefficient and folded/terminal reference tests. Try direct polynomial convolution and reuse fixed constants/buffers; retain generic reference if no repeatable benefit. Preserve all IO/RNG/coins.
++5. Check legacy hyrax_a3::opening call chain. Run directed tests then independent small FS positives, cross-version compatibility, malformed/mutated-source negatives. Build full binaries and run exactly one full independent Oneblock P then V after measuring benefit. Run requested full public-input negatives without another prover.
++6. Archive exact final source/patch/SHA/dependency/config/parameter identity, accepted proof/statement, logs and measurements to Windows; verify compressed members and restore-read SHA. Commit source and deliver the three OPT2 report files with actual final HEAD. No security status promotion.
++
++Review focus: map mutation between defer/barrier; mutation after immutable snapshot; repeated/constant/bias/root-specific coordinates; cache overflow fallback; full-width/zero/negative scalars; degree 0..3 repeated factor expressions; hidden coefficient/challenge equality; public proof tampering. Only public metrics are emitted.
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+index 868aabf..578f6c6 100644
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-add_library(paper_r7 STATIC framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
++add_library(paper_r7 STATIC opt2_metrics.cpp framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
+ target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+ # Treat unchanged R6 headers as a dependency; keep -Werror on new R7 code.
+ target_include_directories(paper_r7 SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/src)
+@@ -147,3 +147,13 @@ add_executable(r7_rowmajor_statement rowmajor_statement.cpp)
+ target_link_libraries(r7_rowmajor_statement PRIVATE paper_r7)
+ add_executable(r7_rowmajor_perf_tests rowmajor_perf_tests.cpp)
+ target_link_libraries(r7_rowmajor_perf_tests PRIVATE paper_r7)
++
++add_executable(r7_opt2_kernel_tests opt2_kernel_tests.cpp)
++target_link_libraries(r7_opt2_kernel_tests PRIVATE paper_r7)
++add_test(NAME r7_opt2_kernel_dense COMMAND r7_opt2_kernel_tests)
++add_executable(r7_opt2_msm_bench opt2_msm_bench.cpp)
++target_link_libraries(r7_opt2_msm_bench PRIVATE paper_r7)
++
++add_executable(r7_opt2_sumcheck_tests opt2_sumcheck_tests.cpp)
++target_link_libraries(r7_opt2_sumcheck_tests PRIVATE paper_r7)
++add_test(NAME r7_opt2_sumcheck_coefficients COMMAND r7_opt2_sumcheck_tests)
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+index f955aa3..31906b7 100644
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -17,9 +17,54 @@ class MapHash {
+  void append(const Located&l){if(used_+41>buffer_.size())flush();buffer_[used_++]=l.constant?1:0;for(auto n:{l.coordinate.root,l.coordinate.index})for(unsigned j=0;j<4;++j)buffer_[used_++]=std::uint8_t(n>>(8*j));need(l.bias.isValid() && l.bias.serialize(buffer_.data()+used_,32)==32,"classified canonical map bias");used_+=32;}
+  Digest finish(){flush();Digest d{};unsigned n=0;need(EVP_DigestFinal_ex(ctx_.get(),d.data(),&n)==1 && n==32,"classified map digest end");return d;}
+ };
+-class Weights {std::vector<Fr>a_,b_;unsigned split_;public:explicit Weights(const std::vector<Fr>&q):split_(q.size()/2){a_=r1::weights({q.begin(),q.begin()+split_});b_=r1::weights({q.begin()+split_,q.end()});}Fr at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>>split_];}};
++
+ Fr fold(std::vector<Fr>&v,const std::vector<Fr>&q){std::size_t n=v.size();need(r1::log2exact(n)==q.size(),"classified public kernel query");for(auto&x:q){for(std::size_t j=0;j<n/2;++j)v[j]=v[2*j]+x*(v[2*j+1]-v[2*j]);n/=2;}return v[0];}
+ }
++// All cached state is owned by one stack-scoped authentication session.
++// Neither a caller callback nor Layout storage is retained in a frozen map.
++Commitments::Weights::Weights(const std::vector<Fr>&q,AuthMetrics*m):split_(q.size()/2){auto t=processCPU();a_=r1::weights({q.begin(),q.begin()+split_});b_=r1::weights({q.begin()+split_,q.end()});if(m){++m->weights;m->weight_terms+=a_.size()+b_.size();m->weights_cpu+=processCPU()-t;}}
++std::size_t Commitments::Weights::bytes()const{return (a_.capacity()+b_.capacity())*sizeof(Fr);}
++Fr Commitments::Weights::at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>>split_];}
++
++Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)const{
++ auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
++ auto&p=auth.claims[i];auto maxRuns=(Authentication::map_limit-auth.map_bytes)/sizeof(Authentication::Run);bool fits=maxRuns>0;
++ auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest;
++ for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);
++  need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
++  if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");
++  digest.append(l);if(c.only_root<0 && !l.bias.isZero()){bias+=weights->at(j)*l.bias;++auth_metrics_.weight_products;}
++  if(!fits || l.constant)continue;
++  if(!p.runs.empty()){auto&last=p.runs.back();if(last.begin+last.count==j && last.first.root==l.coordinate.root && std::uint64_t(last.first.index)+last.count==l.coordinate.index){++last.count;continue;}}
++  if(p.runs.size()==maxRuns){fits=false;std::vector<Authentication::Run>().swap(p.runs);continue;}
++  if(p.runs.size()==p.runs.capacity())p.runs.reserve(std::min(maxRuns,std::max<std::size_t>(8,p.runs.capacity()*2)));
++  p.runs.push_back({j,1,l.coordinate});
++ }
++ need(digest.finish()==c.map_digest,"classified source map changed after defer");
++ p.frozen=fits;auth.map_bytes+=p.runs.capacity()*sizeof(Authentication::Run);
++ if(weights->bytes()<=Authentication::weight_limit-auth.weight_bytes){auth.weight_bytes+=weights->bytes();p.weights=std::move(weights);}
++ auth_metrics_.map_cpu+=processCPU()-started;return bias;
++}
++std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda,const Authentication&auth)const{
++ auto started=processCPU();++auth_metrics_.kernel_calls;auto n=roots_.at(k).spec.padded;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,n*sizeof(Fr));std::vector<Fr>result(n,Fr(0));std::uint64_t visited=0;
++ for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
++  if(p.frozen){for(auto&run:p.runs)if(run.first.root==k)for(std::size_t j=0;j<run.count;++j){result[run.first.index+j]+=lambda[i]*w.at(run.begin+j);++visited;}}
++  else{MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);++visited;if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
++ }
++ auth_metrics_.kernel_coordinates+=visited;auth_metrics_.weight_products+=visited;auth_metrics_.kernel_cpu+=processCPU()-started;
++ if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"coordinates\":"<<visited<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
++ return result;
++}
++std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authentication&auth)const{
++ auto started=processCPU();std::vector<Fr>values(roots_.size(),Fr(0));std::uint64_t visited=0;
++ for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
++  if(p.frozen){for(auto&run:p.runs)for(std::size_t j=0;j<run.count;++j){values[run.first.root]+=lambda[i]*w.at(run.begin+j)*roots_[run.first.root].value(run.first.index+j);++visited;}}
++  else{MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);++visited;if(!l.constant){need(l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual,"classified partial map bounds");values[l.coordinate.root]+=lambda[i]*w.at(j)*roots_[l.coordinate.root].value(l.coordinate.index);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
++ }
++ auth_metrics_.partial_cpu+=processCPU()-started;auth_metrics_.weight_products+=visited;
++ if(opt2MetricsEnabled())std::cerr<<"OPT2_PARTIAL {\"coordinates\":"<<visited<<",\"cpu_seconds\":"<<processCPU()-started<<",\"map_cache_bytes\":"<<auth.map_bytes<<",\"weight_cache_bytes\":"<<auth.weight_bytes<<"}\n";
++ return values;
++}
+ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
+  need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());
+  for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto&root=roots_[k];root.spec=layout.roots[k];if(root.spec.model)continue;std::shared_ptr<std::vector<Fr>>packed;
+@@ -63,17 +108,24 @@ void Commitments::defer(Claim c){
+  need(sealed_ && base_registered_ && !authenticated_ && io_.session()==session_,"classified unregistered/closed session");need(c.map && c.padded && c.padded<=(1u<<24) && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
+ }
+ void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<layout_.base.size(),"classified base map out of bounds");return {layout_.base[at],Fr(0),false};}});}
+-Digest Commitments::mapDigest(const Claim&c)const{MapHash h;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}return h.finish();}
++Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
+- std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;Weights w(c.point);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}return result;
++ auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
++ return result;
+ }
++Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
+ void Commitments::authenticate(){
+  need(sealed_ && base_registered_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && identity(layout_)==identity_,"classified missing/closed/mutated authentication barrier");Writer summary;summary.text(suite);summary.text(identity_);summary.number(claims_.size());for(auto&c:claims_)summary.text(c.id);bindPublic(io_,"Classified/all-claims-fixed",summary.b);
+- std::vector<Fr>lambda;std::vector<Hidden>values;Fr bias=0;for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];need(mapDigest(c)==c.map_digest,"classified source map changed after defer");lambda.push_back(io_.coin("Classified/lambda/"+std::to_string(i)));need(!lambda.back().isZero(),"classified zero aggregation challenge");values.push_back(c.value);if(c.only_root<0){Weights w(c.point);Fr local=0;MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);local+=w.at(j)*l.bias;}need(digest.finish()==c.map_digest,"classified bias map changed after defer");bias+=lambda.back()*local;}}
++ Authentication auth(claims_.size());std::vector<Fr>lambda;std::vector<Hidden>values;Fr bias=0;for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto local=prepareClaim(c,auth,i);lambda.push_back(io_.coin("Classified/lambda/"+std::to_string(i)));need(!lambda.back().isZero(),"classified zero aggregation challenge");values.push_back(c.value);bias+=lambda.back()*local;}
++ if(opt2MetricsEnabled()){
++  std::uint64_t legacyCoordinates=0,legacyWeights=0,frozen=0,onlyRoot=0,nonRoot=0;
++  for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto scans=c.only_root>=0?1:roots_.size();legacyCoordinates+=scans*c.padded;legacyWeights+=scans;if(c.only_root>=0)++onlyRoot;else ++nonRoot;if(auth.claims[i].frozen)++frozen;}
++  std::cerr<<"OPT2_SCAN_PLAN {\"claims\":"<<claims_.size()<<",\"root_only_claims\":"<<onlyRoot<<",\"multi_root_claims\":"<<nonRoot<<",\"frozen_claims\":"<<frozen<<",\"legacy_kernel_calls\":"<<roots_.size()*(io_.prover()?2:1)<<",\"legacy_kernel_coordinates\":"<<legacyCoordinates*(io_.prover()?2:1)<<",\"legacy_weights_precomputations\":"<<legacyWeights*(io_.prover()?2:1)+nonRoot<<",\"map_cache_bytes\":"<<auth.map_bytes<<",\"weight_cache_bytes\":"<<auth.weight_bytes<<"}\n";
++ }
+  auto initial=combine(session_,"Classified/aggregate",values,lambda);initial.value-=bias;initial.handle.point-=scalarCommit(bias,Fr(0));bindPublic(io_,"Classified/aggregate",encode(initial.handle));std::vector<Hidden>partial;
+- for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();Fr v=0;if(io_.prover()){auto K=kernel(k,lambda);for(std::size_t j=0;j<roots_[k].spec.actual;++j)v+=roots_[k].value(j)*K[j];}partial.push_back(exchangeHidden(io_,"Classified/partial/"+std::to_string(k),v,rng_));rootTiming("partial-kernel-dot",roots_[k].spec.id,rootStarted);}
++ auto dot=io_.prover()?partialDot(lambda,auth):std::vector<Fr>(roots_.size(),Fr(0));for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto v=dot[k];partial.push_back(exchangeHidden(io_,"Classified/partial/"+std::to_string(k),v,rng_));rootTiming("partial-exchange",roots_[k].spec.id,rootStarted);}
+  auto witnesses=partial;witnesses.push_back(initial);Relations sum;sum.role="Classified/partial-sum";for(auto&h:witnesses)sum.handles.push_back(h.handle);std::vector<Fr>coeff(witnesses.size(),Fr(1));coeff.back()=Fr(-1);sum.linear={coeff};sigma(io_,sum,io_.prover()?&witnesses:nullptr,rng_);
+- for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto K=kernel(k,lambda);auto name="Classified/root-proof/"+std::to_string(k);std::vector<Value>f;if(io_.prover())f={roots_[k].value,[&K](std::size_t j){return K.at(j);}};auto end=expressionSumcheck(io_,roots_[k].spec.padded,partial[k],f,Expression{2,{{Fr(1),{0,1}}}},rng_,name+"/sumcheck");auto expected=fold(K,end.point);std::vector<Fr>().swap(K);equalHidden(io_,end.endpoints[1],expected,rng_,name+"/kernel");rootOpening(k,{end.point,end.endpoints[0].handle},io_.prover()?&end.endpoints[0]:nullptr,name+"/opening");rootTiming("authentication-and-opening",roots_[k].spec.id,rootStarted);}
++ for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto K=kernel(k,lambda,auth);auto name="Classified/root-proof/"+std::to_string(k);std::vector<Value>f;if(io_.prover())f={roots_[k].value,[&K](std::size_t j){return K.at(j);}};auto end=expressionSumcheck(io_,roots_[k].spec.padded,partial[k],f,Expression{2,{{Fr(1),{0,1}}}},rng_,name+"/sumcheck");auto expected=fold(K,end.point);std::vector<Fr>().swap(K);equalHidden(io_,end.endpoints[1],expected,rng_,name+"/kernel");rootOpening(k,{end.point,end.endpoints[0].handle},io_.prover()?&end.endpoints[0]:nullptr,name+"/opening");rootTiming("authentication-and-opening",roots_[k].spec.id,rootStarted);}
+  authenticated_=true;io_.coin("Classified/all-claims-authenticated/ack");
+ }
+ }
+diff --git a/src/paper_r7/classified_commitments.hpp b/src/paper_r7/classified_commitments.hpp
+index eb9e201..7fc2901 100644
+--- a/src/paper_r7/classified_commitments.hpp
++++ b/src/paper_r7/classified_commitments.hpp
+@@ -9,7 +9,25 @@ struct Root {
+  std::function<void(IO&,const Query&,const Hidden*,Random*,const std::string&)>open;
+  std::vector<G1>basis;std::vector<Fr>blinds;
+ };
++struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0;};
+ class Commitments {
++ friend struct AuthenticationTestAccess;
++ mutable AuthMetrics auth_metrics_;
++ class Weights {
++  std::vector<Fr>a_,b_;unsigned split_;
++  public:explicit Weights(const std::vector<Fr>&,AuthMetrics* =nullptr);
++  std::size_t bytes()const;Fr at(std::size_t)const;
++ };
++ struct Authentication {
++ struct Run {std::size_t begin,count;Coordinate first;};
++ struct Prepared {std::vector<Run>runs;bool frozen=false;std::unique_ptr<Weights>weights;};
++ static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
++ std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
++ explicit Authentication(std::size_t n):claims(n){}
++};
++ Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
++ std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
++ std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
+  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,base_registered_=false,authenticated_=false;
+  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
+  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
+@@ -17,6 +35,7 @@ class Commitments {
+  public:
+  std::uint64_t registration_bytes=0,registered_rows=0;
+  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
++ ~Commitments();
+  void registerBase();
+  VectorOracle view(const std::string&);
+  void defer(Claim);
+diff --git a/src/paper_r7/crypto.cpp b/src/paper_r7/crypto.cpp
+index 5449890..af002ca 100644
+--- a/src/paper_r7/crypto.cpp
++++ b/src/paper_r7/crypto.cpp
+@@ -35,7 +35,7 @@ Fr Random::scalar(bool nonzero){curve();for(unsigned i=0;i<4096;++i){auto b=byte
+ Parameters parameters(std::size_t n){return trusted(n);}
+ void validate(const Parameters&p){need(p.suite==suite,"R7 wrong generator suite");const auto&e=trusted(p.columns.size());need(p.scalar==e.scalar && p.hiding==e.hiding && p.columns==e.columns,"R7 generators differ from independently derived suite");}
+ Metrics& metrics(){static Metrics m;return m;}
+-G1 msm(const std::vector<G1>&g,const std::vector<Fr>&x){need(g.size()==x.size() && !g.empty() && g.size()<=65,"R7 bounded MSM shape");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;}
++G1 msm(const std::vector<G1>&g,const std::vector<Fr>&x){need(g.size()==x.size() && !g.empty() && g.size()<=65,"R7 bounded MSM shape");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;}
+ G1 scalarCommit(const Fr&v,const Fr&r){const auto&p=trusted(1);return msm({p.scalar,p.hiding},{v,r});}
+ PCSpec PCSpec::make(const std::string&role,std::size_t actual,std::size_t padded){PCSpec s;s.role=role;s.actual=actual;s.padded=padded;unsigned d=r1::log2exact(padded);s.rows=std::size_t(1)<<(d/2);s.columns=padded/s.rows;validate(s);return s;}
+ void validate(const PCSpec&s){need(s.suite==suite,"R7 wrong PC suite");need(!s.role.empty() && s.role.size()<=160 && s.layout=="column-major-i+R*j","R7 PC role/layout mismatch");need(s.actual && s.actual<=s.padded && s.padded<=maxN && !(s.padded&(s.padded-1)),"R7 PC dimensions/padding bound");auto d=r1::log2exact(s.padded);need(s.rows==(std::size_t(1)<<(d/2)) && s.columns==s.padded/s.rows,"R7 PC row/column mismatch");}
+diff --git a/src/paper_r7/crypto.hpp b/src/paper_r7/crypto.hpp
+index fd13751..69c761e 100644
+--- a/src/paper_r7/crypto.hpp
++++ b/src/paper_r7/crypto.hpp
+@@ -1,5 +1,6 @@
+ #pragma once
+ #include "paper_r1/core.hpp"
++#include "opt2_metrics.hpp"
+ #include <map>
+ #include <functional>
+ namespace zkgpt::r7::crypto {
+diff --git a/src/paper_r7/hyrax_a3.cpp b/src/paper_r7/hyrax_a3.cpp
+index 320bf79..f86e18e 100644
+--- a/src/paper_r7/hyrax_a3.cpp
++++ b/src/paper_r7/hyrax_a3.cpp
+@@ -8,7 +8,7 @@ void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimensio
+ G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
+  need(g.size()==x.size() && !g.empty() && g.size()<=maxTrustedR6Dot+1,"A3 MSM dimension");
+  auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
+- G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
++ MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+ }
+ void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
+ Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
+@@ -96,6 +96,9 @@ void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const
+  if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
+  auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+ }
++// Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
++// Interactive controllers call dotProduct / dotProductTrustedR6Basis through
++// openVector and model::opening. crypto::validate rejects any other layout tag.
+ void opening(IO&io,const PC&pc,const Query&q,const PCSecret*secret,const Hidden*evaluation,Random*rng){
+  validate(pc);validate(q.evaluation,io.session(),q.evaluation.role);need(q.point.size()==r1::log2exact(pc.spec.padded),"A3 PC query dimension");
+  Writer b;b.text(suite);b.text(messageVersion);b.raw(encode(pc));b.raw(encode(q.evaluation));b.number(q.point.size());for(auto&f:q.point)b.scalar(f);publicBinding(io,"A3/PC-statement",b.b);
+diff --git a/src/paper_r7/oneblock_model.cpp b/src/paper_r7/oneblock_model.cpp
+index fc25376..647ad23 100644
+--- a/src/paper_r7/oneblock_model.cpp
++++ b/src/paper_r7/oneblock_model.cpp
+@@ -18,7 +18,7 @@ void checkTrust(const Trust&t){
+ }
+ Public decode(const Bytes&b){Reader r{b};Public p;p.version=r.text();need(p.version==suite,"oneblock model unknown suite/version");p.session=r.text();p.trust_id=r.text();p.spec=spec(r);need(r.number()==p.spec.rows,"oneblock model wire row count");for(std::size_t i=0;i<p.spec.rows;++i)p.rows.push_back(r.point());r.end();return p;}
+ G1 modelMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
+- need(g.size()==x.size() && !g.empty() && g.size()<=4096,"oneblock model folded-row MSM bounds");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
++ need(g.size()==x.size() && !g.empty() && g.size()<=4096,"oneblock model folded-row MSM bounds");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+ }
+ }
+ Trust loadTrust(const std::string&anchor_path,const std::string&manifest_path){
+diff --git a/src/paper_r7/oneblock_sumcheck.cpp b/src/paper_r7/oneblock_sumcheck.cpp
+index 008b049..f023a56 100644
+--- a/src/paper_r7/oneblock_sumcheck.cpp
++++ b/src/paper_r7/oneblock_sumcheck.cpp
+@@ -1,11 +1,12 @@
+ #include "oneblock_sumcheck.hpp"
+ #include <algorithm>
++#include <array>
+ namespace zkgpt::r7::oneblock {
+ Hidden publicHidden(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
+ Hidden exchangeHidden(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"Oneblock entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/commitment",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
+ void equalHidden(IO&io,const Hidden&h,const Fr&value,Random*rng,const std::string&role){auto c=publicHidden(io,role+"/public",value);std::vector<Hidden>w{h,c};Relations r;r.role=role;r.handles={h.handle,c.handle};r.linear={{Fr(1),Fr(-1)}};sigma(io,r,io.prover()?&w:nullptr,rng);}
+ namespace {
+-Fr expression(const Expression&e,const std::vector<Fr>&x){Fr v=0;for(auto&t:e.terms){auto a=t.coefficient;for(auto i:t.factors)a*=x[i];v+=a;}return v;}
++
+ Hidden alias(IO&io,const Hidden&h,const std::string&role){auto out=h;out.handle.role=role;bindPublic(io,role,encode(out.handle));return out;}
+ void endpoint(IO&io,const Hidden&claim,const std::vector<Hidden>&x,const Expression&e,Random*rng,const std::string&role){
+  std::vector<Hidden>terms;std::vector<Fr>coeff;
+@@ -17,13 +18,28 @@ void endpoint(IO&io,const Hidden&claim,const std::vector<Hidden>&x,const Express
+  terms.push_back(claim);coeff.push_back(Fr(-1));Relations r;r.role=role+"/expression";for(auto&t:terms)r.handles.push_back(t.handle);r.linear={coeff};sigma(io,r,io.prover()?&terms:nullptr,rng);
+ }
+ }
++namespace detail {
++std::vector<Fr>expressionPolynomial(const Expression&e,std::size_t current,const std::vector<Value>&factors,const std::vector<std::vector<Fr>>&folded,bool first){
++ unsigned degree=0;for(auto&t:e.terms)degree=std::max(degree,unsigned(t.factors.size()));
++ std::vector<Fr>coeff(degree+1,Fr(0));std::array<Fr,8>a,d;
++ for(std::size_t j=0;j<current/2;++j){
++  for(std::size_t k=0;k<e.factor_count;++k){a[k]=first?factors[k](2*j):folded[k][2*j];d[k]=(first?factors[k](2*j+1):folded[k][2*j+1])-a[k];}
++  for(auto&t:e.terms){auto n=t.factors.size();const auto&c=t.coefficient;
++   if(!n){coeff[0]+=c;continue;}
++   auto i=t.factors[0];if(n==1){coeff[0]+=c*a[i];coeff[1]+=c*d[i];continue;}
++   auto k=t.factors[1];auto ab0=a[i]*a[k],ab1=a[i]*d[k]+d[i]*a[k],ab2=d[i]*d[k];
++   if(n==2){coeff[0]+=c*ab0;coeff[1]+=c*ab1;coeff[2]+=c*ab2;continue;}
++   auto l=t.factors[2];coeff[0]+=c*(ab0*a[l]);coeff[1]+=c*(ab0*d[l]+ab1*a[l]);coeff[2]+=c*(ab1*d[l]+ab2*a[l]);coeff[3]+=c*(ab2*d[l]);
++  }
++ }
++ return coeff;
++}
++}
+ Reduction expressionSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role){
+  need(n && n<=(1u<<24) && !(n&(n-1)) && e.factor_count>0 && e.factor_count<=8 && !e.terms.empty() && e.terms.size()<=16,"Oneblock expression bounds");validate(initial.handle,io.session(),initial.handle.role);unsigned degree=0;Writer statement;statement.text("R7-ONEBLOCK-HIDDEN-EXPRESSION-SUMCHECK-v1");statement.number(n,8);statement.number(e.factor_count);statement.raw(encode(initial.handle));statement.number(e.terms.size());for(auto&t:e.terms){need(t.factors.size()<=3,"Oneblock expression degree");degree=std::max(degree,unsigned(t.factors.size()));statement.scalar(t.coefficient);statement.number(t.factors.size());for(auto i:t.factors){need(i<e.factor_count,"Oneblock expression factor index");statement.number(i);}}bindPublic(io,role+"/statement",statement.b);if(io.prover())need(factors.size()==e.factor_count && rng,"Oneblock expression witness shape");
+  std::vector<std::vector<Fr>>folded(e.factor_count);Hidden previous=initial;std::vector<Fr>point;std::size_t current=n;unsigned round=0;
+  while(current>1){auto name=role+"/round/"+std::to_string(round);std::vector<Fr>coeff(degree+1,Fr(0));if(io.prover()){
+-   std::vector<Fr>evaluations(degree+1,Fr(0)),x0(e.factor_count,Fr(0)),dx(e.factor_count,Fr(0)),x(e.factor_count,Fr(0));
+-   for(std::size_t j=0;j<current/2;++j){for(std::size_t k=0;k<e.factor_count;++k){x0[k]=round?folded[k][2*j]:factors[k](2*j);dx[k]=(round?folded[k][2*j+1]:factors[k](2*j+1))-x0[k];}for(unsigned t=0;t<=degree;++t){for(std::size_t k=0;k<e.factor_count;++k)x[k]=x0[k]+Fr(t)*dx[k];evaluations[t]+=expression(e,x);}}
+-   Fr half,sixth;Fr::inv(half,Fr(2));Fr::inv(sixth,Fr(6));Fr a3=degree==3?(evaluations[3]-Fr(3)*evaluations[2]+Fr(3)*evaluations[1]-evaluations[0])*sixth:Fr(0);Fr a2=degree>=2?(evaluations[2]-Fr(2)*evaluations[1]+evaluations[0])*half-Fr(3)*a3:Fr(0);coeff[0]=evaluations[0];if(degree>=1)coeff[1]=evaluations[1]-coeff[0]-a2-a3;if(degree>=2)coeff[2]=a2;if(degree==3)coeff[3]=a3;
++   coeff=detail::expressionPolynomial(e,current,factors,folded,!round);
+   }
+   std::vector<Hidden>h{previous};for(unsigned k=0;k<=degree;++k)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),coeff[k],rng));Relations r;r.role=name+"/recurrence";for(auto&v:h)r.handles.push_back(v.handle);std::vector<Fr>line(h.size(),Fr(1));line[0]=Fr(-1);line[1]=Fr(2);r.linear={line};sigma(io,r,io.prover()?&h:nullptr,rng);
+   auto challenge=io.coin(name+"/r");point.push_back(challenge);std::vector<Hidden>polynomial(h.begin()+1,h.end());std::vector<Fr>powers;Fr power=1;for(unsigned k=0;k<=degree;++k){powers.push_back(power);power*=challenge;}previous=combine(io.session(),name+"/derived",polynomial,powers);bindPublic(io,name+"/derived",encode(previous.handle));
+diff --git a/src/paper_r7/oneblock_sumcheck.hpp b/src/paper_r7/oneblock_sumcheck.hpp
+index bbfd0a0..ea3d687 100644
+--- a/src/paper_r7/oneblock_sumcheck.hpp
++++ b/src/paper_r7/oneblock_sumcheck.hpp
+@@ -15,6 +15,10 @@ struct VectorOracle {
+ using VectorFactory=std::function<VectorOracle(IO&,std::string,std::size_t,std::size_t,Value)>;
+ struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelation(const std::string&)=0;};
+ inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
++namespace detail {
++// Pure local arithmetic, no transcript, RNG, handles, or challenge operations.
++std::vector<Fr>expressionPolynomial(const Expression&,std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
++}
+ Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
+ Hidden publicHidden(IO&,const std::string&,const Fr&);
+ Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
+diff --git a/src/paper_r7/opt2_kernel_tests.cpp b/src/paper_r7/opt2_kernel_tests.cpp
+new file mode 100644
+index 0000000..ddfd095
+--- /dev/null
++++ b/src/paper_r7/opt2_kernel_tests.cpp
+@@ -0,0 +1,40 @@
++#include "classified_commitments.hpp"
++#include <iostream>
++#include <chrono>
++using namespace zkgpt::r7;using namespace oneblock;using namespace classified;
++namespace zkgpt::r7::oneblock::classified {
++struct AuthenticationTestAccess {
++ static void setup(Commitments&c,std::size_t n){
++  c.roots_.resize(6);for(std::size_t k=0;k<6;++k){c.roots_[k].spec={"test/"+std::to_string(k),n,n,false,false};c.roots_[k].value=[k](std::size_t j){return Fr(1+j%29+k);};}
++  for(unsigned i=0;i<48;++i){Claim a;a.id="test/"+std::to_string(i);a.padded=n;for(unsigned k=0;k<r1::log2exact(n);++k)a.point.push_back(Fr(3+(i+k)%37));a.only_root=i<24?int(i%6):-1;
++   a.map=[i,n](std::size_t j)->Located{if(i<24)return {{i%6,std::uint32_t(j)},Fr(0),false};if(j>=n-16)return {{},Fr(7),true};return {{std::uint32_t((j/(n/8)+i)%6),std::uint32_t(j)},Fr(int(i%5)-2),false};};
++   a.map_digest=c.mapDigest(a);c.claims_.push_back(std::move(a));
++  }
++ }
++ static void run(Commitments&c,bool bench,bool optimized){
++  std::vector<Fr>lambda;for(unsigned i=0;i<c.claims_.size();++i)lambda.push_back(Fr(i+2));
++  auto start=std::chrono::steady_clock::now();auto cpu=processCPU();Fr checksum=0,bias=0;
++  Commitments::Authentication prepared(c.claims_.size());
++  if(optimized)for(unsigned i=0;i<c.claims_.size();++i)bias+=lambda[i]*c.prepareClaim(c.claims_[i],prepared,i);
++  else for(unsigned i=0;i<c.claims_.size();++i){auto&a=c.claims_[i];need(c.mapDigest(a)==a.map_digest,"reference barrier map");if(a.only_root<0){auto w=r1::weights(a.point);for(std::size_t j=0;j<a.padded;++j)bias+=lambda[i]*w[j]*a.map(j).bias;}}
++  std::vector<Fr>dots(c.roots_.size(),Fr(0));
++  if(optimized)dots=c.partialDot(lambda,prepared);
++  else for(unsigned k=0;k<6;++k){auto kernel=c.kernel(k,lambda);for(std::size_t j=0;j<kernel.size();++j)dots[k]+=kernel[j]*c.roots_[k].value(j);}
++  for(unsigned k=0;k<6;++k){auto got=optimized?c.kernel(k,lambda,prepared):c.kernel(k,lambda);if(!bench){auto ref=c.kernel(k,lambda);need(got==ref,"optimized/reference kernel mismatch");std::vector<Fr>want(got.size(),Fr(0));for(unsigned i=0;i<c.claims_.size();++i){auto&a=c.claims_[i];auto w=r1::weights(a.point);for(std::size_t j=0;j<a.padded;++j){auto l=a.map(j);if(!l.constant && l.coordinate.root==k)want[l.coordinate.index]+=lambda[i]*w[j];}}need(want==got,"kernel dense reference mismatch");Fr dot=0;for(std::size_t j=0;j<got.size();++j)dot+=got[j]*c.roots_[k].value(j);need(dot==dots[k],"partial-dot reference mismatch");}checksum+=got[0]+dots[k];}
++  // A validated snapshot is independent of later mutations of callbacks.
++  if(!bench && optimized){
++   Commitments::Authentication uncached(c.claims_.size());uncached.map_bytes=Commitments::Authentication::map_limit;uncached.weight_bytes=Commitments::Authentication::weight_limit;
++   for(unsigned i=0;i<c.claims_.size();++i){c.prepareClaim(c.claims_[i],uncached,i);need(!uncached.claims[i].frozen && !uncached.claims[i].weights,"budget fallback retained cache");}
++   for(unsigned k=0;k<6;++k)need(c.kernel(k,lambda,prepared)==c.kernel(k,lambda,uncached),"budget fallback kernel mismatch");need(c.partialDot(lambda,uncached)==dots,"budget fallback dot mismatch");
++   Commitments::Authentication tight(c.claims_.size());tight.map_bytes=Commitments::Authentication::map_limit-2*sizeof(Commitments::Authentication::Run);c.prepareClaim(c.claims_[24],tight,24);need(!tight.claims[24].frozen && tight.claims[24].runs.empty(),"fragmented map exceeded cache bound");
++   auto good=c.kernel(0,lambda,prepared);c.claims_[0].map=[](std::size_t)->Located{throw std::runtime_error("callback must not be reused after freeze");};need(good==c.kernel(0,lambda,prepared),"snapshot retained mutable callback");
++   need(prepared.map_bytes<=Commitments::Authentication::map_limit && prepared.weight_bytes<=Commitments::Authentication::weight_limit,"cache budget exceeded");
++   // Force the generic checked path and ensure it detects a changed callback.
++   prepared.claims[0].frozen=false;c.claims_[0].map=[](std::size_t j)->Located{return {{0,std::uint32_t(j^1)},Fr(0),false};};bool rejected=false;try{c.kernel(0,lambda,prepared);}catch(const std::exception&e){rejected=std::string(e.what())=="classified source map changed after defer";}need(rejected,"fallback mutable map accepted");}
++  if(!bench){std::vector<Fr>q(24,Fr(7));auto t=processCPU();Commitments::Weights w(q);auto precompute=processCPU()-t;Fr sum=0;t=processCPU();for(std::size_t i=0;i<(1u<<20);++i)sum+=w.at(i);need(sum.isValid(),"weight arithmetic");std::cout<<"{\"test\":\"weights\",\"precompute_cpu_seconds\":"<<precompute<<",\"at_products\":1048576,\"Fr_multiply_add_cpu_seconds\":"<<processCPU()-t<<",\"cache_bytes\":"<<w.bytes()<<"}\n";}
++  std::cout<<"{\"test\":\"kernel\",\"mode\":\""<<(optimized?"optimized":"reference")<<"\",\"n\":"<<c.roots_[0].spec.padded<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"cpu_seconds\":"<<processCPU()-cpu<<",\"checksum\":\""<<(checksum+bias).getStr()<<"\"}\n";
++ }
++};
++}
++struct Tape:IO {bool prover()const override{return true;}std::string session()const override{return std::string(64,'a');}Digest prefix()const override{return {};}Bytes message(const std::string&,const Bytes&b={})override{return b;}Fr coin(const std::string&)override{return Fr(3);}};
++int main(int argc,char**argv){try{r1::init();bool bench=argc>1;bool optimized=argc<=1 || std::string(argv[1])!="reference";Layout l;l.native=std::string(64,'a');l.roots={{"C_aux",1,1,true,false}};l.base={{0,0}};Prepared p;SessionRandom rng;Tape t;Commitments c(t,l,[](std::size_t){return Fr(1);},&p,&rng);AuthenticationTestAccess::setup(c,bench?65536:256);AuthenticationTestAccess::run(c,bench,optimized);return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/opt2_metrics.cpp b/src/paper_r7/opt2_metrics.cpp
+new file mode 100644
+index 0000000..5cf2c99
+--- /dev/null
++++ b/src/paper_r7/opt2_metrics.cpp
+@@ -0,0 +1,24 @@
++#include "opt2_metrics.hpp"
++#include <ctime>
++#include <cstdlib>
++#include <new>
++#include <iostream>
++#include <array>
++namespace {thread_local std::uint64_t allocations=0;thread_local unsigned tracing=0;}
++void* operator new(std::size_t n){for(;;){if(void*p=std::malloc(n?n:1)){if(tracing)++allocations;return p;}auto handler=std::get_new_handler();if(!handler)throw std::bad_alloc();handler();}}
++void* operator new[](std::size_t n){return ::operator new(n);}
++void operator delete(void*p)noexcept{std::free(p);}
++void operator delete[](void*p)noexcept{std::free(p);}
++void operator delete(void*p,std::size_t)noexcept{std::free(p);}
++void operator delete[](void*p,std::size_t)noexcept{std::free(p);}
++namespace zkgpt::r7::crypto {
++double processCPU(){timespec t{};clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&t);return t.tv_sec+t.tv_nsec*1e-9;}
++bool opt2MetricsEnabled(){static bool enabled=std::getenv("ZKGPT_OPT2_METRICS")!=nullptr;return enabled;}
++namespace {
++struct Bin {std::uint64_t calls=0,terms=0,allocations=0;double cpu=0;};
++struct Stats {std::array<Bin,6>bins{};~Stats(){if(!opt2MetricsEnabled())return;const char*names[]={"1","2","3-8","9-64","65-1024",">1024"};double total=0;for(auto&b:bins)total+=b.cpu;std::cerr<<"OPT2_MSM {\"cpu_seconds\":"<<total<<",\"allocation_scope\":\"ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation\",\"bins\":[";for(unsigned i=0;i<6;++i){if(i)std::cerr<<',';auto&b=bins[i];std::cerr<<"{\"length\":\""<<names[i]<<"\",\"calls\":"<<b.calls<<",\"terms\":"<<b.terms<<",\"cpu_seconds\":"<<b.cpu<<",\"cpp_allocations\":"<<b.allocations<<'}';}std::cerr<<"]}\n";}};
++Stats&stats(){static Stats s;return s;}
++}
++MSMTrace::MSMTrace(std::size_t n):bin_(n==1?0:n==2?1:n<=8?2:n<=64?3:n<=1024?4:5),started_(0),allocations_(0){if(opt2MetricsEnabled()){auto&b=stats().bins[bin_];++b.calls;b.terms+=n;allocations_=allocations;++tracing;started_=processCPU();}}
++MSMTrace::~MSMTrace(){if(opt2MetricsEnabled()){auto&b=stats().bins[bin_];b.cpu+=processCPU()-started_;b.allocations+=allocations-allocations_;--tracing;}}
++}
+diff --git a/src/paper_r7/opt2_metrics.hpp b/src/paper_r7/opt2_metrics.hpp
+new file mode 100644
+index 0000000..2905621
+--- /dev/null
++++ b/src/paper_r7/opt2_metrics.hpp
+@@ -0,0 +1,12 @@
++#pragma once
++#include <cstddef>
++#include <cstdint>
++namespace zkgpt::r7::crypto {
++// Public length/time/allocation metadata only. Never inspect scalar bytes here.
++double processCPU();
++bool opt2MetricsEnabled();
++class MSMTrace {
++ std::size_t bin_;double started_;std::uint64_t allocations_;
++ public:explicit MSMTrace(std::size_t);~MSMTrace();
++};
++}
+diff --git a/src/paper_r7/opt2_msm_bench.cpp b/src/paper_r7/opt2_msm_bench.cpp
+new file mode 100644
+index 0000000..86aefa7
+--- /dev/null
++++ b/src/paper_r7/opt2_msm_bench.cpp
+@@ -0,0 +1,14 @@
++#include "crypto.hpp"
++#include <mcl/window_method.hpp>
++#include <iostream>
++#include <chrono>
++#include <array>
++using namespace zkgpt::r7::crypto;
++int main(int argc,char**argv){try{r1::init();unsigned mode=argc>1?std::stoul(argv[1]):0;need(mode<4,"benchmark mode");auto p=parameters(1);mcl::fp::WindowMethod<G1>g,h;auto setup=processCPU();g.init(p.scalar,Fr::getBitSize(),8);h.init(p.hiding,Fr::getBitSize(),8);auto setupCPU=processCPU()-setup;
++ // Deterministic, full-width public scalars. Production entropy is untouched.
++ std::array<Fr,256>a,b;for(unsigned i=0;i<a.size();++i){auto d=r1::hash(Bytes{std::uint8_t(i),17,93});a[i].setLittleEndianMod(d.data(),d.size());d=r1::hash(Bytes{std::uint8_t(i),73,29});b[i].setLittleEndianMod(d.data(),d.size());}a[0]=0;b[1]=0;a[2]=Fr(-1);b[3]=Fr(-1);
++ auto evaluate=[&](unsigned m,const Fr&v,const Fr&r){G1 out,x,y;if(m==0){std::vector<G1>bases{p.scalar,p.hiding};std::vector<Fr>s{v,r};G1::mulVec(out,bases.data(),s.data(),2);}else if(m==1){G1::mul(x,p.scalar,v);G1::mul(y,p.hiding,r);G1::add(out,x,y);}else if(m==2){g.mul(x,v);h.mul(y,r);G1::add(out,x,y);}else{std::array<G1,2>bases{p.scalar,p.hiding};std::array<Fr,2>s{v,r};G1::mulVec(out,bases.data(),s.data(),2);}return out;};
++ for(unsigned i=0;i<a.size();++i)need(evaluate(0,a[i],b[i])==evaluate(1,a[i],b[i]) && evaluate(0,a[i],b[i])==evaluate(2,a[i],b[i]) && evaluate(0,a[i],b[i])==evaluate(3,a[i],b[i]),"scalarCommit full-width equivalence");
++ auto started=std::chrono::steady_clock::now();auto cpu=processCPU();G1 checksum;checksum.clear();for(unsigned i=0;i<8192;++i){MSMTrace trace(2);checksum+=evaluate(mode,a[i%256],b[i%256]);}
++ std::cout<<"{\"mode\":"<<mode<<",\"iterations\":8192,\"cpu_seconds\":"<<processCPU()-cpu<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"setup_cpu_seconds\":"<<setupCPU<<",\"equivalence_cases\":256,\"point\":\""<<hex(r1::hash(r1::encode(checksum)))<<"\"}\n";return 0;
++ }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/opt2_sumcheck_tests.cpp b/src/paper_r7/opt2_sumcheck_tests.cpp
+new file mode 100644
+index 0000000..b1b5ab9
+--- /dev/null
++++ b/src/paper_r7/opt2_sumcheck_tests.cpp
+@@ -0,0 +1,24 @@
++#include "oneblock_sumcheck.hpp"
++#include <array>
++#include <iostream>
++#include <chrono>
++using namespace zkgpt::r7::oneblock;
++Fr evaluate(const Expression&e,const std::vector<Fr>&x){Fr v=0;for(auto&t:e.terms){auto a=t.coefficient;for(auto k:t.factors)a*=x[k];v+=a;}return v;}
++unsigned degree(const Expression&e){unsigned d=0;for(auto&t:e.terms)d=std::max(d,unsigned(t.factors.size()));return d;}
++std::vector<Fr>reference(const Expression&e,std::size_t n,const std::vector<Value>&f,const std::vector<std::vector<Fr>>&folded,bool first){
++ auto d=degree(e);std::vector<Fr>ys(d+1,Fr(0)),x0(e.factor_count),dx(e.factor_count),x(e.factor_count);
++ for(std::size_t j=0;j<n/2;++j){for(std::size_t k=0;k<e.factor_count;++k){x0[k]=first?f[k](2*j):folded[k][2*j];dx[k]=(first?f[k](2*j+1):folded[k][2*j+1])-x0[k];}for(unsigned t=0;t<=d;++t){for(std::size_t k=0;k<e.factor_count;++k)x[k]=x0[k]+Fr(t)*dx[k];ys[t]+=evaluate(e,x);}}
++ Fr half,sixth;Fr::inv(half,Fr(2));Fr::inv(sixth,Fr(6));Fr a3=d==3?(ys[3]-Fr(3)*ys[2]+Fr(3)*ys[1]-ys[0])*sixth:Fr(0);Fr a2=d>=2?(ys[2]-Fr(2)*ys[1]+ys[0])*half-Fr(3)*a3:Fr(0);std::vector<Fr>c(d+1,Fr(0));c[0]=ys[0];if(d>=1)c[1]=ys[1]-c[0]-a2-a3;if(d>=2)c[2]=a2;if(d==3)c[3]=a3;return c;
++}
++Fr randomFr(unsigned i,unsigned seed){Bytes b;for(auto v:{i,seed})for(unsigned k=0;k<4;++k)b.push_back(std::uint8_t(v>>(k*8)));auto d=r1::hash(b);Fr x;x.setLittleEndianMod(d.data(),d.size());return x;}
++Expression spec(unsigned d){if(d==0)return {1,{{Fr(7),{}}}};if(d==1)return {2,{{Fr(3),{0}},{Fr(-5),{1}},{Fr(7),{}}}};if(d==2)return {4,{{Fr(1),{0,1}},{Fr(-3),{2,3}},{Fr(7),{0,0}},{Fr(5),{}},{Fr(-1),{3}}}};return {5,{{Fr(1),{0,1,2}},{Fr(-3),{0,3,4}},{Fr(4),{1,1,1}},{Fr(5),{}},{Fr(-1),{3}}}};}
++int main(int argc,char**argv){try{r1::init();bool bench=argc>1;bool optimized=argc<=1 || std::string(argv[1])!="reference";unsigned rounds=0;double polynomialCPU=0;auto start=std::chrono::steady_clock::now();auto cpu=processCPU();
++ for(unsigned d:(bench?std::vector<unsigned>{2,3}:std::vector<unsigned>{0,1,2,3}))for(unsigned seed=0;seed<(bench?1u:24u);++seed){auto e=spec(d);auto n=bench?65536u:(1u<<(seed%9));std::vector<std::vector<Fr>>input(e.factor_count,std::vector<Fr>(n));std::vector<Value>f;for(unsigned k=0;k<e.factor_count;++k){for(unsigned j=0;j<n;++j)input[k][j]=randomFr(j,seed*13+k);f.push_back([&,k](std::size_t j){return input[k][j];});}
++  std::vector<std::vector<Fr>>folded=input;std::vector<Fr>point;Fr claim=0;std::vector<Fr>x(e.factor_count);for(unsigned j=0;j<n;++j){for(unsigned k=0;k<e.factor_count;++k)x[k]=input[k][j];claim+=evaluate(e,x);}
++  for(std::size_t current=n;current>1;current/=2){auto polyStarted=processCPU();auto got=optimized?detail::expressionPolynomial(e,current,f,folded,current==n):reference(e,current,f,folded,current==n);polynomialCPU+=processCPU()-polyStarted;if(!bench){auto expected=reference(e,current,f,folded,current==n);need(got==expected,"degree2/3 round coefficients mismatch");Fr recurrence=got[0];for(auto&a:got)recurrence+=a;need(recurrence==claim,"sumcheck recurrence mismatch");}
++   auto r=randomFr(unsigned(current),seed+91);point.push_back(r);Fr power=1;claim=0;for(auto&a:got){claim+=a*power;power*=r;}for(unsigned k=0;k<e.factor_count;++k){for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+r*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}++rounds;
++  }
++  if(!bench){for(unsigned k=0;k<e.factor_count;++k){need(folded[k][0]==r1::mle(input[k],point),"final factor MLE mismatch");x[k]=folded[k][0];}need(claim==evaluate(e,x),"terminal expression mismatch");}
++ }
++ std::cout<<"{\"test\":\"sumcheck\",\"mode\":\""<<(optimized?"optimized":"reference")<<"\",\"rounds\":"<<rounds<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"polynomial_cpu_seconds\":"<<polynomialCPU<<",\"cpu_seconds\":"<<processCPU()-cpu<<"}\n";return 0;
++ }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/streaming_master.cpp b/src/paper_r7/streaming_master.cpp
+index 8aabe85..2456326 100644
+--- a/src/paper_r7/streaming_master.cpp
++++ b/src/paper_r7/streaming_master.cpp
+@@ -22,7 +22,7 @@ G1 masterMSM(const G1*g,const Fr*x,std::size_t size){
+  // MCL exposes mutable base storage: retain a bounded private work copy.
+  // Scalars are const in MCL, so borrow them without a second allocation.
+  thread_local std::vector<G1>scratch(1024);
+- G1 out;out.clear();for(std::size_t at=0;at<size;at+=1024){auto n=std::min<std::size_t>(1024,size-at);std::copy_n(g+at,n,scratch.begin());G1 p;G1::mulVec(p,scratch.data(),x+at,n);out+=p;auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);}return out;
++ G1 out;out.clear();for(std::size_t at=0;at<size;at+=1024){auto n=std::min<std::size_t>(1024,size-at);std::copy_n(g+at,n,scratch.begin());MSMTrace trace(n);G1 p;G1::mulVec(p,scratch.data(),x+at,n);out+=p;auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);}return out;
+ }
+ G1 masterMSM(const std::vector<G1>&g,const std::vector<Fr>&x){need(g.size()==x.size(),"M3 streaming MSM shape");return masterMSM(g.data(),x.data(),g.size());}
+ Secret commitMaster(const Spec&s,const Value&value){validate(s);Secret out;out.public_pc.spec=s;out.value=value;auto g=hyrax_a3::generators(1024);out.public_pc.rows.reserve(s.rows);out.blinds.reserve(s.rows);for(std::size_t i=0;i<s.rows;++i){std::vector<Fr>row;row.reserve(1024);for(std::size_t j=0;j<1024;++j){auto k=i+s.rows*j;auto f=k<s.actual?value(k):Fr(0);need(f.isValid(),"M3 invalid scalar");row.push_back(f);}OSRandom rng;out.blinds.push_back(rng.scalar());out.public_pc.rows.push_back(masterMSM(g,row)+parameters(1).hiding*out.blinds.back());}return out;}

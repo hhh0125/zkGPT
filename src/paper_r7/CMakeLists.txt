@@ -1,4 +1,4 @@
-add_library(paper_r7 STATIC framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
+add_library(paper_r7 STATIC opt2_metrics.cpp framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
 target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # Treat unchanged R6 headers as a dependency; keep -Werror on new R7 code.
 target_include_directories(paper_r7 SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/src)
@@ -147,3 +147,13 @@ add_executable(r7_rowmajor_statement rowmajor_statement.cpp)
 target_link_libraries(r7_rowmajor_statement PRIVATE paper_r7)
 add_executable(r7_rowmajor_perf_tests rowmajor_perf_tests.cpp)
 target_link_libraries(r7_rowmajor_perf_tests PRIVATE paper_r7)
+
+add_executable(r7_opt2_kernel_tests opt2_kernel_tests.cpp)
+target_link_libraries(r7_opt2_kernel_tests PRIVATE paper_r7)
+add_test(NAME r7_opt2_kernel_dense COMMAND r7_opt2_kernel_tests)
+add_executable(r7_opt2_msm_bench opt2_msm_bench.cpp)
+target_link_libraries(r7_opt2_msm_bench PRIVATE paper_r7)
+
+add_executable(r7_opt2_sumcheck_tests opt2_sumcheck_tests.cpp)
+target_link_libraries(r7_opt2_sumcheck_tests PRIVATE paper_r7)
+add_test(NAME r7_opt2_sumcheck_coefficients COMMAND r7_opt2_sumcheck_tests)

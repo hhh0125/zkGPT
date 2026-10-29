@@ -18,7 +18,7 @@ void checkTrust(const Trust&t){
 }
 Public decode(const Bytes&b){Reader r{b};Public p;p.version=r.text();need(p.version==suite,"oneblock model unknown suite/version");p.session=r.text();p.trust_id=r.text();p.spec=spec(r);need(r.number()==p.spec.rows,"oneblock model wire row count");for(std::size_t i=0;i<p.spec.rows;++i)p.rows.push_back(r.point());r.end();return p;}
 G1 modelMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
- need(g.size()==x.size() && !g.empty() && g.size()<=4096,"oneblock model folded-row MSM bounds");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+ need(g.size()==x.size() && !g.empty() && g.size()<=4096,"oneblock model folded-row MSM bounds");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
 }
 }
 Trust loadTrust(const std::string&anchor_path,const std::string&manifest_path){

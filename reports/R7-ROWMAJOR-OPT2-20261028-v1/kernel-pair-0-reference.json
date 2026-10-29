@@ -1,0 +1,166 @@
+{
+  "name": "kernel-pair-0-reference",
+  "command": [
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_opt2_kernel_tests",
+    "reference"
+  ],
+  "exit_code": 0,
+  "expected": 0,
+  "wall_seconds": 5.297341809142381,
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "host_before": {
+    "load": "79.95 80.17 80.11 80/7225 1881421\n",
+    "cgroup": {
+      "/sys/fs/cgroup/user.slice/user-1013.slice/session-163945.scope/cpu.stat": "usage_usec 1487711\nuser_usec 1071792\nsystem_usec 415919\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/session-163945.scope/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2026\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2026\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/cpu.stat": "usage_usec 538613859048\nuser_usec 498783701851\nsystem_usec 39830157196\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1364863806\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=486869620\n",
+      "/sys/fs/cgroup/user.slice/cpu.stat": "usage_usec 18358952747375\nuser_usec 16834334127353\nsystem_usec 1524618620022\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n",
+      "/sys/fs/cgroup/user.slice/cpu.max": "max 100000\n",
+      "/sys/fs/cgroup/user.slice/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3136502930\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1138364590\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 19592196948000\nuser_usec 17743528564000\nsystem_usec 1848668384000\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n",
+      "/sys/fs/cgroup/cpu.pressure": "some avg10=0.02 avg60=0.05 avg300=0.01 total=3344432511\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "stat": "cpu  1774170877 181978 173229128 55567612763 2841408 0 11637710 0 0 0"
+  },
+  "host_after": {
+    "load": "79.95 80.16 80.11 82/7224 1881447\n",
+    "cgroup": {
+      "/sys/fs/cgroup/user.slice/user-1013.slice/session-163945.scope/cpu.stat": "usage_usec 6785720\nuser_usec 6337606\nsystem_usec 448113\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/session-163945.scope/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10867\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=10867\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/cpu.stat": "usage_usec 538619715518\nuser_usec 498789475071\nsystem_usec 39830240447\n",
+      "/sys/fs/cgroup/user.slice/user-1013.slice/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1364872671\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=486878485\n",
+      "/sys/fs/cgroup/user.slice/cpu.stat": "usage_usec 18359381175341\nuser_usec 16834756286220\nsystem_usec 1524624889121\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n",
+      "/sys/fs/cgroup/user.slice/cpu.max": "max 100000\n",
+      "/sys/fs/cgroup/user.slice/cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3136503410\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1138364953\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 19592625520000\nuser_usec 17743950664000\nsystem_usec 1848674856000\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n",
+      "/sys/fs/cgroup/cpu.pressure": "some avg10=0.01 avg60=0.05 avg300=0.00 total=3344433081\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "stat": "cpu  1774213087 181978 173229759 55567646222 2841408 0 11637726 0 0 0"
+  },
+  "records": [
+    {
+      "root": 0,
+      "cpu_seconds": 0.327924
+    },
+    {
+      "root": 1,
+      "cpu_seconds": 0.327723
+    },
+    {
+      "root": 2,
+      "cpu_seconds": 0.338421
+    },
+    {
+      "root": 3,
+      "cpu_seconds": 0.345194
+    },
+    {
+      "root": 4,
+      "cpu_seconds": 0.328598
+    },
+    {
+      "root": 5,
+      "cpu_seconds": 0.327386
+    },
+    {
+      "root": 0,
+      "cpu_seconds": 0.328049
+    },
+    {
+      "root": 1,
+      "cpu_seconds": 0.327098
+    },
+    {
+      "root": 2,
+      "cpu_seconds": 0.327208
+    },
+    {
+      "root": 3,
+      "cpu_seconds": 0.328701
+    },
+    {
+      "root": 4,
+      "cpu_seconds": 0.326707
+    },
+    {
+      "root": 5,
+      "cpu_seconds": 0.328604
+    },
+    {
+      "test": "kernel",
+      "mode": "reference",
+      "n": 65536,
+      "wall_seconds": 4.78099,
+      "cpu_seconds": 4.78053,
+      "checksum": "16798108731015832284940804142231733909759579603402334759722428661239385575125"
+    },
+    {
+      "map_calls": 96,
+      "map_coordinates": 6291456,
+      "map_cpu_seconds": 0.945934,
+      "kernel_calls": 12,
+      "kernel_coordinates": 22020096,
+      "kernel_cpu_seconds": 3.96014,
+      "weights_precomputations": 336,
+      "weights_terms": 172032,
+      "weights_cpu_seconds": 0.0224362,
+      "weight_products": 22020096,
+      "partial_cpu_seconds": 0,
+      "kernel_peak_bytes": 2097152
+    },
+    {
+      "cpu_seconds": 3.975e-06,
+      "allocation_scope": "C++ new inside traced wrappers; excludes C malloc and caller construction",
+      "bins": [
+        {
+          "length": "1",
+          "calls": 1,
+          "terms": 1,
+          "cpu_seconds": 3.975e-06,
+          "cpp_allocations": 0
+        },
+        {
+          "length": "2",
+          "calls": 0,
+          "terms": 0,
+          "cpu_seconds": 0,
+          "cpp_allocations": 0
+        },
+        {
+          "length": "3-8",
+          "calls": 0,
+          "terms": 0,
+          "cpu_seconds": 0,
+          "cpp_allocations": 0
+        },
+        {
+          "length": "9-64",
+          "calls": 0,
+          "terms": 0,
+          "cpu_seconds": 0,
+          "cpp_allocations": 0
+        },
+        {
+          "length": "65-1024",
+          "calls": 0,
+          "terms": 0,
+          "cpu_seconds": 0,
+          "cpp_allocations": 0
+        },
+        {
+          "length": ">1024",
+          "calls": 0,
+          "terms": 0,
+          "cpu_seconds": 0,
+          "cpp_allocations": 0
+        }
+      ]
+    }
+  ]
+}

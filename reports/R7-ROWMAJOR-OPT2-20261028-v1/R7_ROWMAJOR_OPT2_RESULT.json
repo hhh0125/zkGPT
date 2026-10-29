@@ -1,0 +1,100 @@
+{
+  "task": "R7-ROWMAJOR-FS-PERFORMANCE-OPT2",
+  "date": "2026-10-29",
+  "started_date": "2026-10-28",
+  "engineering_acceptance": "PASS",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "source_authority": "C:\\Users\\tanyt\\Desktop\\program\\zkGPT-R7-dev",
+  "baseline_head": "a7003d3a5e02c6a2c9d6f57a577420e404e4eb8f",
+  "final_head": "bce054ddb719982e18cbb2a726f08cc239720c91",
+  "git_commit": "bce054ddb719982e18cbb2a726f08cc239720c91",
+  "report_files_generated_after_source_commit": true,
+  "source_files_verified": 371,
+  "full": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "relations": 5351,
+    "roots": 6,
+    "claims": 936,
+    "registered_rows": 8193,
+    "GKR_rounds": 627,
+    "openings": 6,
+    "proof_bytes": 675472397,
+    "proof_sha256": "f65c7d28d7266f67630bed816d14314b33b7ece09312b8c6d91430596854f758",
+    "session": "6ec6e331370b47898cba03489d6c641fc3488495c1b6c65b86c6d447e2cb7a91"
+  },
+  "negative_tests": [
+    {
+      "name": "full-wrong-context",
+      "exit_code": 2,
+      "reason": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch"
+    },
+    {
+      "name": "full-wrong-X",
+      "exit_code": 2,
+      "reason": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch"
+    },
+    {
+      "name": "full-wrong-model",
+      "exit_code": 2,
+      "reason": "REJECT_OR_INCOMPLETE Oneblock invalid frozen public statement"
+    },
+    {
+      "name": "full-wrong-layout",
+      "exit_code": 2,
+      "reason": "REJECT_OR_INCOMPLETE Oneblock invalid frozen public statement"
+    },
+    {
+      "name": "full-tampered-proof",
+      "exit_code": 2,
+      "reason": "REJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch"
+    }
+  ],
+  "directed_cases": 34,
+  "final_checks": 27,
+  "source_edits": [
+    "Commitments::authenticate/prepareClaim/kernel/partialDot",
+    "Commitments::Weights construction/reuse",
+    "detail::expressionPolynomial and expressionSumcheck arithmetic",
+    "MSM timing/allocation instrumentation in crypto::msm, A.3 wideMSM, masterMSM and modelMSM"
+  ],
+  "retained_implementations": [
+    "scalarCommit and all MSM arithmetic remain G1::mulVec; two-mul/add, raw fixed-base lookup and stack variants are benchmark-only"
+  ],
+  "unchanged": [
+    "R6 numerical source/checkpoint/Manifest/X/Y semantics",
+    "RowMajor layout, anchor and pins",
+    "OPT1 owned buffers and streaming FS I/O",
+    "FS suite, message/RNG/challenge order and proof equations",
+    "5351 relations, 6 roots, 936 claims, 8193 rows, 627 GKR rounds, 6 A.3 openings"
+  ],
+  "legacy_opening": "hyrax_a3::opening(PC) remains ColumnMajor legacy bounded-PC API; current Classified RowMajor FS/Interactive uses openVector/model::opening -> dotProduct/dotProductTrustedR6Basis. Existing crypto::validate rejects a different layout tag.",
+  "review": "Read-only independent review: no Critical/Important code finding. Measurement/concurrency scope retained; full verification separately required and completed.",
+  "archive": {
+    "path": "C:/Users/tanyt/Desktop/program/zkGPT-backups/R7-rowmajor-opt2-20261028",
+    "remote_retained": true,
+    "no_cleanup_authorized": true,
+    "local_verification": {
+      "container_sha256": "3319340c455e3095d9a8784fcc4728fb63bcf86aedef6c6b1359446859d6fcf5",
+      "container_bytes": 605000225,
+      "members_verified": 399,
+      "member_sha_verified": true,
+      "gzip_crc_verified": true,
+      "restore_read_verified": true,
+      "source_files_restore_read": 371,
+      "windows_head": "bce054ddb719982e18cbb2a726f08cc239720c91",
+      "proof_file": {
+        "bytes": 675472397,
+        "sha256": "f65c7d28d7266f67630bed816d14314b33b7ece09312b8c6d91430596854f758",
+        "mode": 384
+      },
+      "remote_files_retained": true,
+      "credentials_archived": false
+    }
+  },
+  "full12_started": false,
+  "profiling_completeness": "MSM/allocation scopes explicitly bounded; all-group CPU share is not measured"
+}

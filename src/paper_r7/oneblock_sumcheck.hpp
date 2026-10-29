@@ -15,6 +15,10 @@ struct VectorOracle {
 using VectorFactory=std::function<VectorOracle(IO&,std::string,std::size_t,std::size_t,Value)>;
 struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelation(const std::string&)=0;};
 inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
+namespace detail {
+// Pure local arithmetic, no transcript, RNG, handles, or challenge operations.
+std::vector<Fr>expressionPolynomial(const Expression&,std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
+}
 Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
 Hidden publicHidden(IO&,const std::string&,const Fr&);
 Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);

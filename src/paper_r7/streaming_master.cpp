@@ -22,7 +22,7 @@ G1 masterMSM(const G1*g,const Fr*x,std::size_t size){
  // MCL exposes mutable base storage: retain a bounded private work copy.
  // Scalars are const in MCL, so borrow them without a second allocation.
  thread_local std::vector<G1>scratch(1024);
- G1 out;out.clear();for(std::size_t at=0;at<size;at+=1024){auto n=std::min<std::size_t>(1024,size-at);std::copy_n(g+at,n,scratch.begin());G1 p;G1::mulVec(p,scratch.data(),x+at,n);out+=p;auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);}return out;
+ G1 out;out.clear();for(std::size_t at=0;at<size;at+=1024){auto n=std::min<std::size_t>(1024,size-at);std::copy_n(g+at,n,scratch.begin());MSMTrace trace(n);G1 p;G1::mulVec(p,scratch.data(),x+at,n);out+=p;auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);}return out;
 }
 G1 masterMSM(const std::vector<G1>&g,const std::vector<Fr>&x){need(g.size()==x.size(),"M3 streaming MSM shape");return masterMSM(g.data(),x.data(),g.size());}
 Secret commitMaster(const Spec&s,const Value&value){validate(s);Secret out;out.public_pc.spec=s;out.value=value;auto g=hyrax_a3::generators(1024);out.public_pc.rows.reserve(s.rows);out.blinds.reserve(s.rows);for(std::size_t i=0;i<s.rows;++i){std::vector<Fr>row;row.reserve(1024);for(std::size_t j=0;j<1024;++j){auto k=i+s.rows*j;auto f=k<s.actual?value(k):Fr(0);need(f.isValid(),"M3 invalid scalar");row.push_back(f);}OSRandom rng;out.blinds.push_back(rng.scalar());out.public_pc.rows.push_back(masterMSM(g,row)+parameters(1).hiding*out.blinds.back());}return out;}
