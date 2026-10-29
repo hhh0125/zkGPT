@@ -157,3 +157,17 @@ target_link_libraries(r7_opt2_msm_bench PRIVATE paper_r7)
 add_executable(r7_opt2_sumcheck_tests opt2_sumcheck_tests.cpp)
 target_link_libraries(r7_opt2_sumcheck_tests PRIVATE paper_r7)
 add_test(NAME r7_opt2_sumcheck_coefficients COMMAND r7_opt2_sumcheck_tests)
+
+add_executable(r7_full12_plan_tests full12_plan_tests.cpp)
+target_link_libraries(r7_full12_plan_tests PRIVATE paper_r7)
+
+add_executable(r7_full12_plan full12_plan_main.cpp)
+target_link_libraries(r7_full12_plan PRIVATE paper_r7)
+
+add_executable(r7_partitioned_layout_tests partitioned_layout_tests.cpp)
+target_link_libraries(r7_partitioned_layout_tests PRIVATE paper_r7)
+
+target_sources(paper_r7 PRIVATE partitioned_layout.cpp)
+
+add_executable(r7_full12_witness_probe full12_witness_probe.cpp)
+target_link_libraries(r7_full12_witness_probe PRIVATE paper_r7)

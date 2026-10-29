@@ -66,6 +66,7 @@ std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authen
  return values;
 }
 Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
+ need(!layout.master_actual,"Full12 partitioned commitments require independently pinned chunk-anchor runtime; unavailable");
  need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());
  for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto&root=roots_[k];root.spec=layout.roots[k];if(root.spec.model)continue;std::shared_ptr<std::vector<Fr>>packed;
   if(io.prover()){

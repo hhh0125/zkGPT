@@ -1,0 +1,25 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 68%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_plan_tests.dir/full12_plan_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_plan_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_plan_tests.cpp:6:35: error: too many arguments to function ‘zkgpt::r7::oneblock::Coverage zkgpt::r7::oneblock::discover()’
+    6 |  zkgpt::r1::init();auto p=discover(12);requireCoverage(p);
+      |                           ~~~~~~~~^~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_plan_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:11:10: note: declared here
+   11 | Coverage discover();void requireCoverage(const Coverage&);std::string identity(const Coverage&);
+      |          ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_plan_tests.cpp:16:37: error: too many arguments to function ‘zkgpt::r7::oneblock::Coverage zkgpt::r7::oneblock::discover()’
+   16 |  bool unsupported=false;try{discover(2);}catch(...){unsupported=true;}crypto::need(unsupported,"invented two-block target rejected");
+      |                             ~~~~~~~~^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:11:10: note: declared here
+   11 | Coverage discover();void requireCoverage(const Coverage&);std::string identity(const Coverage&);
+      |          ^~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_full12_plan_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_full12_plan_tests.dir/full12_plan_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5402: src/paper_r7/CMakeFiles/r7_full12_plan_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5409: src/paper_r7/CMakeFiles/r7_full12_plan_tests.dir/rule] Error 2
+gmake: *** [Makefile:1934: r7_full12_plan_tests] Error 2

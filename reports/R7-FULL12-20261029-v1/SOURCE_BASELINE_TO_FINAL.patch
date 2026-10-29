@@ -1,0 +1,490 @@
+diff --git a/src/neuralNetwork.cpp b/src/neuralNetwork.cpp
+index 7ec6bc4..e30c9c2 100644
+--- a/src/neuralNetwork.cpp
++++ b/src/neuralNetwork.cpp
+@@ -2832,3 +2832,10 @@ void neuralNetwork::createFiniteWitness(prover &pr){
+  r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
+  if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
+ }
++
++void neuralNetwork::createFull12FiniteWitness(prover &pr){
++ if(!r6_engineering_ || layer_num!=12 || structure_only || pr.cc.w)
++  throw std::invalid_argument("R7 Full12 finite witness requires native12 blocks and no existing commitment");
++ r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
++ if(pr.cc.w)throw std::logic_error("R7 Full12 witness unexpectedly committed");
++}
+diff --git a/src/neuralNetwork.hpp b/src/neuralNetwork.hpp
+index a8aea9b..b5db240 100644
+--- a/src/neuralNetwork.hpp
++++ b/src/neuralNetwork.hpp
+@@ -77,6 +77,9 @@ public:
+     }
+     void create(prover &pr, bool merge);
+     void createFiniteWitness(prover &pr);
++    // Explicit R7 Full12 witness-only entry. Never calls the legacy PC.
++    // The caller must enforce its memory/CPU budget and suppress private logs.
++    void createFull12FiniteWitness(prover &pr);
+     // Opt-in partial engineering relation; unresolved paper semantics stay explicit.
+     void setR4NumericalCandidate(bool enabled=true) { r4_numerical_candidate_=enabled; }
+     void setR5BEngineeringCandidate(bool enabled=true) { r5b_numerical_candidate_=enabled; }
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+index 578f6c6..9877b2c 100644
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -157,3 +157,17 @@ target_link_libraries(r7_opt2_msm_bench PRIVATE paper_r7)
+ add_executable(r7_opt2_sumcheck_tests opt2_sumcheck_tests.cpp)
+ target_link_libraries(r7_opt2_sumcheck_tests PRIVATE paper_r7)
+ add_test(NAME r7_opt2_sumcheck_coefficients COMMAND r7_opt2_sumcheck_tests)
++
++add_executable(r7_full12_plan_tests full12_plan_tests.cpp)
++target_link_libraries(r7_full12_plan_tests PRIVATE paper_r7)
++
++add_executable(r7_full12_plan full12_plan_main.cpp)
++target_link_libraries(r7_full12_plan PRIVATE paper_r7)
++
++add_executable(r7_partitioned_layout_tests partitioned_layout_tests.cpp)
++target_link_libraries(r7_partitioned_layout_tests PRIVATE paper_r7)
++
++target_sources(paper_r7 PRIVATE partitioned_layout.cpp)
++
++add_executable(r7_full12_witness_probe full12_witness_probe.cpp)
++target_link_libraries(r7_full12_witness_probe PRIVATE paper_r7)
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+index 31906b7..681c2c8 100644
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -66,6 +66,7 @@ std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authen
+  return values;
+ }
+ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
++ need(!layout.master_actual,"Full12 partitioned commitments require independently pinned chunk-anchor runtime; unavailable");
+  need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());
+  for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto&root=roots_[k];root.spec=layout.roots[k];if(root.spec.model)continue;std::shared_ptr<std::vector<Fr>>packed;
+   if(io.prover()){
+diff --git a/src/paper_r7/classified_layout.cpp b/src/paper_r7/classified_layout.cpp
+index a55052d..dad7656 100644
+--- a/src/paper_r7/classified_layout.cpp
++++ b/src/paper_r7/classified_layout.cpp
+@@ -5,6 +5,7 @@
+ namespace zkgpt::r7::oneblock::classified {
+ std::size_t power2(std::size_t n){need(n && n<=(1u<<26),"classified size bound");std::size_t x=1;while(x<n)x*=2;return x;}
+ Layout makeLayout(const R7Context&c,std::size_t cap){
++ if(c.plan.shape.layer_count==12)return makePartitionedLayout(c,cap);
+  need(cap && cap<=(1u<<26) && !(cap&(cap-1)),"classified slab bound");Layout p;p.native=c.layout_sha256;p.base.resize(c.plan.master.actual);std::vector<unsigned char>tag(p.base.size(),0);
+  p.roots={{"C_W",0,0,true,true},{"C_lookup/queries",0,0,true,false},{"C_aux",0,0,true,false}};
+  need(!c.plan.sources.empty(),"classified missing W source");const auto&w=c.plan.sources.back();std::size_t windex=0;
+@@ -23,8 +24,9 @@ Layout makeLayout(const R7Context&c,std::size_t cap){
+  for(std::size_t k=3;k<p.roots.size();++k)p.roots[k].padded=power2(p.roots[k].actual);
+  return p;
+ }
+-Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"classified view query bounds");if(!v.mapped)return {{v.start.root,std::uint32_t(v.start.index+j)},Fr(0),false};if(j>=v.actual)return {{},Fr(0),true};for(auto&s:v.spans){if(j<s.count){need(s.offset+j<p.base.size(),"classified trusted map bounds");return {p.base[s.offset+j],s.bias,false};}j-=s.count;}throw std::runtime_error("classified missing source span");}
++Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"classified view query bounds");if(!v.mapped && !v.pieces.empty()){for(auto&part:v.pieces)if(j>=part.begin && j-part.begin<part.count)return {{part.start.root,std::uint32_t(part.start.index+j-part.begin)},Fr(0),false};throw std::runtime_error("partitioned helper map omission");}if(!v.mapped)return {{v.start.root,std::uint32_t(v.start.index+j)},Fr(0),false};if(j>=v.actual)return {{},Fr(0),true};for(auto&s:v.spans){if(j<s.count){need(s.offset+j<baseSize(p),"classified trusted map bounds");return {baseCoordinate(p,s.offset+j),s.bias,false};}j-=s.count;}throw std::runtime_error("classified missing source span");}
+ std::string identity(const Layout&p){
++ if(p.master_actual)return partitionedIdentity(p);
+  Writer w;w.text(suite);w.text("hyrax-row-major-low-column-bits-v1");w.text(p.native);w.number(p.roots.size());for(auto&r:p.roots){w.text(r.id);w.number(r.actual,8);w.number(r.padded,8);w.number(r.registered);w.number(r.model);}w.number(p.views.size());
+  for(auto&[id,v]:p.views){w.text(id);w.number(v.actual,8);w.number(v.padded,8);w.number(v.mapped);w.number(unsigned(v.kind));w.number(v.start.root);w.number(v.start.index);w.number(v.spans.size());for(auto&s:v.spans){w.number(s.offset,8);w.number(s.count,8);w.scalar(s.bias);}}
+  std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)>ctx(EVP_MD_CTX_new(),EVP_MD_CTX_free);need(ctx && EVP_DigestInit_ex(ctx.get(),EVP_sha256(),nullptr)==1,"classified digest init");need(EVP_DigestUpdate(ctx.get(),w.b.data(),w.b.size())==1,"classified digest metadata");std::array<unsigned char,32768>b{};std::size_t used=0;
+@@ -32,8 +34,9 @@ std::string identity(const Layout&p){
+  if(used)need(EVP_DigestUpdate(ctx.get(),b.data(),used)==1,"classified digest final maps");
+  Digest out{};unsigned n=0;need(EVP_DigestFinal_ex(ctx.get(),out.data(),&n)==1 && n==32,"classified digest end");return hex(out);
+ }
+-void validate(const Layout&p,const R7Context&c){auto expected=makeLayout(c);need(identity(p)==identity(expected),"classified untrusted layout/map");}
++void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
+ void writeLayout(std::ostream&o,const Layout&p){
++ if(p.master_actual){writePartitionedLayout(o,p);return;}
+  o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:std::min<std::size_t>(1024,r.padded))<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"full_base_registration\":"<<(r.registered?"true":"false")<<'}';}
+  o<<"],\"base_coordinate_runs\":[";first=true;for(std::size_t i=0;i<p.base.size();){auto begin=i;auto r=p.base[i];while(++i<p.base.size() && p.base[i].root==r.root && p.base[i].index==r.index+i-begin){}if(!first)o<<',';first=false;o<<"{\"original\":"<<begin<<",\"count\":"<<i-begin<<",\"root\":"<<r.root<<",\"local\":"<<r.index<<'}';}
+  o<<"],\"views\":[";first=true;for(auto&[id,v]:p.views){if(!first)o<<',';first=false;o<<"{\"id\":\""<<id<<"\",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"logical_padded\":"<<v.padded<<",\"mapped\":"<<(v.mapped?"true":"false")<<",\"root\":"<<v.start.root<<",\"offset\":"<<v.start.index<<",\"spans\":[";bool sfirst=true;for(auto&s:v.spans){if(!sfirst)o<<',';sfirst=false;o<<"{\"base\":"<<s.offset<<",\"count\":"<<s.count<<",\"signed_bias_Fr_decimal\":\""<<s.bias.getStr()<<"\"}";}o<<"],\"padding\":\""<<(v.mapped?"virtual-zero":"stored-native-logical-values")<<"\"}";}o<<"]}\n";
+diff --git a/src/paper_r7/classified_layout.hpp b/src/paper_r7/classified_layout.hpp
+index 6bb64e9..00e9db4 100644
+--- a/src/paper_r7/classified_layout.hpp
++++ b/src/paper_r7/classified_layout.hpp
+@@ -6,11 +6,16 @@ namespace zkgpt::r7::oneblock::classified {
+ inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v3";
+ struct Coordinate {std::uint32_t root=0,index=0;bool operator==(const Coordinate&o)const{return root==o.root&&index==o.index;}};
+ struct RootSpec {std::string id;std::size_t actual=0,padded=0;bool registered=false,model=false;};
+-struct View {std::string id;std::size_t actual=0,padded=0;bool mapped=false;std::vector<r1::InputSpan>spans;Coordinate start;ObjectKind kind;};
+-struct Layout {std::string native;std::vector<RootSpec>roots;std::vector<Coordinate>base;std::map<std::string,View>views;};
++struct Piece {std::size_t begin=0,count=0;Coordinate start;};
++struct View {std::string id;std::size_t actual=0,padded=0;bool mapped=false;std::vector<r1::InputSpan>spans;Coordinate start;ObjectKind kind;std::vector<Piece>pieces;};
++struct Layout {std::string native;std::vector<RootSpec>roots;std::vector<Coordinate>base;std::map<std::string,View>views;std::vector<Piece>base_runs;std::size_t master_actual=0;};
++Layout makePartitionedLayout(const R7Context&,std::size_t);
++std::size_t baseSize(const Layout&);Coordinate baseCoordinate(const Layout&,std::size_t);
++std::string partitionedIdentity(const Layout&);
++void writePartitionedLayout(std::ostream&,const Layout&);
+ struct Located {Coordinate coordinate;Fr bias=0;bool constant=false;};
+ Layout makeLayout(const R7Context&,std::size_t slab_limit=1u<<24);
+-void validate(const Layout&,const R7Context&);
++void validate(const Layout&,const R7Context&,std::size_t slab_limit=1u<<24);
+ std::string identity(const Layout&);
+ Located locate(const Layout&,const View&,std::size_t);
+ void writeLayout(std::ostream&,const Layout&);
+diff --git a/src/paper_r7/execution_target.hpp b/src/paper_r7/execution_target.hpp
+new file mode 100644
+index 0000000..bafa81d
+--- /dev/null
++++ b/src/paper_r7/execution_target.hpp
+@@ -0,0 +1,15 @@
++#pragma once
++#include "framework.hpp"
++namespace zkgpt::r7 {
++struct ExecutionTarget {
++ unsigned blocks;
++ const char* manifest_path;
++ const char* manifest_pin;
++ const char* circuit;
++};
++inline ExecutionTarget executionTarget(unsigned blocks){
++ r1::require(blocks==1 || blocks==12,"R7 supports only native R6 oneblock or Full12");
++ if(blocks==12)return {12,"reports/R6A/full12-model-manifest-v1.txt","b9a948a34b7f68c2efc0c6a36a3353f918380c0556e259e9f9c0b3d7604ba5c1","ac9d0926a13049f10e1a252642508519c13ecef34aa39e42d1813e1cd30b22c7"};
++ return {1,"reports/R6A/oneblock-model-manifest-v1.txt","3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073","1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a"};
++}
++}
+diff --git a/src/paper_r7/framework.cpp b/src/paper_r7/framework.cpp
+index 4b5377a..84ebfdc 100644
+--- a/src/paper_r7/framework.cpp
++++ b/src/paper_r7/framework.cpp
+@@ -7,7 +7,7 @@ std::array<Component,8> allComponents(){return {Component::Commitment,Component:
+ const char* name(Component c){static const char* names[]={"HidingPC","HiddenScalar","Opening","CommittedSumcheck","GKR","Memory","MappedInput","CommittedBridge"};return static_cast<std::size_t>(c)<8?names[static_cast<std::size_t>(c)]:"Invalid";}
+ const char* name(Code c){switch(c){case Code::Ok:return "OK";case Code::Reject:return "REJECT";case Code::Incomplete:return "INCOMPLETE";case Code::Unimplemented:return "UNIMPLEMENTED";}return "REJECT";}
+ R7Statement makeStatement(const R7Context&c,std::vector<Fr>x,std::vector<Fr>y){
+- R7Statement s;s.profile_sha256=r5b::profileHash();s.circuit_id=c.plan.circuit_id;s.layout_id="r7-r6-base-split-aux-rowmajor-v2";s.layout_sha256=c.layout_sha256;s.model_manifest_sha256=c.model_manifest_sha256;s.master_actual=c.plan.master.actual;s.master_padded=c.plan.master.padded;s.x=std::move(x);s.y=std::move(y);return s;
++ R7Statement s;s.blocks=c.plan.shape.layer_count;if(s.blocks==12){s.layout_id="r7-r6-full12-base-split-aux-rowmajor-v3";s.commitment_suite="r7-full12-hiding-pc-rowmajor-v3";}s.profile_sha256=r5b::profileHash();s.circuit_id=c.plan.circuit_id;if(s.blocks==1)s.layout_id="r7-r6-base-split-aux-rowmajor-v2";s.layout_sha256=c.layout_sha256;s.model_manifest_sha256=c.model_manifest_sha256;s.master_actual=c.plan.master.actual;s.master_padded=c.plan.master.padded;s.x=std::move(x);s.y=std::move(y);return s;
+ }
+ namespace {
+ bool digestString(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
+@@ -31,11 +31,11 @@ class PendingCrypto final:public R7Commitment,public R7HiddenScalar,public R7Ope
+ }
+ Result validateStatement(const R7Statement&s,const R7Context&c){
+  auto bad=[](const char*m){return Result{Code::Reject,Component::MappedInput,m};};
+- if(s.version!=1 || s.blocks!=1)return bad("R7 version/oneblock required");
++ if(s.version!=1 || (s.blocks!=1 && s.blocks!=12) || s.blocks!=c.plan.shape.layer_count)return bad("R7 version/native target mismatch");
+  if(!digestString(c.model_manifest_sha256) || !digestString(s.model_manifest_sha256) || s.model_manifest_sha256!=c.model_manifest_sha256)return bad("model identity mismatch");
+- if(!c.plan.r6_engineering || !c.plan.r5b_candidate || c.plan.shape.layer_count!=1 || s.circuit_id!=c.plan.circuit_id || s.profile_sha256!=r5b::profileHash())return bad("frozen R6 circuit/profile mismatch");
+- if(s.layout_id!="r7-r6-base-split-aux-rowmajor-v2" || s.layout_sha256!=c.layout_sha256 || s.master_actual!=c.plan.master.actual || s.master_padded!=c.plan.master.padded || s.master_padded>=(std::uint64_t(1)<<30))return bad("R6 base/split auxiliary layout mismatch");
+- if(s.output_semantics!="r6-final-hidden-state-signed64-padded-32x1024" || s.commitment_suite!="r7-hiding-pc-rowmajor-v2")return bad("output/commitment identity mismatch");
++ if(!c.plan.r6_engineering || !c.plan.r5b_candidate || (c.plan.shape.layer_count!=1 && c.plan.shape.layer_count!=12) || s.circuit_id!=c.plan.circuit_id || s.profile_sha256!=r5b::profileHash())return bad("frozen R6 circuit/profile mismatch");
++ if(s.layout_id!=(s.blocks==1?"r7-r6-base-split-aux-rowmajor-v2":"r7-r6-full12-base-split-aux-rowmajor-v3") || s.layout_sha256!=c.layout_sha256 || s.master_actual!=c.plan.master.actual || s.master_padded!=c.plan.master.padded || s.master_padded>=(std::uint64_t(1)<<30))return bad("R6 base/split auxiliary layout mismatch");
++ if(s.output_semantics!="r6-final-hidden-state-signed64-padded-32x1024" || s.commitment_suite!=(s.blocks==1?"r7-hiding-pc-rowmajor-v2":"r7-full12-hiding-pc-rowmajor-v3"))return bad("output/commitment identity mismatch");
+  if(s.x.size()!=32768 || s.y.size()!=32768)return bad("complete public X/Y required");
+  for(std::size_t i=0;i<32768;++i){if(!signed64(s.x[i]) || !signed64(s.y[i]))return bad("public signed64 domain");if(i%1024>=768 && (!s.x[i].isZero() || !s.y[i].isZero()))return bad("public padding must be zero");}
+  return {Code::Ok,Component::MappedInput,"structural validation only"};
+diff --git a/src/paper_r7/full12_plan_main.cpp b/src/paper_r7/full12_plan_main.cpp
+new file mode 100644
+index 0000000..323bdc0
+--- /dev/null
++++ b/src/paper_r7/full12_plan_main.cpp
+@@ -0,0 +1,14 @@
++#include "oneblock_plan.hpp"
++#include "classified_layout.hpp"
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++int main(int argc,char**argv){try{
++ using namespace zkgpt::r7;zkgpt::r1::init();crypto::need(argc==2,"usage: r7_full12_plan NEW_REPORT_DIRECTORY");
++ const auto root=std::filesystem::canonical(std::filesystem::current_path()),dest=std::filesystem::weakly_canonical(std::filesystem::absolute(argv[1]));auto rel=dest.lexically_relative(root);
++ crypto::need(!rel.empty() && *rel.begin()!=".." && !std::filesystem::exists(dest),"new in-workspace directory required");
++ auto p=oneblock::discover(12);std::filesystem::create_directories(dest);
++ std::ofstream native(dest/"R6_NATIVE_PLAN.json"),coverage(dest/"R7_FULL12_COVERAGE.json");
++ native<<p.native_json;oneblock::writeCoverage(coverage,p);native.close();coverage.close();auto layout=oneblock::classified::makeLayout(p.context);std::ofstream partitions(dest/"R7_FULL12_PARTITIONS.json");oneblock::classified::writeLayout(partitions,layout);partitions.close();crypto::need(!partitions.fail(),"partition output failed");crypto::need(!native.fail() && !coverage.fail(),"Full12 plan output failed");
++ std::cout<<"FULL12_NATIVE_PLAN_DISCOVERED relations="<<p.required.size()<<" FC="<<p.fc_layers<<" objects="<<p.objects.size()<<" terminals="<<p.native_terminals<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"INCOMPLETE "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/full12_plan_tests.cpp b/src/paper_r7/full12_plan_tests.cpp
+new file mode 100644
+index 0000000..f7b2cd1
+--- /dev/null
++++ b/src/paper_r7/full12_plan_tests.cpp
+@@ -0,0 +1,18 @@
++#include "oneblock_plan.hpp"
++#include "framework.hpp"
++#include <iostream>
++using namespace zkgpt::r7;using namespace oneblock;
++int main(){try{
++ zkgpt::r1::init();auto p=discover(12);requireCoverage(p);
++ crypto::need(p.context.plan.shape.layer_count==12 && p.fc_layers==48,"real Full12 target/FC coverage");
++ crypto::need(p.context.plan.master.actual==199348640 && p.context.plan.master.padded==(1u<<28),"Full12 native master regenerated");
++ std::size_t exp=0;for(auto&e:p.context.plan.exps)exp+=p.context.plan.sources.at(e.index_child).spec.actual;
++ crypto::need(exp==76032,"Full12 actual Exp queries");
++ auto s=makeStatement(p.context,std::vector<Fr>(32768,Fr(0)),std::vector<Fr>(32768,Fr(0)));
++ crypto::need(s.blocks==12 && validateStatement(s,p.context).code==Code::Ok,"Full12 external statement binding");
++ s.blocks=1;crypto::need(validateStatement(s,p.context).code==Code::Reject,"suite/block downgrade rejected");
++ auto b=p;b.required.pop_back();crypto::need(identity(b)!=identity(p),"missing native relation changes identity");
++ b=p;b.required.push_back(b.required.front());bool rejected=false;try{requireCoverage(b);}catch(...){rejected=true;}crypto::need(rejected,"duplicate relation rejected");
++ bool unsupported=false;try{discover(2);}catch(...){unsupported=true;}crypto::need(unsupported,"invented two-block target rejected");
++ std::cout<<"FULL12_NATIVE_PLAN_TESTED FC="<<p.fc_layers<<" Exp="<<exp<<" relations="<<p.required.size()<<" objects="<<p.objects.size()<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_witness_probe.cpp b/src/paper_r7/full12_witness_probe.cpp
+new file mode 100644
+index 0000000..9dd3b26
+--- /dev/null
++++ b/src/paper_r7/full12_witness_probe.cpp
+@@ -0,0 +1,16 @@
++#include "r6_adapter.hpp"
++#include "execution_target.hpp"
++#include "master_layout.hpp"
++#include <sys/prctl.h>
++#include <sys/resource.h>
++#include <iostream>
++#include <fstream>
++#include <malloc.h>
++int main(){try{
++ using namespace zkgpt::r7;zkgpt::r1::init();crypto::need(prctl(PR_SET_DUMPABLE,0)==0,"private process isolation");
++ const auto t=executionTarget(12);auto c=master3::trustedContext(12);
++ std::cerr<<"FULL12_WITNESS_BEGIN blocks="<<c.plan.shape.layer_count<<" master_actual="<<c.plan.master.actual<<" legacy_commitment=disabled\n";
++ auto memory=[](const char*stage){std::ifstream in("/proc/self/status");std::string line;while(std::getline(in,line))if(line.rfind("VmSize:",0)==0 || line.rfind("VmRSS:",0)==0)std::cerr<<stage<<" "<<line<<'\n';};memory("FULL12_BEFORE_TRIM");malloc_trim(0);memory("FULL12_AFTER_TRIM");
++ R7WitnessStore w;{master3::QuietStdout quiet;w.generateR6(c,t.manifest_path);}crypto::need(w.legacyCommitmentAbsent(),"legacy commitment forbidden");
++ std::cerr<<"FULL12_WITNESS_VALIDATED_NO_PRIVATE_EXPORT\n";return 0;
++}catch(const std::exception&e){std::cerr<<"FULL12_WITNESS_INCOMPLETE "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/master_layout.cpp b/src/paper_r7/master_layout.cpp
+index 6270c35..8be4127 100644
+--- a/src/paper_r7/master_layout.cpp
++++ b/src/paper_r7/master_layout.cpp
+@@ -1,4 +1,5 @@
+ #include "master_layout.hpp"
++#include "execution_target.hpp"
+ #include "paper_r2/r6_model.hpp"
+ #include "paper_r2/r5b_trust.hpp"
+ #include "fixed_cw.hpp"
+@@ -11,7 +12,7 @@
+ namespace zkgpt::r7::master3 {
+ QuietStdout::QuietStdout(){std::cout.flush();std::fflush(stdout);saved_=dup(1);int fd=open("/dev/null",O_WRONLY);need(saved_>=0 && fd>=0 && dup2(fd,1)>=0,"M3 public-plan output isolation");close(fd);}
+ QuietStdout::~QuietStdout(){std::cout.flush();std::fflush(stdout);dup2(saved_,1);close(saved_);}
+-R7Context trustedContext(){QuietStdout quiet;return buildR6Context(stage2::manifestPin);}
++R7Context trustedContext(unsigned blocks){const auto target=executionTarget(blocks);QuietStdout quiet;return buildR6Context(target.manifest_pin,blocks);}
+ void validate(const Layout&l){
+  if(!(l.actual==16642424 && l.padded==(1u<<24) && l.profile==r5b::profileHash() && l.context.size()==64 && l.object_count==331))throw std::runtime_error("M3 frozen layout identity: actual="+std::to_string(l.actual)+" padded="+std::to_string(l.padded)+" objects="+std::to_string(l.object_count)+" context_bytes="+std::to_string(l.context.size()));
+  std::uint64_t end=0;std::set<std::string>ids;for(auto&r:l.regions){need(ids.insert(r.id).second && !r.id.empty() && r.offset==end && r.count>0 && r.offset<l.actual && r.count<=l.actual-r.offset && r.stride==1 && r.rows>0 && r.columns>0 && r.rows<=r.count && r.count/r.rows==r.columns && r.count%r.rows==0 && r.logical_rows<=r.rows && r.logical_columns<=r.columns,"M3 region overlap/coverage/overflow/shape");end+=r.count;}need(end==l.actual,"M3 missing layout coverage");
+diff --git a/src/paper_r7/master_layout.hpp b/src/paper_r7/master_layout.hpp
+index 753320d..8c66fc3 100644
+--- a/src/paper_r7/master_layout.hpp
++++ b/src/paper_r7/master_layout.hpp
+@@ -7,7 +7,7 @@ inline constexpr const char*suite="R7-STAGE3A-STREAMING-MASTER-A3-v1";
+ struct Region {std::string id,kind,order="original-R6-val0";std::uint64_t offset=0,count=0,rows=1,columns=0,stride=1,logical_rows=0,logical_columns=0;std::string alias="";};
+ struct Layout {std::uint64_t actual=0,padded=0,object_count=0;std::string profile,context;std::vector<Region>regions;std::vector<std::size_t>projection;std::vector<WitnessObject>views;};
+ Layout trustedLayout(const R7Context&);
+-R7Context trustedContext();
++R7Context trustedContext(unsigned blocks=1);
+ class QuietStdout {int saved_=-1;public:QuietStdout();~QuietStdout();};
+ void validate(const Layout&);
+ Bytes encodeLayout(const Layout&);
+diff --git a/src/paper_r7/oneblock_plan.cpp b/src/paper_r7/oneblock_plan.cpp
+index 182fcaf..6dc765a 100644
+--- a/src/paper_r7/oneblock_plan.cpp
++++ b/src/paper_r7/oneblock_plan.cpp
+@@ -24,8 +24,8 @@ void range(Coverage&p,const r1::RangeSpec&s){
+ }
+ std::string quoted(const std::string&s){std::string o="\"";for(auto c:s){if(c=='\"'||c=='\\')o+='\\';need(static_cast<unsigned char>(c)>=32,"coverage nonprintable ID");o+=c;}return o+'\"';}
+ }
+-Coverage discover(){
+- Coverage p;p.context=master3::trustedContext();master3::QuietStdout quiet;LLM nn(1,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();auto q=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,q);r6::validateRegions(q,nn.parameterRegions());crypto::need(q.circuit_id==p.context.plan.circuit_id,"native coverage circuit mismatch");std::ostringstream native;r6::writePlan(native,graph,nn,q);p.native_json=native.str();p.objects=p.context.objects;p.source_objects=p.objects.size();
++Coverage discover(unsigned blocks){
++ Coverage p;p.context=master3::trustedContext(blocks);master3::QuietStdout quiet;LLM nn(blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();auto q=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,q);r6::validateRegions(q,nn.parameterRegions());crypto::need(q.circuit_id==p.context.plan.circuit_id,"native coverage circuit mismatch");std::ostringstream native;r6::writePlan(native,graph,nn,q);p.native_json=native.str();p.objects=p.context.objects;p.source_objects=p.objects.size();
+  const auto base=object(q.master);add(p,"master/registration","MASTER_REGISTRATION",base,q.master.padded);add(p,"master/zero-tail","MASTER_TAIL",base,q.master.padded-q.master.actual);add(p,"master/hidden-openings","MASTER_OPENING",base,q.master.padded);
+  for(const auto&o:p.objects){add(p,"object/"+o.id+"/commitment","OBJECT_COMMITMENT",o.id,o.padded);if(o.kind!=ObjectKind::BaseMaster)add(p,"object/"+o.id+"/source","OBJECT_SOURCE",o.parent,o.padded);p.object_padded_coordinates+=o.padded;
+   // Cost of DIRECT reuse of current complete representation registration.
+@@ -49,6 +49,6 @@ Coverage discover(){
+  requireCoverage(p);return p;
+ }
+ void requireCoverage(const Coverage&p){crypto::need(!p.required.empty() && p.objects.size()==p.source_objects,"coverage empty/object loss");std::set<std::string>ids;for(auto&r:p.required)crypto::need(!r.id.empty() && !r.family.empty() && ids.insert(r.id).second,"coverage duplicate/empty relation");std::set<std::string>objects;for(auto&o:p.objects)crypto::need(objects.insert(o.id).second,"coverage duplicate object");}
+-std::string identity(const Coverage&p){r1::Fs f("R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2");f.text("circuit",p.context.plan.circuit_id);f.text("layout",p.context.layout_sha256);for(auto&r:p.required){f.text("id",r.id);f.text("family",r.family);f.text("source",r.source);f.integer("domain",r.domain);f.integer("rounds",r.rounds);}auto d=f.digest();return crypto::hex(d);}
+-void writeCoverage(std::ostream&o,const Coverage&p){requireCoverage(p);o<<"{\"schema\":\"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2\",\"coverage_sha256\":"<<quoted(identity(p))<<",\"circuit\":"<<quoted(p.context.plan.circuit_id)<<",\"native_plan_sha256\":"<<quoted(r5b::digestHex(Bytes(p.native_json.begin(),p.native_json.end())))<<",\"object_count\":"<<p.objects.size()<<",\"auxiliary_and_source_count\":"<<p.objects.size()-1<<",\"required_count\":"<<p.required.size()<<",\"FC_layers\":"<<p.fc_layers<<",\"native_master_terminals\":"<<p.native_terminals<<",\"object_padded_coordinates\":"<<p.object_padded_coordinates<<",\"direct_full_registration_response_bytes\":"<<p.full_representation_response_bytes<<",\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\",\"required\":[";bool first=true;for(auto&r:p.required){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(r.id)<<",\"family\":"<<quoted(r.family)<<",\"source\":"<<quoted(r.source)<<",\"domain\":"<<r.domain<<",\"sumcheck_rounds\":"<<r.rounds<<",\"status\":\"UNVERIFIED\"}";}o<<"],\"objects\":[";first=true;for(auto&v:p.objects){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(v.id)<<",\"parent\":"<<quoted(v.parent)<<",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<"}";}o<<"]}\n";}
++std::string identity(const Coverage&p){r1::Fs f(p.context.plan.shape.layer_count==1?"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2":"R7-FULL12-NATIVE-COVERAGE-ROWMAJOR-v3");f.text("circuit",p.context.plan.circuit_id);f.text("layout",p.context.layout_sha256);for(auto&r:p.required){f.text("id",r.id);f.text("family",r.family);f.text("source",r.source);f.integer("domain",r.domain);f.integer("rounds",r.rounds);}auto d=f.digest();return crypto::hex(d);}
++void writeCoverage(std::ostream&o,const Coverage&p){requireCoverage(p);o<<"{\"schema\":"<<quoted(p.context.plan.shape.layer_count==1?"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2":"R7-FULL12-NATIVE-COVERAGE-ROWMAJOR-v3")<<",\"coverage_sha256\":"<<quoted(identity(p))<<",\"circuit\":"<<quoted(p.context.plan.circuit_id)<<",\"native_plan_sha256\":"<<quoted(r5b::digestHex(Bytes(p.native_json.begin(),p.native_json.end())))<<",\"object_count\":"<<p.objects.size()<<",\"auxiliary_and_source_count\":"<<p.objects.size()-1<<",\"required_count\":"<<p.required.size()<<",\"FC_layers\":"<<p.fc_layers<<",\"native_master_terminals\":"<<p.native_terminals<<",\"object_padded_coordinates\":"<<p.object_padded_coordinates<<",\"direct_full_registration_response_bytes\":"<<p.full_representation_response_bytes<<",\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\",\"required\":[";bool first=true;for(auto&r:p.required){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(r.id)<<",\"family\":"<<quoted(r.family)<<",\"source\":"<<quoted(r.source)<<",\"domain\":"<<r.domain<<",\"sumcheck_rounds\":"<<r.rounds<<",\"status\":\"UNVERIFIED\"}";}o<<"],\"objects\":[";first=true;for(auto&v:p.objects){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(v.id)<<",\"parent\":"<<quoted(v.parent)<<",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<"}";}o<<"]}\n";}
+ }
+diff --git a/src/paper_r7/oneblock_plan.hpp b/src/paper_r7/oneblock_plan.hpp
+index 20aa5e9..0017baa 100644
+--- a/src/paper_r7/oneblock_plan.hpp
++++ b/src/paper_r7/oneblock_plan.hpp
+@@ -8,6 +8,6 @@ struct Coverage {
+  std::string native_json;std::size_t fc_layers=0,native_terminals=0,source_objects=0;
+  std::uint64_t object_padded_coordinates=0,full_representation_response_bytes=0;
+ };
+-Coverage discover();void requireCoverage(const Coverage&);std::string identity(const Coverage&);
++Coverage discover(unsigned blocks=1);void requireCoverage(const Coverage&);std::string identity(const Coverage&);
+ void writeCoverage(std::ostream&,const Coverage&);
+ }
+diff --git a/src/paper_r7/partitioned_layout.cpp b/src/paper_r7/partitioned_layout.cpp
+new file mode 100644
+index 0000000..8aec9e4
+--- /dev/null
++++ b/src/paper_r7/partitioned_layout.cpp
+@@ -0,0 +1,72 @@
++#include "classified_layout.hpp"
++#include <algorithm>
++#include <limits>
++namespace zkgpt::r7::oneblock::classified {
++std::size_t baseSize(const Layout&p){return p.master_actual?p.master_actual:p.base.size();}
++Coordinate baseCoordinate(const Layout&p,std::size_t at){
++ need(at<baseSize(p),"partitioned base bounds");if(!p.master_actual)return p.base.at(at);
++ auto it=std::upper_bound(p.base_runs.begin(),p.base_runs.end(),at,[](std::size_t i,const Piece&r){return i<r.begin;});
++ need(it!=p.base_runs.begin(),"partitioned base prefix omission");--it;need(at-it->begin<it->count,"partitioned base gap");
++ return {it->start.root,std::uint32_t(it->start.index+at-it->begin)};
++}
++namespace {
++struct Span {std::size_t begin,end,logical;};
++void shape(std::size_t cap){need(cap && cap<=(1u<<24) && !(cap&(cap-1)),"partitioned physical root cap");}
++void addRun(std::vector<Piece>&out,std::size_t begin,std::size_t count,Coordinate start){
++ if(!out.empty()){auto&prev=out.back();if(prev.begin+prev.count==begin && prev.start.root==start.root && std::uint64_t(prev.start.index)+prev.count==start.index){prev.count+=count;return;}}
++ out.push_back({begin,count,start});
++}
++void appendCoordinates(Layout&p,std::vector<Piece>&runs,std::size_t begin,std::size_t count,const std::string&category,bool registered,bool model,std::size_t cap,std::vector<std::size_t>&roots){
++ while(count){if(roots.empty() || p.roots[roots.back()].actual==cap){need(p.roots.size()<std::numeric_limits<std::uint32_t>::max(),"partitioned root index overflow");roots.push_back(p.roots.size());p.roots.push_back({category+"/chunk/"+std::to_string(roots.size()-1),0,0,registered,model});}
++ auto k=roots.back();auto&r=p.roots[k];auto n=std::min(count,cap-r.actual);addRun(runs,begin,n,{std::uint32_t(k),std::uint32_t(r.actual)});r.actual+=n;begin+=n;count-=n;
++ }
++}
++void encodePiece(Writer&w,const Piece&r){w.number(r.begin,8);w.number(r.count,8);w.number(r.start.root);w.number(r.start.index);}
++}
++Layout makePartitionedLayout(const R7Context&c,std::size_t cap){
++ shape(cap);need(c.plan.shape.layer_count==12 && !c.plan.sources.empty(),"partitioned Full12 native target required");
++ Layout p;p.native=c.layout_sha256;p.master_actual=c.plan.master.actual;need(p.master_actual>0 && p.master_actual<=(1u<<28),"partitioned native master bounds");
++ const auto&w=c.plan.sources.back();std::vector<Span>weights;std::set<std::size_t>cuts{0,p.master_actual};std::map<std::size_t,int>queryEvents;
++ std::size_t logical=0;for(auto&s:w.spans){need(s.bias.isZero() && s.count && s.offset<p.master_actual && s.count<=p.master_actual-s.offset,"partitioned W span bounds/bias");weights.push_back({s.offset,s.offset+s.count,logical});logical+=s.count;cuts.insert(s.offset);cuts.insert(s.offset+s.count);}
++ need(logical==w.spec.actual,"partitioned W complete source");std::sort(weights.begin(),weights.end(),[](const Span&a,const Span&b){return a.begin<b.begin;});
++ for(std::size_t i=1;i<weights.size();++i)need(weights[i-1].end<=weights[i].begin,"partitioned W overlap");
++ for(std::size_t k=0;k+1<c.plan.sources.size();++k){std::size_t actual=0;for(auto&s:c.plan.sources[k].spans){need(s.count && s.offset<p.master_actual && s.count<=p.master_actual-s.offset,"partitioned query span bounds");cuts.insert(s.offset);cuts.insert(s.offset+s.count);++queryEvents[s.offset];--queryEvents[s.offset+s.count];actual+=s.count;}need(actual==c.plan.sources[k].spec.actual,"partitioned query source omission");}
++ // W roots follow original logical W order, even if native master spans do not.
++ std::vector<std::size_t>wRoots,qRoots,aRoots,hRoots;std::vector<Piece>wRuns;
++ appendCoordinates(p,wRuns,0,w.spec.actual,"C_W",true,true,cap,wRoots);
++ auto wAt=[&](std::size_t i){auto it=std::upper_bound(wRuns.begin(),wRuns.end(),i,[](std::size_t j,const Piece&r){return j<r.begin;});need(it!=wRuns.begin(),"partitioned W logical prefix");--it;return std::pair<Coordinate,std::size_t>{{it->start.root,std::uint32_t(it->start.index+i-it->begin)},it->count-(i-it->begin)};};
++ int active=0;std::size_t wi=0;for(auto it=cuts.begin();std::next(it)!=cuts.end();++it){auto begin=*it,end=*std::next(it);active+=queryEvents[begin];need(active>=0,"partitioned query interval balance");while(wi<weights.size() && weights[wi].end<=begin)++wi;
++  if(wi<weights.size() && weights[wi].begin<=begin && begin<weights[wi].end){std::size_t at=begin;while(at<end){auto loc=wAt(weights[wi].logical+at-weights[wi].begin);auto n=std::min(end-at,loc.second);addRun(p.base_runs,at,n,loc.first);at+=n;}}
++  else appendCoordinates(p,p.base_runs,begin,end-begin,active?"C_lookup/queries":"C_aux",true,false,cap,active?qRoots:aRoots);
++ }
++ std::size_t covered=0;for(auto&r:p.base_runs){need(r.begin==covered && r.count,"partitioned native coordinate gap");covered+=r.count;}need(covered==p.master_actual,"partitioned complete master coverage");
++ std::vector<const WitnessObject*>helpers;for(auto&o:c.objects)if(o.kind!=ObjectKind::BaseMaster){View v;v.id=o.id;v.actual=o.actual;v.padded=o.padded;v.kind=o.kind;v.mapped=o.kind==ObjectKind::MappedChild || o.kind==ObjectKind::ModelW;v.spans=o.spans;need(v.actual && v.actual<=v.padded && p.views.emplace(v.id,v).second,"partitioned duplicate/wrong-shape view");if(!v.mapped)helpers.push_back(&o);}
++ std::sort(helpers.begin(),helpers.end(),[](auto a,auto b){return a->padded!=b->padded?a->padded>b->padded:a->id<b->id;});
++ for(auto*o:helpers){auto&v=p.views.at(o->id);appendCoordinates(p,v.pieces,0,o->padded,"C_lookup/helpers",false,false,cap,hRoots);v.start=v.pieces.front().start;}
++ for(auto&r:p.roots){r.padded=power2(r.actual);need(r.padded<=cap,"partitioned root exceeded configured cap");}
++ return p;
++}
++std::string partitionedIdentity(const Layout&p){
++ need(p.master_actual && p.base.empty(),"partitioned mixed dense/compressed map");Writer w;w.text("R7-FULL12-CLASSIFIED-PARTITION-ROWMAJOR-v1");w.text("hyrax-row-major-low-column-bits-v1");w.text(p.native);w.number(p.master_actual,8);w.number(p.roots.size());
++ for(auto&r:p.roots){w.text(r.id);w.number(r.actual,8);w.number(r.padded,8);w.number(r.registered);w.number(r.model);}
++ w.number(p.base_runs.size());for(auto&r:p.base_runs)encodePiece(w,r);w.number(p.views.size());
++ for(auto&[id,v]:p.views){w.text(id);w.number(v.actual,8);w.number(v.padded,8);w.number(v.mapped);w.number(unsigned(v.kind));w.number(v.spans.size());for(auto&s:v.spans){w.number(s.offset,8);w.number(s.count,8);w.scalar(s.bias);}w.number(v.pieces.size());for(auto&r:v.pieces)encodePiece(w,r);}
++ return hex(r1::hash(w.b));
++}
++void writePartitionedLayout(std::ostream&o,const Layout&p){
++ // Roles originate from native validated PC specs. No witness values are read.
++ o<<"{\"suite\":\"R7-FULL12-CLASSIFIED-PARTITION-ROWMAJOR-v1\",\"status\":\"LAYOUT_PLANNED_NOT_AUTHENTICATED\",\"identity\":\""<<identity(p)<<"\",\"master_actual\":"<<baseSize(p)<<",\"dense_mapping_bytes\":0,\"base_coordinate_runs\":[";
++ auto pieces=[&](const std::vector<Piece>&parts){bool first=true;for(auto&r:parts){if(!first)o<<',';first=false;o<<"{\"original\":"<<r.begin<<",\"count\":"<<r.count<<",\"root\":"<<r.start.root<<",\"local\":"<<r.start.index<<'}';}};
++ pieces(p.base_runs);o<<"],\"roots\":[";bool first=true;
++ for(auto&r:p.roots){if(!first)o<<',';first=false;const auto columns=r.model?r.padded/(std::size_t(1)<<(r1::log2exact(r.padded)/2)):std::min<std::size_t>(1024,r.padded);
++  o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"rows\":"<<r.padded/columns<<",\"columns\":"<<columns<<",\"registered\":"<<(r.registered?"true":"false")<<",\"model\":"<<(r.model?"true":"false")<<",\"layout\":\"RowMajor\",\"basis_status\":\""<<(r.model?"PENDING_INDEPENDENT_CHUNK_ANCHOR":"EXISTING_HYRAX_A3")<<"\"}";
++ }
++ o<<"],\"views\":[";first=true;
++ for(auto&[id,v]:p.views){if(!first)o<<',';first=false;
++  o<<"{\"id\":\""<<id<<"\",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<",\"mapped\":"<<(v.mapped?"true":"false")<<",\"source_spans\":[";
++  bool sf=true;for(auto&span:v.spans){if(!sf)o<<',';sf=false;o<<"{\"base\":"<<span.offset<<",\"count\":"<<span.count<<",\"signed_bias_Fr_decimal\":\""<<span.bias.getStr()<<"\"}";}
++  o<<"],\"pieces\":[";pieces(v.pieces);o<<"]}";
++ }
++ o<<"]}\n";
++}
++}
+diff --git a/src/paper_r7/partitioned_layout_tests.cpp b/src/paper_r7/partitioned_layout_tests.cpp
+new file mode 100644
+index 0000000..84e436d
+--- /dev/null
++++ b/src/paper_r7/partitioned_layout_tests.cpp
+@@ -0,0 +1,23 @@
++#include "classified_layout.hpp"
++#include <iostream>
++#include <set>
++#include <sstream>
++using namespace zkgpt::r7;using namespace zkgpt::r7::crypto;using namespace oneblock::classified;
++int main(){try{
++ zkgpt::r1::init();R7Context c;c.layout_sha256=std::string(64,'a');c.plan.shape.layer_count=12;
++ c.plan.master=zkgpt::r1::PCSpec::make("master",31,32,zkgpt::r1::Layout::RowMajor);
++ c.plan.sources.push_back({zkgpt::r1::PCSpec::make("query",31,32,zkgpt::r1::Layout::RowMajor),{{0,31,Fr(2)}}});
++ c.plan.sources.push_back({zkgpt::r1::PCSpec::make("W",11,16,zkgpt::r1::Layout::RowMajor),{{3,5,Fr(0)},{16,6,Fr(0)}}});
++ c.objects={{"r7/master","",ObjectKind::BaseMaster,31,32,{},false},{"r7/query","r7/master",ObjectKind::MappedChild,31,32,{{0,31,Fr(2)}},false},{"r7/W","r7/master",ObjectKind::ModelW,11,16,{{3,5,Fr(0)},{16,6,Fr(0)}},false},{"r7/helper","r7/query",ObjectKind::RangeDigit,20,32,{},false}};
++ auto p=makeLayout(c,8);validate(p,c,8);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
++ std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
++ std::size_t total=0,models=0;std::set<std::string>ids;for(auto&r:p.roots){need(r.padded<=8 && r.actual<=r.padded && ids.insert(r.id).second,"bounded unique physical roots");if(r.registered)total+=r.actual;if(r.model){++models;need(r.registered,"W knowledge retained");}}
++ need(total==31 && models==2,"complete base routing and W chunks");
++ auto&w=p.views.at("r7/W");for(std::size_t i=0;i<11;++i){auto x=locate(p,w,i);need(!x.constant && x.bias.isZero() && x.coordinate==baseCoordinate(p,i<5?3+i:16+i-5),"W logical to physical coordinates");}
++ need(locate(p,w,15).constant,"W logical padded tail");auto&q=p.views.at("r7/query");need(locate(p,q,7).bias==Fr(2),"source affine bias preserved");need(locate(p,q,31).constant,"query virtual tail");
++ auto&h=p.views.at("r7/helper");need(h.pieces.size()==4,"helper crosses four bounded roots");for(std::size_t i=0;i<32;++i){auto x=locate(p,h,i);need(!x.constant && p.roots[x.coordinate.root].actual>x.coordinate.index,"helper complete logical padded domain");}
++ std::ostringstream rendered;writeLayout(rendered,p);need(rendered.str().find("\"source_spans\"")!=std::string::npos && rendered.str().find("\"signed_bias_Fr_decimal\":\"2\"")!=std::string::npos && rendered.str().find("\"kind\"")!=std::string::npos,"standalone partition report retains spans, affine biases and kinds");
++ auto bad=p;bad.base_runs.front().start.index++;need(identity(bad)!=identity(p),"wrong partition identity changes digest");bool rejected=false;try{validate(bad,c,8);}catch(...){rejected=true;}need(rejected,"wrong map rejected against native context");
++ bad=p;bad.roots.front().id+="/replacement";need(identity(bad)!=identity(p),"wrong root identity changes digest");
++ std::cout<<"PARTITIONED_MAPPING_TESTED roots="<<p.roots.size()<<" runs="<<p.base_runs.size()<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/r6_adapter.cpp b/src/paper_r7/r6_adapter.cpp
+index 61a40bb..22e9ac3 100644
+--- a/src/paper_r7/r6_adapter.cpp
++++ b/src/paper_r7/r6_adapter.cpp
+@@ -1,4 +1,5 @@
+ #include "r6_adapter.hpp"
++#include "execution_target.hpp"
+ #include "paper_r2/r6_model.hpp"
+ #include "paper_r2/r6_trust.hpp"
+ #include "paper_r1/wire.hpp"
+@@ -14,21 +15,23 @@ void add(std::vector<WitnessObject>&out,const r1::PCSpec&s,ObjectKind kind,const
+ void memoryObjects(std::vector<WitnessObject>&out,const r1::MemorySpec&m,const std::string&parent){add(out,r1::readSpec(m),ObjectKind::MemoryRead,parent);add(out,r1::finalSpec(m),ObjectKind::MemoryFinal,parent);}
+ void rangeObjects(std::vector<WitnessObject>&out,const r1::RangeSpec&r,const std::string&parent){for(unsigned h=0;h<(r.bits+8)/9;++h){auto d=r1::digitSpec(r,h);add(out,d,ObjectKind::RangeDigit,parent);memoryObjects(out,r1::digitMemory(r,h),"r7/"+d.role);}}
+ }
+-std::string checkManifest(const std::string&file,const std::string&pin){
++std::string checkManifest(const std::string&file,const std::string&pin,unsigned blocks){
+  auto bytes=r1::readFile(file);r1::require(r5b::digestHex(bytes)==pin,"independent model manifest SHA256 mismatch");
+- r6::parseManifest(bytes,1);return pin;
++ executionTarget(blocks);r6::parseManifest(bytes,blocks);return pin;
+ }
+ void executePrivateWitness(const std::function<void()>&operation){
+  try{Quiet out(std::cout);Quiet err(std::cerr);operation();}
++ catch(const std::bad_alloc&){throw std::runtime_error("R7 private witness resource exhaustion (std::bad_alloc); details suppressed");}
+  catch(...){throw std::runtime_error("R7 private witness generation/validation failed; details suppressed");}
+ }
+-R7Context buildR6Context(const std::string&pin){
++R7Context buildR6Context(const std::string&pin,unsigned blocks){
++ const auto target=executionTarget(blocks);
+  r1::require(pin.size()==64,"independent model manifest SHA256 required");
+  R7Context c;c.model_manifest_sha256=pin;
+- {Quiet quiet(std::cout);LLM nn(1,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();c.plan=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,c.plan);r6::validateRegions(c.plan,nn.parameterRegions());}
+- r1::require(c.plan.circuit_id=="1cf3bc83a9a9f289e540238255d467b7fa6e2801209aa00f07fe232c48635a9a","frozen oneblock circuit changed");
++ {Quiet quiet(std::cout);LLM nn(blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();c.plan=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,c.plan);r6::validateRegions(c.plan,nn.parameterRegions());}
++ r1::require(c.plan.circuit_id==target.circuit,"frozen native R6 target circuit changed");
+  add(c.objects,c.plan.master,ObjectKind::BaseMaster,"");
+- r1::Fs layout("zkGPT.R7.R6-layout.split-aux.rowmajor.v2");dimensions(layout,c.plan.master);
++ r1::Fs layout(blocks==1?"zkGPT.R7.R6-layout.split-aux.rowmajor.v2":"zkGPT.R7.R6-full12-layout.split-aux.rowmajor.v3");dimensions(layout,c.plan.master);
+  for(std::size_t i=0;i<c.plan.sources.size();++i){const auto&s=c.plan.sources[i];add(c.objects,s.spec,i+1==c.plan.sources.size()?ObjectKind::ModelW:ObjectKind::MappedChild,c.objects.front().id);c.objects.back().spans=s.spans;dimensions(layout,s.spec);layout.integer("spans",s.spans.size());for(auto&span:s.spans){layout.integer("span/offset",span.offset);layout.integer("span/count",span.count);layout.scalar("span/bias",span.bias);}}
+  for(auto&r:c.plan.ranges){layout.integer("range/child",r.child);layout.integer("range/bits",r.bits);rangeObjects(c.objects,{r.id,c.plan.sources.at(r.child).spec,r.bits},"r7/"+c.plan.sources.at(r.child).spec.role);}
+  for(auto&e:c.plan.exps){
+@@ -49,14 +52,18 @@ R7Context buildR6Context(const std::string&pin){
+ R7WitnessStore::R7WitnessStore()=default;
+ R7WitnessStore::~R7WitnessStore()=default;
+ void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
+- r1::require(!execution_,"R7 witness store already populated");checkManifest(manifest,c.model_manifest_sha256);
+- auto m=r6::parseManifest(r1::readFile(manifest),1);r6::checkParameterFiles(m,"data/gpt2_int");
++ r1::require(!execution_,"R7 witness store already populated");const auto target=executionTarget(c.plan.shape.layer_count);checkManifest(manifest,c.model_manifest_sha256,target.blocks);
++ auto m=r6::parseManifest(r1::readFile(manifest),target.blocks);r6::checkParameterFiles(m,"data/gpt2_int");
+  // Freeze the parameter directory across the existing production readers.
+  const char*old=std::getenv("ZKGPT_PARAMETER_DIR");const bool had=old;const std::string saved=old?old:"";
+  struct Restore{bool had;std::string saved;~Restore(){if(had)setenv("ZKGPT_PARAMETER_DIR",saved.c_str(),1);else unsetenv("ZKGPT_PARAMETER_DIR");}}restore{had,saved};
+  r1::require(setenv("ZKGPT_PARAMETER_DIR","data/gpt2_int",1)==0,"parameter directory setup failed");
+- network_=std::make_unique<LLM>(1,12,64,768,3072);execution_=std::make_unique<::prover>();r6::configure(*network_);network_->setWitnessCapacityHint(c.plan.master.actual);
+- executePrivateWitness([&]{network_->createFiniteWitness(*execution_);network_->validateCurrentWitness(*execution_);});
++ network_=std::make_unique<LLM>(target.blocks,12,64,768,3072);execution_=std::make_unique<::prover>();r6::configure(*network_);network_->setWitnessCapacityHint(c.plan.master.actual);
++ try{executePrivateWitness([&]{if(target.blocks==12)network_->createFull12FiniteWitness(*execution_);else network_->createFiniteWitness(*execution_);network_->validateCurrentWitness(*execution_);});}catch(...){
++  if(target.blocks==12){std::size_t gates=0,maps=0,fields=0;for(auto&l:execution_->C.circuit){gates+=l.uni_gates.capacity()*sizeof(uniGate)+l.bin_gates.capacity()*sizeof(binGate);maps+=(l.ori_id_u.capacity()+l.ori_id_v.capacity())*sizeof(u32);}for(std::size_t i=1;i<execution_->val.size();++i)fields+=execution_->val[i].capacity()*sizeof(Fr);
++   std::cerr<<"FULL12_WITNESS_ALLOCATION_METADATA master_fields="<<(execution_->val.empty()?0:execution_->val[0].size())<<" master_capacity_bytes="<<(execution_->val.empty()?0:execution_->val[0].capacity()*sizeof(Fr))<<" graph_gate_capacity_bytes="<<gates<<" graph_map_capacity_bytes="<<maps<<" nonmaster_capacity_bytes="<<fields<<'\n';
++  }throw;
++ }
+  r1::require(legacyCommitmentAbsent(),"R7 must not call legacy nonhiding PC");
+  auto p=r2::planModelQueries(execution_->C,network_->getWitnessRegistry(),network_->parameterRegions(),r1::ExpProfile::LegacyClampOne);
+  r1::require(p.circuit_id==c.plan.circuit_id && p.master==c.plan.master && p.output==c.plan.output,"R7 witness differs from verifier-owned R6 plan");
+diff --git a/src/paper_r7/r6_adapter.hpp b/src/paper_r7/r6_adapter.hpp
+index c96df52..58dc542 100644
+--- a/src/paper_r7/r6_adapter.hpp
++++ b/src/paper_r7/r6_adapter.hpp
+@@ -2,8 +2,8 @@
+ #include "framework.hpp"
+ #include <functional>
+ namespace zkgpt::r7 {
+-R7Context buildR6Context(const std::string& independently_pinned_manifest_sha256);
+-std::string checkManifest(const std::string&file,const std::string&pin);
++R7Context buildR6Context(const std::string& independently_pinned_manifest_sha256,unsigned blocks=1);
++std::string checkManifest(const std::string&file,const std::string&pin,unsigned blocks=1);
+ // Frozen R6 exceptions may contain scalar values; only this sanitized boundary
+ // may surround private computation before a CLI/logging boundary.
+ void executePrivateWitness(const std::function<void()>&);

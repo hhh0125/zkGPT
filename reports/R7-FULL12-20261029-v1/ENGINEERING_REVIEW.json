@@ -1,0 +1,21 @@
+{
+  "kind": "engineering code review only; no cryptographic design audit",
+  "reviewed_files": 19,
+  "critical_or_important_findings": 0,
+  "scope": "native target, statement checks, compressed layout and fail-closed old runtime boundary",
+  "rulings": [
+    {
+      "finding": "Partition JSON lacks spans/bias/kind",
+      "decision": "Regraded as required audit evidence and fixed with serialization RED->GREEN test",
+      "cost_if_wrong": "additional public metadata only"
+    }
+  ],
+  "deferred_minors": [
+    "New test executables are run explicitly by the saved runner but not registered with CTest.",
+    "Omitting a discovered relation only tests digest binding; Full12 verifier rejection remains untested until its runtime exists."
+  ],
+  "declined_to_judge": [
+    "Cryptographic protocol security (out of task scope)",
+    "Full12 acceptance/negative runtime behavior (not executed)"
+  ]
+}

@@ -1,0 +1,3 @@
+p=Path('src/paper_r7/partitioned_layout_tests.cpp');p.write_text(p.read_text().replace('using namespace zkgpt::r7;','using namespace zkgpt::r7;using namespace zkgpt::r7::crypto;'))
+p=Path('src/paper_r7/full12_plan_main.cpp');s=p.read_text().replace('#include "oneblock_plan.hpp"','#include "oneblock_plan.hpp"\n#include "classified_layout.hpp"');s=s.replace('native.close();coverage.close();','native.close();coverage.close();auto layout=oneblock::classified::makeLayout(p.context);std::ofstream partitions(dest/"R7_FULL12_PARTITIONS.json");oneblock::classified::writeLayout(partitions,layout);partitions.close();crypto::need(!partitions.fail(),"partition output failed");');p.write_text(s)
+print('TEST_NAMESPACE_CORRECTED_AND_NATIVE_PARTITION_OUTPUT_CONNECTED')

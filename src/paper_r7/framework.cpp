@@ -7,7 +7,7 @@ std::array<Component,8> allComponents(){return {Component::Commitment,Component:
 const char* name(Component c){static const char* names[]={"HidingPC","HiddenScalar","Opening","CommittedSumcheck","GKR","Memory","MappedInput","CommittedBridge"};return static_cast<std::size_t>(c)<8?names[static_cast<std::size_t>(c)]:"Invalid";}
 const char* name(Code c){switch(c){case Code::Ok:return "OK";case Code::Reject:return "REJECT";case Code::Incomplete:return "INCOMPLETE";case Code::Unimplemented:return "UNIMPLEMENTED";}return "REJECT";}
 R7Statement makeStatement(const R7Context&c,std::vector<Fr>x,std::vector<Fr>y){
- R7Statement s;s.profile_sha256=r5b::profileHash();s.circuit_id=c.plan.circuit_id;s.layout_id="r7-r6-base-split-aux-rowmajor-v2";s.layout_sha256=c.layout_sha256;s.model_manifest_sha256=c.model_manifest_sha256;s.master_actual=c.plan.master.actual;s.master_padded=c.plan.master.padded;s.x=std::move(x);s.y=std::move(y);return s;
+ R7Statement s;s.blocks=c.plan.shape.layer_count;if(s.blocks==12){s.layout_id="r7-r6-full12-base-split-aux-rowmajor-v3";s.commitment_suite="r7-full12-hiding-pc-rowmajor-v3";}s.profile_sha256=r5b::profileHash();s.circuit_id=c.plan.circuit_id;if(s.blocks==1)s.layout_id="r7-r6-base-split-aux-rowmajor-v2";s.layout_sha256=c.layout_sha256;s.model_manifest_sha256=c.model_manifest_sha256;s.master_actual=c.plan.master.actual;s.master_padded=c.plan.master.padded;s.x=std::move(x);s.y=std::move(y);return s;
 }
 namespace {
 bool digestString(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
@@ -31,11 +31,11 @@ class PendingCrypto final:public R7Commitment,public R7HiddenScalar,public R7Ope
 }
 Result validateStatement(const R7Statement&s,const R7Context&c){
  auto bad=[](const char*m){return Result{Code::Reject,Component::MappedInput,m};};
- if(s.version!=1 || s.blocks!=1)return bad("R7 version/oneblock required");
+ if(s.version!=1 || (s.blocks!=1 && s.blocks!=12) || s.blocks!=c.plan.shape.layer_count)return bad("R7 version/native target mismatch");
  if(!digestString(c.model_manifest_sha256) || !digestString(s.model_manifest_sha256) || s.model_manifest_sha256!=c.model_manifest_sha256)return bad("model identity mismatch");
- if(!c.plan.r6_engineering || !c.plan.r5b_candidate || c.plan.shape.layer_count!=1 || s.circuit_id!=c.plan.circuit_id || s.profile_sha256!=r5b::profileHash())return bad("frozen R6 circuit/profile mismatch");
- if(s.layout_id!="r7-r6-base-split-aux-rowmajor-v2" || s.layout_sha256!=c.layout_sha256 || s.master_actual!=c.plan.master.actual || s.master_padded!=c.plan.master.padded || s.master_padded>=(std::uint64_t(1)<<30))return bad("R6 base/split auxiliary layout mismatch");
- if(s.output_semantics!="r6-final-hidden-state-signed64-padded-32x1024" || s.commitment_suite!="r7-hiding-pc-rowmajor-v2")return bad("output/commitment identity mismatch");
+ if(!c.plan.r6_engineering || !c.plan.r5b_candidate || (c.plan.shape.layer_count!=1 && c.plan.shape.layer_count!=12) || s.circuit_id!=c.plan.circuit_id || s.profile_sha256!=r5b::profileHash())return bad("frozen R6 circuit/profile mismatch");
+ if(s.layout_id!=(s.blocks==1?"r7-r6-base-split-aux-rowmajor-v2":"r7-r6-full12-base-split-aux-rowmajor-v3") || s.layout_sha256!=c.layout_sha256 || s.master_actual!=c.plan.master.actual || s.master_padded!=c.plan.master.padded || s.master_padded>=(std::uint64_t(1)<<30))return bad("R6 base/split auxiliary layout mismatch");
+ if(s.output_semantics!="r6-final-hidden-state-signed64-padded-32x1024" || s.commitment_suite!=(s.blocks==1?"r7-hiding-pc-rowmajor-v2":"r7-full12-hiding-pc-rowmajor-v3"))return bad("output/commitment identity mismatch");
  if(s.x.size()!=32768 || s.y.size()!=32768)return bad("complete public X/Y required");
  for(std::size_t i=0;i<32768;++i){if(!signed64(s.x[i]) || !signed64(s.y[i]))return bad("public signed64 domain");if(i%1024>=768 && (!s.x[i].isZero() || !s.y[i].isZero()))return bad("public padding must be zero");}
  return {Code::Ok,Component::MappedInput,"structural validation only"};

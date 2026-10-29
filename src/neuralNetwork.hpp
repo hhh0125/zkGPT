@@ -77,6 +77,9 @@ public:
     }
     void create(prover &pr, bool merge);
     void createFiniteWitness(prover &pr);
+    // Explicit R7 Full12 witness-only entry. Never calls the legacy PC.
+    // The caller must enforce its memory/CPU budget and suppress private logs.
+    void createFull12FiniteWitness(prover &pr);
     // Opt-in partial engineering relation; unresolved paper semantics stay explicit.
     void setR4NumericalCandidate(bool enabled=true) { r4_numerical_candidate_=enabled; }
     void setR5BEngineeringCandidate(bool enabled=true) { r5b_numerical_candidate_=enabled; }

@@ -1,0 +1,520 @@
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 26%] Built target paper_r1
+[ 26%] Building CXX object src/CMakeFiles/gpt_lib.dir/model_binding.cpp.o
+[ 26%] Building CXX object src/CMakeFiles/gpt_lib.dir/models.cpp.o
+[ 30%] Building CXX object src/CMakeFiles/gpt_lib.dir/neuralNetwork.cpp.o
+[ 30%] Building CXX object src/CMakeFiles/gpt_lib.dir/r5b_gelu.cpp.o
+[ 34%] Building CXX object src/CMakeFiles/gpt_lib.dir/r5b_layernorm.cpp.o
+[ 34%] Building CXX object src/CMakeFiles/gpt_lib.dir/r5b_operators.cpp.o
+[ 38%] Building CXX object src/CMakeFiles/gpt_lib.dir/zkgpt_protocol.cpp.o
+[ 38%] Linking CXX static library libgpt_lib.a
+[ 57%] Built target gpt_lib
+[ 57%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/r6_mapping.cpp.o
+[ 57%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/model_queries.cpp.o
+[ 57%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/model_resources.cpp.o
+[ 57%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/r5b_trust.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_resources.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_resources.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_trust.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_mapping.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.cpp: In function ‘zkgpt::r1::Bytes zkgpt::r5b::encodeAnchor(const Anchor&, const char*)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.cpp:36:2: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+   36 |  for(const auto &g:a.w.rows)out<<hex(r1::encode(g))<<'\n';const auto s=out.str();return r1::Bytes(s.begin(),s.end());
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.cpp:36:59: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   36 |  for(const auto &g:a.w.rows)out<<hex(r1::encode(g))<<'\n';const auto s=out.str();return r1::Bytes(s.begin(),s.end());
+      |                                                           ^~~~~
+[ 61%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/r6_model.cpp.o
+[ 61%] Building CXX object src/paper_r2/CMakeFiles/paper_r2.dir/r6_trust.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/models.hpp:4,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_model.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_model.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/hyrax_util.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:6,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r5b_trust.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_trust.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_trust.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/typedef.hpp:13:9: warning: ISO C++ does not support ‘__int128’ for ‘ll’ [-Wpedantic]
+   13 | typedef __int128 ll;
+      |         ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h: In constructor ‘binGate::binGate(u32, u32, u32, ll, u8)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:32:8: warning: ‘binGate::sc’ will be initialized after [-Wreorder]
+   32 |     ll sc;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:31:9: warning:   ‘u8 binGate::l’ [-Wreorder]
+   31 |     u8  l;
+      |         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:33:5: warning:   when initialized here [-Wreorder]
+   33 |     binGate(u32 _g, u32 _u, u32 _v, ll _sc, u8 _l):
+      |     ^~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:15:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/prover.hpp:102:1: warning: ISO C++ does not support ‘__int128’ for ‘convert’ [-Wpedantic]
+  102 | __int128 convert(Fr x)  ;
+      | ^~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:16:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:46:28: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   46 | inline bool fitsSignedBits(__int128 value, unsigned bits) {
+      |                            ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsSignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:11: warning: ISO C++ does not support ‘__int128’ for ‘half’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:48:39: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   48 |     const __int128 half = static_cast<__int128>(1) << (bits - 1);
+      |                                       ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:52:30: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   52 | inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘bool fitsUnsignedBits(__int128, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:54:20: warning: ISO C++ does not support ‘__int128’ for ‘limit’ [-Wpedantic]
+   54 |     const unsigned __int128 limit =
+      |                    ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:55:30: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   55 |         static_cast<unsigned __int128>(1) << bits;
+      |                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:56:33: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   56 |     return static_cast<unsigned __int128>(value) < limit;
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:59:35: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+   59 | inline std::string int128ToString(__int128 value) {
+      |                                   ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp: In function ‘std::string int128ToString(__int128)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:62:14: warning: ISO C++ does not support ‘__int128’ for ‘magnitude’ [-Wpedantic]
+   62 |     unsigned __int128 magnitude = negative
+      |              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:63:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   63 |         ? static_cast<unsigned __int128>(-(value + 1)) + 1
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/witness_registry.hpp:64:32: warning: ISO C++ does not support ‘__int128’ for ‘type name’ [-Wpedantic]
+   64 |         : static_cast<unsigned __int128>(value);
+      |                                ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp: At global scope:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:252:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  252 |     void recordGeluDelta3Scalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:253:33: warning: ISO C++ does not support ‘__int128’ for ‘value’ [-Wpedantic]
+  253 |     void recordRoundDeltaScalar(__int128 value);
+      |                                 ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_model.cpp: In function ‘void zkgpt::r6::writePlan(std::ostream&, const layeredCircuit&, const LLM&, const zkgpt::r2::ModelQueryPlan&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_model.cpp:60:3: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+   60 |   if(l.bit_length_u[0]>=0)terminal("input-u0",false);if(l.bit_length_v[0]>=0)terminal("input-v0",true);if(l.ty==layerType::FCONN){terminal("matrix-u",false);terminal("matrix-v",true);}
+      |   ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/r6_model.cpp:60:54: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   60 |   if(l.bit_length_u[0]>=0)terminal("input-u0",false);if(l.bit_length_v[0]>=0)terminal("input-v0",true);if(l.ty==layerType::FCONN){terminal("matrix-u",false);terminal("matrix-v",true);}
+      |                                                      ^~
+[ 61%] Linking CXX static library libpaper_r2.a
+[ 65%] Built target paper_r2
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/framework.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/wire.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/r6_adapter.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/interactive.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/research.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fixed_cw.cpp.o
+[ 73%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/stage2_opening.cpp.o
+[ 73%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o
+[ 76%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/streaming_master.cpp.o
+[ 76%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_bridge.cpp.o
+[ 76%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_registration.cpp.o
+[ 76%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/global_bridge.cpp.o
+[ 80%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+[ 80%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_layout.cpp.o
+[ 80%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 84%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/lookup_prepare.cpp.o
+[ 84%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_vectors.cpp.o
+[ 84%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_model.cpp.o
+[ 88%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o
+[ 88%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_bindings.cpp.o
+[ 88%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_public.cpp.o
+[ 88%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 88%] Linking CXX static library libpaper_r7.a
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_witness_probe.dir/full12_witness_probe.cpp.o
+[100%] Linking CXX executable r7_full12_witness_probe
+[100%] Built target r7_full12_witness_probe
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 55%] Built target gpt_lib
+[ 62%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_framework_tests.dir/tests.cpp.o
+[100%] Linking CXX executable r7_framework_tests
+[100%] Built target r7_framework_tests
+	Command being timed: "cmake --build build/release --target r7_full12_witness_probe r7_framework_tests -j4"
+	User time (seconds): 102.56
+	System time (seconds): 5.67
+	Percent of CPU this job got: 320%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 370392
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 21
+	Minor (reclaiming a frame) page faults: 2845740
+	Voluntary context switches: 1330
+	Involuntary context switches: 1220
+	Swaps: 0
+	File system inputs: 7696
+	File system outputs: 133800
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

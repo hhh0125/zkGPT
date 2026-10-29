@@ -1,0 +1,99 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 28%] Built target paper_r1
+[ 60%] Built target gpt_lib
+[ 68%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/partitioned_layout_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:11:62: error: ‘baseSize’ was not declared in this scope
+   11 |  auto p=makeLayout(c,8);validate(p,c);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
+      |                                                              ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:11:39: error: ‘need’ was not declared in this scope; did you mean ‘zkgpt::r7::crypto::need’?
+   11 |  auto p=makeLayout(c,8);validate(p,c);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
+      |                                       ^~~~
+      |                                       zkgpt::r7::crypto::need
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/streaming_master.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_bridge.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_registration.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_layout.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:11:6: note: ‘zkgpt::r7::crypto::need’ declared here
+   11 | void need(bool,const char*);
+      |      ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:12:82: error: ‘baseCoordinate’ was not declared in this scope
+   12 |  std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
+      |                                                                                  ^~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:12:177: error: no matching function for call to ‘std::set<std::pair<unsigned int, unsigned int> >::insert(<brace-enclosed initializer list>)’
+   12 |  std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
+      |                                                                                                                                                                      ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/12/set:61,
+                 from /usr/include/x86_64-linux-gnu/c++/12/bits/stdc++.h:87,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/global_var.hpp:5,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/circuit.h:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/neuralNetwork.hpp:14,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2/model_queries.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/framework.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/r6_adapter.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.hpp:2:
+/usr/include/c++/12/bits/stl_set.h:566:9: note: candidate: ‘template<class _InputIterator> void std::set<_Key, _Compare, _Alloc>::insert(_InputIterator, _InputIterator) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >]’
+  566 |         insert(_InputIterator __first, _InputIterator __last)
+      |         ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:566:9: note:   template argument deduction/substitution failed:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:12:177: note:   candidate expects 2 arguments, 1 provided
+   12 |  std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
+      |                                                                                                                                                                      ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+/usr/include/c++/12/bits/stl_set.h:509:7: note: candidate: ‘std::pair<typename std::_Rb_tree<_Key, _Key, std::_Identity<_Tp>, _Compare, typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other>::const_iterator, bool> std::set<_Key, _Compare, _Alloc>::insert(const value_type&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; typename std::_Rb_tree<_Key, _Key, std::_Identity<_Tp>, _Compare, typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other>::const_iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other = std::allocator<std::pair<unsigned int, unsigned int> >; typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key> = __gnu_cxx::__alloc_traits<std::allocator<std::pair<unsigned int, unsigned int> >, std::pair<unsigned int, unsigned int> >::rebind<std::pair<unsigned int, unsigned int> >; typename _Allocator::value_type = std::pair<unsigned int, unsigned int>; value_type = std::pair<unsigned int, unsigned int>]’
+  509 |       insert(const value_type& __x)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:509:32: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::set<std::pair<unsigned int, unsigned int> >::value_type&’ {aka ‘const std::pair<unsigned int, unsigned int>&’}
+  509 |       insert(const value_type& __x)
+      |              ~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/12/bits/stl_set.h:518:7: note: candidate: ‘std::pair<typename std::_Rb_tree<_Key, _Key, std::_Identity<_Tp>, _Compare, typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other>::const_iterator, bool> std::set<_Key, _Compare, _Alloc>::insert(value_type&&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; typename std::_Rb_tree<_Key, _Key, std::_Identity<_Tp>, _Compare, typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other>::const_iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key>::other = std::allocator<std::pair<unsigned int, unsigned int> >; typename __gnu_cxx::__alloc_traits<_Allocator>::rebind<_Key> = __gnu_cxx::__alloc_traits<std::allocator<std::pair<unsigned int, unsigned int> >, std::pair<unsigned int, unsigned int> >::rebind<std::pair<unsigned int, unsigned int> >; typename _Allocator::value_type = std::pair<unsigned int, unsigned int>; value_type = std::pair<unsigned int, unsigned int>]’
+  518 |       insert(value_type&& __x)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:518:27: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::set<std::pair<unsigned int, unsigned int> >::value_type&&’ {aka ‘std::pair<unsigned int, unsigned int>&&’}
+  518 |       insert(value_type&& __x)
+      |              ~~~~~~~~~~~~~^~~
+/usr/include/c++/12/bits/stl_set.h:546:7: note: candidate: ‘std::set<_Key, _Compare, _Alloc>::iterator std::set<_Key, _Compare, _Alloc>::insert(const_iterator, const value_type&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; const_iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; value_type = std::pair<unsigned int, unsigned int>]’
+  546 |       insert(const_iterator __position, const value_type& __x)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:546:7: note:   candidate expects 2 arguments, 1 provided
+/usr/include/c++/12/bits/stl_set.h:551:7: note: candidate: ‘std::set<_Key, _Compare, _Alloc>::iterator std::set<_Key, _Compare, _Alloc>::insert(const_iterator, value_type&&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; const_iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; value_type = std::pair<unsigned int, unsigned int>]’
+  551 |       insert(const_iterator __position, value_type&& __x)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:551:7: note:   candidate expects 2 arguments, 1 provided
+/usr/include/c++/12/bits/stl_set.h:578:7: note: candidate: ‘void std::set<_Key, _Compare, _Alloc>::insert(std::initializer_list<_Tp>) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >]’
+  578 |       insert(initializer_list<value_type> __l)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:578:43: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::initializer_list<std::pair<unsigned int, unsigned int> >’
+  578 |       insert(initializer_list<value_type> __l)
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/12/bits/stl_set.h:598:7: note: candidate: ‘std::set<_Key, _Compare, _Alloc>::insert_return_type std::set<_Key, _Compare, _Alloc>::insert(node_type&&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; insert_return_type = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::insert_return_type; node_type = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::node_type]’
+  598 |       insert(node_type&& __nh)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:598:26: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::set<std::pair<unsigned int, unsigned int> >::node_type&&’ {aka ‘std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::node_type&&’}
+  598 |       insert(node_type&& __nh)
+      |              ~~~~~~~~~~~~^~~~
+/usr/include/c++/12/bits/stl_set.h:603:7: note: candidate: ‘std::set<_Key, _Compare, _Alloc>::iterator std::set<_Key, _Compare, _Alloc>::insert(const_iterator, node_type&&) [with _Key = std::pair<unsigned int, unsigned int>; _Compare = std::less<std::pair<unsigned int, unsigned int> >; _Alloc = std::allocator<std::pair<unsigned int, unsigned int> >; iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; const_iterator = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::const_iterator; node_type = std::_Rb_tree<std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>, std::_Identity<std::pair<unsigned int, unsigned int> >, std::less<std::pair<unsigned int, unsigned int> >, std::allocator<std::pair<unsigned int, unsigned int> > >::node_type]’
+  603 |       insert(const_iterator __hint, node_type&& __nh)
+      |       ^~~~~~
+/usr/include/c++/12/bits/stl_set.h:603:7: note:   candidate expects 2 arguments, 1 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:15:132: error: ‘baseCoordinate’ was not declared in this scope
+   15 |  auto&w=p.views.at("r7/W");for(std::size_t i=0;i<11;++i){auto x=locate(p,w,i);need(!x.constant && x.bias.isZero() && x.coordinate==baseCoordinate(p,i<5?3+i:16+i-5),"W logical to physical coordinates");}
+      |                                                                                                                                    ^~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:17:40: error: ‘struct zkgpt::r7::oneblock::classified::View’ has no member named ‘pieces’
+   17 |  auto&h=p.views.at("r7/helper");need(h.pieces.size()==4,"helper crosses four bounded roots");for(std::size_t i=0;i<32;++i){auto x=locate(p,h,i);need(!x.constant && p.roots[x.coordinate.root].actual>x.coordinate.index,"helper complete logical padded domain");}
+      |                                        ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:18:17: error: ‘struct zkgpt::r7::oneblock::classified::Layout’ has no member named ‘base_runs’
+   18 |  auto bad=p;bad.base_runs.front().start.index++;need(identity(bad)!=identity(p),"wrong partition identity changes digest");bool rejected=false;try{validate(bad,c);}catch(...){rejected=true;}need(rejected,"wrong map rejected against native context");
+      |                 ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:20:78: error: ‘struct zkgpt::r7::oneblock::classified::Layout’ has no member named ‘base_runs’
+   20 |  std::cout<<"PARTITIONED_MAPPING_TESTED roots="<<p.roots.size()<<" runs="<<p.base_runs.size()<<'\n';return 0;
+      |                                                                              ^~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/partitioned_layout_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5482: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5489: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/rule] Error 2
+gmake: *** [Makefile:1960: r7_partitioned_layout_tests] Error 2

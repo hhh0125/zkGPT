@@ -1,0 +1,3 @@
+p=Path('src/paper_r7/full12_witness_probe.cpp');s=p.read_text().replace('#include <iostream>','#include <iostream>\n#include <fstream>\n#include <malloc.h>')
+s=s.replace('R7WitnessStore w;w.generateR6(c,t.manifest_path);','auto memory=[](const char*stage){std::ifstream in("/proc/self/status");std::string line;while(std::getline(in,line))if(line.rfind("VmSize:",0)==0 || line.rfind("VmRSS:",0)==0)std::cerr<<stage<<" "<<line<<\'\\n\';};memory("FULL12_BEFORE_TRIM");malloc_trim(0);memory("FULL12_AFTER_TRIM");\n R7WitnessStore w;w.generateR6(c,t.manifest_path);')
+p.write_text(s);print('TRIM_EXPERIMENT_PROBE_ONLY')

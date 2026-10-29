@@ -1,0 +1,115 @@
+{
+  "status": "RESOURCE_PLAN_AND_WITNESS_ATTEMPTS_ONLY",
+  "source_commit": "f04c2ef824218b56d43b5a502d06e3740ebd2083",
+  "prover": null,
+  "verifier": null,
+  "proof_bytes": null,
+  "proof_sha256": null,
+  "GKR_round_count": null,
+  "MSM_calls": null,
+  "MSM_terms": null,
+  "MSM_cpu_seconds": null,
+  "A3_openings": null,
+  "authentication_claims": null,
+  "actual_registered_rows": null,
+  "witness_attempts": [
+    {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_witness_probe"
+      ],
+      "exit_code": 2,
+      "wall_seconds": 16.31152530387044,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4,
+      "user_cpu_seconds": 30.38,
+      "system_cpu_seconds": 2.32,
+      "peak_rss_kib": 4645820.0,
+      "raw_log": "full12-actual-witness-8gib.log"
+    },
+    {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_witness_probe"
+      ],
+      "exit_code": 2,
+      "wall_seconds": 17.76977821206674,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4,
+      "user_cpu_seconds": 32.06,
+      "system_cpu_seconds": 2.66,
+      "peak_rss_kib": 4644376.0,
+      "raw_log": "full12-actual-witness-8gib-diagnostic.log"
+    },
+    {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_witness_probe"
+      ],
+      "exit_code": 2,
+      "wall_seconds": 16.9048839379102,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4,
+      "user_cpu_seconds": 33.35,
+      "system_cpu_seconds": 1.76,
+      "peak_rss_kib": 4644600.0,
+      "raw_log": "full12-actual-witness-8gib-trim-experiment.log"
+    },
+    {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_witness_probe"
+      ],
+      "exit_code": 2,
+      "wall_seconds": 61.17515047872439,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4,
+      "user_cpu_seconds": 73.66,
+      "system_cpu_seconds": 6.34,
+      "peak_rss_kib": 7130684.0,
+      "raw_log": "full12-actual-witness-8gib-mmap-experiment.log"
+    }
+  ],
+  "real_plan": {
+    "blocks": 12,
+    "gkr_layers": 277,
+    "FC": 48,
+    "Exp_queries": 76032,
+    "master_actual": 199348640,
+    "master_padded": 268435456,
+    "master_actual_bytes": 6379156480,
+    "master_padded_bytes": 8589934592,
+    "W_actual": 163749888,
+    "W_padded": 268435456,
+    "W_actual_bytes": 5239996416,
+    "W_padded_bytes": 8589934592,
+    "source_objects": 16,
+    "helper_objects": 315,
+    "objects_including_master": 332,
+    "physical_roots": 45,
+    "model_chunks": 10,
+    "base_coordinate_runs": 228,
+    "physical_root_cap_fields": 16777216,
+    "physical_root_cap_bytes": 536870912,
+    "total_root_actual_fields": 714217488,
+    "total_root_padded_fields": 723519488,
+    "all_private_padded_roots_bytes": 23152623616,
+    "planned_registered_rows": 75778,
+    "mandatory_registration_response_lower_bound_bytes": 6381581376,
+    "proof_upper_bound_bytes": null,
+    "proof_estimate_status": "Only a registration lower bound is established; no defensible complete FS proof estimate until the chunk runtime exists",
+    "graph_gate_capacity_bytes": 4810063872,
+    "graph_coordinate_capacity_bytes": 1021602816,
+    "nonmaster_layer_fields": 42568704,
+    "legacy_full_residency_lower_bound_bytes": 13573021696,
+    "disk_available_bytes": 726079598592,
+    "private_external_storage_required_at_least_bytes": 22854959616
+  },
+  "last_witness_failure": {
+    "phase": "R7WitnessStore::generateR6 -> neuralNetwork::createFull12FiniteWitness -> neuralNetwork::create",
+    "error": "std::bad_alloc under RLIMIT_AS=8589934592",
+    "master_fields_at_failure": 171293770,
+    "master_capacity_bytes": 6379156480,
+    "graph_gate_capacity_bytes": 1043132416,
+    "graph_map_capacity_bytes": 149028864,
+    "nonmaster_capacity_bytes": 262096896,
+    "allocator_mmap_threshold_bytes": 131072,
+    "peak_rss_kib": 7130684.0
+  }
+}

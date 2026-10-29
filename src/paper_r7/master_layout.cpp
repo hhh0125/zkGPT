@@ -1,4 +1,5 @@
 #include "master_layout.hpp"
+#include "execution_target.hpp"
 #include "paper_r2/r6_model.hpp"
 #include "paper_r2/r5b_trust.hpp"
 #include "fixed_cw.hpp"
@@ -11,7 +12,7 @@
 namespace zkgpt::r7::master3 {
 QuietStdout::QuietStdout(){std::cout.flush();std::fflush(stdout);saved_=dup(1);int fd=open("/dev/null",O_WRONLY);need(saved_>=0 && fd>=0 && dup2(fd,1)>=0,"M3 public-plan output isolation");close(fd);}
 QuietStdout::~QuietStdout(){std::cout.flush();std::fflush(stdout);dup2(saved_,1);close(saved_);}
-R7Context trustedContext(){QuietStdout quiet;return buildR6Context(stage2::manifestPin);}
+R7Context trustedContext(unsigned blocks){const auto target=executionTarget(blocks);QuietStdout quiet;return buildR6Context(target.manifest_pin,blocks);}
 void validate(const Layout&l){
  if(!(l.actual==16642424 && l.padded==(1u<<24) && l.profile==r5b::profileHash() && l.context.size()==64 && l.object_count==331))throw std::runtime_error("M3 frozen layout identity: actual="+std::to_string(l.actual)+" padded="+std::to_string(l.padded)+" objects="+std::to_string(l.object_count)+" context_bytes="+std::to_string(l.context.size()));
  std::uint64_t end=0;std::set<std::string>ids;for(auto&r:l.regions){need(ids.insert(r.id).second && !r.id.empty() && r.offset==end && r.count>0 && r.offset<l.actual && r.count<=l.actual-r.offset && r.stride==1 && r.rows>0 && r.columns>0 && r.rows<=r.count && r.count/r.rows==r.columns && r.count%r.rows==0 && r.logical_rows<=r.rows && r.logical_columns<=r.columns,"M3 region overlap/coverage/overflow/shape");end+=r.count;}need(end==l.actual,"M3 missing layout coverage");

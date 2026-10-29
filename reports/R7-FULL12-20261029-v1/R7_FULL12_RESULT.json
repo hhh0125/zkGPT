@@ -1,0 +1,191 @@
+{
+  "task": "R7-FULL12-ROWMAJOR-FS-ENDTOEND",
+  "status": "BLOCKED_RESOURCE_AND_INCOMPLETE_RUNTIME",
+  "complete": false,
+  "independent_full12_prover_run": false,
+  "independent_full12_verifier_run": false,
+  "full12_accept": false,
+  "proof": null,
+  "verified_count": 0,
+  "source_commit": "f04c2ef824218b56d43b5a502d06e3740ebd2083",
+  "baseline_commit": "bce054ddb719982e18cbb2a726f08cc239720c91",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "OPT3_started": false,
+  "resource_limits_increased": false,
+  "private_witness_exported": false,
+  "stage_tests": {
+    "A": "PASS_NATIVE_PLAN_AND_STRUCTURAL_BINDING",
+    "B": "NOT_IMPLEMENTED_PINNED_CHUNK_ANCHOR_RUNTIME",
+    "C": "PASS_MAPPING_COMPONENT_ONLY_OPENINGS_NOT_FULL12",
+    "D": "PUBLIC_GRAPH_AUDITED_FULL12_GKR_NOT_RUN",
+    "E": "EXISTING_SMALL_COMPONENT_REGRESSIONS_ONLY",
+    "F": "NOT_RUN",
+    "G": "NOT_RUN"
+  },
+  "final_checks": [
+    {
+      "name": "final-build",
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "--target",
+        "r7_full12_plan_tests",
+        "r7_partitioned_layout_tests",
+        "r7_full12_plan",
+        "r7_full12_witness_probe",
+        "r7_oneblock_plan_tests",
+        "r7_framework_tests",
+        "r7_classified_crypto_tests",
+        "r7_opt2_kernel_tests",
+        "r7_oneblock_gkr_tests",
+        "r7_oneblock_public_tests",
+        "r7_oneblock_bindings_tests",
+        "r7_oneblock_lookup_tests",
+        "r7_fs_io_tests",
+        "r7_fs_oneblock_prover",
+        "r7_fs_oneblock_verifier",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 37.56945461593568,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_partitioned_layout_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_partitioned_layout_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.010473802220076323,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_oneblock_plan_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_plan_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 3.5750357010401785,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_framework_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_framework_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 3.8774277847260237,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_classified_crypto_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_classified_crypto_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.4174062339589,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_opt2_kernel_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_opt2_kernel_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.11709533585235476,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_oneblock_gkr_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_gkr_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.4684212589636445,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_oneblock_public_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_public_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 1.3199338321574032,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_oneblock_bindings_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_bindings_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 3.2754736691713333,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_oneblock_lookup_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 23.53088331175968,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-r7_fs_io_tests",
+      "command": [
+        "build/release/src/paper_r7/r7_fs_io_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.01854186737909913,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-full12-native-test",
+      "command": [
+        "build/release/src/paper_r7/r7_full12_plan_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 41.68409926164895,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    },
+    {
+      "name": "final-full12-discovery",
+      "command": [
+        "build/release/src/paper_r7/r7_full12_plan",
+        "reports/R7-FULL12-20261029-v1/native-final"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 40.678838074207306,
+      "rlimit_as_bytes": 8589934592,
+      "cpus": 4
+    }
+  ],
+  "blockers": [
+    "Native full12 witness still requires a monolithic std::vector<Fr> Master and resident graph/nonmaster fields; capped run fails after171293770 Master fields.",
+    "Full12 independently pinned chunk-anchor generation/loading/rerandomization/opening runtime is not implemented.",
+    "Current Classified Commitments retain all root values and prepared helpers; planned padded roots total 23152623616 bytes.",
+    "Unified Full12 FS entrypoint/controller, authentication ledger and complete independent P/V plus requested negative cases remain to be implemented."
+  ],
+  "next_work": [
+    "Introduce permission-protected, bounded external storage for actual R6 witness, block graph and helpers, preserving all source coordinates and numerical semantics.",
+    "Create/recompute and fix the Full12 chunk-anchor trust bundle, then connect chunk rerandomization/opening to Classified Commitments.",
+    "Connect all native GKR/lookup/source claims to one Full12 statement/transcript; test per-block and cross-block coverage barriers.",
+    "Run the real independent Full12 P/V and all requested negative tests only after the bounded runtime exists."
+  ]
+}

@@ -2832,3 +2832,10 @@ void neuralNetwork::createFiniteWitness(prover &pr){
  r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
  if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
 }
+
+void neuralNetwork::createFull12FiniteWitness(prover &pr){
+ if(!r6_engineering_ || layer_num!=12 || structure_only || pr.cc.w)
+  throw std::invalid_argument("R7 Full12 finite witness requires native12 blocks and no existing commitment");
+ r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
+ if(pr.cc.w)throw std::logic_error("R7 Full12 witness unexpectedly committed");
+}

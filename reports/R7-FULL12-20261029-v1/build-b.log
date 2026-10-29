@@ -1,0 +1,55 @@
+[  3%] Built target mcl
+[  7%] Built target mclbn256
+[ 26%] Built target paper_r1
+[ 57%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_layout.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/lookup_prepare.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 69%] Linking CXX static library libpaper_r7.a
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/partitioned_layout_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:11:41: error: ‘need’ was not declared in this scope; did you mean ‘zkgpt::r7::crypto::need’?
+   11 |  auto p=makeLayout(c,8);validate(p,c,8);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
+      |                                         ^~~~
+      |                                         zkgpt::r7::crypto::need
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.hpp:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/streaming_master.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_bridge.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_registration.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_layout.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/partitioned_layout_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:11:6: note: ‘zkgpt::r7::crypto::need’ declared here
+   11 | void need(bool,const char*);
+      |      ^~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/partitioned_layout_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5482: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5489: src/paper_r7/CMakeFiles/r7_partitioned_layout_tests.dir/rule] Error 2
+gmake: *** [Makefile:1960: r7_partitioned_layout_tests] Error 2
+Command exited with non-zero status 2
+	Command being timed: "cmake --build build/release --target r7_partitioned_layout_tests r7_classified_crypto_tests r7_opt2_kernel_tests -j4"
+	User time (seconds): 15.71
+	System time (seconds): 0.92
+	Percent of CPU this job got: 216%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.67
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 348628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 411638
+	Voluntary context switches: 245
+	Involuntary context switches: 134
+	Swaps: 0
+	File system inputs: 24
+	File system outputs: 47144
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2
