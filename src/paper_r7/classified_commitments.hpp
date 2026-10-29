@@ -22,8 +22,9 @@ class Commitments {
  struct Run {std::size_t begin,count;Coordinate first;};
  struct Prepared {std::vector<Run>runs;bool frozen=false;std::unique_ptr<Weights>weights;};
  static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
+ const std::size_t map_budget,weight_budget;
  std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
- explicit Authentication(std::size_t n):claims(n){}
+ explicit Authentication(std::size_t n,bool full12=false):map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n){}
 };
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
@@ -34,7 +35,7 @@ class Commitments {
  Digest mapDigest(const Claim&)const;
  public:
  std::uint64_t registration_bytes=0,registered_rows=0;
- Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
+ Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr);
  ~Commitments();
  void registerBase();
  VectorOracle view(const std::string&);

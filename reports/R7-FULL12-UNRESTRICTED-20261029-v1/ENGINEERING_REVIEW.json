@@ -1,0 +1,31 @@
+{
+  "schema": "R7-FULL12-ENGINEERING-REVIEW-v1",
+  "reviewer": "/root/review_unrestricted_full12",
+  "read_only": true,
+  "protocol_security_audit": false,
+  "critical_findings": 0,
+  "important_findings": 0,
+  "source_files_sha_matched": 386,
+  "checked": [
+    "chunk pin/ordering/spec derivation",
+    "model-to-classified coordinate links",
+    "scoped FS labels",
+    "verifier-owned trust",
+    "registration and zero tails",
+    "authentication coverage",
+    "Full12 bounds",
+    "Oneblock defaults retained"
+  ],
+  "minor_findings": [
+    {
+      "subject": "Inherited Oneblock P_ATTACK debug hooks require Full12 adaptation",
+      "details": "wrong-mapping indexes empty layout.base; wrong-commitment/model-response/truncated target events absent from Full12. These debug hooks are unsupported for Full12. The actual direct proof-message mutation runner and wrong-X/model statement negatives do not use these hooks.",
+      "file_locations": [
+        "src/paper_r7/classified_controller.inc:28",
+        "src/paper_r7/oneblock_main.cpp:61",
+        "src/paper_r7/oneblock_main.cpp:63"
+      ]
+    }
+  ],
+  "coverage_note": "Cross-block continuity uses native shared coordinates validated by r6::auditGraph; terminal claims enter mandatory classified authentication. Real full independent verifier acceptance must be separately observed."
+}

@@ -1,0 +1,1 @@
+p=Path('src/paper_r7/classified_commitments.cpp');s=p.read_text();assert 'Authentication::map_limit' in s;s=s.replace('Authentication::map_limit','auth.map_limit').replace('Authentication::weight_limit','auth.weight_limit');p.write_text(s);print('FIXED_INSTANCE_CACHE_LIMIT_REFERENCES')

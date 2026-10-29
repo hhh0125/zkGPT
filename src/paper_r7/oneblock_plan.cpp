@@ -34,7 +34,8 @@ Coverage discover(unsigned blocks){
  for(const auto&s:q.sources)add(p,"mapped/"+s.spec.role,"MAPPED_INPUT",base,s.spec.padded,r1::log2exact(q.master.padded));
  add(p,"public/X","PUBLIC_BINDING",base,q.shape.sequence_length*power(q.shape.hidden_dimension));add(p,"public/Y","PUBLIC_BINDING",base,q.output.size());add(p,"public/constants","PUBLIC_BINDING",base,q.constants.size()+q.reserved_zero.size());
  add(p,"model/checkpoint-exporter-profile","MODEL_AUTHORITY",object(q.sources.back().spec),q.sources.back().spec.actual);add(p,"model/anchor-hiding-rerandomization","MODEL_RERANDOMIZATION",object(q.sources.back().spec),q.sources.back().spec.rows);add(p,"model/C_W_model-to-master","MODEL_MASTER_LINK",base,q.sources.back().spec.actual);
- for(const auto&r:nn.parameterRegions())add(p,"model/region/"+r.name,"MODEL_PARAMETER_LINK",object(q.sources.back().spec),r.count);
+ for(const auto&r:nn.parameterRegions()){p.model_regions.push_back(r.name);add(p,"model/region/"+r.name,"MODEL_PARAMETER_LINK",object(q.sources.back().spec),r.count);}
+ if(blocks==12)for(auto&e:nn.blockConnections())if(e.block)add(p,"full12/block/"+std::to_string(e.block+1)+"/input","CROSS_BLOCK_STATE","native-master/"+std::to_string(e.input),32768);
  add(p,"gkr/public-output-evaluation","GKR_OUTPUT","public-zero-constraint-output",q.output.size());
  for(std::size_t i=1;i<graph.circuit.size();++i){auto&l=graph.circuit[i];auto id="gkr/layer/"+std::to_string(i);add(p,id+"/predicate","GKR_PREDICATE",base,l.size);
   if(l.ty==layerType::FCONN){++p.fc_layers;for(auto port:{"u","v"})add(p,id+"/matrix/"+port,"FC_MATRIX",base,l.size,l.ori_id_u.empty()?0:r1::log2exact(l.ori_id_u.size())-r1::log2exact(power(q.shape.sequence_length)));}

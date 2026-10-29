@@ -1,0 +1,96 @@
+{
+  "fixed_bundle_unmodified": true,
+  "tests": [
+    {
+      "case": "fixed-original",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "sha256": "02ed086e3a5b596e193ded8ede2e5de5da38a1358ff628068cea1e483e1e90c1",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+        "reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-fixed-original.bundle"
+      ]
+    },
+    {
+      "case": "replaced",
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "sha256": "c4e4d4962ee459021fee94684bacd3365cc6fcd1689e8351768944f38c7ebd61",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+        "reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-replaced.bundle"
+      ]
+    },
+    {
+      "case": "missing",
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "sha256": "5412a0f23d286dc6a02b92f946db02a29c96f35b35e28cad64292ccdff821e3f",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+        "reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-missing.bundle"
+      ]
+    },
+    {
+      "case": "reordered",
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "sha256": "933e1bdb5e574dc5ab892c799c44d25f55b2a6415490f4afed20e0ddc121142e",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+        "reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-reordered.bundle"
+      ]
+    },
+    {
+      "case": "mixed",
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "sha256": "eb24ef3cce66602c2beea4c4691d6f5f7a62bd0ee8b985af689e66fc182f8e13",
+      "command": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+        "reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-mixed.bundle"
+      ]
+    }
+  ],
+  "compile_command": [
+    "/usr/bin/c++",
+    "-DMCLBN_NO_AUTOLINK",
+    "-DMCL_NO_AUTOLINK",
+    "-DMCL_USE_LLVM=1",
+    "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7",
+    "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2",
+    "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+    "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include",
+    "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1",
+    "-isystem",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src",
+    "-pthread",
+    "-O3",
+    "-DNDEBUG",
+    "-std=gnu++17",
+    "-c",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe.cpp",
+    "-o",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe.o"
+  ],
+  "link_command": [
+    "/usr/bin/c++",
+    "-pthread",
+    "-O3",
+    "-DNDEBUG",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe.o",
+    "-o",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FULL12-UNRESTRICTED-20261029-v1/anchor-negative-probe",
+    "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib",
+    "libpaper_r7.a",
+    "../paper_r2/libpaper_r2.a",
+    "../libgpt_lib.a",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+    "-lz",
+    "../paper_r1/libpaper_r1.a",
+    "../../lib/libmclbn256.so.1.74",
+    "../../lib/libmcl.so.1.74",
+    "-lpthread",
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so"
+  ]
+}

@@ -1,0 +1,56 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[ 64%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fs_io.cpp.o
+[ 64%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 64%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/full12_model.cpp.o
+[ 64%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 68%] Linking CXX static library libpaper_r7.a
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/full12_runtime_tests.cpp.o
+[100%] Linking CXX executable r7_full12_runtime_tests
+[100%] Built target r7_full12_runtime_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_fs_tests.dir/full12_fs_tests.cpp.o
+[100%] Linking CXX executable r7_full12_fs_tests
+[100%] Built target r7_full12_fs_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_fs_full12_prover.dir/oneblock_main.cpp.o
+[100%] Linking CXX executable r7_fs_full12_prover
+[100%] Built target r7_fs_full12_prover
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 61%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_fs_full12_verifier.dir/oneblock_main.cpp.o
+[100%] Linking CXX executable r7_fs_full12_verifier
+[100%] Built target r7_fs_full12_verifier
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 61%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_statement.dir/full12_statement.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_statement.cpp: In function ‘int main(int, char**)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_statement.cpp:7:976: error: ‘zkgpt::r5b’ has not been declared
+    7 | int main(int argc,char**argv){try{using namespace zkgpt::r7;zkgpt::r1::init();crypto::need(argc==2 && !std::filesystem::exists(argv[1]),"usage: full12_statement NEW_PUBLIC_STATEMENT");auto c=master3::trustedContext(12);auto read=[](const char*name){auto b=zkgpt::r1::readFile(std::string("reports/R6-FULL12-P0AB-20261021/D-EXECUTION-20261022/")+name);crypto::need(b.size()==262144,"Full12 public X/Y padded shape");std::vector<Fr>v;v.reserve(32768);for(std::size_t i=0;i<32768;++i){std::uint64_t bits=0;for(unsigned j=0;j<8;++j)bits|=std::uint64_t(b[8*i+j])<<(8*j);std::int64_t value;std::memcpy(&value,&bits,8);v.emplace_back(value);}return v;};auto s=makeStatement(c,read("FULL12_PUBLIC_X_SIGNED64_LE.bin"),read("FULL12_FINAL_BLOCK_Y_SIGNED64_LE.bin"));crypto::need(validateStatement(s,c).code==Code::Ok,"Full12 public statement native binding");auto b=R7Wire::encodeStatement(s);zkgpt::r1::writeFile(argv[1],b);std::cout<<"FULL12_PUBLIC_STATEMENT_CREATED sha256="<<zkgpt::r5b::digestHex(b)<<" bytes="<<b.size()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 2;}}
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ^~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_full12_statement.dir/build.make:79: src/paper_r7/CMakeFiles/r7_full12_statement.dir/full12_statement.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5842: src/paper_r7/CMakeFiles/r7_full12_statement.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5849: src/paper_r7/CMakeFiles/r7_full12_statement.dir/rule] Error 2
+gmake: *** [Makefile:2077: r7_full12_statement] Error 2

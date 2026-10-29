@@ -1,0 +1,3 @@
+p=Path('src/paper_r7/classified_commitments.hpp');s=p.read_text().replace('const std::size_t map_limit,weight_limit;','static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;\n const std::size_t map_budget,weight_budget;').replace(':map_limit(full12?256u<<20:16u<<20),weight_limit(full12?256u<<20:32u<<20),claims(n)',':map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n)');p.write_text(s)
+p=Path('src/paper_r7/classified_commitments.cpp');s=p.read_text().replace('auth.map_limit','auth.map_budget').replace('auth.weight_limit','auth.weight_budget');p.write_text(s)
+print('RETAINED_OPT2_STATIC_DEFAULT_CACHE_INTERFACE')

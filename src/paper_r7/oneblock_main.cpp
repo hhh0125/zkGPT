@@ -8,6 +8,10 @@
 #include "oneblock_public.hpp"
 #include "interactive.hpp"
 #include "fs_io.hpp"
+#ifdef R7_FS_FULL12
+#include "full12_model.hpp"
+#include "execution_target.hpp"
+#endif
 #include "paper_r2/r6_model.hpp"
 #include <sys/prctl.h>
 #include <sys/resource.h>
@@ -25,7 +29,11 @@
 using namespace zkgpt::r7;using namespace oneblock;using namespace crypto;namespace r6=zkgpt::r6;namespace r2=zkgpt::r2;
 namespace {
 #ifdef R7_FS_ONEBLOCK
+#ifdef R7_FS_FULL12
+constexpr auto liveSuite=zkgpt::r7::fs::full12Suite;
+#else
 constexpr auto liveSuite=zkgpt::r7::fs::suite;
+#endif
 constexpr auto coverageAccepted=zkgpt::r7::fs::verifiedStatus;
 #elif defined(R7_CLASSIFIED_V2)
 constexpr auto liveSuite=classified::suite;
@@ -69,13 +77,22 @@ std::pair<std::size_t,Fr>sourceIndex(const r2::ModelQuerySource&s,std::size_t i)
 Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){auto w=r1::weights(q);Fr y=0;for(std::size_t i=0;i<v.padded;++i)y+=w[i]*v.value(i);return y;}
 }
 int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
- need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");alarm(21600);r1::init();auto started=std::chrono::steady_clock::now();
+ need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");
+#ifndef R7_FS_FULL12
+ alarm(21600);
+#endif
+ r1::init();auto started=std::chrono::steady_clock::now();
 #ifdef R7_FS_ONEBLOCK
  need(argc>=4 && argc<=5,"FS usage prove|verify PROOF_PATH CONTEXT [P_ATTACK]");
 #else
  need(argc>=2 && argc<=3,"Oneblock usage setup|run [P_ATTACK]");
 #endif
- auto plan=discover();auto&ctx=plan.context;
+ #ifdef R7_FS_FULL12
+ auto plan=discover(12);
+#else
+ auto plan=discover();
+#endif
+ auto&ctx=plan.context;
 #ifdef R7_CLASSIFIED_V2
  auto layout=classified::makeLayout(ctx);
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
@@ -108,9 +125,24 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
  #ifdef R7_FS_ONEBLOCK
  need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
+ #ifdef R7_FS_FULL12
+ auto fsTrust=full12::loadTrust(ctx);
+#else
  auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
- Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));instance.text(model::trustIdentity(fsTrust));instance.raw(statement_bytes);
+#endif
+ Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
+#ifdef R7_FS_FULL12
+ instance.text(full12::trustIdentity(fsTrust));
+#else
+ instance.text(model::trustIdentity(fsTrust));
+#endif
+instance.raw(statement_bytes);
+ #ifdef R7_FS_FULL12
+ std::vector<G1>extraGenerators;for(auto&t:fsTrust.chunks){auto&g=r1::generators(t.anchor.w.spec).g;extraGenerators.insert(extraGenerators.end(),g.begin(),g.end());}
+ fs::Binding fsBinding{"Full12",argv[3],fs::generatorIdentity(extraGenerators),instance.b};
+#else
  fs::Binding fsBinding{"Oneblock",argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
+#endif
 #ifdef R7_COMPLETE_VERIFIER
  fs::FsVerifierIO pipe(argv[2],fsBinding);
 #else
@@ -121,7 +153,11 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #endif
  tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
  Writer binding;binding.text(liveSuite);binding.text(identity(plan));binding.raw(R7Wire::encodeStatement(s));bindPublic(io,"Oneblock/statement-native-plan",binding.b);
- std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';};
+ std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();[[maybe_unused]] auto cpuStarted=processCPU();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';
+#ifdef R7_FS_FULL12
+ std::cerr<<"PHASE_CPU {\"name\":\""<<id<<"\",\"cpu_seconds\":"<<processCPU()-cpuStarted<<"}\n";
+#endif
+};
  #ifndef R7_CLASSIFIED_V2
  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");

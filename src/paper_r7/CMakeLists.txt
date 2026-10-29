@@ -171,3 +171,36 @@ target_sources(paper_r7 PRIVATE partitioned_layout.cpp)
 
 add_executable(r7_full12_witness_probe full12_witness_probe.cpp)
 target_link_libraries(r7_full12_witness_probe PRIVATE paper_r7)
+
+add_executable(r7_full12_witness full12_witness_main.cpp)
+target_link_libraries(r7_full12_witness PRIVATE paper_r7)
+
+add_executable(r7_full12_anchor_tests full12_anchor_tests.cpp)
+target_link_libraries(r7_full12_anchor_tests PRIVATE paper_r7)
+
+target_sources(paper_r7 PRIVATE full12_model.cpp)
+add_executable(r7_full12_preprocess full12_preprocess.cpp)
+target_link_libraries(r7_full12_preprocess PRIVATE paper_r7)
+
+add_executable(r7_full12_runtime_tests full12_runtime_tests.cpp)
+target_link_libraries(r7_full12_runtime_tests PRIVATE paper_r7)
+add_executable(r7_full12_fs_tests full12_fs_tests.cpp)
+target_link_libraries(r7_full12_fs_tests PRIVATE paper_r7)
+
+add_executable(r7_fs_full12_prover oneblock_main.cpp)
+target_link_libraries(r7_fs_full12_prover PRIVATE paper_r7)
+target_compile_definitions(r7_fs_full12_prover PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1)
+add_executable(r7_fs_full12_verifier oneblock_main.cpp)
+target_link_libraries(r7_fs_full12_verifier PRIVATE paper_r7)
+target_compile_definitions(r7_fs_full12_verifier PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1 R7_COMPLETE_VERIFIER=1)
+add_executable(r7_full12_statement full12_statement.cpp)
+target_link_libraries(r7_full12_statement PRIVATE paper_r7)
+add_test(NAME r7_full12_partition_crypto COMMAND r7_full12_runtime_tests)
+add_test(NAME r7_full12_fs_framing COMMAND r7_full12_fs_tests)
+set_tests_properties(r7_full12_partition_crypto r7_full12_fs_framing PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+
+add_executable(r7_full12_component_prover full12_runtime_probe.cpp)
+target_link_libraries(r7_full12_component_prover PRIVATE paper_r7)
+add_executable(r7_full12_component_verifier full12_runtime_probe.cpp)
+target_compile_definitions(r7_full12_component_verifier PRIVATE R7_FULL12_PROBE_VERIFIER=1)
+target_link_libraries(r7_full12_component_verifier PRIVATE paper_r7)

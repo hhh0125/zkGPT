@@ -1,0 +1,4 @@
+#include "fs_io.hpp"
+#include <iostream>
+#include <unistd.h>
+int main(){try{using namespace zkgpt::r7::crypto;namespace fs=zkgpt::r7::fs;r1::init();char d[]="build/full12-fs-unit-XXXXXX";need(mkdtemp(d),"Full12 FS temp");auto path=std::string(d)+"/proof";fs::Binding b{"Full12","unit-full12",std::string(64,'a'),{1,2,3}};{fs::FsProverIO p(path,b);p.message("Full12/first",{7});p.coin("Full12/challenge");p.finish();}{fs::FsVerifierIO v(path,b);need(v.message("Full12/first")==Bytes{7},"Full12 FS public message");v.coin("Full12/challenge");v.finish();}bool rejected=false;auto wrong=b;wrong.proof_type="Oneblock";try{fs::FsVerifierIO v(path,wrong);}catch(...){rejected=true;}need(rejected,"Oneblock/Full12 suite mixing must reject");std::cout<<"FULL12_FS_FRAMING_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

@@ -1,0 +1,35 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 20%] Built target paper_r1
+[ 52%] Built target gpt_lib
+[ 60%] Built target paper_r2
+[ 96%] Built target paper_r7
+[ 96%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/full12_runtime_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_runtime_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_runtime_tests.cpp:10:72: error: no matching function for call to ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(Tape&, zkgpt::r7::oneblock::classified::Layout&, zkgpt::r7::oneblock::Value&, zkgpt::r7::oneblock::classified::Prepared*, zkgpt::r7::oneblock::SessionRandom*, std::nullptr_t, std::nullptr_t, std::vector<zkgpt::r7::oneblock::model::Trust>*, std::vector<zkgpt::r7::oneblock::model::Secret>*)’
+   10 |  Commitments p(tx,l,base,&prepared,&rng,nullptr,nullptr,&trust,&secrets);p.registerBase();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
+      |                                                                        ^
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_runtime_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:37:2: note: candidate: ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::classified::Layout&, zkgpt::r7::oneblock::Value, zkgpt::r7::oneblock::classified::Prepared*, zkgpt::r7::crypto::Random*, const zkgpt::r7::oneblock::model::Trust*, zkgpt::r7::oneblock::model::Secret*)’
+   37 |  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
+      |  ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:37:2: note:   candidate expects 7 arguments, 9 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:13:7: note: candidate: ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(const zkgpt::r7::oneblock::classified::Commitments&)’
+   13 | class Commitments {
+      |       ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:13:7: note:   candidate expects 1 argument, 9 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/full12_runtime_tests.cpp:12:101: error: no matching function for call to ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(Tape&, zkgpt::r7::oneblock::classified::Layout&, <brace-enclosed initializer list>, std::nullptr_t, std::nullptr_t, std::nullptr_t, std::nullptr_t, std::vector<zkgpt::r7::oneblock::model::Trust>*, std::nullptr_t)’
+   12 |  Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.registerBase();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
+      |                                                                                                     ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:37:2: note: candidate: ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::classified::Layout&, zkgpt::r7::oneblock::Value, zkgpt::r7::oneblock::classified::Prepared*, zkgpt::r7::crypto::Random*, const zkgpt::r7::oneblock::model::Trust*, zkgpt::r7::oneblock::model::Secret*)’
+   37 |  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
+      |  ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:37:2: note:   candidate expects 7 arguments, 9 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:13:7: note: candidate: ‘zkgpt::r7::oneblock::classified::Commitments::Commitments(const zkgpt::r7::oneblock::classified::Commitments&)’
+   13 | class Commitments {
+      |       ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:13:7: note:   candidate expects 1 argument, 9 provided
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/full12_runtime_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5685: src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5692: src/paper_r7/CMakeFiles/r7_full12_runtime_tests.dir/rule] Error 2
+gmake: *** [Makefile:2025: r7_full12_runtime_tests] Error 2

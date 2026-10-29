@@ -1,0 +1,605 @@
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+index 9877b2c..6c8c4e5 100644
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -171,3 +171,36 @@ target_sources(paper_r7 PRIVATE partitioned_layout.cpp)
+ 
+ add_executable(r7_full12_witness_probe full12_witness_probe.cpp)
+ target_link_libraries(r7_full12_witness_probe PRIVATE paper_r7)
++
++add_executable(r7_full12_witness full12_witness_main.cpp)
++target_link_libraries(r7_full12_witness PRIVATE paper_r7)
++
++add_executable(r7_full12_anchor_tests full12_anchor_tests.cpp)
++target_link_libraries(r7_full12_anchor_tests PRIVATE paper_r7)
++
++target_sources(paper_r7 PRIVATE full12_model.cpp)
++add_executable(r7_full12_preprocess full12_preprocess.cpp)
++target_link_libraries(r7_full12_preprocess PRIVATE paper_r7)
++
++add_executable(r7_full12_runtime_tests full12_runtime_tests.cpp)
++target_link_libraries(r7_full12_runtime_tests PRIVATE paper_r7)
++add_executable(r7_full12_fs_tests full12_fs_tests.cpp)
++target_link_libraries(r7_full12_fs_tests PRIVATE paper_r7)
++
++add_executable(r7_fs_full12_prover oneblock_main.cpp)
++target_link_libraries(r7_fs_full12_prover PRIVATE paper_r7)
++target_compile_definitions(r7_fs_full12_prover PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1)
++add_executable(r7_fs_full12_verifier oneblock_main.cpp)
++target_link_libraries(r7_fs_full12_verifier PRIVATE paper_r7)
++target_compile_definitions(r7_fs_full12_verifier PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1 R7_COMPLETE_VERIFIER=1)
++add_executable(r7_full12_statement full12_statement.cpp)
++target_link_libraries(r7_full12_statement PRIVATE paper_r7)
++add_test(NAME r7_full12_partition_crypto COMMAND r7_full12_runtime_tests)
++add_test(NAME r7_full12_fs_framing COMMAND r7_full12_fs_tests)
++set_tests_properties(r7_full12_partition_crypto r7_full12_fs_framing PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
++
++add_executable(r7_full12_component_prover full12_runtime_probe.cpp)
++target_link_libraries(r7_full12_component_prover PRIVATE paper_r7)
++add_executable(r7_full12_component_verifier full12_runtime_probe.cpp)
++target_compile_definitions(r7_full12_component_verifier PRIVATE R7_FULL12_PROBE_VERIFIER=1)
++target_link_libraries(r7_full12_component_verifier PRIVATE paper_r7)
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+index 681c2c8..d40e35e 100644
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -28,7 +28,7 @@ Fr Commitments::Weights::at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>
+ 
+ Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)const{
+  auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
+- auto&p=auth.claims[i];auto maxRuns=(Authentication::map_limit-auth.map_bytes)/sizeof(Authentication::Run);bool fits=maxRuns>0;
++ auto&p=auth.claims[i];auto maxRuns=(auth.map_budget-auth.map_bytes)/sizeof(Authentication::Run);bool fits=maxRuns>0;
+  auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest;
+  for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);
+   need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
+@@ -42,7 +42,7 @@ Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)con
+  }
+  need(digest.finish()==c.map_digest,"classified source map changed after defer");
+  p.frozen=fits;auth.map_bytes+=p.runs.capacity()*sizeof(Authentication::Run);
+- if(weights->bytes()<=Authentication::weight_limit-auth.weight_bytes){auth.weight_bytes+=weights->bytes();p.weights=std::move(weights);}
++ if(weights->bytes()<=auth.weight_budget-auth.weight_bytes){auth.weight_bytes+=weights->bytes();p.weights=std::move(weights);}
+  auth_metrics_.map_cpu+=processCPU()-started;return bias;
+ }
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda,const Authentication&auth)const{
+@@ -65,13 +65,14 @@ std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authen
+  if(opt2MetricsEnabled())std::cerr<<"OPT2_PARTIAL {\"coordinates\":"<<visited<<",\"cpu_seconds\":"<<processCPU()-started<<",\"map_cache_bytes\":"<<auth.map_bytes<<",\"weight_cache_bytes\":"<<auth.weight_bytes<<"}\n";
+  return values;
+ }
+-Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
+- need(!layout.master_actual,"Full12 partitioned commitments require independently pinned chunk-anchor runtime; unavailable");
+- need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());
++Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret,const std::vector<model::Trust>*chunks,std::vector<model::Secret>*chunkSecrets):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
++ auto modelCount=std::count_if(layout.roots.begin(),layout.roots.end(),[](auto&r){return r.model;});need(layout.master_actual?(chunks && chunks->size()==std::size_t(modelCount) && !trust && !modelSecret && (io.prover()?(chunkSecrets && chunkSecrets->size()==chunks->size()):!chunkSecrets)):(!chunks && !chunkSecrets),"classified Full12 independently loaded chunk trust boundary");
++ need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());std::set<std::string>usedPrepared;
+  for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto&root=roots_[k];root.spec=layout.roots[k];if(root.spec.model)continue;std::shared_ptr<std::vector<Fr>>packed;
+   if(io.prover()){
+    packed=std::make_shared<std::vector<Fr>>(root.spec.padded,Fr(0));
+-   if(root.spec.registered){for(std::size_t i=0;i<layout.base.size();++i)if(layout.base[i].root==k)packed->at(layout.base[i].index)=base(i);}
++   if(root.spec.registered){if(layout.master_actual){for(auto&run:layout.base_runs)if(run.start.root==k)for(std::size_t j=0;j<run.count;++j)packed->at(run.start.index+j)=base(run.begin+j);}else for(std::size_t i=0;i<layout.base.size();++i)if(layout.base[i].root==k)packed->at(layout.base[i].index)=base(i);}
++   else if(layout.master_actual){for(auto&[id,view]:layout.views)if(!view.mapped)for(auto&piece:view.pieces)if(piece.start.root==k){auto it=prepared->find(id);need(it!=prepared->end() && it->second->size()==view.padded && piece.begin<=view.padded && piece.count<=view.padded-piece.begin && piece.start.index<=packed->size() && piece.count<=packed->size()-piece.start.index,"classified prepared partition shape/bounds");std::copy_n(it->second->begin()+piece.begin,piece.count,packed->begin()+piece.start.index);usedPrepared.insert(id);}}
+    else for(auto&[id,view]:layout.views)if(!view.mapped && view.start.root==k){auto it=prepared->find(id);need(it!=prepared->end() && it->second->size()==view.padded,"classified prepared object/shape");std::copy(it->second->begin(),it->second->end(),packed->begin()+view.start.index);prepared->erase(it);}
+    root.secret=commitVectorOwned(root.spec.id,root.spec.actual,root.spec.padded,std::move(packed),*rng);root.pc=root.secret->pc;
+   }
+@@ -79,9 +80,15 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
+   if(io.prover()){auto values=root.secret->values;root.value=[values](std::size_t i){return values->at(i);};root.blinds=root.secret->blinds;}
+   rootTiming("pack-and-commit",root.spec.id,rootStarted);
+  }
+- for(std::size_t k=0;k<roots_.size();++k)if(roots_[k].spec.model){need(trust,"classified missing model authority");auto pub=model::registerModel(io,*trust,modelSecret,rng);auto&root=roots_[k];need(root.spec.actual==pub.spec.actual && root.spec.padded==pub.spec.padded,"classified W trusted dimensions");root.pc={root.spec.id,pub.spec.actual,pub.spec.padded,pub.spec.rows,pub.spec.columns,pub.rows,r1::Layout::RowMajor};root.basis=r1::generators(trust->anchor.w.spec).g;
+-  if(io.prover()){root.value=[modelSecret](std::size_t i){return modelSecret->value(i);};root.blinds=modelSecret->blinds;}
+-  root.open=[trust,pub,modelSecret](IO&live,const Query&q,const Hidden*h,Random*r,const std::string&id){model::opening(live,*trust,pub,q,modelSecret,h,r,id);};
++ if(io.prover() && layout.master_actual){need(usedPrepared.size()==prepared->size(),"classified unused/missing partitioned helper");prepared->clear();}
++ std::size_t chunkIndex=0;
++ for(std::size_t k=0;k<roots_.size();++k)if(roots_[k].spec.model){
++  const model::Trust*activeTrust=layout.master_actual?&chunks->at(chunkIndex):trust;model::Secret*activeSecret=layout.master_actual?(io.prover()?&chunkSecrets->at(chunkIndex):nullptr):modelSecret;need(activeTrust,"classified missing model authority");
++  std::string scope=layout.master_actual?"Full12/model/chunk/"+std::to_string(chunkIndex):"";std::optional<stage2::ScopedIO>scoped;if(!scope.empty())scoped.emplace(io,scope);IO&activeIO=scoped?static_cast<IO&>(*scoped):io;
++  auto pub=model::registerModel(activeIO,*activeTrust,activeSecret,rng);auto&root=roots_[k];need(root.spec.actual==pub.spec.actual && root.spec.padded==pub.spec.padded,"classified W trusted dimensions");root.pc={root.spec.id,pub.spec.actual,pub.spec.padded,pub.spec.rows,pub.spec.columns,pub.rows,r1::Layout::RowMajor};root.basis=r1::generators(activeTrust->anchor.w.spec).g;
++  if(io.prover()){root.value=[activeSecret](std::size_t i){return activeSecret->value(i);};root.blinds=activeSecret->blinds;}
++  root.open=[activeTrust,pub,activeSecret,scope](IO&live,const Query&q,const Hidden*h,Random*r,const std::string&id){if(scope.empty())model::opening(live,*activeTrust,pub,q,activeSecret,h,r,id);else{stage2::ScopedIO scoped(live,scope);model::opening(scoped,*activeTrust,pub,q,activeSecret,h,r,id);}};
++  ++chunkIndex;
+  }
+  if(io.prover())need(prepared->empty(),"classified unused prepared object");
+  sealed_=true;
+@@ -103,12 +110,12 @@ void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const s
+ VectorOracle Commitments::view(const std::string&id){
+  need(sealed_ && !authenticated_,"classified view lifecycle");const auto&v=layout_.views.at(id);VectorOracle out;out.id=id;out.actual=v.actual;out.padded=v.padded;
+  if(io_.prover())out.value=[this,&v](std::size_t j){auto l=locate(layout_,v,j);return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
+- out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped)c.only_root=int(v.start.root);defer(std::move(c));};return out;
++ out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);defer(std::move(c));};return out;
+ }
+ void Commitments::defer(Claim c){
+- need(sealed_ && base_registered_ && !authenticated_ && io_.session()==session_,"classified unregistered/closed session");need(c.map && c.padded && c.padded<=(1u<<24) && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
++ need(sealed_ && base_registered_ && !authenticated_ && io_.session()==session_,"classified unregistered/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
+ }
+-void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<layout_.base.size(),"classified base map out of bounds");return {layout_.base[at],Fr(0),false};}});}
++void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
+ Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
+  auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
+@@ -117,7 +124,7 @@ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)co
+ Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
+ void Commitments::authenticate(){
+  need(sealed_ && base_registered_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && identity(layout_)==identity_,"classified missing/closed/mutated authentication barrier");Writer summary;summary.text(suite);summary.text(identity_);summary.number(claims_.size());for(auto&c:claims_)summary.text(c.id);bindPublic(io_,"Classified/all-claims-fixed",summary.b);
+- Authentication auth(claims_.size());std::vector<Fr>lambda;std::vector<Hidden>values;Fr bias=0;for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto local=prepareClaim(c,auth,i);lambda.push_back(io_.coin("Classified/lambda/"+std::to_string(i)));need(!lambda.back().isZero(),"classified zero aggregation challenge");values.push_back(c.value);bias+=lambda.back()*local;}
++ Authentication auth(claims_.size(),layout_.master_actual!=0);std::vector<Fr>lambda;std::vector<Hidden>values;Fr bias=0;for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto local=prepareClaim(c,auth,i);lambda.push_back(io_.coin("Classified/lambda/"+std::to_string(i)));need(!lambda.back().isZero(),"classified zero aggregation challenge");values.push_back(c.value);bias+=lambda.back()*local;}
+  if(opt2MetricsEnabled()){
+   std::uint64_t legacyCoordinates=0,legacyWeights=0,frozen=0,onlyRoot=0,nonRoot=0;
+   for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto scans=c.only_root>=0?1:roots_.size();legacyCoordinates+=scans*c.padded;legacyWeights+=scans;if(c.only_root>=0)++onlyRoot;else ++nonRoot;if(auth.claims[i].frozen)++frozen;}
+diff --git a/src/paper_r7/classified_commitments.hpp b/src/paper_r7/classified_commitments.hpp
+index 7fc2901..3922862 100644
+--- a/src/paper_r7/classified_commitments.hpp
++++ b/src/paper_r7/classified_commitments.hpp
+@@ -22,8 +22,9 @@ class Commitments {
+  struct Run {std::size_t begin,count;Coordinate first;};
+  struct Prepared {std::vector<Run>runs;bool frozen=false;std::unique_ptr<Weights>weights;};
+  static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
++ const std::size_t map_budget,weight_budget;
+  std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
+- explicit Authentication(std::size_t n):claims(n){}
++ explicit Authentication(std::size_t n,bool full12=false):map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n){}
+ };
+  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
+  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
+@@ -34,7 +35,7 @@ class Commitments {
+  Digest mapDigest(const Claim&)const;
+  public:
+  std::uint64_t registration_bytes=0,registered_rows=0;
+- Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr);
++ Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr);
+  ~Commitments();
+  void registerBase();
+  VectorOracle view(const std::string&);
+diff --git a/src/paper_r7/classified_controller.inc b/src/paper_r7/classified_controller.inc
+index e12d01a..6baf083 100644
+--- a/src/paper_r7/classified_controller.inc
++++ b/src/paper_r7/classified_controller.inc
+@@ -5,22 +5,43 @@
+ #else
+  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+ #endif
+- std::optional<model::Secret>modelSecret;R7WitnessStore witness;Value master;
++ #ifdef R7_FS_FULL12
++ std::vector<model::Secret>modelSecrets;
++#else
++ std::optional<model::Secret>modelSecret;
++#endif
++ R7WitnessStore witness;Value master;
+  std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;
+  classified::Prepared prepared;
+  timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
+-  {master3::QuietStdout quiet;witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);}
++  {master3::QuietStdout quiet;
++#ifdef R7_FS_FULL12
++ witness.generateR6(ctx,executionTarget(12).manifest_path);modelSecrets=full12::prepare(trust,ctx,masterValue(witness),io.session(),random);
++#else
++ witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);
++#endif
++ }
+   graph=&witness.executionForR7().C;master=masterValue(witness);
+   if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
+   prepared=classified::prepareLookup(ctx,master);
+   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
+   if(attack=="wrong-mapping")std::swap(layout.base[0],layout.base[1]);
+- }else{master3::QuietStdout quiet;network.emplace(1,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
++ }else{master3::QuietStdout quiet;network.emplace(ctx.plan.shape.layer_count,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
+  std::optional<classified::Commitments>commitments;
+- timed("all-classified-roots-prechallenge-seal",[&]{commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,&trust,isP?&*modelSecret:nullptr);});
++ timed("all-classified-roots-prechallenge-seal",[&]{
++#ifdef R7_FS_FULL12
++ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,nullptr,nullptr,&trust.chunks,isP?&modelSecrets:nullptr);
++#else
++ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,&trust,isP?&*modelSecret:nullptr);
++#endif
++});
+  auto&pcs=*commitments;for(auto&r:layout.roots)checked(io,"classified/root/"+r.id+"/commitment");
+  checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
++ #ifdef R7_FS_FULL12
++ if(isP && attack=="wrong-model-witness")modelSecrets.front().values.at(0)+=Fr(1);
++#else
+  if(isP && attack=="wrong-model-witness")modelSecret->values.at(0)+=Fr(1);
++#endif
+  timed("complete-classified-base-knowledge-and-tail",[&]{pcs.registerBase();});for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/knowledge-tail");
+  if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;classified::writeLayout(out,layout);output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
+  timed("classified-public-X-Y-constants",[&]{
+@@ -43,7 +64,7 @@
+  need(objects.size()==layout.views.size(),"classified unused/missing native view");
+  timed("mandatory-classified-authentication-barrier",[&]{pcs.authenticate();});need(pcs.authenticated(),"classified barrier INCOMPLETE");io.authenticationComplete();checked(io,"classified/authentication-barrier");
+  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
+- for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&r:trust.regions)checked(io,"model/region/"+r.name);
++ for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
+  if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
+ #ifdef R7_FS_ONEBLOCK
+  pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
+diff --git a/src/paper_r7/fs_io.cpp b/src/paper_r7/fs_io.cpp
+index 69e100e..d9bfaf4 100644
+--- a/src/paper_r7/fs_io.cpp
++++ b/src/paper_r7/fs_io.cpp
+@@ -32,16 +32,16 @@ Bytes eventHeader(char tag,std::uint64_t sequence,const std::string&label,std::u
+ }
+ Bytes digestBytes(const Bytes&b){Hash h;h.add(b);return bytes(h.digest());}
+ bool hexadecimal(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0' && c<='9') || (c>='a' && c<='f');});}
+-void validate(const Binding&b){need((b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
+-Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(suite);w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
+-Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==suite && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
++void validate(const Binding&b){need((b.proof_type=="Full12" || b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
++Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(b.proof_type=="Full12"?full12Suite:suite);w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
++Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==(b.proof_type=="Full12"?full12Suite:suite) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
+ }
+ struct CanonicalTranscript::Impl {
+- Hash state,audit;std::set<std::pair<char,std::string>>labels;std::uint64_t seq=0,msg=0,coins=0,rejected=0;double candidate_seconds=0;
+- Impl(const Bytes&h,const Bytes&i){state.text("zkGPT.R7.FS.canonical.SHA256.v1");audit.text("zkGPT.R7.FS.challenge-audit.v1");event('I',"header",h);event('I',"public-instance",i);}
+- void event(char tag,const std::string&label,const Bytes&b){need(seq<eventLimit && labels.emplace(tag,label).second,"FS repeated event label/budget");state.add(eventHeader(tag,seq,label,b.size()));state.add(b);++seq;}
++ Hash state,audit;std::set<std::pair<char,std::string>>labels;std::uint64_t seq=0,msg=0,coins=0,rejected=0,max_events=eventLimit;double candidate_seconds=0;
++ Impl(const Bytes&h,const Bytes&i,bool full12){max_events=full12?16ull*eventLimit:eventLimit;state.text("zkGPT.R7.FS.canonical.SHA256.v1");audit.text("zkGPT.R7.FS.challenge-audit.v1");event('I',"header",h);event('I',"public-instance",i);}
++ void event(char tag,const std::string&label,const Bytes&b){need(seq<max_events && labels.emplace(tag,label).second,"FS repeated event label/budget");state.add(eventHeader(tag,seq,label,b.size()));state.add(b);++seq;}
+ };
+-CanonicalTranscript::CanonicalTranscript(const Bytes&h,const Bytes&i):impl_(std::make_unique<Impl>(h,i)){}
++CanonicalTranscript::CanonicalTranscript(const Bytes&h,const Bytes&i,bool full12):impl_(std::make_unique<Impl>(h,i,full12)){}
+ CanonicalTranscript::~CanonicalTranscript()=default;
+ void CanonicalTranscript::message(const std::string&s,const Bytes&b){impl_->event('P',s,b);++impl_->msg;}
+ Fr CanonicalTranscript::coin(const std::string&s){auto&v=*impl_;need(!v.labels.count({'C',s}),"FS repeated challenge label");auto parent=v.state.digest();
+@@ -55,11 +55,11 @@ std::uint64_t CanonicalTranscript::events()const{return impl_->seq;}std::uint64_
+ double CanonicalTranscript::seconds()const{return impl_->state.seconds+impl_->audit.seconds+impl_->candidate_seconds;}
+ std::string generatorIdentity(const std::vector<G1>&extra){Writer w;w.text("R7-FS-MCL-BN254-original-generators-v1");w.text(crypto::suite);w.text(hyrax_a3::suite);w.text(hyrax_a3::trustedR6Suite);w.text(r1::kModulus);auto p=parameters(1);w.point(p.scalar);w.point(p.hiding);auto g=hyrax_a3::generators(1024);w.number(g.size());for(auto&x:g)w.point(x);w.number(extra.size());for(auto&x:extra)w.point(x);return hex(r1::hash(w.b));}
+ struct FsIO::Impl {
+- bool prover,finished=false;int fd=-1,dir=-1;std::string final_name,temp_name,sid;std::unique_ptr<CanonicalTranscript>transcript;Hash file_hash;std::uint64_t total=0,max_payload=0,file_syscalls=0;std::array<std::uint8_t,65536>buffer{};std::size_t used=0,cursor=0;double io_seconds=0;struct stat original{};
++ bool prover,finished=false;int fd=-1,dir=-1;std::string final_name,temp_name,sid;std::unique_ptr<CanonicalTranscript>transcript;Hash file_hash;std::uint64_t total=0,max_payload=0,file_syscalls=0,limit=byteLimit;std::string suite_name=suite;std::array<std::uint8_t,65536>buffer{};std::size_t used=0,cursor=0;double io_seconds=0;struct stat original{};
+  explicit Impl(bool p):prover(p){}~Impl(){if(fd>=0)::close(fd);if(dir>=0)::close(dir);}
+  void writeExact(const std::uint8_t*p,std::size_t n){auto t=Clock::now();std::size_t at=0;while(at<n){++file_syscalls;auto k=::write(fd,p+at,n-at);if(k<0 && errno==EINTR)continue;need(k>0,"FS truncated proof or file IO failure");at+=std::size_t(k);}io_seconds+=elapsed(t);}
+  void flush(){if(used){writeExact(buffer.data(),used);used=0;}}
+- void transfer(std::uint8_t*p,std::size_t n){need(n<=byteLimit-total,"FS proof byte budget");std::size_t at=0;
++ void transfer(std::uint8_t*p,std::size_t n){need(n<=limit-total,"FS proof byte budget");std::size_t at=0;
+   if(prover){
+    if(n>=buffer.size()){flush();writeExact(p,n);at=n;}
+    while(at<n){auto size=std::min(n-at,buffer.size()-used);std::memcpy(buffer.data()+used,p+at,size);used+=size;at+=size;if(used==buffer.size())flush();}
+@@ -69,15 +69,15 @@ struct FsIO::Impl {
+   }
+   file_hash.add(p,n);total+=n;
+  }
+- void send(const Bytes&b){transfer(const_cast<std::uint8_t*>(b.data()),b.size());}Bytes receive(std::size_t n){need(n<=payloadLimit && n<=byteLimit-total,"FS preallocation bound");Bytes b(n);transfer(b.data(),n);return b;}
++ void send(const Bytes&b){transfer(const_cast<std::uint8_t*>(b.data()),b.size());}Bytes receive(std::size_t n){need(n<=payloadLimit && n<=limit-total,"FS preallocation bound");Bytes b(n);transfer(b.data(),n);return b;}
+  void sendEvent(char tag,const std::string&label,const Bytes&b){send(eventHeader(tag,transcript->events(),label,b.size()));send(b);max_payload=std::max<std::uint64_t>(max_payload,b.size());}
+- Bytes readEvent(char tag,const std::string&label){auto b=receive(17);Reader h{b};need(h.number(1)==std::uint8_t(tag) && h.number(8)==transcript->events(),"FS reordered/unknown event or sequence");auto n=h.number(8);h.end();need(n==label.size() && n>0 && n<=256,"FS unexpected label length");auto text=receive(n);need(text==Bytes(label.begin(),label.end()),"FS unexpected/reordered message label");b=receive(8);Reader length{b};auto size=length.number(8);length.end();need(size<=payloadLimit && size<=byteLimit-total,"FS message length bound");max_payload=std::max<std::uint64_t>(max_payload,size);return receive(size);}
++ Bytes readEvent(char tag,const std::string&label){auto b=receive(17);Reader h{b};need(h.number(1)==std::uint8_t(tag) && h.number(8)==transcript->events(),"FS reordered/unknown event or sequence");auto n=h.number(8);h.end();need(n==label.size() && n>0 && n<=256,"FS unexpected label length");auto text=receive(n);need(text==Bytes(label.begin(),label.end()),"FS unexpected/reordered message label");b=receive(8);Reader length{b};auto size=length.number(8);length.end();need(size<=payloadLimit && size<=limit-total,"FS message length bound");max_payload=std::max<std::uint64_t>(max_payload,size);return receive(size);}
+ };
+ FsIO::FsIO(bool p,const std::string&path,const Binding&b):impl_(std::make_unique<Impl>(p)){
+- validate(b);auto&v=*impl_;Bytes h;
++ validate(b);auto&v=*impl_;v.limit=b.proof_type=="Full12"?64ull<<30:byteLimit;v.suite_name=b.proof_type=="Full12"?full12Suite:suite;Bytes h;
+  if(p){OSRandom random;auto nonce=random.bytes(32);h=header(b,nonce);std::filesystem::path target(path);auto parent=target.parent_path();if(parent.empty())parent=".";v.final_name=target.filename().string();need(!v.final_name.empty() && v.final_name!="." && v.final_name!=".." && v.final_name.size()<=128,"FS output filename");v.dir=::open(parent.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);need(v.dir>=0,"FS output directory");struct stat st{};need(fstat(v.dir,&st)==0 && st.st_uid==getuid(),"FS output directory ownership");errno=0;need(fstatat(v.dir,v.final_name.c_str(),&st,AT_SYMLINK_NOFOLLOW)<0 && errno==ENOENT,"FS output exists; no overwrite");v.temp_name=v.final_name+".partial."+hex(r1::hash(nonce));v.fd=::openat(v.dir,v.temp_name.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);need(v.fd>=0,"FS exclusive temporary output");Writer start;start.raw(Bytes{'Z','K','R','7','F','S','1',0});start.number(h.size());v.send(start.b);v.send(h);
+- }else{v.fd=::open(path.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC);need(v.fd>=0 && fstat(v.fd,&v.original)==0 && S_ISREG(v.original.st_mode) && v.original.st_size>0 && std::uint64_t(v.original.st_size)<=byteLimit,"FS regular bounded proof input");auto magic=v.receive(12);Reader r{magic};need(r.raw(8)==Bytes({'Z','K','R','7','F','S','1',0}),"FS magic: interactive/foreign proof rejected");auto n=r.number();r.end();need(n>0 && n<=4096,"FS header length bound");h=v.receive(n);nonceFrom(h,b);}
+- v.transcript=std::make_unique<CanonicalTranscript>(h,b.public_instance);Hash session;session.text("zkGPT.R7.FS.session.v1");session.add(bytes(v.transcript->prefix()));v.sid=hex(session.digest());
++ }else{v.fd=::open(path.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC);need(v.fd>=0 && fstat(v.fd,&v.original)==0 && S_ISREG(v.original.st_mode) && v.original.st_size>0 && std::uint64_t(v.original.st_size)<=v.limit,"FS regular bounded proof input");auto magic=v.receive(12);Reader r{magic};need(r.raw(8)==Bytes({'Z','K','R','7','F','S','1',0}),"FS magic: interactive/foreign proof rejected");auto n=r.number();r.end();need(n>0 && n<=4096,"FS header length bound");h=v.receive(n);nonceFrom(h,b);}
++ v.transcript=std::make_unique<CanonicalTranscript>(h,b.public_instance,b.proof_type=="Full12");Hash session;session.text("zkGPT.R7.FS.session.v1");session.add(bytes(v.transcript->prefix()));v.sid=hex(session.digest());
+ }
+ FsIO::~FsIO()=default;
+ bool FsIO::prover()const{return impl_->prover;}std::string FsIO::session()const{return impl_->sid;}Digest FsIO::prefix()const{return impl_->transcript->prefix();}
+@@ -89,5 +89,5 @@ void FsIO::finish(){auto&v=*impl_;need(!v.finished,"FS repeated completion");Wri
+  v.finished=true;
+ }
+ std::uint64_t FsIO::frames()const{return impl_->transcript->events();}std::uint64_t FsIO::wireBytes()const{return impl_->total;}std::uint64_t FsIO::proofBytes()const{return impl_->total;}
+-std::string FsIO::metadataJson()const{auto&v=*impl_;std::ostringstream o;o<<"{\"security_status\":\"FS_NIZK_CANDIDATE\",\"suite\":\""<<suite<<"\",\"session\":\""<<v.sid<<"\",\"complete\":"<<(v.finished?"true":"false")<<",\"proof_bytes\":"<<v.total<<",\"proof_sha256\":\""<<hex(v.file_hash.digest())<<"\",\"transcript_digest\":\""<<hex(prefix())<<"\",\"challenge_digest\":\""<<hex(v.transcript->challengeDigest())<<"\",\"challenges\":"<<v.transcript->coins()<<",\"prover_messages\":"<<v.transcript->messages()<<",\"events\":"<<frames()<<",\"field_rejections\":"<<v.transcript->rejections()<<",\"hash_seconds\":"<<v.transcript->seconds()+v.file_hash.seconds<<",\"file_io_seconds\":"<<v.io_seconds<<",\"file_syscalls\":"<<v.file_syscalls<<",\"file_buffer_bytes\":"<<v.buffer.size()<<",\"max_message_payload_bytes\":"<<v.max_payload<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}";return o.str();}
++std::string FsIO::metadataJson()const{auto&v=*impl_;std::ostringstream o;o<<"{\"security_status\":\"FS_NIZK_CANDIDATE\",\"suite\":\""<<v.suite_name<<"\",\"session\":\""<<v.sid<<"\",\"complete\":"<<(v.finished?"true":"false")<<",\"proof_bytes\":"<<v.total<<",\"proof_sha256\":\""<<hex(v.file_hash.digest())<<"\",\"transcript_digest\":\""<<hex(prefix())<<"\",\"challenge_digest\":\""<<hex(v.transcript->challengeDigest())<<"\",\"challenges\":"<<v.transcript->coins()<<",\"prover_messages\":"<<v.transcript->messages()<<",\"events\":"<<frames()<<",\"field_rejections\":"<<v.transcript->rejections()<<",\"hash_seconds\":"<<v.transcript->seconds()+v.file_hash.seconds<<",\"file_io_seconds\":"<<v.io_seconds<<",\"file_syscalls\":"<<v.file_syscalls<<",\"file_buffer_bytes\":"<<v.buffer.size()<<",\"max_message_payload_bytes\":"<<v.max_payload<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}";return o.str();}
+ }
+diff --git a/src/paper_r7/fs_io.hpp b/src/paper_r7/fs_io.hpp
+index 79c107b..7962c67 100644
+--- a/src/paper_r7/fs_io.hpp
++++ b/src/paper_r7/fs_io.hpp
+@@ -4,13 +4,14 @@
+ namespace zkgpt::r7::fs {
+ using namespace crypto;
+ inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
++inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v1";
+ inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
+ inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
+ struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};
+ std::string generatorIdentity(const std::vector<G1>& trusted_extra={});
+ class CanonicalTranscript {
+  struct Impl;std::unique_ptr<Impl>impl_;
+- public:CanonicalTranscript(const Bytes&header,const Bytes&public_instance);~CanonicalTranscript();
++ public:CanonicalTranscript(const Bytes&header,const Bytes&public_instance,bool full12=false);~CanonicalTranscript();
+  CanonicalTranscript(const CanonicalTranscript&)=delete;CanonicalTranscript&operator=(const CanonicalTranscript&)=delete;
+  void message(const std::string&,const Bytes&);Fr coin(const std::string&);
+  Digest prefix()const;Digest challengeDigest()const;
+diff --git a/src/paper_r7/full12_anchor_tests.cpp b/src/paper_r7/full12_anchor_tests.cpp
+new file mode 100644
+index 0000000..dcbb8bd
+--- /dev/null
++++ b/src/paper_r7/full12_anchor_tests.cpp
+@@ -0,0 +1,5 @@
++#include "full12_model.hpp"
++#include "master_layout.hpp"
++#include "paper_r1/wire.hpp"
++#include <iostream>
++int main(){try{using namespace zkgpt::r7;zkgpt::r1::init();auto c=master3::trustedContext(12);auto t=full12::loadTrust(c);crypto::need(t.chunks.size()==10,"all Full12 model chunks");std::size_t n=0;for(auto&a:t.chunks){crypto::need(a.anchor.w.spec.layout==zkgpt::r1::Layout::RowMajor && a.anchor.w.spec.padded<=(1u<<24),"bounded RowMajor chunk");n+=a.anchor.w.spec.actual;}crypto::need(n==163749888,"all actual W coordinates covered");std::cout<<"FULL12_TRUST_TESTED chunks=10 W=163749888 pin="<<full12::anchorPin<<'\n';return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_fs_tests.cpp b/src/paper_r7/full12_fs_tests.cpp
+new file mode 100644
+index 0000000..ac165e2
+--- /dev/null
++++ b/src/paper_r7/full12_fs_tests.cpp
+@@ -0,0 +1,4 @@
++#include "fs_io.hpp"
++#include <iostream>
++#include <unistd.h>
++int main(){try{using namespace zkgpt::r7::crypto;namespace fs=zkgpt::r7::fs;r1::init();char d[]="build/full12-fs-unit-XXXXXX";need(mkdtemp(d),"Full12 FS temp");auto path=std::string(d)+"/proof";fs::Binding b{"Full12","unit-full12",std::string(64,'a'),{1,2,3}};{fs::FsProverIO p(path,b);p.message("Full12/first",{7});p.coin("Full12/challenge");p.finish();}{fs::FsVerifierIO v(path,b);need(v.message("Full12/first")==Bytes{7},"Full12 FS public message");v.coin("Full12/challenge");v.finish();}bool rejected=false;auto wrong=b;wrong.proof_type="Oneblock";try{fs::FsVerifierIO v(path,wrong);}catch(...){rejected=true;}need(rejected,"Oneblock/Full12 suite mixing must reject");std::cout<<"FULL12_FS_FRAMING_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_model.cpp b/src/paper_r7/full12_model.cpp
+new file mode 100644
+index 0000000..a0d33f1
+--- /dev/null
++++ b/src/paper_r7/full12_model.cpp
+@@ -0,0 +1,17 @@
++#include "full12_model.hpp"
++#include "execution_target.hpp"
++#include "paper_r1/wire.hpp"
++#include <filesystem>
++namespace zkgpt::r7::full12 {
++using namespace crypto;
++namespace {
++std::size_t power(std::size_t n){std::size_t p=1;while(p<n)p*=2;return p;}
++void target(const R7Context&c){auto t=executionTarget(12);need(c.plan.shape.layer_count==12 && c.plan.circuit_id==t.circuit && c.model_manifest_sha256==t.manifest_pin,"Full12 anchor native target/manifest");}
++r1::PCSpec expected(const R7Context&c,std::size_t k){auto total=c.plan.sources.back().spec.actual;need(k<(total+(1u<<24)-1)/(1u<<24),"Full12 anchor chunk range");auto n=std::min<std::size_t>(1u<<24,total-k*(1u<<24));return r1::PCSpec::make(c.plan.sources.back().spec.role+"/chunk/"+std::to_string(k),n,power(n),r1::Layout::RowMajor);}
++void check(const R7Context&c,const r5b::Anchor&a,std::size_t k){need(a.profile==r5b::kProfile && a.profile_hash==r5b::profileHash() && a.manifest_hash==c.model_manifest_sha256 && a.circuit==c.plan.circuit_id && a.model_id=="r6-op-model/12/"+c.model_manifest_sha256 && a.w.spec==expected(c,k) && a.w.rows.size()==a.w.spec.rows,"Full12 chunk identity/order/profile/shape mismatch");}
++}
++Bytes encodeTrust(const R7Context&c,const std::vector<r5b::Anchor>&chunks){target(c);auto layout=oneblock::classified::makeLayout(c);Writer w;w.text(bundleSuite);w.text(c.model_manifest_sha256);w.text(r5b::profileHash());w.text(c.plan.circuit_id);w.text(c.layout_sha256);w.text(oneblock::classified::identity(layout));w.number(c.plan.sources.back().spec.actual,8);w.number(c.plan.sources.back().spec.padded,8);auto count=(c.plan.sources.back().spec.actual+(1u<<24)-1)/(1u<<24);need(chunks.size()==count,"Full12 anchor missing chunk");w.number(count);for(std::size_t k=0;k<count;++k){check(c,chunks[k],k);w.number(k);w.number(k*(1u<<24),8);auto b=r6::encodeAnchor(chunks[k]);w.number(b.size());w.raw(b);}return w.b;}
++Trust loadTrust(const R7Context&c,const std::string&path){target(c);need(std::string(anchorPin).size()==64,"Full12 chunk anchor not independently pinned");need(std::filesystem::file_size(path)<=4u<<20,"Full12 anchor file bound");auto b=r1::readFile(path);need(r5b::digestHex(b)==anchorPin,"Full12 independent chunk bundle pin mismatch");auto manifest=r1::readFile(executionTarget(12).manifest_path);need(r5b::digestHex(manifest)==c.model_manifest_sha256,"Full12 independently pinned manifest mismatch");auto m=r6::parseManifest(manifest,12);auto layout=oneblock::classified::makeLayout(c);Trust out;out.pin=anchorPin;out.partition=oneblock::classified::identity(layout);Reader r{b};need(r.text()==bundleSuite && r.text()==c.model_manifest_sha256 && r.text()==r5b::profileHash() && r.text()==c.plan.circuit_id && r.text()==c.layout_sha256 && r.text()==out.partition,"Full12 anchor bundle scope/layout");need(r.number(8)==c.plan.sources.back().spec.actual && r.number(8)==c.plan.sources.back().spec.padded,"Full12 full W logical shape");auto count=r.number();need(count==(c.plan.sources.back().spec.actual+(1u<<24)-1)/(1u<<24),"Full12 anchor chunk completeness");std::vector<r5b::Anchor>anchors;for(std::size_t k=0;k<count;++k){need(r.number()==k && r.number(8)==k*(1u<<24),"Full12 anchor chunk order/offset");auto size=r.number();need(size<=2u<<20,"Full12 anchor chunk size");auto raw=r.raw(size);auto a=r5b::decodeAnchor(raw,r6::anchorVersion,2u<<20);check(c,a,k);need(r6::encodeAnchor(a)==raw,"Full12 noncanonical chunk anchor");oneblock::model::Trust t;t.anchor=a;t.anchor_hash=r5b::digestHex(raw);t.manifest_hash=c.model_manifest_sha256;t.manifest=m;out.chunks.push_back(std::move(t));anchors.push_back(std::move(a));}r.end();need(encodeTrust(c,anchors)==b,"Full12 canonical anchor bundle");return out;}
++std::string trustIdentity(const Trust&t){Writer w;w.text(bundleSuite);w.text(t.pin);w.text(t.partition);w.number(t.chunks.size());for(auto&c:t.chunks)w.text(oneblock::model::trustIdentity(c));return hex(r1::hash(w.b));}
++std::vector<oneblock::model::Secret>prepare(const Trust&t,const R7Context&c,const oneblock::Value&base,const std::string&session,Random&rng){target(c);need(t.pin==anchorPin && bool(base),"Full12 model private/trust boundary");std::vector<oneblock::model::Secret>out;auto&source=c.plan.sources.back();std::size_t span=0,within=0;for(auto&trust:t.chunks){std::vector<Fr>values;values.reserve(trust.anchor.w.spec.actual);for(std::size_t j=0;j<trust.anchor.w.spec.actual;++j){while(span<source.spans.size() && within==source.spans[span].count){++span;within=0;}need(span<source.spans.size() && source.spans[span].bias.isZero(),"Full12 model source mapping");values.push_back(base(source.spans[span].offset+within++));}out.push_back(oneblock::model::rerandomize(trust,session,std::move(values),rng));}while(span<source.spans.size() && within==source.spans[span].count){++span;within=0;}need(span==source.spans.size(),"Full12 model source omission");return out;}
++}
+diff --git a/src/paper_r7/full12_model.hpp b/src/paper_r7/full12_model.hpp
+new file mode 100644
+index 0000000..2b0b285
+--- /dev/null
++++ b/src/paper_r7/full12_model.hpp
+@@ -0,0 +1,13 @@
++#pragma once
++#include "oneblock_model.hpp"
++#include "classified_layout.hpp"
++#include "full12_model_pin.hpp"
++namespace zkgpt::r7::full12 {
++inline constexpr const char*anchorPath="reports/R7-FULL12-UNRESTRICTED-20261029-v1/full12-chunks.anchor";
++inline constexpr const char*bundleSuite="R7-FULL12-ROWMAJOR-CHUNK-ANCHOR-v1";
++struct Trust {std::string pin,partition;std::vector<oneblock::model::Trust>chunks;};
++Bytes encodeTrust(const R7Context&,const std::vector<r5b::Anchor>&);
++Trust loadTrust(const R7Context&,const std::string&path=anchorPath);
++std::string trustIdentity(const Trust&);
++std::vector<oneblock::model::Secret>prepare(const Trust&,const R7Context&,const oneblock::Value&,const std::string&,crypto::Random&);
++}
+diff --git a/src/paper_r7/full12_model_pin.hpp b/src/paper_r7/full12_model_pin.hpp
+new file mode 100644
+index 0000000..27bbecd
+--- /dev/null
++++ b/src/paper_r7/full12_model_pin.hpp
+@@ -0,0 +1,2 @@
++#pragma once
++namespace zkgpt::r7::full12 { inline constexpr const char*anchorPin="02ed086e3a5b596e193ded8ede2e5de5da38a1358ff628068cea1e483e1e90c1"; }
+diff --git a/src/paper_r7/full12_preprocess.cpp b/src/paper_r7/full12_preprocess.cpp
+new file mode 100644
+index 0000000..b309d21
+--- /dev/null
++++ b/src/paper_r7/full12_preprocess.cpp
+@@ -0,0 +1,13 @@
++#include "full12_model.hpp"
++#include "master_layout.hpp"
++#include "execution_target.hpp"
++#include "paper_r2/r6_model.hpp"
++#include "paper_r1/wire.hpp"
++#include <filesystem>
++#include <iostream>
++int main(int argc,char**argv){try{using namespace zkgpt;using namespace r7;r1::init();crypto::need(argc==2 && !std::filesystem::exists(argv[1]),"usage: full12_preprocess NEW_BUNDLE");auto c=master3::trustedContext(12);std::vector<r5b::Anchor>anchors;{
++ master3::QuietStdout quiet;LLM n(12,12,64,768,3072);r6::configure(n);auto g=n.buildPublicCircuit();auto p=r2::planModelQueries(g,n.getWitnessRegistry(),n.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(g,n,p);crypto::need(p.circuit_id==c.plan.circuit_id,"Full12 preprocessing native graph");auto mb=r1::readFile(executionTarget(12).manifest_path);auto m=r6::parseManifest(mb,12);auto w=r6::preprocessWeights(p,n.parameterRegions(),m,"data/gpt2_int");auto count=r6::compareProductionMapping(p,n.parameterRegions(),w,"data/gpt2_int");crypto::need(count==p.sources.back().spec.actual,"all Full12 W production-reader fields checked");std::cerr<<"FULL12_W_MAPPING_VERIFIED fields="<<count<<" parameter_files=120\n";
++ for(std::size_t at=0,k=0;at<p.sources.back().spec.actual;at+=1u<<24,++k){auto actual=std::min<std::size_t>(1u<<24,p.sources.back().spec.actual-at);std::size_t padded=1;while(padded<actual)padded*=2;auto spec=r1::PCSpec::make(p.sources.back().spec.role+"/chunk/"+std::to_string(k),actual,padded,r1::Layout::RowMajor);std::vector<Fr>chunk(w.begin()+at,w.begin()+at+actual);chunk.resize(padded,Fr(0));auto pc=r1::commit(spec,chunk);anchors.push_back({r5b::kProfile,r5b::profileHash(),c.model_manifest_sha256,p.circuit_id,"r6-op-model/12/"+c.model_manifest_sha256,pc});std::cerr<<"FULL12_ANCHOR_CHUNK_COMPLETED "<<k<<" actual="<<actual<<" padded="<<padded<<'\n';}
++ r6::checkParameterFiles(m,"data/gpt2_int");}
++ auto b=full12::encodeTrust(c,anchors);r1::writeFile(argv[1],b);std::cout<<"FULL12_CHUNK_ANCHOR_GENERATED chunks="<<anchors.size()<<" sha256="<<r5b::digestHex(b)<<" bytes="<<b.size()<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/full12_runtime_probe.cpp b/src/paper_r7/full12_runtime_probe.cpp
+new file mode 100644
+index 0000000..0164e25
+--- /dev/null
++++ b/src/paper_r7/full12_runtime_probe.cpp
+@@ -0,0 +1,20 @@
++#include "classified_commitments.hpp"
++#include "stage2_opening.hpp"
++#include "fs_io.hpp"
++#include <iostream>
++using namespace zkgpt::r7;using namespace oneblock;using namespace classified;
++struct Tape:IO{bool p;std::size_t at=0,draw=0;std::vector<std::pair<std::string,Bytes>>data;explicit Tape(bool b):p(b){}bool prover()const override{return p;}std::string session()const override{return std::string(64,'b');}Digest prefix()const override{return {};}Bytes message(const std::string&n,const Bytes&b={})override{if(p){data.push_back({n,b});return b;}need(at<data.size() && data[at].first==n,"partition crypto order");return data[at++].second;}Fr coin(const std::string&)override{return Fr(3+draw++%71);}};
++int main(int argc,char**argv){try{need(argc==2,"component probe requires proof path");zkgpt::r1::init();R7Context c;c.layout_sha256=std::string(64,'a');c.plan.shape.layer_count=12;c.plan.master=zkgpt::r1::PCSpec::make("master",31,32,zkgpt::r1::Layout::RowMajor);c.plan.sources={{zkgpt::r1::PCSpec::make("query",31,32,zkgpt::r1::Layout::RowMajor),{{0,31,Fr(2)}}},{zkgpt::r1::PCSpec::make("W",11,16,zkgpt::r1::Layout::RowMajor),{{3,5,Fr(0)},{16,6,Fr(0)}}}};c.objects={{"r7/master","",ObjectKind::BaseMaster,31,32,{},false},{"r7/query","r7/master",ObjectKind::MappedChild,31,32,{{0,31,Fr(2)}},false},{"r7/W","r7/master",ObjectKind::ModelW,11,16,{{3,5,Fr(0)},{16,6,Fr(0)}},false},{"r7/helper","r7/query",ObjectKind::RangeDigit,20,32,{},false}};
++ auto l=makeLayout(c,8);Value base=[](std::size_t j){return Fr(j+1);};std::vector<model::Trust>trust;std::vector<model::Secret>secrets;SessionRandom rng;namespace fs=zkgpt::r7::fs;fs::Binding binding{"Full12","synthetic-partition-component-not-native-Full12",std::string(64,'a'),{3,1,4,1,5}};
++#ifdef R7_FULL12_PROBE_VERIFIER
++ constexpr bool isP=false;fs::FsVerifierIO tx(argv[1],binding);
++#else
++ constexpr bool isP=true;fs::FsProverIO tx(argv[1],binding);
++#endif
++std::vector<Fr>W;for(std::size_t j=0;j<11;++j)W.push_back(base(j<5?3+j:16+j-5));std::size_t off=0;
++ for(auto&r:l.roots)if(r.model){model::Trust t;t.anchor.profile="unit";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="unit-full12-model";auto s=zkgpt::r1::PCSpec::make("unit/W/"+std::to_string(trust.size()),r.actual,r.padded,zkgpt::r1::Layout::RowMajor);std::vector<Fr>values(W.begin()+off,W.begin()+off+r.actual);auto padded=values;padded.resize(r.padded,Fr(0));t.anchor.w=zkgpt::r1::commit(s,padded);t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;trust.push_back(t);if(isP)secrets.push_back(model::rerandomize(trust.back(),tx.session(),std::move(values),rng));off+=r.actual;}
++ Prepared prepared;prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(32);for(std::size_t j=0;j<32;++j)prepared["r7/helper"]->at(j)=Fr(j<20?j+7:0);
++ Commitments p(tx,l,isP?base:Value{},isP?&prepared:nullptr,isP?&rng:nullptr,nullptr,nullptr,&trust,isP?&secrets:nullptr);p.registerBase();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
++ for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));Fr value=0;if(isP){std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);value=zkgpt::r1::mle(values,point);}auto h=exchangeHidden(tx,std::string(id)+"/value",value,isP?&rng:nullptr);v.open(tx,{point,h.handle},isP?&h:nullptr,isP?&rng:nullptr,std::string(id)+"/open");}p.authenticate();
++ need(p.authenticated(),"component authentication barrier");tx.finish();std::cerr<<tx.metadataJson()<<'\n';std::cout<<(isP?"PARTITION_COMPONENT_PROOF_CREATED":"PARTITION_COMPONENT_INDEPENDENT_VERIFIED")<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_runtime_tests.cpp b/src/paper_r7/full12_runtime_tests.cpp
+new file mode 100644
+index 0000000..718bbed
+--- /dev/null
++++ b/src/paper_r7/full12_runtime_tests.cpp
+@@ -0,0 +1,13 @@
++#include "classified_commitments.hpp"
++#include "stage2_opening.hpp"
++#include <iostream>
++using namespace zkgpt::r7;using namespace oneblock;using namespace classified;
++struct Tape:IO{bool p;std::size_t at=0,draw=0;std::vector<std::pair<std::string,Bytes>>data;explicit Tape(bool b):p(b){}bool prover()const override{return p;}std::string session()const override{return std::string(64,'b');}Digest prefix()const override{return {};}Bytes message(const std::string&n,const Bytes&b={})override{if(p){data.push_back({n,b});return b;}need(at<data.size() && data[at].first==n,"partition crypto order");return data[at++].second;}Fr coin(const std::string&)override{return Fr(3+draw++%71);}};
++int main(){try{zkgpt::r1::init();R7Context c;c.layout_sha256=std::string(64,'a');c.plan.shape.layer_count=12;c.plan.master=zkgpt::r1::PCSpec::make("master",31,32,zkgpt::r1::Layout::RowMajor);c.plan.sources={{zkgpt::r1::PCSpec::make("query",31,32,zkgpt::r1::Layout::RowMajor),{{0,31,Fr(2)}}},{zkgpt::r1::PCSpec::make("W",11,16,zkgpt::r1::Layout::RowMajor),{{3,5,Fr(0)},{16,6,Fr(0)}}}};c.objects={{"r7/master","",ObjectKind::BaseMaster,31,32,{},false},{"r7/query","r7/master",ObjectKind::MappedChild,31,32,{{0,31,Fr(2)}},false},{"r7/W","r7/master",ObjectKind::ModelW,11,16,{{3,5,Fr(0)},{16,6,Fr(0)}},false},{"r7/helper","r7/query",ObjectKind::RangeDigit,20,32,{},false}};
++ auto l=makeLayout(c,8);Value base=[](std::size_t j){return Fr(j+1);};std::vector<model::Trust>trust;std::vector<model::Secret>secrets;SessionRandom rng;Tape tx(true);std::vector<Fr>W;for(std::size_t j=0;j<11;++j)W.push_back(base(j<5?3+j:16+j-5));std::size_t off=0;
++ for(auto&r:l.roots)if(r.model){model::Trust t;t.anchor.profile="unit";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="unit-full12-model";auto s=zkgpt::r1::PCSpec::make("unit/W/"+std::to_string(trust.size()),r.actual,r.padded,zkgpt::r1::Layout::RowMajor);std::vector<Fr>values(W.begin()+off,W.begin()+off+r.actual);auto padded=values;padded.resize(r.padded,Fr(0));t.anchor.w=zkgpt::r1::commit(s,padded);t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;trust.push_back(t);secrets.push_back(model::rerandomize(trust.back(),tx.session(),std::move(values),rng));off+=r.actual;}
++ Prepared prepared;prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(32);for(std::size_t j=0;j<32;++j)prepared["r7/helper"]->at(j)=Fr(j<20?j+7:0);
++ Commitments p(tx,l,base,&prepared,&rng,nullptr,nullptr,&trust,&secrets);p.registerBase();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
++ for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);auto h=exchangeHidden(tx,std::string(id)+"/value",zkgpt::r1::mle(values,point),&rng);v.open(tx,{point,h.handle},&h,&rng,std::string(id)+"/open");}p.authenticate();
++ Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.registerBase();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_statement.cpp b/src/paper_r7/full12_statement.cpp
+new file mode 100644
+index 0000000..2ca0690
+--- /dev/null
++++ b/src/paper_r7/full12_statement.cpp
+@@ -0,0 +1,8 @@
++#include "oneblock_plan.hpp"
++#include "wire.hpp"
++#include "paper_r1/wire.hpp"
++#include "paper_r2/r5b_trust.hpp"
++#include <filesystem>
++#include <cstring>
++#include <iostream>
++int main(int argc,char**argv){try{using namespace zkgpt::r7;zkgpt::r1::init();crypto::need(argc==2 && !std::filesystem::exists(argv[1]),"usage: full12_statement NEW_PUBLIC_STATEMENT");auto c=master3::trustedContext(12);auto read=[](const char*name){auto b=zkgpt::r1::readFile(std::string("reports/R6-FULL12-P0AB-20261021/D-EXECUTION-20261022/")+name);crypto::need(b.size()==262144,"Full12 public X/Y padded shape");std::vector<Fr>v;v.reserve(32768);for(std::size_t i=0;i<32768;++i){std::uint64_t bits=0;for(unsigned j=0;j<8;++j)bits|=std::uint64_t(b[8*i+j])<<(8*j);std::int64_t value;std::memcpy(&value,&bits,8);v.emplace_back(value);}return v;};auto s=makeStatement(c,read("FULL12_PUBLIC_X_SIGNED64_LE.bin"),read("FULL12_FINAL_BLOCK_Y_SIGNED64_LE.bin"));crypto::need(validateStatement(s,c).code==Code::Ok,"Full12 public statement native binding");auto b=R7Wire::encodeStatement(s);zkgpt::r1::writeFile(argv[1],b);std::cout<<"FULL12_PUBLIC_STATEMENT_CREATED sha256="<<zkgpt::r5b::digestHex(b)<<" bytes="<<b.size()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/full12_witness_main.cpp b/src/paper_r7/full12_witness_main.cpp
+new file mode 100644
+index 0000000..c66528a
+--- /dev/null
++++ b/src/paper_r7/full12_witness_main.cpp
+@@ -0,0 +1,31 @@
++#include "r6_adapter.hpp"
++#include "execution_target.hpp"
++#include "master_layout.hpp"
++#include "paper_r1/wire.hpp"
++#include <sys/prctl.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <filesystem>
++#include <iostream>
++#include <cstring>
++using namespace zkgpt::r7;
++void writeAll(int fd,const void*data,std::size_t n){auto p=static_cast<const char*>(data);while(n){auto amount=std::min<std::size_t>(n,16u<<20);auto k=::write(fd,p,amount);crypto::need(k>0,"private checkpoint write failed");p+=k;n-=k;}}
++void publicReference(const std::vector<Fr>&v,const std::string&file){auto b=zkgpt::r1::readFile(file);crypto::need(b.size()==v.size()*8,"Full12 public reference shape");for(std::size_t i=0;i<v.size();++i){std::uint64_t bits=0;for(unsigned j=0;j<8;++j)bits|=std::uint64_t(b[8*i+j])<<(8*j);std::int64_t value;std::memcpy(&value,&bits,8);crypto::need(v[i]==Fr(value),"Full12 public reference mismatch (values suppressed)");}}
++int main(int argc,char**argv){try{
++ crypto::need(argc==2 && prctl(PR_SET_DUMPABLE,0)==0,"usage: full12_witness PRIVATE_CHECKPOINT_DIRECTORY");zkgpt::r1::init();
++ auto t=executionTarget(12);auto c=master3::trustedContext(12);R7WitnessStore w;
++ std::cerr<<"FULL12_WITNESS_BEGIN blocks=12 master_expected=199348640 no_legacy_commitment=true\n";
++ {master3::QuietStdout quiet;w.generateR6(c,t.manifest_path);}
++ crypto::need(w.baseMaster().size()==199348640 && w.legacyCommitmentAbsent(),"Full12 master/no-legacy requirement");
++ const std::string ref="reports/R6-FULL12-P0AB-20261021/D-EXECUTION-20261022/";
++ publicReference(w.publicX(),ref+"FULL12_PUBLIC_X_SIGNED64_LE.bin");publicReference(w.publicY(c),ref+"FULL12_FINAL_BLOCK_Y_SIGNED64_LE.bin");
++ auto root=std::filesystem::canonical(std::filesystem::current_path());auto dest=std::filesystem::weakly_canonical(std::filesystem::absolute(argv[1]));auto rel=dest.lexically_relative(root);
++ crypto::need(!rel.empty() && *rel.begin()!=".." && rel.generic_string().rfind("build/private-full12/",0)==0 && !std::filesystem::exists(dest),"new private fixed-workspace directory required");
++ std::filesystem::create_directories(dest);crypto::need(chmod(dest.c_str(),0700)==0,"private checkpoint permissions");
++ auto path=dest/"witness.local.part";int fd=open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);crypto::need(fd>=0,"private checkpoint create");
++ auto&pr=w.executionForR7();std::uint64_t count=pr.val.size();crypto::need(count==277,"all native layer witnesses retained");writeAll(fd,&count,8);std::uint64_t total=0;
++ for(auto&v:pr.val){std::uint64_t n=v.size();writeAll(fd,&n,8);writeAll(fd,v.data(),v.size()*sizeof(Fr));total+=n;}
++ crypto::need(fsync(fd)==0 && close(fd)==0,"private checkpoint flush");std::filesystem::rename(path,dest/"witness.local");
++ std::cerr<<"FULL12_WITNESS_VALIDATED_AND_RETAINED blocks=12 layers=277 master=199348640 X_reference=match Y_reference=match legacy_commitment=absent fields="<<total<<" checkpoint_bytes="<<std::filesystem::file_size(dest/"witness.local")<<'\n';return 0;
++}catch(const std::exception&e){std::cerr<<"FULL12_WITNESS_INCOMPLETE "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/oneblock_main.cpp b/src/paper_r7/oneblock_main.cpp
+index d6326fa..c5151c7 100644
+--- a/src/paper_r7/oneblock_main.cpp
++++ b/src/paper_r7/oneblock_main.cpp
+@@ -8,6 +8,10 @@
+ #include "oneblock_public.hpp"
+ #include "interactive.hpp"
+ #include "fs_io.hpp"
++#ifdef R7_FS_FULL12
++#include "full12_model.hpp"
++#include "execution_target.hpp"
++#endif
+ #include "paper_r2/r6_model.hpp"
+ #include <sys/prctl.h>
+ #include <sys/resource.h>
+@@ -25,7 +29,11 @@
+ using namespace zkgpt::r7;using namespace oneblock;using namespace crypto;namespace r6=zkgpt::r6;namespace r2=zkgpt::r2;
+ namespace {
+ #ifdef R7_FS_ONEBLOCK
++#ifdef R7_FS_FULL12
++constexpr auto liveSuite=zkgpt::r7::fs::full12Suite;
++#else
+ constexpr auto liveSuite=zkgpt::r7::fs::suite;
++#endif
+ constexpr auto coverageAccepted=zkgpt::r7::fs::verifiedStatus;
+ #elif defined(R7_CLASSIFIED_V2)
+ constexpr auto liveSuite=classified::suite;
+@@ -69,13 +77,22 @@ std::pair<std::size_t,Fr>sourceIndex(const r2::ModelQuerySource&s,std::size_t i)
+ Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){auto w=r1::weights(q);Fr y=0;for(std::size_t i=0;i<v.padded;++i)y+=w[i]*v.value(i);return y;}
+ }
+ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
+- need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");alarm(21600);r1::init();auto started=std::chrono::steady_clock::now();
++ need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");
++#ifndef R7_FS_FULL12
++ alarm(21600);
++#endif
++ r1::init();auto started=std::chrono::steady_clock::now();
+ #ifdef R7_FS_ONEBLOCK
+  need(argc>=4 && argc<=5,"FS usage prove|verify PROOF_PATH CONTEXT [P_ATTACK]");
+ #else
+  need(argc>=2 && argc<=3,"Oneblock usage setup|run [P_ATTACK]");
+ #endif
+- auto plan=discover();auto&ctx=plan.context;
++ #ifdef R7_FS_FULL12
++ auto plan=discover(12);
++#else
++ auto plan=discover();
++#endif
++ auto&ctx=plan.context;
+ #ifdef R7_CLASSIFIED_V2
+  auto layout=classified::makeLayout(ctx);
+  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
+@@ -108,9 +125,24 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
+  // both public copies for wrong X/Y, rather than testing only byte mismatch.
+  #ifdef R7_FS_ONEBLOCK
+  need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
++ #ifdef R7_FS_FULL12
++ auto fsTrust=full12::loadTrust(ctx);
++#else
+  auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+- Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));instance.text(model::trustIdentity(fsTrust));instance.raw(statement_bytes);
++#endif
++ Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
++#ifdef R7_FS_FULL12
++ instance.text(full12::trustIdentity(fsTrust));
++#else
++ instance.text(model::trustIdentity(fsTrust));
++#endif
++instance.raw(statement_bytes);
++ #ifdef R7_FS_FULL12
++ std::vector<G1>extraGenerators;for(auto&t:fsTrust.chunks){auto&g=r1::generators(t.anchor.w.spec).g;extraGenerators.insert(extraGenerators.end(),g.begin(),g.end());}
++ fs::Binding fsBinding{"Full12",argv[3],fs::generatorIdentity(extraGenerators),instance.b};
++#else
+  fs::Binding fsBinding{"Oneblock",argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
++#endif
+ #ifdef R7_COMPLETE_VERIFIER
+  fs::FsVerifierIO pipe(argv[2],fsBinding);
+ #else
+@@ -121,7 +153,11 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
+ #endif
+  tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
+  Writer binding;binding.text(liveSuite);binding.text(identity(plan));binding.raw(R7Wire::encodeStatement(s));bindPublic(io,"Oneblock/statement-native-plan",binding.b);
+- std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';};
++ std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();[[maybe_unused]] auto cpuStarted=processCPU();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';
++#ifdef R7_FS_FULL12
++ std::cerr<<"PHASE_CPU {\"name\":\""<<id<<"\",\"cpu_seconds\":"<<processCPU()-cpuStarted<<"}\n";
++#endif
++};
+  #ifndef R7_CLASSIFIED_V2
+  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
+  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
+diff --git a/src/paper_r7/oneblock_plan.cpp b/src/paper_r7/oneblock_plan.cpp
+index 6dc765a..745b8fe 100644
+--- a/src/paper_r7/oneblock_plan.cpp
++++ b/src/paper_r7/oneblock_plan.cpp
+@@ -34,7 +34,8 @@ Coverage discover(unsigned blocks){
+  for(const auto&s:q.sources)add(p,"mapped/"+s.spec.role,"MAPPED_INPUT",base,s.spec.padded,r1::log2exact(q.master.padded));
+  add(p,"public/X","PUBLIC_BINDING",base,q.shape.sequence_length*power(q.shape.hidden_dimension));add(p,"public/Y","PUBLIC_BINDING",base,q.output.size());add(p,"public/constants","PUBLIC_BINDING",base,q.constants.size()+q.reserved_zero.size());
+  add(p,"model/checkpoint-exporter-profile","MODEL_AUTHORITY",object(q.sources.back().spec),q.sources.back().spec.actual);add(p,"model/anchor-hiding-rerandomization","MODEL_RERANDOMIZATION",object(q.sources.back().spec),q.sources.back().spec.rows);add(p,"model/C_W_model-to-master","MODEL_MASTER_LINK",base,q.sources.back().spec.actual);
+- for(const auto&r:nn.parameterRegions())add(p,"model/region/"+r.name,"MODEL_PARAMETER_LINK",object(q.sources.back().spec),r.count);
++ for(const auto&r:nn.parameterRegions()){p.model_regions.push_back(r.name);add(p,"model/region/"+r.name,"MODEL_PARAMETER_LINK",object(q.sources.back().spec),r.count);}
++ if(blocks==12)for(auto&e:nn.blockConnections())if(e.block)add(p,"full12/block/"+std::to_string(e.block+1)+"/input","CROSS_BLOCK_STATE","native-master/"+std::to_string(e.input),32768);
+  add(p,"gkr/public-output-evaluation","GKR_OUTPUT","public-zero-constraint-output",q.output.size());
+  for(std::size_t i=1;i<graph.circuit.size();++i){auto&l=graph.circuit[i];auto id="gkr/layer/"+std::to_string(i);add(p,id+"/predicate","GKR_PREDICATE",base,l.size);
+   if(l.ty==layerType::FCONN){++p.fc_layers;for(auto port:{"u","v"})add(p,id+"/matrix/"+port,"FC_MATRIX",base,l.size,l.ori_id_u.empty()?0:r1::log2exact(l.ori_id_u.size())-r1::log2exact(power(q.shape.sequence_length)));}
+diff --git a/src/paper_r7/oneblock_plan.hpp b/src/paper_r7/oneblock_plan.hpp
+index 0017baa..d592edb 100644
+--- a/src/paper_r7/oneblock_plan.hpp
++++ b/src/paper_r7/oneblock_plan.hpp
+@@ -5,7 +5,7 @@ namespace zkgpt::r7::oneblock {
+ struct Obligation {std::string id,family,source;std::uint64_t domain=0,rounds=0;};
+ struct Coverage {
+  R7Context context;std::vector<Obligation>required;std::vector<WitnessObject>objects;
+- std::string native_json;std::size_t fc_layers=0,native_terminals=0,source_objects=0;
++ std::vector<std::string>model_regions;std::string native_json;std::size_t fc_layers=0,native_terminals=0,source_objects=0;
+  std::uint64_t object_padded_coordinates=0,full_representation_response_bytes=0;
+ };
+ Coverage discover(unsigned blocks=1);void requireCoverage(const Coverage&);std::string identity(const Coverage&);

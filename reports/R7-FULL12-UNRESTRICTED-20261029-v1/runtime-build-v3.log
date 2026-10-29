@@ -1,0 +1,111 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Built target r7_full12_runtime_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Built target r7_full12_fs_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_fs_full12_prover.dir/oneblock_main.cpp.o
+[100%] Linking CXX executable r7_fs_full12_prover
+[100%] Built target r7_fs_full12_prover
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 61%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_fs_full12_verifier.dir/oneblock_main.cpp.o
+[100%] Linking CXX executable r7_fs_full12_verifier
+[100%] Built target r7_fs_full12_verifier
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 61%] Built target paper_r2
+[ 96%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_full12_statement.dir/full12_statement.cpp.o
+[100%] Linking CXX executable r7_full12_statement
+[100%] Built target r7_full12_statement
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 53%] Built target gpt_lib
+[ 61%] Built target paper_r2
+[ 96%] Built target paper_r7
+[ 96%] Building CXX object src/paper_r7/CMakeFiles/r7_classified_crypto_tests.dir/classified_crypto_tests.cpp.o
+[100%] Linking CXX executable r7_classified_crypto_tests
+[100%] Built target r7_classified_crypto_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_oneblock_model_tests.dir/oneblock_model_tests.cpp.o
+[100%] Linking CXX executable r7_oneblock_model_tests
+[100%] Built target r7_oneblock_model_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_fs_io_tests.dir/fs_tests.cpp.o
+[100%] Linking CXX executable r7_fs_io_tests
+[100%] Built target r7_fs_io_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 24%] Built target paper_r1
+[ 56%] Built target gpt_lib
+[ 64%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_opt2_kernel_tests.dir/opt2_kernel_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp: In static member function ‘static void zkgpt::r7::oneblock::classified::AuthenticationTestAccess::run(zkgpt::r7::oneblock::classified::Commitments&, bool, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:26:107: error: invalid use of member ‘zkgpt::r7::oneblock::classified::Commitments::Authentication::map_limit’ in static member function
+   26 |    Commitments::Authentication uncached(c.claims_.size());uncached.map_bytes=Commitments::Authentication::map_limit;uncached.weight_bytes=Commitments::Authentication::weight_limit;
+      |                                                                                                           ^~~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:24:20: note: declared here
+   24 |  const std::size_t map_limit,weight_limit;
+      |                    ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:26:168: error: invalid use of member ‘zkgpt::r7::oneblock::classified::Commitments::Authentication::weight_limit’ in static member function
+   26 |    Commitments::Authentication uncached(c.claims_.size());uncached.map_bytes=Commitments::Authentication::map_limit;uncached.weight_bytes=Commitments::Authentication::weight_limit;
+      |                                                                                                                                                                        ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:24:30: note: declared here
+   24 |  const std::size_t map_limit,weight_limit;
+      |                              ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:29:101: error: invalid use of member ‘zkgpt::r7::oneblock::classified::Commitments::Authentication::map_limit’ in static member function
+   29 |    Commitments::Authentication tight(c.claims_.size());tight.map_bytes=Commitments::Authentication::map_limit-2*sizeof(Commitments::Authentication::Run);c.prepareClaim(c.claims_[24],tight,24);need(!tight.claims[24].frozen && tight.claims[24].runs.empty(),"fragmented map exceeded cache bound");
+      |                                                                                                     ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:24:20: note: declared here
+   24 |  const std::size_t map_limit,weight_limit;
+      |                    ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:31:58: error: invalid use of member ‘zkgpt::r7::oneblock::classified::Commitments::Authentication::map_limit’ in static member function
+   31 |    need(prepared.map_bytes<=Commitments::Authentication::map_limit && prepared.weight_bytes<=Commitments::Authentication::weight_limit,"cache budget exceeded");
+      |                                                          ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:24:20: note: declared here
+   24 |  const std::size_t map_limit,weight_limit;
+      |                    ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt2_kernel_tests.cpp:31:123: error: invalid use of member ‘zkgpt::r7::oneblock::classified::Commitments::Authentication::weight_limit’ in static member function
+   31 |    need(prepared.map_bytes<=Commitments::Authentication::map_limit && prepared.weight_bytes<=Commitments::Authentication::weight_limit,"cache budget exceeded");
+      |                                                                                                                           ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:24:30: note: declared here
+   24 |  const std::size_t map_limit,weight_limit;
+      |                              ^~~~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_opt2_kernel_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_opt2_kernel_tests.dir/opt2_kernel_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:5324: src/paper_r7/CMakeFiles/r7_opt2_kernel_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5331: src/paper_r7/CMakeFiles/r7_opt2_kernel_tests.dir/rule] Error 2
+gmake: *** [Makefile:1895: r7_opt2_kernel_tests] Error 2

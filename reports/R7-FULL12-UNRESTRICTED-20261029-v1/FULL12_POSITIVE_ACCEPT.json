@@ -1,0 +1,70 @@
+{
+  "prover": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-FULL12-UNRESTRICTED-20261029-v1/full12-v1.fsproof",
+      "zkGPT/R7/Full12/20261029/unrestricted-endtoend-v1"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "wall_seconds": 9015.756111970637,
+    "user_cpu_seconds": 8540.594458,
+    "system_cpu_seconds": 554.867588,
+    "peak_rss_kib": 52082248,
+    "peak_vmsize_kib": 52742572,
+    "rlimit_as": [
+      -1,
+      -1
+    ],
+    "arbitrary_time_limit": null,
+    "pressure_stop": false,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b"
+  },
+  "verifier": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-FULL12-UNRESTRICTED-20261029-v1/full12-v1.fsproof",
+      "zkGPT/R7/Full12/20261029/unrestricted-endtoend-v1"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "wall_seconds": 5536.603030211758,
+    "user_cpu_seconds": 5547.684208,
+    "system_cpu_seconds": 39.744343,
+    "peak_rss_kib": 6496724,
+    "peak_vmsize_kib": 6904676,
+    "rlimit_as": [
+      -1,
+      -1
+    ],
+    "arbitrary_time_limit": null,
+    "pressure_stop": false,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b"
+  },
+  "fs": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v1",
+    "session": "7020bd8edf05f4f1342800d81a3ecb3a398bd7603fa26dfd93fc2be87836aff6",
+    "complete": true,
+    "proof_bytes": 6651349553,
+    "proof_sha256": "9c905ec2cc4a674bc1d9c186157b9dbf996302705c433542640184be86e0a136",
+    "transcript_digest": "6f1082ac4e242debb1cc891d3ba34020a89b04279ecb7a8c0db7399e38c6b482",
+    "challenge_digest": "dcebb8a74f63bbd7ddc16fb365d55fef300ba5aecde3aa83ec4c87749630a8dc",
+    "challenges": 170897,
+    "prover_messages": 517801,
+    "events": 688700,
+    "field_rejections": 1002949,
+    "hash_seconds": 10.9176,
+    "file_io_seconds": 1.24414,
+    "file_syscalls": 101493,
+    "file_buffer_bytes": 65536,
+    "max_message_payload_bytes": 2679174,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "verified_count": 8066,
+  "proof_sha256": "9c905ec2cc4a674bc1d9c186157b9dbf996302705c433542640184be86e0a136",
+  "proof_bytes": 6651349553
+}

@@ -5,22 +5,43 @@
 #else
  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
 #endif
- std::optional<model::Secret>modelSecret;R7WitnessStore witness;Value master;
+ #ifdef R7_FS_FULL12
+ std::vector<model::Secret>modelSecrets;
+#else
+ std::optional<model::Secret>modelSecret;
+#endif
+ R7WitnessStore witness;Value master;
  std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;
  classified::Prepared prepared;
  timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
-  {master3::QuietStdout quiet;witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);}
+  {master3::QuietStdout quiet;
+#ifdef R7_FS_FULL12
+ witness.generateR6(ctx,executionTarget(12).manifest_path);modelSecrets=full12::prepare(trust,ctx,masterValue(witness),io.session(),random);
+#else
+ witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);
+#endif
+ }
   graph=&witness.executionForR7().C;master=masterValue(witness);
   if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
   prepared=classified::prepareLookup(ctx,master);
   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
   if(attack=="wrong-mapping")std::swap(layout.base[0],layout.base[1]);
- }else{master3::QuietStdout quiet;network.emplace(1,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
+ }else{master3::QuietStdout quiet;network.emplace(ctx.plan.shape.layer_count,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
  std::optional<classified::Commitments>commitments;
- timed("all-classified-roots-prechallenge-seal",[&]{commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,&trust,isP?&*modelSecret:nullptr);});
+ timed("all-classified-roots-prechallenge-seal",[&]{
+#ifdef R7_FS_FULL12
+ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,nullptr,nullptr,&trust.chunks,isP?&modelSecrets:nullptr);
+#else
+ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,&trust,isP?&*modelSecret:nullptr);
+#endif
+});
  auto&pcs=*commitments;for(auto&r:layout.roots)checked(io,"classified/root/"+r.id+"/commitment");
  checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
+ #ifdef R7_FS_FULL12
+ if(isP && attack=="wrong-model-witness")modelSecrets.front().values.at(0)+=Fr(1);
+#else
  if(isP && attack=="wrong-model-witness")modelSecret->values.at(0)+=Fr(1);
+#endif
  timed("complete-classified-base-knowledge-and-tail",[&]{pcs.registerBase();});for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/knowledge-tail");
  if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;classified::writeLayout(out,layout);output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
  timed("classified-public-X-Y-constants",[&]{
@@ -43,7 +64,7 @@
  need(objects.size()==layout.views.size(),"classified unused/missing native view");
  timed("mandatory-classified-authentication-barrier",[&]{pcs.authenticate();});need(pcs.authenticated(),"classified barrier INCOMPLETE");io.authenticationComplete();checked(io,"classified/authentication-barrier");
  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
- for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&r:trust.regions)checked(io,"model/region/"+r.name);
+ for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
  if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
 #ifdef R7_FS_ONEBLOCK
  pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
