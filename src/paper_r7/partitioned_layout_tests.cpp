@@ -11,7 +11,7 @@ int main(){try{
  c.objects={{"r7/master","",ObjectKind::BaseMaster,31,32,{},false},{"r7/query","r7/master",ObjectKind::MappedChild,31,32,{{0,31,Fr(2)}},false},{"r7/W","r7/master",ObjectKind::ModelW,11,16,{{3,5,Fr(0)},{16,6,Fr(0)}},false},{"r7/helper","r7/query",ObjectKind::RangeDigit,20,32,{},false}};
  auto p=makeLayout(c,8);validate(p,c,8);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
  std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
- std::size_t total=0,models=0;std::set<std::string>ids;for(auto&r:p.roots){need(r.padded<=8 && r.actual<=r.padded && ids.insert(r.id).second,"bounded unique physical roots");if(r.registered)total+=r.actual;if(r.model){++models;need(r.registered,"W knowledge retained");}}
+ std::size_t total=0,models=0;std::set<std::string>ids;for(auto&r:p.roots){need(r.padded<=8 && r.actual<=r.padded && ids.insert(r.id).second,"bounded unique physical roots");if(r.registered)total+=r.actual;if(r.model){++models;need(r.registered,"W base packing classification retained");}}
  need(total==31 && models==2,"complete base routing and W chunks");
  auto&w=p.views.at("r7/W");for(std::size_t i=0;i<11;++i){auto x=locate(p,w,i);need(!x.constant && x.bias.isZero() && x.coordinate==baseCoordinate(p,i<5?3+i:16+i-5),"W logical to physical coordinates");}
  need(locate(p,w,15).constant,"W logical padded tail");auto&q=p.views.at("r7/query");need(locate(p,q,7).bias==Fr(2),"source affine bias preserved");need(locate(p,q,31).constant,"query virtual tail");

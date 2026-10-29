@@ -1,0 +1,326 @@
+[
+  {
+    "name": "build-final",
+    "args": [
+      "cmake",
+      "--build",
+      "build/release",
+      "-j4"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 4.776436891872436
+  },
+  {
+    "name": "ctest-r7",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "build/release",
+      "-R",
+      "^r7_",
+      "--output-on-failure",
+      "-j2"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 13.903576569631696
+  },
+  {
+    "name": "r7_fs_io_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_io_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.032178869005292654
+  },
+  {
+    "name": "r7_oneblock_model_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_model_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.46510637970641255
+  },
+  {
+    "name": "r7_oneblock_vectors_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_vectors_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 1.7691078749485314
+  },
+  {
+    "name": "r7_oneblock_lookup_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_lookup_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 22.225161123089492
+  },
+  {
+    "name": "r7_oneblock_gkr_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_gkr_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.5152597711421549
+  },
+  {
+    "name": "r7_oneblock_bindings_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_bindings_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 3.273384653031826
+  },
+  {
+    "name": "r7_oneblock_public_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_oneblock_public_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 1.2674551168456674
+  },
+  {
+    "name": "r7_partitioned_layout_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_partitioned_layout_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.008196318987756968
+  },
+  {
+    "name": "r7_full12_plan_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_full12_plan_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 35.86080603627488
+  },
+  {
+    "name": "r7_full12_anchor_tests",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_full12_anchor_tests"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 14.907116462942213
+  },
+  {
+    "name": "probe-joint-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "joint",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/probe-joint.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.5655718031339347
+  },
+  {
+    "name": "probe-joint-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "joint",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/probe-joint.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.5155635317787528
+  },
+  {
+    "name": "probe-grouped-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/probe-grouped.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.6157992091029882
+  },
+  {
+    "name": "probe-grouped-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/probe-grouped.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.5157091892324388
+  },
+  {
+    "name": "probe-value-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-value.fsproof",
+      "r7-tail-only-regression",
+      "value"
+    ],
+    "rc": 2,
+    "expected": 0,
+    "seconds": 0.4151064772158861
+  },
+  {
+    "name": "probe-map-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-map.fsproof",
+      "r7-tail-only-regression",
+      "map"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.6156980129890144
+  },
+  {
+    "name": "probe-map-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-map.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.3650926072150469
+  },
+  {
+    "name": "probe-late-change-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-late-change.fsproof",
+      "r7-tail-only-regression",
+      "late-change"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.6159557569772005
+  },
+  {
+    "name": "probe-late-change-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-late-change.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.46534221479669213
+  },
+  {
+    "name": "probe-challenge-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-challenge.fsproof",
+      "r7-tail-only-regression",
+      "challenge"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.6157008572481573
+  },
+  {
+    "name": "probe-challenge-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-challenge.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.364893670193851
+  },
+  {
+    "name": "probe-missing-barrier-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_prover",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/attack-missing-barrier.fsproof",
+      "r7-tail-only-regression",
+      "missing-barrier"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.41513081500306726
+  },
+  {
+    "name": "full12-component-P",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_full12_component_prover",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/full12-component.fsproof"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.3148975479416549
+  },
+  {
+    "name": "full12-component-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_full12_component_verifier",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/full12-component.fsproof"
+    ],
+    "rc": 0,
+    "expected": 0,
+    "seconds": 0.21465543704107404
+  },
+  {
+    "name": "independent-truncated-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/corrupt-truncated.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.5153163578361273
+  },
+  {
+    "name": "independent-appended-V",
+    "args": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_probe_verifier",
+      "32",
+      "grouped",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-tail-only-20261029/proofs/corrupt-appended.fsproof",
+      "r7-tail-only-regression"
+    ],
+    "rc": 2,
+    "expected": 2,
+    "seconds": 0.5154816713184118
+  }
+]

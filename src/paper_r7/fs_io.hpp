@@ -3,8 +3,8 @@
 #include <memory>
 namespace zkgpt::r7::fs {
 using namespace crypto;
-inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
-inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v1";
+inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v3";
+inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
 inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
 inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
 struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};

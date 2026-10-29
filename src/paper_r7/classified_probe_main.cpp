@@ -21,7 +21,7 @@ int main(int argc,char**argv){try{
  View mapped;mapped.id="unit/L1";mapped.actual=mapped.padded=n;mapped.mapped=true;mapped.kind=ObjectKind::MappedChild;mapped.spans={{0,n/2,Fr(-3)},{0,n/2,Fr(5)}};p.views.emplace(mapped.id,mapped);
  int audit=-1;if(!isP){auto e=std::getenv("R7_PUBLIC_AUDIT_FD");need(e,"classified probe audit FD");audit=std::stoi(e);}
  PipeIO io(isP,"classified-probe",attack=="challenge"?"challenge":"",classified::suite,PipeIO::Profile::ClassifiedV2,audit);SessionRandom random;Random*rng=isP?&random:nullptr;Value base;if(isP)base=[](std::size_t i){return Fr(int(i%29)-7);};
- Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.registerBase();
+ Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.constrainBaseTails();
  if(isP && attack=="late-change")pcs.roots().at(2).secret->values->at(0)+=Fr(1);
  for(auto&[id,v]:p.views){auto oracle=pcs.view(id);std::vector<Fr>q;for(unsigned k=0;k<r1::log2exact(n);++k)q.push_back(io.coin("probe/"+id+"/query/"+std::to_string(k)));Fr y=0;if(isP){auto weights=r1::weights(q);for(std::size_t i=0;i<n;++i)y+=oracle.value(i)*weights[i];if(attack=="value" && id=="unit/L1")y+=Fr(1);}auto h=exchangeHidden(io,"probe/"+id+"/value",y,rng);oracle.open(io,{q,h.handle},isP?&h:nullptr,rng,"probe/"+id+"/open");}
  std::vector<Fr>q;for(unsigned j=0;j<r1::log2exact(n);++j)q.push_back(io.coin("probe/GKR-point/"+std::to_string(j)));auto mapping=[=](std::size_t j){return (j+(isP && attack=="map"?1:0))%(2*n);};Fr y=0;if(isP){auto w=r1::weights(q);for(std::size_t j=0;j<n;++j)y+=w[j]*base(mapping(j));}auto h=exchangeHidden(io,"probe/GKR-value",y,rng);pcs.deferBase("probe/GKR-terminal",n,n,mapping,h,q);

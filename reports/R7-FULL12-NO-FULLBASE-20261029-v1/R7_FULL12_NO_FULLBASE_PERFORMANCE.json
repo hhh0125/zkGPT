@@ -1,0 +1,293 @@
+{
+  "prover": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-FULL12-NO-FULLBASE-20261029-v1/full12-no-fullbase-v1.fsproof",
+      "zkGPT/R7/Full12/no-fullbase/20261029/v1"
+    ],
+    "pid": 3585272,
+    "exit_code": 0,
+    "wall_seconds": 5935.546122366097,
+    "user_cpu_seconds": 5909.842245,
+    "system_cpu_seconds": 107.842114,
+    "cpu_seconds": 6017.684359,
+    "peak_rss_kib": 52071416,
+    "peak_vmsize_kib": 52741804,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T10:55:40.278849+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-FULL12-NO-FULLBASE-20261029-v1/full12-no-fullbase-v1.fsproof",
+      "zkGPT/R7/Full12/no-fullbase/20261029/v1"
+    ],
+    "pid": 3717865,
+    "exit_code": 0,
+    "wall_seconds": 3492.1543183228932,
+    "user_cpu_seconds": 3511.518866,
+    "system_cpu_seconds": 27.45092,
+    "cpu_seconds": 3538.969786,
+    "peak_rss_kib": 6500324,
+    "peak_vmsize_kib": 6903068,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T11:53:52.812849+00:00"
+  },
+  "proof_bytes": 263710424,
+  "proof_sha256": "d3ca57f02864d295e9effa7bc42c5d631e202ca4001a11d86f4a920e5b61cc19",
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 5933.29,
+    "wire_bytes": 263710424,
+    "P_wire_bytes": 263710424,
+    "frames": 676288,
+    "peak_rss_kib": 52071416,
+    "MSM_calls": 1281061,
+    "MSM_terms": 558035360,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 304.018,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34560620,
+        "cumulative_peak_rss_kib": 34560620
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 757.033,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 542722,
+        "rss_end_kib": 36473600,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0279708,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 36473600,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0353405,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 36473600,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 201.317,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36473600,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1097.43,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30080100,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 60.6772,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30080100,
+        "cumulative_peak_rss_kib": 52071416
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 3432.34,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 14448,
+        "rss_end_kib": 30079924,
+        "cumulative_peak_rss_kib": 52071416
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 3488.96,
+    "wire_bytes": 263710424,
+    "P_wire_bytes": 263710424,
+    "frames": 676288,
+    "peak_rss_kib": 6500324,
+    "MSM_calls": 281356,
+    "MSM_terms": 1299146,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.45922,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5561476,
+        "cumulative_peak_rss_kib": 5561476
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 95.8767,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 0,
+        "rss_end_kib": 5589460,
+        "cumulative_peak_rss_kib": 5589460
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0282877,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 5589460,
+        "cumulative_peak_rss_kib": 5589460
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.042778,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 5603716,
+        "cumulative_peak_rss_kib": 5603716
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 52.9088,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5622704,
+        "cumulative_peak_rss_kib": 5753680
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 364.56,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5708052,
+        "cumulative_peak_rss_kib": 6184992
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.7544,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5708104,
+        "cumulative_peak_rss_kib": 6184992
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 2857.03,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 5474,
+        "rss_end_kib": 5871720,
+        "cumulative_peak_rss_kib": 6500324
+      }
+    ]
+  },
+  "comparison": {
+    "prover_wall_seconds": {
+      "before": 9015.756,
+      "after": 5935.546122366097,
+      "absolute_change": -3080.2098776339026,
+      "percent_change": -34.16474311897863,
+      "before_over_after": 1.5189429606194407
+    },
+    "verifier_wall_seconds": {
+      "before": 5536.603,
+      "after": 3492.1543183228932,
+      "absolute_change": -2044.4486816771068,
+      "percent_change": -36.9260480059182,
+      "before_over_after": 1.5854405319232723
+    },
+    "prover_peak_rss_kib": {
+      "before": 52082248,
+      "after": 52071416,
+      "absolute_change": -10832,
+      "percent_change": -0.02079787339440494,
+      "before_over_after": 1.0002080219980958
+    },
+    "verifier_peak_rss_kib": {
+      "before": 6496724,
+      "after": 6500324,
+      "absolute_change": 3600,
+      "percent_change": 0.05541254330644183,
+      "before_over_after": 0.9994461814518784
+    },
+    "proof_bytes": {
+      "before": 6651349553,
+      "after": 263710424,
+      "absolute_change": -6387639129,
+      "percent_change": -96.0352343250242,
+      "before_over_after": 25.222171547530483
+    },
+    "full_registration_response_bytes": {
+      "before": 6381581376,
+      "after": 0,
+      "absolute_change": -6381581376,
+      "percent_change": -100.0,
+      "before_over_after": null
+    }
+  },
+  "registered_rows_field_meaning": "full base row knowledge registration rows; disabled, zero; excludes model Anchor binding and physical tail-only rows",
+  "tail_rows": 54,
+  "tail_response_bytes": 15040,
+  "measurement": "actual native Full12 run; no synthetic or reduced witness",
+  "phase_cpu_seconds": {
+    "full-P": {
+      "frozen-witness-and-prechallenge-lookup": 319.878,
+      "all-classified-roots-prechallenge-seal": 756.667,
+      "classified-physical-zero-tails": 0.028007,
+      "classified-public-X-Y-constants": 0.0353893,
+      "all-native-GKR": 237.412,
+      "native-Range-Exp-Lasso-Memory-Product": 1096.91,
+      "all-source-original-handles": 60.6481,
+      "mandatory-classified-authentication-barrier": 3430.73
+    },
+    "full-V": {
+      "frozen-witness-and-prechallenge-lookup": 5.45671,
+      "all-classified-roots-prechallenge-seal": 95.8362,
+      "classified-physical-zero-tails": 0.0283304,
+      "classified-public-X-Y-constants": 0.0427947,
+      "all-native-GKR": 69.6306,
+      "native-Range-Exp-Lasso-Memory-Product": 364.382,
+      "all-source-original-handles": 25.7429,
+      "mandatory-classified-authentication-barrier": 2855.65
+    }
+  },
+  "VmSize_measurement": "maximum observed /proc/PID/status VmPeak, sampled every5seconds; ru_maxrss is kernel exit rusage"
+}

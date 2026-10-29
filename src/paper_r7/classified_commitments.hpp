@@ -29,15 +29,17 @@ class Commitments {
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
  std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
- IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,base_registered_=false,authenticated_=false;
+ IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
  Digest mapDigest(const Claim&)const;
  public:
- std::uint64_t registration_bytes=0,registered_rows=0;
+ // Full base row knowledge registration is disabled; retain truthful legacy metrics.
+ static constexpr std::uint64_t registration_bytes=0,registered_rows=0;
+ std::uint64_t tail_response_bytes=0,tail_rows=0;
  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr);
  ~Commitments();
- void registerBase();
+ void constrainBaseTails();
  VectorOracle view(const std::string&);
  void defer(Claim);
  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);

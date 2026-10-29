@@ -97,7 +97,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  auto layout=classified::makeLayout(ctx);
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
- for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/knowledge-tail","CLASSIFIED_BASE_REGISTRATION",r.id,r.padded,0});}
+ for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/physical-zero-tail",r.model?"CLASSIFIED_TRUSTED_ANCHOR_TAIL":"CLASSIFIED_ZERO_TAIL",r.id,r.padded,0});}
  for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
  plan.required.push_back({"classified/authentication-barrier","CLASSIFIED_AUTHENTICATION",classified::identity(layout),ctx.plan.master.actual,0});
 #endif

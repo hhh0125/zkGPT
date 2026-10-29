@@ -10,6 +10,6 @@ int main(){try{
  auto bad=p;bad.base[1]=bad.base[0];bool rejected=false;try{validate(bad,native.context);}catch(...){rejected=true;}need(rejected,"classified wrong map rejected");
  need(identity(p)==identity(makeLayout(native.context)),"classified deterministic layout");
  std::size_t registered=0;for(auto&r:p.roots){need(r.padded<=(1u<<24),"classified bounded slab");if(r.registered)registered+=r.actual;}
- need(registered==native.context.plan.master.actual,"classified full base knowledge retained");
+ need(registered==native.context.plan.master.actual,"classified native base packing classification retained");
  std::cout<<"CLASSIFIED_LAYOUT_TESTED roots="<<p.roots.size()<<" registered="<<registered<<" views="<<p.views.size()<<'\n';return 0;
 }catch(const std::exception&e){std::cerr<<"CLASSIFIED_LAYOUT_FAILED "<<e.what()<<'\n';return 1;}}

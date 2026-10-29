@@ -59,7 +59,7 @@ void writePartitionedLayout(std::ostream&o,const Layout&p){
  auto pieces=[&](const std::vector<Piece>&parts){bool first=true;for(auto&r:parts){if(!first)o<<',';first=false;o<<"{\"original\":"<<r.begin<<",\"count\":"<<r.count<<",\"root\":"<<r.start.root<<",\"local\":"<<r.start.index<<'}';}};
  pieces(p.base_runs);o<<"],\"roots\":[";bool first=true;
  for(auto&r:p.roots){if(!first)o<<',';first=false;const auto columns=r.model?r.padded/(std::size_t(1)<<(r1::log2exact(r.padded)/2)):std::min<std::size_t>(1024,r.padded);
-  o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"rows\":"<<r.padded/columns<<",\"columns\":"<<columns<<",\"registered\":"<<(r.registered?"true":"false")<<",\"model\":"<<(r.model?"true":"false")<<",\"layout\":\"RowMajor\",\"basis_status\":\""<<(r.model?"PENDING_INDEPENDENT_CHUNK_ANCHOR":"EXISTING_HYRAX_A3")<<"\"}";
+  o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"rows\":"<<r.padded/columns<<",\"columns\":"<<columns<<",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false,\"model\":"<<(r.model?"true":"false")<<",\"layout\":\"RowMajor\",\"basis_status\":\""<<(r.model?"PENDING_INDEPENDENT_CHUNK_ANCHOR":"EXISTING_HYRAX_A3")<<"\"}";
  }
  o<<"],\"views\":[";first=true;
  for(auto&[id,v]:p.views){if(!first)o<<',';first=false;
