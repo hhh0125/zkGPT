@@ -1,0 +1,11 @@
+# Virtual-domain boundary correction
+
+2026-10-30. This is an evidence record for the implementation fix after actual Full12-v1 failure; it is not a claim of a second fresh-agent review.
+
+Original Full12 stopped with `REJECT_OR_INCOMPLETE vector dimension bound`, Prover exit2, no independent Verifier started, zero Kernel calls. All1502 maps were prepared. The saved partial Proof layout independently establishes virtual partition2^30 and global domain2^32. No completed Proof existed. Failure source397/binaries/raw logs and partial Proof were preserved and Windows archive/member/gzip/restore SHA checked.
+
+Root cause: the new virtual-domain driver used `r1::log2exact(n)`, whose contract includes the unrelated materialized-vector cap2^28. The virtual layout already admitted at most2^32. Correction is local to `unified_input.cpp`: metadata-only checked `domainBits()` with the existing2^32 cap replaces two calls on global n. All existing physical-root dimension checks, allocation caps, sumcheck equations, challenge order, FS messages and opening equations remain as implemented. No generic vector cap or cache cap was increased.
+
+TDD: three-scalar sparse virtual-domain test reproduced original bound failure before changing implementation. Independent polynomial values at0/1/2 for every round, hidden real Sigma P/V tape replay and EOF pass for2^29,2^30,2^31,2^32;2^33 remains rejected. It never allocates the virtual domain. Initial sparse test oracle default-constructed mcl Fr pairs without zero initialization; corrected only the oracle to explicit Fr0. First failure logs and exact historical test sourceSHA8b03ab6dbebb8183b6e9ba52b94ae36fbaa5a1b4da18cefa5321a6baf7916669 retained. Whole all-target Release build and CTest92/92 then passed. Actual post-fix fresh production Oneblock P/V and16 negative cases are required before Full12 retry; at this record creation they are in progress.
+
+The earlier clean fresh whole-change and final routing review predates this correction. Its conclusions are retained with their original scope. This correction is validated by observed RED→GREEN and full regression evidence. Engineering tests do not establish formal knowledge soundness, ZK or Fiat-Shamir composition. FS_NIZK_CANDIDATE / BLOCKED_CRYPTOGRAPHIC_DESIGN / may_enter_stage2=false.

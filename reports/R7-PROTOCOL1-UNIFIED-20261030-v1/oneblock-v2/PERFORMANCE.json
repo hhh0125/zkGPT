@@ -1,0 +1,222 @@
+{
+  "prover": {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_protocol1_oneblock_prover",
+      "prove",
+      "reports/R7-PROTOCOL1-UNIFIED-20261030-v1/oneblock-v2/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/oneblock/20261030/v1"
+    ],
+    "pid": 1473490,
+    "exit_code": 0,
+    "wall_seconds": 827.8403875227086,
+    "user_cpu_seconds": 824.040957,
+    "system_cpu_seconds": 12.351218,
+    "cpu_seconds": 836.3921750000001,
+    "peak_rss_kib": 4381780,
+    "peak_vmsize_kib": 4792912,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+    "ended_utc": "2026-10-30T09:32:19.725147+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_protocol1_oneblock_verifier",
+      "verify",
+      "reports/R7-PROTOCOL1-UNIFIED-20261030-v1/oneblock-v2/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/oneblock/20261030/v1"
+    ],
+    "pid": 1508580,
+    "exit_code": 0,
+    "wall_seconds": 240.80427182558924,
+    "user_cpu_seconds": 241.190695,
+    "system_cpu_seconds": 2.687495,
+    "cpu_seconds": 243.87819000000002,
+    "peak_rss_kib": 1215044,
+    "peak_vmsize_kib": 1367120,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+    "ended_utc": "2026-10-30T09:36:20.717859+00:00"
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5358,
+    "coverage_sha256": "83c4711459d2e833c0f0c5220e728da7f2959991b9a70147f8c364005222ecea",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 1171,
+    "tail_response_bytes": 49504,
+    "GKR_rounds": 627,
+    "seconds": 826.908,
+    "wire_bytes": 142894010,
+    "P_wire_bytes": 142894010,
+    "frames": 413073,
+    "peak_rss_kib": 4381780,
+    "MSM_calls": 510205,
+    "MSM_terms": 55522301,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 34.6632,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 3324992,
+        "cumulative_peak_rss_kib": 3324992
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 69.7902,
+        "P_wire_bytes": 2391110,
+        "MSM_calls": 53249,
+        "rss_end_kib": 4381228,
+        "cumulative_peak_rss_kib": 4381228
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.60367,
+        "P_wire_bytes": 132590,
+        "MSM_calls": 2,
+        "rss_end_kib": 4381492,
+        "cumulative_peak_rss_kib": 4381492
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.173422,
+        "P_wire_bytes": 2627402,
+        "MSM_calls": 1,
+        "rss_end_kib": 4381492,
+        "cumulative_peak_rss_kib": 4381492
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 14.6805,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 7843,
+        "rss_end_kib": 4381560,
+        "cumulative_peak_rss_kib": 4381780
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 294.79,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 448576,
+        "rss_end_kib": 3828712,
+        "cumulative_peak_rss_kib": 4381780
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 3.52487,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 16,
+        "rss_end_kib": 3828712,
+        "cumulative_peak_rss_kib": 4381780
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 399.445,
+        "P_wire_bytes": 3601952,
+        "MSM_calls": 518,
+        "rss_end_kib": 3828832,
+        "cumulative_peak_rss_kib": 4381780
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5358,
+    "coverage_sha256": "83c4711459d2e833c0f0c5220e728da7f2959991b9a70147f8c364005222ecea",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 1171,
+    "tail_response_bytes": 49504,
+    "GKR_rounds": 627,
+    "seconds": 237.657,
+    "wire_bytes": 142894010,
+    "P_wire_bytes": 142894010,
+    "frames": 413073,
+    "peak_rss_kib": 1215044,
+    "MSM_calls": 176140,
+    "MSM_terms": 426505,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 0.620283,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 628740,
+        "cumulative_peak_rss_kib": 628740
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 10.9763,
+        "P_wire_bytes": 2391110,
+        "MSM_calls": 0,
+        "rss_end_kib": 628740,
+        "cumulative_peak_rss_kib": 628740
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.512648,
+        "P_wire_bytes": 132590,
+        "MSM_calls": 2,
+        "rss_end_kib": 628740,
+        "cumulative_peak_rss_kib": 628740
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.173072,
+        "P_wire_bytes": 2627402,
+        "MSM_calls": 1,
+        "rss_end_kib": 628740,
+        "cumulative_peak_rss_kib": 628740
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 4.44268,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 2953,
+        "rss_end_kib": 617840,
+        "cumulative_peak_rss_kib": 757008
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 164.806,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 172989,
+        "rss_end_kib": 669356,
+        "cumulative_peak_rss_kib": 757008
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 1.5633,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 0,
+        "rss_end_kib": 669356,
+        "cumulative_peak_rss_kib": 757008
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 42.1998,
+        "P_wire_bytes": 3601952,
+        "MSM_calls": 195,
+        "rss_end_kib": 693976,
+        "cumulative_peak_rss_kib": 1215044
+      }
+    ]
+  },
+  "proof_bytes": 142894010,
+  "proof_sha256": "c6e3dafd97cc833934b2464ef87939a4e18fae7dcabd28689553a833b15c469e"
+}

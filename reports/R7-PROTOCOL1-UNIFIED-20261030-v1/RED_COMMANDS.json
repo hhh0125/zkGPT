@@ -1,0 +1,56 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/protocol1-unified-release",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/protocol1-unified-release",
+      "-j4",
+      "--target",
+      "r7_unified_input_tests"
+    ],
+    "exit_code": 2
+  },
+  {
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/protocol1-unified-release",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DZKGPT_BUILD_R7_FRAMEWORK=ON",
+      "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/protocol1-unified-release",
+      "-j4",
+      "--target",
+      "r7_unified_input_tests"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_unified_input_tests"
+    ],
+    "exit_code": 1
+  }
+]

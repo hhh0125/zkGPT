@@ -1,0 +1,27 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 54%] Built target gpt_lib
+[ 62%] Built target paper_r2
+[ 62%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:5,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp: In member function ‘void zkgpt::r7::oneblock::classified::mapping::Store::each(const zkgpt::r7::oneblock::classified::mapping::RootSpan&, F&&) const’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp:44:4: error: this ‘for’ clause does not guard... [-Werror=misleading-indentation]
+   44 |    for(std::size_t i=0;i<h.count;++i)consume(buffer[i]);seen+=h.count;need(h.next==absent || h.next>at,"classified mapping plan chain order");at=h.next;
+      |    ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp:44:57: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+   44 |    for(std::size_t i=0;i<h.count;++i)consume(buffer[i]);seen+=h.count;need(h.next==absent || h.next>at,"classified mapping plan chain order");at=h.next;
+      |                                                         ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp: In member function ‘void zkgpt::r7::oneblock::classified::mapping::Builder::append(std::size_t, zkgpt::r7::oneblock::classified::Coordinate)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp:72:3: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+   72 |   if(!fits_)return;auto k=coordinate.root;need(k<roots_,"classified mapping plan root bounds");auto index=last_[k];
+      |   ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_mapping_plan.hpp:72:20: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   72 |   if(!fits_)return;auto k=coordinate.root;need(k<roots_,"classified mapping plan root bounds");auto index=last_[k];
+      |                    ^~~~
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:401: src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3560: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:5417: src/paper_r7/CMakeFiles/r7_opt3b_mapping_tests.dir/rule] Error 2
+gmake: *** [Makefile:1921: r7_opt3b_mapping_tests] Error 2

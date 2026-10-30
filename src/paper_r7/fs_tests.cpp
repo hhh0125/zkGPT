@@ -21,6 +21,14 @@ void legacySuites(const std::string&p){
   bool rejected=false;try{fs::FsVerifierIO v(name+".legacy",b);}catch(const std::exception&e){need(std::string(e.what()).find("unknown suite/version")!=std::string::npos,e.what());rejected=true;}need(rejected,"legacy full-registration suite accepted");
  }
 }
+void unifiedSuites(const std::string&p){
+ for(bool full:{false,true}){fs::Binding old{full?"Full12":"Oneblock","protocol1-transition",std::string(64,'a'),{2,7,1,8}};auto candidate=old;candidate.proof_type=full?"Full12Unified":"OneblockUnified";auto name=p+(full?".unified-full12":".unified-oneblock");
+  {fs::FsProverIO w(name,old);w.message("first",{7,8});auto c=w.coin("challenge");w.message("response",r1::encode(c*Fr(7)));w.finish();}
+  rejects([&]{fs::FsVerifierIO v(name,candidate);});
+  {fs::FsProverIO w(name+".new",candidate);w.message("first",{7,8});auto c=w.coin("challenge");w.message("response",r1::encode(c*Fr(7)));w.finish();}
+  consume(name+".new",candidate);rejects([&]{fs::FsVerifierIO v(name+".new",old);});
+ }
+}
 void buffered(const std::string&p,const fs::Binding&b){
  Bytes big(131073,17);fs::FsProverIO tx(p,b);
  for(unsigned i=0;i<1000;++i)tx.message("batch/"+std::to_string(i),Bytes(31,std::uint8_t(i)));
@@ -39,7 +47,7 @@ void buffered(const std::string&p,const fs::Binding&b){
 int main(){try{
  r1::init();char pattern[]="build/fs-unit-XXXXXX";auto d=mkdtemp(pattern);need(d,"FS test temp");std::string p=std::string(d)+"/proof.fsproof";
  fs::Binding b{"Unit","test-context",std::string(64,'a'),{1,2,3}};
- buffered(p+".buffered",b);legacySuites(p);
+ buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
  fs::CanonicalTranscript t({1,2,3},{4,5});auto initial=t.prefix();need(t.prefix()==initial,"FS prefix mutated state");t.message("m",{7,8});auto c=t.coin("c");std::cout<<"REFERENCE "<<hex(t.prefix())<<' '<<hex(t.challengeDigest())<<' '<<hex(r1::hash(r1::encode(c)))<<' '<<t.rejections()<<'\n';rejects([&]{t.coin("c");});
  fs::FsProverIO w(p,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));need(!std::filesystem::exists(p),"FS early publication");auto prefix=w.prefix();w.finish();consume(p,b);need(std::filesystem::exists(p) && w.prefix()==prefix,"FS publication/prefix");
  auto bytes=read(p);rejects([&]{fs::FsProverIO duplicate(p,b);});need(read(p)==bytes,"FS overwrite changed original");

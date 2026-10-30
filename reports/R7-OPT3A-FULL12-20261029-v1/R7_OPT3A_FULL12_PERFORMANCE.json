@@ -1,0 +1,1495 @@
+{
+  "prover": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-OPT3A-FULL12-20261029-v1/full12-opt3a-v1.fsproof",
+      "zkGPT/R7/Full12/opt3a-kernel/20261029/v1"
+    ],
+    "pid": 3868124,
+    "exit_code": 0,
+    "wall_seconds": 5749.672307198867,
+    "user_cpu_seconds": 5715.39569,
+    "system_cpu_seconds": 118.799428,
+    "cpu_seconds": 5834.195118000001,
+    "peak_rss_kib": 52079148,
+    "peak_vmsize_kib": 52743092,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T14:35:47.806233+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-OPT3A-FULL12-20261029-v1/full12-opt3a-v1.fsproof",
+      "zkGPT/R7/Full12/opt3a-kernel/20261029/v1"
+    ],
+    "pid": 4029706,
+    "exit_code": 0,
+    "wall_seconds": 3251.4675149610266,
+    "user_cpu_seconds": 3272.036495,
+    "system_cpu_seconds": 30.014574,
+    "cpu_seconds": 3302.0510689999996,
+    "peak_rss_kib": 6493924,
+    "peak_vmsize_kib": 6903048,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T15:29:59.827092+00:00"
+  },
+  "proof_bytes": 263710425,
+  "proof_sha256": "324d57c39a5bb3c6e4b4f1e25b70c9ba0979abc1d904c666fd28b440fcf4e287",
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 5744.51,
+    "wire_bytes": 263710425,
+    "P_wire_bytes": 263710425,
+    "frames": 676288,
+    "peak_rss_kib": 52079148,
+    "MSM_calls": 1281061,
+    "MSM_terms": 558035360,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 308.045,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34567200,
+        "cumulative_peak_rss_kib": 34567200
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 755.081,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 542722,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0292233,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0367379,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 218.052,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1157.9,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30087924,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 59.742,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30087924,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 3161.89,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 14448,
+        "rss_end_kib": 30087800,
+        "cumulative_peak_rss_kib": 52079148
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 3250.23,
+    "wire_bytes": 263710425,
+    "P_wire_bytes": 263710425,
+    "frames": 676288,
+    "peak_rss_kib": 6493924,
+    "MSM_calls": 281356,
+    "MSM_terms": 1299146,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.82355,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5559320,
+        "cumulative_peak_rss_kib": 5559320
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 97.3025,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 0,
+        "rss_end_kib": 5587364,
+        "cumulative_peak_rss_kib": 5587364
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0228177,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 5587364,
+        "cumulative_peak_rss_kib": 5587364
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0338696,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 5601620,
+        "cumulative_peak_rss_kib": 5601620
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 53.661,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5620640,
+        "cumulative_peak_rss_kib": 5751616
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 369.043,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5709948,
+        "cumulative_peak_rss_kib": 6182928
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.6379,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5710096,
+        "cumulative_peak_rss_kib": 6182928
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 2614.54,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 5474,
+        "rss_end_kib": 5968124,
+        "cumulative_peak_rss_kib": 6493924
+      }
+    ]
+  },
+  "comparison": {
+    "prover_wall_seconds": {
+      "before": 5935.546122,
+      "after": 5749.672307198867,
+      "absolute_change": -185.87381480113254,
+      "percent_change": -3.1315368625002247,
+      "before_over_after": 1.0323277231936174
+    },
+    "verifier_wall_seconds": {
+      "before": 3492.154318,
+      "after": 3251.4675149610266,
+      "absolute_change": -240.68680303897327,
+      "percent_change": -6.8922155529718285,
+      "before_over_after": 1.074024052810461
+    },
+    "prover_peak_rss_kib": {
+      "before": 52071416,
+      "after": 52079148,
+      "absolute_change": 7732,
+      "percent_change": 0.014848837604108942,
+      "before_over_after": 0.9998515336694832
+    },
+    "verifier_peak_rss_kib": {
+      "before": 6500324,
+      "after": 6493924,
+      "absolute_change": -6400,
+      "percent_change": -0.09845663077717356,
+      "before_over_after": 1.0009855366339366
+    },
+    "proof_bytes": {
+      "before": 263710424,
+      "after": 263710425,
+      "absolute_change": 1,
+      "percent_change": 3.7920381941367627e-07,
+      "before_over_after": 0.9999999962079619
+    },
+    "full_registration_response_bytes": {
+      "before": 0,
+      "after": 0,
+      "absolute_change": 0,
+      "percent_change": null,
+      "before_over_after": null
+    }
+  },
+  "registered_rows_field_meaning": "full base row knowledge registration rows; disabled, zero; excludes model Anchor binding and physical tail-only rows",
+  "tail_rows": 54,
+  "tail_response_bytes": 15040,
+  "measurement": "actual native Full12 run; no synthetic or reduced witness",
+  "prover_authentication_comparison": {
+    "before_seconds": 3432.34,
+    "after_seconds": 3161.89,
+    "absolute_change": -270.4500000000003,
+    "percent_change": -7.879464155648924,
+    "speedup": 1.0855342848739205
+  },
+  "verifier_authentication_comparison": {
+    "before_seconds": 2857.03,
+    "after_seconds": 2614.54,
+    "absolute_change": -242.49000000000024,
+    "percent_change": -8.487485255667606,
+    "speedup": 1.0927467164396032
+  },
+  "kernel_metrics": {
+    "prover": {
+      "OPT2_SCAN_PLAN": {
+        "claims": 1502,
+        "root_only_claims": 842,
+        "multi_root_claims": 660,
+        "frozen_claims": 1076,
+        "legacy_kernel_calls": 90,
+        "legacy_kernel_coordinates": 77882227424,
+        "legacy_weights_precomputations": 61744,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT2_PARTIAL": {
+        "coordinates": 2599956852,
+        "matched_coordinates": 2461708448,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 5375083948,
+        "Fr_additions": 2461708448,
+        "wall_seconds": 198.123,
+        "cpu_seconds": 198.064,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 21810771592,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 2599956852,
+        "frozen_kernel_coordinates": 2016251028,
+        "fallback_map_queries": 26850467904,
+        "kernel_and_partial_Fr_multiplications": 8288459448,
+        "kernel_and_partial_Fr_additions": 4923416896,
+        "kernel_wall_seconds": 2302.22,
+        "partial_wall_seconds": 198.123,
+        "prepare_wall_seconds": 218.805,
+        "kernel_and_partial_cpp_allocations": 46,
+        "kernel_and_partial_cpp_allocated_bytes": 23152625056
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 434.251,
+        "kernel_calls": 45,
+        "kernel_coordinates": 28283013108,
+        "kernel_cpu_seconds": 2301.44,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.137952,
+        "weight_products": 4961443648,
+        "partial_cpu_seconds": 198.064,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 603.942,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 90,
+            "terms": 90,
+            "cpu_seconds": 0.00367235,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 736903,
+            "terms": 1473806,
+            "cpu_seconds": 45.9121,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 180,
+            "terms": 1080,
+            "cpu_seconds": 0.0235808,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 270,
+            "terms": 10080,
+            "cpu_seconds": 0.188624,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 543578,
+            "terms": 556427424,
+            "cpu_seconds": 556.786,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 40,
+            "terms": 122880,
+            "cpu_seconds": 1.02744,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    },
+    "verifier": {
+      "OPT2_SCAN_PLAN": {
+        "claims": 1502,
+        "root_only_claims": 842,
+        "multi_root_claims": 660,
+        "frozen_claims": 1076,
+        "legacy_kernel_calls": 45,
+        "legacy_kernel_coordinates": 38941113712,
+        "legacy_weights_precomputations": 31202,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 21365314172,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 2016251028,
+        "fallback_map_queries": 26266762080,
+        "kernel_and_partial_Fr_multiplications": 2913375500,
+        "kernel_and_partial_Fr_additions": 2461708448,
+        "kernel_wall_seconds": 2299.17,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 212.763,
+        "kernel_and_partial_cpp_allocations": 45,
+        "kernel_and_partial_cpp_allocated_bytes": 23152623616
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 419.325,
+        "kernel_calls": 45,
+        "kernel_coordinates": 28283013108,
+        "kernel_cpu_seconds": 2298.54,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.152439,
+        "weight_products": 2499735200,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 22.9212,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 280725,
+            "terms": 561450,
+            "cpu_seconds": 15.703,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 601,
+            "terms": 614816,
+            "cpu_seconds": 6.23084,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 30,
+            "terms": 122880,
+            "cpu_seconds": 0.987397,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    }
+  },
+  "phase_cpu_seconds": {
+    "prover": {
+      "frozen-witness-and-prechallenge-lookup": 325.661,
+      "all-classified-roots-prechallenge-seal": 754.799,
+      "classified-physical-zero-tails": 0.0292681,
+      "classified-public-X-Y-constants": 0.0367863,
+      "all-native-GKR": 254.742,
+      "native-Range-Exp-Lasso-Memory-Product": 1157.39,
+      "all-source-original-handles": 59.7158,
+      "mandatory-classified-authentication-barrier": 3160.78
+    },
+    "verifier": {
+      "frozen-witness-and-prechallenge-lookup": 5.81996,
+      "all-classified-roots-prechallenge-seal": 97.2671,
+      "classified-physical-zero-tails": 0.0228407,
+      "classified-public-X-Y-constants": 0.0339398,
+      "all-native-GKR": 71.9186,
+      "native-Range-Exp-Lasso-Memory-Product": 368.874,
+      "all-source-original-handles": 25.6215,
+      "mandatory-classified-authentication-barrier": 2613.77
+    }
+  },
+  "kernel_call_records": {
+    "prover": [
+      {
+        "root": 0,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.334,
+        "cpu_seconds": 51.3192
+      },
+      {
+        "root": 1,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.392,
+        "cpu_seconds": 51.3786
+      },
+      {
+        "root": 2,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.2668,
+        "cpu_seconds": 51.2522
+      },
+      {
+        "root": 3,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.3942,
+        "cpu_seconds": 51.3827
+      },
+      {
+        "root": 4,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.1158,
+        "cpu_seconds": 51.1071
+      },
+      {
+        "root": 5,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.3738,
+        "cpu_seconds": 51.3639
+      },
+      {
+        "root": 6,
+        "coordinates": 617089248,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67300268,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.9057,
+        "cpu_seconds": 50.8925
+      },
+      {
+        "root": 7,
+        "coordinates": 617255136,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67154932,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.8849,
+        "cpu_seconds": 50.8663
+      },
+      {
+        "root": 8,
+        "coordinates": 617260256,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67148790,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.4971,
+        "cpu_seconds": 51.4799
+      },
+      {
+        "root": 9,
+        "coordinates": 609126624,
+        "matched_coordinates": 38203392,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 51024512,
+        "Fr_additions": 38203392,
+        "wall_seconds": 50.8629,
+        "cpu_seconds": 50.8403
+      },
+      {
+        "root": 10,
+        "coordinates": 617483872,
+        "matched_coordinates": 79776768,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 125794595,
+        "Fr_additions": 79776768,
+        "wall_seconds": 56.3341,
+        "cpu_seconds": 56.3084
+      },
+      {
+        "root": 11,
+        "coordinates": 583707300,
+        "matched_coordinates": 1584,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 1876,
+        "Fr_additions": 1584,
+        "wall_seconds": 52.6173,
+        "cpu_seconds": 52.5834
+      },
+      {
+        "root": 12,
+        "coordinates": 630658816,
+        "matched_coordinates": 79088416,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 115039832,
+        "Fr_additions": 79088416,
+        "wall_seconds": 56.2654,
+        "cpu_seconds": 56.24
+      },
+      {
+        "root": 13,
+        "coordinates": 591473056,
+        "matched_coordinates": 9810144,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 13065467,
+        "Fr_additions": 9810144,
+        "wall_seconds": 50.091,
+        "cpu_seconds": 50.064
+      },
+      {
+        "root": 14,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.5871,
+        "cpu_seconds": 51.5603
+      },
+      {
+        "root": 15,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.1852,
+        "cpu_seconds": 50.1636
+      },
+      {
+        "root": 16,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 53.2388,
+        "cpu_seconds": 53.2206
+      },
+      {
+        "root": 17,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.1825,
+        "cpu_seconds": 51.1648
+      },
+      {
+        "root": 18,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.5946,
+        "cpu_seconds": 49.5804
+      },
+      {
+        "root": 19,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.1286,
+        "cpu_seconds": 50.1118
+      },
+      {
+        "root": 20,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.546,
+        "cpu_seconds": 51.5267
+      },
+      {
+        "root": 21,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.6861,
+        "cpu_seconds": 51.671
+      },
+      {
+        "root": 22,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 52.9487,
+        "cpu_seconds": 52.9333
+      },
+      {
+        "root": 23,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 52.9718,
+        "cpu_seconds": 52.9548
+      },
+      {
+        "root": 24,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.5547,
+        "cpu_seconds": 51.5414
+      },
+      {
+        "root": 25,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.459,
+        "cpu_seconds": 50.4475
+      },
+      {
+        "root": 26,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.5591,
+        "cpu_seconds": 50.5392
+      },
+      {
+        "root": 27,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.6026,
+        "cpu_seconds": 50.5822
+      },
+      {
+        "root": 28,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.7262,
+        "cpu_seconds": 51.7105
+      },
+      {
+        "root": 29,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.7771,
+        "cpu_seconds": 51.7624
+      },
+      {
+        "root": 30,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 52.0323,
+        "cpu_seconds": 52.0203
+      },
+      {
+        "root": 31,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 50.6783,
+        "cpu_seconds": 50.6688
+      },
+      {
+        "root": 32,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.7834,
+        "cpu_seconds": 49.7717
+      },
+      {
+        "root": 33,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.4566,
+        "cpu_seconds": 49.4423
+      },
+      {
+        "root": 34,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.8959,
+        "cpu_seconds": 49.8822
+      },
+      {
+        "root": 35,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.428,
+        "cpu_seconds": 49.4123
+      },
+      {
+        "root": 36,
+        "coordinates": 655008992,
+        "matched_coordinates": 71303168,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 71337984,
+        "Fr_additions": 71303168,
+        "wall_seconds": 50.8105,
+        "cpu_seconds": 50.7961
+      },
+      {
+        "root": 37,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.1645,
+        "cpu_seconds": 51.1525
+      },
+      {
+        "root": 38,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.0404,
+        "cpu_seconds": 51.0293
+      },
+      {
+        "root": 39,
+        "coordinates": 655008992,
+        "matched_coordinates": 71303168,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 71337984,
+        "Fr_additions": 71303168,
+        "wall_seconds": 50.1332,
+        "cpu_seconds": 50.1133
+      },
+      {
+        "root": 40,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.2225,
+        "cpu_seconds": 50.2003
+      },
+      {
+        "root": 41,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.8538,
+        "cpu_seconds": 49.8333
+      },
+      {
+        "root": 42,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.6114,
+        "cpu_seconds": 49.5923
+      },
+      {
+        "root": 43,
+        "coordinates": 648717536,
+        "matched_coordinates": 65011712,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 65095680,
+        "Fr_additions": 65011712,
+        "wall_seconds": 49.8556,
+        "cpu_seconds": 49.8343
+      },
+      {
+        "root": 44,
+        "coordinates": 617650000,
+        "matched_coordinates": 33944176,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 34050860,
+        "Fr_additions": 33944176,
+        "wall_seconds": 49.1698,
+        "cpu_seconds": 49.145
+      }
+    ],
+    "verifier": [
+      {
+        "root": 0,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.6335,
+        "cpu_seconds": 51.6253
+      },
+      {
+        "root": 1,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.8994,
+        "cpu_seconds": 50.8863
+      },
+      {
+        "root": 2,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.2658,
+        "cpu_seconds": 51.2534
+      },
+      {
+        "root": 3,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.1274,
+        "cpu_seconds": 51.1162
+      },
+      {
+        "root": 4,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.4782,
+        "cpu_seconds": 51.462
+      },
+      {
+        "root": 5,
+        "coordinates": 583705824,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 100663296,
+        "Fr_additions": 50331648,
+        "wall_seconds": 51.4973,
+        "cpu_seconds": 51.4821
+      },
+      {
+        "root": 6,
+        "coordinates": 617089248,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67300268,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.4147,
+        "cpu_seconds": 50.4031
+      },
+      {
+        "root": 7,
+        "coordinates": 617255136,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67154932,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.1367,
+        "cpu_seconds": 50.12
+      },
+      {
+        "root": 8,
+        "coordinates": 617260256,
+        "matched_coordinates": 50331648,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 67148790,
+        "Fr_additions": 50331648,
+        "wall_seconds": 50.2123,
+        "cpu_seconds": 50.1926
+      },
+      {
+        "root": 9,
+        "coordinates": 609126624,
+        "matched_coordinates": 38203392,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 51024512,
+        "Fr_additions": 38203392,
+        "wall_seconds": 49.9629,
+        "cpu_seconds": 49.9433
+      },
+      {
+        "root": 10,
+        "coordinates": 617483872,
+        "matched_coordinates": 79776768,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 125794595,
+        "Fr_additions": 79776768,
+        "wall_seconds": 53.1443,
+        "cpu_seconds": 53.1228
+      },
+      {
+        "root": 11,
+        "coordinates": 583707300,
+        "matched_coordinates": 1584,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 1876,
+        "Fr_additions": 1584,
+        "wall_seconds": 50.1413,
+        "cpu_seconds": 50.1191
+      },
+      {
+        "root": 12,
+        "coordinates": 630658816,
+        "matched_coordinates": 79088416,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 115039832,
+        "Fr_additions": 79088416,
+        "wall_seconds": 53.2419,
+        "cpu_seconds": 53.2225
+      },
+      {
+        "root": 13,
+        "coordinates": 591473056,
+        "matched_coordinates": 9810144,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 13065467,
+        "Fr_additions": 9810144,
+        "wall_seconds": 50.6479,
+        "cpu_seconds": 50.6281
+      },
+      {
+        "root": 14,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 54.0679,
+        "cpu_seconds": 54.0481
+      },
+      {
+        "root": 15,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.4768,
+        "cpu_seconds": 51.4603
+      },
+      {
+        "root": 16,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.0691,
+        "cpu_seconds": 51.0529
+      },
+      {
+        "root": 17,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.1648,
+        "cpu_seconds": 51.1506
+      },
+      {
+        "root": 18,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.8347,
+        "cpu_seconds": 49.8173
+      },
+      {
+        "root": 19,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.5462,
+        "cpu_seconds": 49.5295
+      },
+      {
+        "root": 20,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.4787,
+        "cpu_seconds": 51.4597
+      },
+      {
+        "root": 21,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.3081,
+        "cpu_seconds": 51.287
+      },
+      {
+        "root": 22,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 50.9268,
+        "cpu_seconds": 50.9115
+      },
+      {
+        "root": 23,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.3604,
+        "cpu_seconds": 51.346
+      },
+      {
+        "root": 24,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.15,
+        "cpu_seconds": 49.1408
+      },
+      {
+        "root": 25,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 48.8366,
+        "cpu_seconds": 48.8256
+      },
+      {
+        "root": 26,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.156,
+        "cpu_seconds": 49.1493
+      },
+      {
+        "root": 27,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 48.943,
+        "cpu_seconds": 48.9371
+      },
+      {
+        "root": 28,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 50.143,
+        "cpu_seconds": 50.1352
+      },
+      {
+        "root": 29,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 50.6317,
+        "cpu_seconds": 50.6235
+      },
+      {
+        "root": 30,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 50.6436,
+        "cpu_seconds": 50.6371
+      },
+      {
+        "root": 31,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.3549,
+        "cpu_seconds": 51.3491
+      },
+      {
+        "root": 32,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.1964,
+        "cpu_seconds": 51.189
+      },
+      {
+        "root": 33,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.4944,
+        "cpu_seconds": 51.4874
+      },
+      {
+        "root": 34,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.7524,
+        "cpu_seconds": 51.7463
+      },
+      {
+        "root": 35,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.4067,
+        "cpu_seconds": 51.3975
+      },
+      {
+        "root": 36,
+        "coordinates": 655008992,
+        "matched_coordinates": 71303168,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 71337984,
+        "Fr_additions": 71303168,
+        "wall_seconds": 52.0469,
+        "cpu_seconds": 52.0329
+      },
+      {
+        "root": 37,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 51.941,
+        "cpu_seconds": 51.9266
+      },
+      {
+        "root": 38,
+        "coordinates": 667591904,
+        "matched_coordinates": 83886080,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 83927040,
+        "Fr_additions": 83886080,
+        "wall_seconds": 52.2695,
+        "cpu_seconds": 52.2513
+      },
+      {
+        "root": 39,
+        "coordinates": 655008992,
+        "matched_coordinates": 71303168,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 71337984,
+        "Fr_additions": 71303168,
+        "wall_seconds": 50.766,
+        "cpu_seconds": 50.7496
+      },
+      {
+        "root": 40,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 49.8936,
+        "cpu_seconds": 49.8769
+      },
+      {
+        "root": 41,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 50.1736,
+        "cpu_seconds": 50.1598
+      },
+      {
+        "root": 42,
+        "coordinates": 617260256,
+        "matched_coordinates": 33554432,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 33570816,
+        "Fr_additions": 33554432,
+        "wall_seconds": 51.3839,
+        "cpu_seconds": 51.3655
+      },
+      {
+        "root": 43,
+        "coordinates": 648717536,
+        "matched_coordinates": 65011712,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 65095680,
+        "Fr_additions": 65011712,
+        "wall_seconds": 53.5652,
+        "cpu_seconds": 53.5453
+      },
+      {
+        "root": 44,
+        "coordinates": 617650000,
+        "matched_coordinates": 33944176,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 34050860,
+        "Fr_additions": 33944176,
+        "wall_seconds": 54.3886,
+        "cpu_seconds": 54.3734
+      }
+    ]
+  },
+  "kernel_comparison": {
+    "prover": {
+      "kernel_cpu_seconds": {
+        "before": 2526.45,
+        "after": 2301.44,
+        "absolute_change": -225.00999999999976,
+        "percent_change": -8.906172692909015,
+        "speedup": 1.097769222747497
+      },
+      "kernel_coordinates": {
+        "before": 30664833319,
+        "after": 28283013108,
+        "absolute_change": -2381820211,
+        "percent_change": -7.767269387126324,
+        "speedup": 1.084213807132391
+      },
+      "map_cpu_seconds": {
+        "before": 417.522,
+        "after": 434.251,
+        "absolute_change": 16.728999999999985,
+        "percent_change": 4.0067349744444565,
+        "speedup": 0.961476196946006
+      },
+      "partial_cpu_seconds": {
+        "before": 245.446,
+        "after": 198.064,
+        "absolute_change": -47.382000000000005,
+        "percent_change": -19.30444985862471,
+        "speedup": 1.2392257048226836
+      },
+      "weights_cpu_seconds": {
+        "before": 0.134429,
+        "after": 0.137952,
+        "absolute_change": 0.0035229999999999984,
+        "percent_change": 2.6207142804008052,
+        "speedup": 0.9744621317559731
+      },
+      "new_total_map_callback_queries": 32104788768,
+      "new_frozen_kernel_visit_fraction": 0.07128840977094102,
+      "new_kernel_and_partial_Fr_operation_scope": "Runtime logical Fr mul/add counter; excludes prepare bias, weights generation, Sumcheck/MSM; not CPU instructions."
+    },
+    "verifier": {
+      "kernel_cpu_seconds": {
+        "before": 2546.41,
+        "after": 2298.54,
+        "absolute_change": -247.8699999999999,
+        "percent_change": -9.73409623744801,
+        "speedup": 1.1078380189163555
+      },
+      "kernel_coordinates": {
+        "before": 30664833319,
+        "after": 28283013108,
+        "absolute_change": -2381820211,
+        "percent_change": -7.767269387126324,
+        "speedup": 1.084213807132391
+      },
+      "map_cpu_seconds": {
+        "before": 417.956,
+        "after": 419.325,
+        "absolute_change": 1.3689999999999714,
+        "percent_change": 0.3275464402951438,
+        "speedup": 0.996735229237465
+      },
+      "partial_cpu_seconds": {
+        "before": 0,
+        "after": 0,
+        "absolute_change": 0,
+        "percent_change": null,
+        "speedup": null
+      },
+      "weights_cpu_seconds": {
+        "before": 0.150727,
+        "after": 0.152439,
+        "absolute_change": 0.0017119999999999913,
+        "percent_change": 1.135828351921017,
+        "speedup": 0.9887692782030846
+      },
+      "new_total_map_callback_queries": 31521082944,
+      "new_frozen_kernel_visit_fraction": 0.07128840977094102,
+      "new_kernel_and_partial_Fr_operation_scope": "Runtime logical Fr mul/add counter; excludes prepare bias, weights generation, Sumcheck/MSM; not CPU instructions."
+    }
+  },
+  "message_schema_comparison": {
+    "actual_message_categories_equal": true,
+    "normalized_message_types_equal": true,
+    "new_context": "zkGPT/R7/Full12/opt3a-kernel/20261029/v1",
+    "old_context": "zkGPT/R7/Full12/no-fullbase/20261029/v1",
+    "context_utf8_length_delta": 1,
+    "proof_bytes_delta": 1
+  },
+  "measurement_limitations": "One actual Full12 run per version on a shared server, four CPU affinity. VmSize peak is sampled /proc VmPeak every5sec; wait4 RSS and CPU are separate-process OS measurements. Full12 speedup is measured, not extrapolated from microbenchmarks.",
+  "enrichment_provenance": "Additional fields parsed from this run's immutable raw P/V logs; original remote JSON retained in full12-evidence and SHA receipt."
+}

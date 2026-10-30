@@ -1,0 +1,430 @@
+{
+  "prover": {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-PROTOCOL1-UNIFIED-20261030-v1/full12-v2/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/full12/20261030/retry2"
+    ],
+    "pid": 1852171,
+    "exit_code": 0,
+    "wall_seconds": 7023.895145749673,
+    "user_cpu_seconds": 6757.583268,
+    "system_cpu_seconds": 347.502376,
+    "cpu_seconds": 7105.085644000001,
+    "peak_rss_kib": 52071256,
+    "peak_vmsize_kib": 52741880,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-30T13:17:22.918930+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-PROTOCOL1-UNIFIED-20261030-v1/full12-v2/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/full12/20261030/retry2"
+    ],
+    "pid": 2034648,
+    "exit_code": 0,
+    "wall_seconds": 1058.691154026892,
+    "user_cpu_seconds": 1084.531382,
+    "system_cpu_seconds": 23.286367,
+    "cpu_seconds": 1107.8177489999998,
+    "peak_rss_kib": 6308632,
+    "peak_vmsize_kib": 6641032,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-30T13:35:02.034061+00:00"
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 7021.43,
+    "wire_bytes": 261504622,
+    "P_wire_bytes": 261504622,
+    "frames": 663867,
+    "peak_rss_kib": 52071256,
+    "MSM_calls": 1268601,
+    "MSM_terms": 558010440,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 298.299,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34560716,
+        "cumulative_peak_rss_kib": 34560716
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 740.102,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 542722,
+        "rss_end_kib": 36473632,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0278009,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 36473632,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0290886,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 36473632,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 187.868,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36474072,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1065.25,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30080572,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 58.3801,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30080572,
+        "cumulative_peak_rss_kib": 52071256
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 4593.16,
+        "P_wire_bytes": 25036952,
+        "MSM_calls": 1988,
+        "rss_end_kib": 30080692,
+        "cumulative_peak_rss_kib": 52071256
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 1056.34,
+    "wire_bytes": 261504622,
+    "P_wire_bytes": 261504622,
+    "frames": 663867,
+    "peak_rss_kib": 6308632,
+    "MSM_calls": 276697,
+    "MSM_terms": 1289828,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.4807,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5560440,
+        "cumulative_peak_rss_kib": 5560440
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 93.3217,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 0,
+        "rss_end_kib": 5588420,
+        "cumulative_peak_rss_kib": 5588420
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0217977,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 5588420,
+        "cumulative_peak_rss_kib": 5588420
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0331675,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 5602676,
+        "cumulative_peak_rss_kib": 5602676
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 52.7453,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5621684,
+        "cumulative_peak_rss_kib": 5752660
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 358.675,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5706816,
+        "cumulative_peak_rss_kib": 6183968
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.487,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5707080,
+        "cumulative_peak_rss_kib": 6183968
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 436.15,
+        "P_wire_bytes": 25036952,
+        "MSM_calls": 815,
+        "rss_end_kib": 5786660,
+        "cumulative_peak_rss_kib": 6308632
+      }
+    ]
+  },
+  "proof_bytes": 261504622,
+  "proof_sha256": "4c5c63501e67a3c1f558f5ca0d43ff3d5b9f0e84eadb7a8f20cf8d577b53d510",
+  "telemetry": {
+    "P": {
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 4066,
+        "cpu_seconds": 4064.01,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_OPENING": {
+        "roots": 45,
+        "wall_seconds": 256.656,
+        "cpu_seconds": 256.563,
+        "includes_root_MLE_and_hidden_stitch": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 81236378784,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 81236378784,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 81930065151,
+        "kernel_and_partial_Fr_additions": 81236378784,
+        "kernel_wall_seconds": 2255.12,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 210.999,
+        "kernel_and_partial_cpp_allocations": 1485,
+        "kernel_and_partial_cpp_allocated_bytes": 764036579328
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 412.638,
+        "kernel_calls": 1485,
+        "kernel_coordinates": 81236378784,
+        "kernel_cpu_seconds": 2254.03,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.132997,
+        "weight_products": 81274405536,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 588.875,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 90,
+            "terms": 90,
+            "cpu_seconds": 0.00361019,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 724443,
+            "terms": 1448886,
+            "cpu_seconds": 40.7859,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 180,
+            "terms": 1080,
+            "cpu_seconds": 0.0229882,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 270,
+            "terms": 10080,
+            "cpu_seconds": 0.182577,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 543578,
+            "terms": 556427424,
+            "cpu_seconds": 546.859,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 40,
+            "terms": 122880,
+            "cpu_seconds": 1.02131,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    },
+    "V": {
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 91.5145,
+        "cpu_seconds": 91.4514,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_OPENING": {
+        "roots": 45,
+        "wall_seconds": 70.6809,
+        "cpu_seconds": 70.6464,
+        "includes_root_MLE_and_hidden_stitch": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 2461708448,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 2482729247,
+        "kernel_and_partial_Fr_additions": 2461708448,
+        "kernel_wall_seconds": 69.0979,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 212.603,
+        "kernel_and_partial_cpp_allocations": 45,
+        "kernel_and_partial_cpp_allocated_bytes": 23152623616
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 414.484,
+        "kernel_calls": 45,
+        "kernel_coordinates": 2461708448,
+        "kernel_cpu_seconds": 69.053,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.143305,
+        "weight_products": 2499735200,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 22.0913,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 276066,
+            "terms": 552132,
+            "cpu_seconds": 15.12,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 601,
+            "terms": 614816,
+            "cpu_seconds": 5.98207,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 30,
+            "terms": 122880,
+            "cpu_seconds": 0.989196,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    }
+  }
+}

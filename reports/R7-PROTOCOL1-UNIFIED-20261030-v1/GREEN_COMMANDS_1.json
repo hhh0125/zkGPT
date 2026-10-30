@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/protocol1-unified-release",
+      "-j4"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 138.34788045473397
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_fs_io_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.01668924279510975
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/protocol1-unified-release",
+      "--output-on-failure",
+      "-j1"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 167.2025444577448
+  }
+]

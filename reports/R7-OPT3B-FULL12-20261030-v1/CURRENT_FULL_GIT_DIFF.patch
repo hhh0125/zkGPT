@@ -1,0 +1,557 @@
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+index 6c8c4e5b7ea1066e38ed54b860911f99e4bedc22..54bfcce285e89c4fea5ad3bb756180b84a38b17c 100644
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -151,6 +151,14 @@ target_link_libraries(r7_rowmajor_perf_tests PRIVATE paper_r7)
+ add_executable(r7_opt2_kernel_tests opt2_kernel_tests.cpp)
+ target_link_libraries(r7_opt2_kernel_tests PRIVATE paper_r7)
+ add_test(NAME r7_opt2_kernel_dense COMMAND r7_opt2_kernel_tests)
++add_executable(r7_opt3a_kernel_tests opt3a_kernel_tests.cpp)
++target_link_libraries(r7_opt3a_kernel_tests PRIVATE paper_r7)
++add_test(NAME r7_opt3a_kernel_equivalence COMMAND r7_opt3a_kernel_tests correctness)
++add_test(NAME r7_opt3a_bounded_strided_map COMMAND r7_opt3a_kernel_tests contract)
++add_executable(r7_opt3b_mapping_tests opt3b_mapping_tests.cpp)
++target_link_libraries(r7_opt3b_mapping_tests PRIVATE paper_r7)
++add_test(NAME r7_opt3b_mapping_equivalence COMMAND r7_opt3b_mapping_tests correctness)
++add_test(NAME r7_opt3b_root_centric_contract COMMAND r7_opt3b_mapping_tests contract)
+ add_executable(r7_opt2_msm_bench opt2_msm_bench.cpp)
+ target_link_libraries(r7_opt2_msm_bench PRIVATE paper_r7)
+ 
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+index d40e35edf88226e689f427f38ea01ec19cff8e5d..e7001bb23394e5aeabdc7e42c19b7e89da4803f3 100644
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -26,43 +26,56 @@ Commitments::Weights::Weights(const std::vector<Fr>&q,AuthMetrics*m):split_(q.si
+ std::size_t Commitments::Weights::bytes()const{return (a_.capacity()+b_.capacity())*sizeof(Fr);}
+ Fr Commitments::Weights::at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>>split_];}
+ 
++bool Commitments::usesBaseCoordinates(const Claim&c)const{
++ // Built-in native-terminal and mapped-view callbacks perform exactly one
++ // baseCoordinate lookup for each nonconstant location. Custom test maps do not.
++ auto it=layout_.views.find(c.map_id);return c.map_id.rfind("native-base/",0)==0 || (it!=layout_.views.end() && it->second.mapped);
++}
+ Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)const{
+- auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
+- auto&p=auth.claims[i];auto maxRuns=(auth.map_budget-auth.map_bytes)/sizeof(Authentication::Run);bool fits=maxRuns>0;
+- auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest;
+- for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);
++ auto started=processCPU();auto wall=Clock::now();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
++ auto&p=auth.claims[i];mapping::Builder builder(p,auth.store,auth.map_budget-auth.map_bytes,roots_.size());
++ auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest;const bool baseMapped=usesBaseCoordinates(c);
++ for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;
+   need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
+   if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");
+   digest.append(l);if(c.only_root<0 && !l.bias.isZero()){bias+=weights->at(j)*l.bias;++auth_metrics_.weight_products;}
+-  if(!fits || l.constant)continue;
+-  if(!p.runs.empty()){auto&last=p.runs.back();if(last.begin+last.count==j && last.first.root==l.coordinate.root && std::uint64_t(last.first.index)+last.count==l.coordinate.index){++last.count;continue;}}
+-  if(p.runs.size()==maxRuns){fits=false;std::vector<Authentication::Run>().swap(p.runs);continue;}
+-  if(p.runs.size()==p.runs.capacity())p.runs.reserve(std::min(maxRuns,std::max<std::size_t>(8,p.runs.capacity()*2)));
+-  p.runs.push_back({j,1,l.coordinate});
++  if(!l.constant)builder.append(j,l.coordinate);
+  }
+  need(digest.finish()==c.map_digest,"classified source map changed after defer");
+- p.frozen=fits;auth.map_bytes+=p.runs.capacity()*sizeof(Authentication::Run);
++ builder.finish();auth.map_bytes+=p.bytes();
+  if(weights->bytes()<=auth.weight_budget-auth.weight_bytes){auth.weight_bytes+=weights->bytes();p.weights=std::move(weights);}
+- auth_metrics_.map_cpu+=processCPU()-started;return bias;
++ if(opt2MetricsEnabled())std::cerr<<"OPT3B_PLAN {\"claim\":"<<i<<",\"id\":\""<<c.id<<"\",\"status\":\""<<p.reason<<"\",\"frozen\":"<<(p.frozen?"true":"false")<<",\"runs\":"<<p.run_count<<",\"RAM_bytes\":"<<p.bytes()<<",\"shared_RAM_bytes\":"<<auth.map_bytes<<",\"file_bytes\":"<<auth.store.bytes<<",\"file_limit\":"<<auth.store.limit<<"}\n";
++ auth_metrics_.map_cpu+=processCPU()-started;auth_metrics_.map_wall+=std::chrono::duration<double>(Clock::now()-wall).count();return bias;
+ }
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda,const Authentication&auth)const{
+- auto started=processCPU();++auth_metrics_.kernel_calls;auto n=roots_.at(k).spec.padded;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,n*sizeof(Fr));std::vector<Fr>result(n,Fr(0));std::uint64_t visited=0;
+- for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
+-  if(p.frozen){for(auto&run:p.runs)if(run.first.root==k)for(std::size_t j=0;j<run.count;++j){result[run.first.index+j]+=lambda[i]*w.at(run.begin+j);++visited;}}
+-  else{MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);++visited;if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
++ auto started=processCPU();auto wall=Clock::now();crypto::AllocationTrace allocation;++auth_metrics_.kernel_calls;auto n=roots_.at(k).spec.padded;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,n*sizeof(Fr));std::vector<Fr>result(n,Fr(0));std::uint64_t visited=0,matched=0,multiplies=0,fallback=0,frozen=0;
++ for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auto&p=auth.claims[i];
++  if(p.frozen && !p.hasRoot(k))continue;
++  std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
++  if(p.frozen){p.forRoot(k,auth.store,[&](const auto&run){std::int64_t at=run.first.index;
++    auto groups=w.scaled(run.begin,run.count,lambda[i],[&](const Fr&weight){result[std::size_t(at)]+=weight;at+=run.stride;},run.logical_step);
++    visited+=run.count;matched+=run.count;frozen+=run.count;multiplies+=run.count+groups;
++   });}
++  else{MapHash digest;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;digest.append(l);++visited;++fallback;if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);++matched;multiplies+=2;}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
+  }
+- auth_metrics_.kernel_coordinates+=visited;auth_metrics_.weight_products+=visited;auth_metrics_.kernel_cpu+=processCPU()-started;
+- if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"coordinates\":"<<visited<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
++ auth_metrics_.cpp_allocations+=allocation.count();auth_metrics_.cpp_allocated_bytes+=allocation.bytes();
++ auto cpu=processCPU()-started;auto seconds=std::chrono::duration<double>(Clock::now()-wall).count();
++ auth_metrics_.kernel_coordinates+=visited;auth_metrics_.kernel_matched+=matched;auth_metrics_.frozen_coordinates+=frozen;auth_metrics_.fallback_map_queries+=fallback;auth_metrics_.fr_multiplications+=multiplies;auth_metrics_.fr_additions+=matched;auth_metrics_.weight_products+=matched;auth_metrics_.kernel_cpu+=cpu;auth_metrics_.kernel_wall+=seconds;
++ if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"coordinates\":"<<visited<<",\"matched_coordinates\":"<<matched<<",\"fallback_map_queries\":"<<fallback<<",\"Fr_multiplications\":"<<multiplies<<",\"Fr_additions\":"<<matched<<",\"wall_seconds\":"<<seconds<<",\"cpu_seconds\":"<<cpu<<"}\n";
+  return result;
+ }
+ std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authentication&auth)const{
+- auto started=processCPU();std::vector<Fr>values(roots_.size(),Fr(0));std::uint64_t visited=0;
++ auto started=processCPU();auto wall=Clock::now();crypto::AllocationTrace allocation;std::vector<Fr>values(roots_.size(),Fr(0));std::uint64_t visited=0,matched=0,multiplies=0,fallback=0;
+  for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
+-  if(p.frozen){for(auto&run:p.runs)for(std::size_t j=0;j<run.count;++j){values[run.first.root]+=lambda[i]*w.at(run.begin+j)*roots_[run.first.root].value(run.first.index+j);++visited;}}
+-  else{MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);++visited;if(!l.constant){need(l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual,"classified partial map bounds");values[l.coordinate.root]+=lambda[i]*w.at(j)*roots_[l.coordinate.root].value(l.coordinate.index);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
++  if(p.frozen){for(std::size_t k=0;k<roots_.size();++k)p.forRoot(k,auth.store,[&](const auto&run){std::int64_t at=run.first.index;
++    auto groups=w.scaled(run.begin,run.count,lambda[i],[&](const Fr&weight){values[run.first.root]+=weight*roots_[run.first.root].value(std::size_t(at));at+=run.stride;},run.logical_step);
++    visited+=run.count;matched+=run.count;multiplies+=2*run.count+groups;
++   });}
++  else{MapHash digest;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;digest.append(l);++visited;++fallback;if(!l.constant){need(l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual,"classified partial map bounds");values[l.coordinate.root]+=lambda[i]*w.at(j)*roots_[l.coordinate.root].value(l.coordinate.index);++matched;multiplies+=3;}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}
+  }
+- auth_metrics_.partial_cpu+=processCPU()-started;auth_metrics_.weight_products+=visited;
+- if(opt2MetricsEnabled())std::cerr<<"OPT2_PARTIAL {\"coordinates\":"<<visited<<",\"cpu_seconds\":"<<processCPU()-started<<",\"map_cache_bytes\":"<<auth.map_bytes<<",\"weight_cache_bytes\":"<<auth.weight_bytes<<"}\n";
++ auth_metrics_.cpp_allocations+=allocation.count();auth_metrics_.cpp_allocated_bytes+=allocation.bytes();
++ auto cpu=processCPU()-started;auto seconds=std::chrono::duration<double>(Clock::now()-wall).count();auth_metrics_.partial_cpu+=cpu;auth_metrics_.partial_wall+=seconds;auth_metrics_.partial_coordinates+=visited;auth_metrics_.weight_products+=matched;auth_metrics_.fallback_map_queries+=fallback;auth_metrics_.fr_multiplications+=multiplies;auth_metrics_.fr_additions+=matched;
++ if(opt2MetricsEnabled())std::cerr<<"OPT2_PARTIAL {\"coordinates\":"<<visited<<",\"matched_coordinates\":"<<matched<<",\"fallback_map_queries\":"<<fallback<<",\"Fr_multiplications\":"<<multiplies<<",\"Fr_additions\":"<<matched<<",\"wall_seconds\":"<<seconds<<",\"cpu_seconds\":"<<cpu<<",\"map_cache_bytes\":"<<auth.map_bytes<<",\"weight_cache_bytes\":"<<auth.weight_bytes<<"}\n";
+  return values;
+ }
+ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret,const std::vector<model::Trust>*chunks,std::vector<model::Secret>*chunkSecrets):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
+@@ -93,18 +106,20 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
+  if(io.prover())need(prepared->empty(),"classified unused prepared object");
+  sealed_=true;
+ }
+-void Commitments::registerBase(){
+- need(sealed_ && !base_registered_,"classified registration lifecycle");for(auto&r:roots_)need(r.pc.layout==r1::Layout::RowMajor,"classified root must be RowMajor");std::set<std::string>seen;
+- for(std::size_t k=0;k<roots_.size();++k){auto&r=roots_[k];if(!r.spec.registered)continue;auto chunk=std::min<std::size_t>(64,65536/r.pc.columns);
+-  for(std::size_t start=0;start<r.pc.rows;start+=chunk){auto count=std::min(chunk,r.pc.rows-start);auto name="Classified/register/"+std::to_string(k)+"/"+std::to_string(start);Writer header;header.text(suite);header.text(identity_);header.text(session_);header.text(r.spec.id);header.number(start);header.number(count);header.number(r.pc.columns);for(std::size_t i=0;i<count;++i)header.point(r.pc.points[start+i]);bindPublic(io_,name+"/header",header.b);std::vector<std::vector<Fr>>masks;std::vector<Fr>blinds;Writer first;
++void Commitments::constrainBaseTails(){
++ need(sealed_ && !tails_constrained_ && !authenticated_ && claims_.empty() && io_.session()==session_ && identity(layout_)==identity_,"classified tail constraint lifecycle");for(auto&r:roots_)need(r.pc.layout==r1::Layout::RowMajor,"classified root must be RowMajor");std::set<std::string>seen;
++ for(std::size_t k=0;k<roots_.size();++k){auto&r=roots_[k];if(!r.spec.registered || r.spec.model)continue;auto chunk=std::min<std::size_t>(64,65536/r.pc.columns);
++  // Full valid rows need no registration. Model tails are fixed by the trusted
++  // R6 anchor and registerModel() rerandomization binding in the constructor.
++  for(std::size_t start=r.spec.actual/r.pc.columns;start<r.pc.rows;start+=chunk){auto count=std::min(chunk,r.pc.rows-start);auto name="Classified/zero-tail/"+std::to_string(k)+"/"+std::to_string(start);Writer header;header.text(suite);header.text(identity_);header.text(session_);header.text(r.spec.id);header.number(start);header.number(count);header.number(r.pc.columns);for(std::size_t i=0;i<count;++i)header.point(r.pc.points[start+i]);bindPublic(io_,name+"/header",header.b);std::vector<std::vector<Fr>>masks;std::vector<Fr>blinds;Writer first;
+    auto active=[&](std::size_t row){const auto begin=row*r.pc.columns;return begin>=r.spec.actual?std::size_t(0):std::min(r.pc.columns,r.spec.actual-begin);};
+    if(io_.prover())for(std::size_t i=0;i<count;++i){std::vector<Fr>d(active(start+i));for(auto&x:d)x=rng_->scalar();auto rho=rng_->scalar();G1 mask;mask.clear();if(!d.empty())mask=master3::masterMSM(r.basis.data(),d.data(),d.size());first.point(mask+parameters(1).hiding*rho);masks.push_back(std::move(d));blinds.push_back(rho);}
+-   auto b=io_.message(name+"/masks",first.b);Reader mr{b};std::vector<G1>D;for(std::size_t i=0;i<count;++i){auto d=mr.point();need(seen.insert(hex(r1::hash(r1::encode(d)))).second,"classified reused row mask");D.push_back(d);}mr.end();auto c=io_.coin(name+"/challenge");need(!c.isZero(),"classified zero registration challenge");Writer response;
++   auto b=io_.message(name+"/masks",first.b);Reader mr{b};std::vector<G1>D;for(std::size_t i=0;i<count;++i){auto d=mr.point();need(seen.insert(hex(r1::hash(r1::encode(d)))).second,"classified reused tail mask");D.push_back(d);}mr.end();auto c=io_.coin(name+"/challenge");need(!c.isZero(),"classified zero tail challenge");Writer response;
+    if(io_.prover())for(std::size_t i=0;i<count;++i){for(std::size_t j=0;j<masks[i].size();++j)response.scalar(masks[i][j]+c*r.value((start+i)*r.pc.columns+j));response.scalar(blinds[i]+c*r.blinds[start+i]);}
+-   b=io_.message(name+"/responses",response.b);registration_bytes+=b.size();Reader rr{b};for(std::size_t i=0;i<count;++i){auto n=active(start+i);std::vector<Fr>z(n);for(auto&x:z)x=rr.scalar();auto rho=rr.scalar();if(!io_.prover()){G1 nonblind;nonblind.clear();if(n)nonblind=master3::masterMSM(r.basis.data(),z.data(),n);need(nonblind+parameters(1).hiding*rho==D[i]+r.pc.points[start+i]*c,"classified row knowledge/zero-tail equation failed");}++registered_rows;}rr.end();
++   b=io_.message(name+"/responses",response.b);tail_response_bytes+=b.size();Reader rr{b};for(std::size_t i=0;i<count;++i){auto n=active(start+i);std::vector<Fr>z(n);for(auto&x:z)x=rr.scalar();auto rho=rr.scalar();if(!io_.prover()){G1 nonblind;nonblind.clear();if(n)nonblind=master3::masterMSM(r.basis.data(),z.data(),n);need(nonblind+parameters(1).hiding*rho==D[i]+r.pc.points[start+i]*c,"classified zero-tail equation failed");}++tail_rows;}rr.end();
+   }
+  }
+- Writer end;end.text(identity_);end.number(registered_rows,8);end.number(registration_bytes,8);bindPublic(io_,"Classified/base-registered",end.b);base_registered_=true;
++ Writer end;end.text(identity_);end.number(tail_rows,8);end.number(tail_response_bytes,8);bindPublic(io_,"Classified/base-tails-constrained",end.b);tails_constrained_=true;
+ }
+ void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const std::string&id){auto started=Clock::now();auto&r=roots_.at(k);if(r.spec.model)r.open(io_,q,h,rng_,id);else openVector(io_,r.pc,q,io_.prover()?&*r.secret:nullptr,h,rng_,id);rootTiming("opening",r.spec.id,started);}
+ VectorOracle Commitments::view(const std::string&id){
+@@ -113,17 +128,18 @@ VectorOracle Commitments::view(const std::string&id){
+  out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);defer(std::move(c));};return out;
+ }
+ void Commitments::defer(Claim c){
+- need(sealed_ && base_registered_ && !authenticated_ && io_.session()==session_,"classified unregistered/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
++ need(sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_,"classified unconstrained tails/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
+ }
+ void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
+-Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
++Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
+  auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
+  return result;
+ }
+-Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
++Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;
++ std::cerr<<"OPT3A_AUTH {\"builtin_RowMajor_base_coordinate_lookups\":"<<m.rowmajor_coordinate_lookups<<",\"kernel_matched_coordinates\":"<<m.kernel_matched<<",\"partial_visited_coordinates\":"<<m.partial_coordinates<<",\"frozen_kernel_coordinates\":"<<m.frozen_coordinates<<",\"fallback_map_queries\":"<<m.fallback_map_queries<<",\"kernel_and_partial_Fr_multiplications\":"<<m.fr_multiplications<<",\"kernel_and_partial_Fr_additions\":"<<m.fr_additions<<",\"kernel_wall_seconds\":"<<m.kernel_wall<<",\"partial_wall_seconds\":"<<m.partial_wall<<",\"prepare_wall_seconds\":"<<m.map_wall<<",\"kernel_and_partial_cpp_allocations\":"<<m.cpp_allocations<<",\"kernel_and_partial_cpp_allocated_bytes\":"<<m.cpp_allocated_bytes<<"}\n";std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
+ void Commitments::authenticate(){
+- need(sealed_ && base_registered_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && identity(layout_)==identity_,"classified missing/closed/mutated authentication barrier");Writer summary;summary.text(suite);summary.text(identity_);summary.number(claims_.size());for(auto&c:claims_)summary.text(c.id);bindPublic(io_,"Classified/all-claims-fixed",summary.b);
++ need(sealed_ && tails_constrained_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && identity(layout_)==identity_,"classified missing/closed/mutated authentication barrier");Writer summary;summary.text(suite);summary.text(identity_);summary.number(claims_.size());for(auto&c:claims_)summary.text(c.id);bindPublic(io_,"Classified/all-claims-fixed",summary.b);
+  Authentication auth(claims_.size(),layout_.master_actual!=0);std::vector<Fr>lambda;std::vector<Hidden>values;Fr bias=0;for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto local=prepareClaim(c,auth,i);lambda.push_back(io_.coin("Classified/lambda/"+std::to_string(i)));need(!lambda.back().isZero(),"classified zero aggregation challenge");values.push_back(c.value);bias+=lambda.back()*local;}
+  if(opt2MetricsEnabled()){
+   std::uint64_t legacyCoordinates=0,legacyWeights=0,frozen=0,onlyRoot=0,nonRoot=0;
+@@ -134,6 +150,7 @@ void Commitments::authenticate(){
+  auto dot=io_.prover()?partialDot(lambda,auth):std::vector<Fr>(roots_.size(),Fr(0));for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto v=dot[k];partial.push_back(exchangeHidden(io_,"Classified/partial/"+std::to_string(k),v,rng_));rootTiming("partial-exchange",roots_[k].spec.id,rootStarted);}
+  auto witnesses=partial;witnesses.push_back(initial);Relations sum;sum.role="Classified/partial-sum";for(auto&h:witnesses)sum.handles.push_back(h.handle);std::vector<Fr>coeff(witnesses.size(),Fr(1));coeff.back()=Fr(-1);sum.linear={coeff};sigma(io_,sum,io_.prover()?&witnesses:nullptr,rng_);
+  for(std::size_t k=0;k<roots_.size();++k){auto rootStarted=Clock::now();auto K=kernel(k,lambda,auth);auto name="Classified/root-proof/"+std::to_string(k);std::vector<Value>f;if(io_.prover())f={roots_[k].value,[&K](std::size_t j){return K.at(j);}};auto end=expressionSumcheck(io_,roots_[k].spec.padded,partial[k],f,Expression{2,{{Fr(1),{0,1}}}},rng_,name+"/sumcheck");auto expected=fold(K,end.point);std::vector<Fr>().swap(K);equalHidden(io_,end.endpoints[1],expected,rng_,name+"/kernel");rootOpening(k,{end.point,end.endpoints[0].handle},io_.prover()?&end.endpoints[0]:nullptr,name+"/opening");rootTiming("authentication-and-opening",roots_[k].spec.id,rootStarted);}
++ if(opt2MetricsEnabled()){std::size_t ram=0,file=0,fallback=0;for(auto&p:auth.claims){if(!p.frozen)++fallback;else if(p.disk_roots.empty())++ram;else ++file;}std::cerr<<"OPT3B_STORAGE {\"RAM_claims\":"<<ram<<",\"file_claims\":"<<file<<",\"fallback_claims\":"<<fallback<<",\"RAM_bytes\":"<<auth.map_bytes<<",\"RAM_limit\":"<<auth.map_budget<<",\"file_bytes\":"<<auth.store.bytes<<",\"file_limit\":"<<auth.store.limit<<",\"file_read_bytes\":"<<auth.store.read_bytes<<",\"file_read_blocks\":"<<auth.store.read_blocks<<",\"bounded_read_scratch_bytes\":"<<mapping::block_runs*sizeof(mapping::Run)<<"}\n";}
+  authenticated_=true;io_.coin("Classified/all-claims-authenticated/ack");
+ }
+ }
+diff --git a/src/paper_r7/classified_commitments.hpp b/src/paper_r7/classified_commitments.hpp
+index 39228623639698c93884b50eb413873b653e4e99..9eeacc82ddcf9190bff68ece10a0d6ec962f7694 100644
+--- a/src/paper_r7/classified_commitments.hpp
++++ b/src/paper_r7/classified_commitments.hpp
+@@ -2,6 +2,7 @@
+ #include "lookup_prepare.hpp"
+ #include "oneblock_vectors.hpp"
+ #include "oneblock_model.hpp"
++#include "classified_mapping_plan.hpp"
+ namespace zkgpt::r7::oneblock::classified {
+ struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};};
+ struct Root {
+@@ -9,7 +10,9 @@ struct Root {
+  std::function<void(IO&,const Query&,const Hidden*,Random*,const std::string&)>open;
+  std::vector<G1>basis;std::vector<Fr>blinds;
+ };
+-struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0;};
++struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
++ std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
++ double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0,kernel_wall=0,partial_wall=0,map_wall=0;};
+ class Commitments {
+  friend struct AuthenticationTestAccess;
+  mutable AuthMetrics auth_metrics_;
+@@ -17,27 +20,39 @@ class Commitments {
+   std::vector<Fr>a_,b_;unsigned split_;
+   public:explicit Weights(const std::vector<Fr>&,AuthMetrics* =nullptr);
+   std::size_t bytes()const;Fr at(std::size_t)const;
++  // Logical intervals share b[high]; lambda is supplied only after its FS draw.
++  template<class F>std::size_t scaled(std::size_t begin,std::size_t count,const Fr&lambda,F&&consume,std::size_t step=1)const{
++   if(step!=1){std::size_t groups=0,previous=std::size_t(-1);Fr factor;for(std::size_t j=0;j<count;++j,begin+=step){auto high=begin>>split_;if(high!=previous){factor=lambda*b_[high];previous=high;++groups;}consume(factor*a_[begin&(a_.size()-1)]);}return groups;}
++   std::size_t groups=0,end=begin+count;
++   while(begin<end){auto high=begin>>split_;auto stop=std::min(end,(high+1)*a_.size());Fr factor=lambda*b_[high];++groups;
++    for(;begin<stop;++begin)consume(factor*a_[begin&(a_.size()-1)]);
++   }return groups;
++  }
+  };
+  struct Authentication {
+- struct Run {std::size_t begin,count;Coordinate first;};
+- struct Prepared {std::vector<Run>runs;bool frozen=false;std::unique_ptr<Weights>weights;};
++ using Run=mapping::Run;
++ struct Prepared:mapping::Plan {std::unique_ptr<Weights>weights;};
+  static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
+  const std::size_t map_budget,weight_budget;
+  std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
+- explicit Authentication(std::size_t n,bool full12=false):map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n){}
++ mapping::Store store;
++ explicit Authentication(std::size_t n,bool full12=false):map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n),store(4*map_budget){}
+ };
++ bool usesBaseCoordinates(const Claim&)const;
+  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
+  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
+  std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
+- IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,base_registered_=false,authenticated_=false;
++ IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
+  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
+  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
+  Digest mapDigest(const Claim&)const;
+  public:
+- std::uint64_t registration_bytes=0,registered_rows=0;
++ // Full base row knowledge registration is disabled; retain truthful legacy metrics.
++ static constexpr std::uint64_t registration_bytes=0,registered_rows=0;
++ std::uint64_t tail_response_bytes=0,tail_rows=0;
+  Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr);
+  ~Commitments();
+- void registerBase();
++ void constrainBaseTails();
+  VectorOracle view(const std::string&);
+  void defer(Claim);
+  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);
+diff --git a/src/paper_r7/classified_controller.inc b/src/paper_r7/classified_controller.inc
+index 6baf08376fd00c097e9bbea39ec04a1500bfe4bd..81bb062cc35fd79ac076b699a1be2b35b2bcb1fd 100644
+--- a/src/paper_r7/classified_controller.inc
++++ b/src/paper_r7/classified_controller.inc
+@@ -42,7 +42,7 @@
+ #else
+  if(isP && attack=="wrong-model-witness")modelSecret->values.at(0)+=Fr(1);
+ #endif
+- timed("complete-classified-base-knowledge-and-tail",[&]{pcs.registerBase();});for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/knowledge-tail");
++ timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/physical-zero-tail");
+  if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;classified::writeLayout(out,layout);output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
+  timed("classified-public-X-Y-constants",[&]{
+   auto entries=trustedPublicEntries(s,ctx);auto all=std::make_shared<PublicEntries>(std::move(entries.x));all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
+@@ -70,4 +70,4 @@
+  pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
+ #endif
+  io.save(true);
+- struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
++ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
+diff --git a/src/paper_r7/classified_crypto_tests.cpp b/src/paper_r7/classified_crypto_tests.cpp
+index 64786a1dd2459d0cbc9b020b16cbe30ce39fecb0..7cfadcf42577d29b3cc50fc4514fd3c5900629f6 100644
+--- a/src/paper_r7/classified_crypto_tests.cpp
++++ b/src/paper_r7/classified_crypto_tests.cpp
+@@ -2,20 +2,45 @@
+ #include <iostream>
+ using namespace zkgpt::r7;using namespace oneblock;using namespace classified;
+ namespace {
+-struct Tape:IO {bool p;std::vector<std::pair<std::string,Bytes>>data;std::size_t at=0,coins=0;explicit Tape(bool b):p(b){}bool prover()const override{return p;}std::string session()const override{return std::string(64,'a');}Digest prefix()const override{return {};}Bytes message(const std::string&n,const Bytes&b={})override{if(p){data.push_back({n,b});return b;}need(at<data.size()&&data[at].first==n,"classified unit order");return data[at++].second;}Fr coin(const std::string&)override{return Fr(3+(coins++%71));}};
++struct Tape:IO {bool p,zero_coin=false;int corrupt_padding=-1;std::vector<std::pair<std::string,Bytes>>data;std::size_t at=0,coins=0;explicit Tape(bool b):p(b){}bool prover()const override{return p;}std::string session()const override{return std::string(64,'a');}Digest prefix()const override{return {};}Bytes message(const std::string&n,const Bytes&b={})override{if(p){auto out=b;if(corrupt_padding>=0 && n=="Classified/root/0/PC"){auto pc=decodeVector(out);auto j=std::size_t(corrupt_padding);pc.points.at(j/pc.columns)+=hyrax_a3::generators(pc.columns).at(j%pc.columns);out=encodeVector(pc);}data.push_back({n,out});return out;}need(at<data.size()&&data[at].first==n,"classified unit order");return data[at++].second;}Fr coin(const std::string&)override{return zero_coin?Fr(0):Fr(3+(coins++%71));}};
++template<class F>void rejects(F f,const std::string&why){bool bad=false;try{f();}catch(const std::exception&){bad=true;}need(bad,why.c_str());}
+ Layout small(){Layout p;p.native=std::string(64,'a');p.roots={{"C_aux",5,8,true,false},{"C_lookup/helpers/0",8,8,false,false}};for(unsigned j=0;j<5;++j)p.base.push_back({0,j});View v;v.id="unit/native-E";v.actual=5;v.padded=8;v.start={1,0};v.kind=ObjectKind::ExpHelper;p.views.emplace(v.id,v);return p;}
+ void zeroTailRows(){
+- Layout layout;layout.native=std::string(64,'a');layout.roots={{"C_aux",17,4096,true,false}};for(unsigned i=0;i<17;++i)layout.base.push_back({0,i});
+- Prepared prepared;SessionRandom rng;Tape p(true);Commitments pcs(p,layout,[](std::size_t i){return Fr(i+1);},&prepared,&rng);pcs.registerBase();need(pcs.registered_rows==4,"fully padded rows skipped");need(pcs.registration_bytes==32*(17+4),"registration failed to constrain padded rows");
+- auto&root=pcs.roots().at(0);for(unsigned i=1;i<4;++i)need(root.pc.points[i]==parameters(1).hiding*root.blinds[i],"fully padded row has nonzero values");
+- Tape v(false);v.data=p.data;Commitments checked(v,layout,{},nullptr,nullptr);checked.registerBase();need(v.at==v.data.size() && checked.registered_rows==4,"independent complete row registration");
++ Layout layout;layout.native=std::string(64,'a');layout.roots={{"C_aux",1041,4096,true,false}};for(unsigned i=0;i<1041;++i)layout.base.push_back({0,i});
++ Prepared prepared;SessionRandom rng;Tape p(true);Commitments pcs(p,layout,[](std::size_t i){return Fr(i+1);},&prepared,&rng);pcs.constrainBaseTails();need(pcs.registered_rows==0 && pcs.registration_bytes==0,"full base row registration must be absent");
++ std::size_t responses=0;for(auto&m:p.data){need(m.first.rfind("Classified/register/",0)!=0 && m.first!="Classified/base-registered","legacy full row registration message emitted");if(m.first.find("/responses")!=std::string::npos)responses+=m.second.size();}need(responses==640,"tail proof must skip full active row and constrain all zero rows");
++ auto&root=pcs.roots().at(0);for(unsigned i=2;i<4;++i)need(root.pc.points[i]==parameters(1).hiding*root.blinds[i],"fully padded row has nonzero values");
++ Tape v(false);v.data=p.data;Commitments checked(v,layout,{},nullptr,nullptr);checked.constrainBaseTails();need(v.at==v.data.size() && checked.registered_rows==0,"independent tail-only verification");
++ need(pcs.tail_rows==3 && pcs.tail_response_bytes==640 && checked.tail_rows==3 && checked.tail_response_bytes==640,"truthful tail-only metrics");
+  // Only the very last blind response is changed: the final zero row equation
+  // must reject, rather than the framing or an earlier active row.
+  Tape bad(false);bad.data=p.data;for(auto&message:bad.data)if(message.first.find("/responses")!=std::string::npos){auto&b=message.second;auto f=r1::decodeFr(Bytes(b.end()-32,b.end()));auto bytes=r1::encode(f+Fr(1));std::copy(bytes.begin(),bytes.end(),b.end()-32);}
+- bool rejected=false;try{Commitments judge(bad,layout,{},nullptr,nullptr);judge.registerBase();}catch(const std::exception&e){need(std::string(e.what()).find("zero-tail equation")!=std::string::npos,e.what());rejected=true;}need(rejected,"malicious zero-row blind accepted");
++ bool rejected=false;try{Commitments judge(bad,layout,{},nullptr,nullptr);judge.constrainBaseTails();}catch(const std::exception&e){need(std::string(e.what()).find("zero-tail equation")!=std::string::npos,e.what());rejected=true;}need(rejected,"malicious zero-row blind accepted");
++ for(auto suffix:{"/header","/masks","/responses"}){Tape broken(false);broken.data=p.data;for(auto&m:broken.data)if(m.first.rfind("Classified/zero-tail/",0)==0 && m.first.find(suffix)!=std::string::npos){m.second.pop_back();break;}rejects([&]{Commitments judge(broken,layout,{},nullptr,nullptr);judge.constrainBaseTails();},"truncated tail message accepted");}
++ // Alter an actual physical padding coordinate at commitment time. Both the
++ // constructor's decoded PC and later tail header contain this malicious PC,
++ // so rejection must be algebraic rather than a header identity mismatch.
++ for(int padding:{1041,2048,4095}){Tape malicious(true);malicious.corrupt_padding=padding;Prepared empty;Commitments prover(malicious,layout,[](std::size_t i){return Fr(i+1);},&empty,&rng);prover.constrainBaseTails();Tape judge(false);judge.data=malicious.data;bool failed=false;try{Commitments verifier(judge,layout,{},nullptr,nullptr);verifier.constrainBaseTails();}catch(const std::exception&e){need(std::string(e.what()).find("zero-tail equation")!=std::string::npos,e.what());failed=true;}need(failed,"nonzero physical padding accepted");}
++ std::cout<<"TAIL_ONLY_METRICS registered_rows="<<checked.registered_rows<<" registration_response_bytes="<<checked.registration_bytes<<" tail_rows="<<checked.tail_rows<<" tail_response_bytes="<<checked.tail_response_bytes<<'\n';
+ }
+-void run(bool bad){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(std::initializer_list<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(1048576),Fr(1048576),Fr(1048576)});SessionRandom rng;Tape tx(true);Value base=[](std::size_t i){return Fr(i+1);};Commitments c(tx,p,base,&data,&rng);c.registerBase();auto view=c.view("unit/native-E");std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};auto h=exchangeHidden(tx,"unit/value",r1::mle(*std::make_shared<std::vector<Fr>>(std::initializer_list<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(1048576),Fr(1048576),Fr(1048576)}),q)+Fr(bad?1:0),&rng);view.open(tx,{q,h.handle},&h,&rng,"unit/view");need(!c.authenticated(),"queued opening is not authenticated");c.authenticate();need(c.authenticated(),"mandatory barrier completed");Tape rx(false);rx.data=tx.data;Commitments v(rx,p,{},nullptr,nullptr);v.registerBase();auto vv=v.view("unit/native-E");auto vh=exchangeHidden(rx,"unit/value",Fr(0),nullptr);vv.open(rx,{q,vh.handle},nullptr,nullptr,"unit/view");v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"witness-free verifier barrier");}
+-void changedMap(){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(1));SessionRandom rng;Tape tx(true);Value base=[](std::size_t j){return Fr(j+1);};Commitments pcs(tx,p,base,&data,&rng);pcs.registerBase();auto indices=std::make_shared<std::vector<std::size_t>>(std::initializer_list<std::size_t>{0,1,2,3});std::vector<Fr>point{Fr(3),Fr(7)},wrong{Fr(2),Fr(1),Fr(3),Fr(4)};auto h=exchangeHidden(tx,"mutation/value",r1::mle(wrong,point),&rng);pcs.deferBase("mutation/query",4,4,[indices](std::size_t j){return indices->at(j);},h,point);std::swap(indices->at(0),indices->at(1));pcs.authenticate();}
+-void lifecycle(unsigned mode){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(1));SessionRandom rng;Tape io(true);Value base=[](std::size_t j){return Fr(j+1);};Commitments pcs(io,p,base,&data,&rng);pcs.registerBase();if(mode==0){pcs.authenticate();return;}auto h=exchangeHidden(io,"lifecycle/value",Fr(1),&rng);std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};if(mode==1){pcs.deferBase("duplicate",5,8,[](std::size_t j){return j;},h,q);pcs.deferBase("duplicate",5,8,[](std::size_t j){return j;},h,q);}else{auto view=pcs.view("unit/native-E");Tape foreign(true);view.open(foreign,{q,h.handle},&h,&rng,"foreign");}}
++void tailBoundaries(){
++ struct Case{std::size_t actual,padded,rows,bytes;};
++ for(auto c:{Case{1024,1024,0,0},Case{4096,4096,0,0},Case{2048,4096,2,64},Case{1023,1024,1,32768},Case{1024,131072,127,4064}}){
++  Layout l;l.native=std::string(64,'a');l.roots={{"C_aux",c.actual,c.padded,true,false}};for(std::size_t i=0;i<c.actual;++i)l.base.push_back({0,std::uint32_t(i)});SessionRandom rng;Prepared empty;Tape p(true);Commitments pcs(p,l,[](std::size_t i){return Fr(i+1);},&empty,&rng);pcs.constrainBaseTails();need(pcs.tail_rows==c.rows && pcs.tail_response_bytes==c.bytes && pcs.registered_rows==0,"tail row boundary/chunk count");
++  Tape v(false);v.data=p.data;Commitments verifier(v,l,{},nullptr,nullptr);verifier.constrainBaseTails();need(v.at==v.data.size() && verifier.tail_rows==c.rows,"independent boundary/chunk verification");
++  if(!c.rows)for(auto&m:p.data)need(m.first.rfind("Classified/zero-tail/",0)!=0,"full active rows produced unnecessary knowledge proof");
++  rejects([&]{pcs.constrainBaseTails();},"repeated tail barrier accepted");
++ }
++ auto l=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(1));SessionRandom rng;Tape io(true);Commitments pcs(io,l,[](std::size_t i){return Fr(i+1);},&data,&rng);auto h=exchangeHidden(io,"missing-tail/value",Fr(1),&rng);
++ rejects([&]{pcs.deferBase("missing-tail",5,8,[](std::size_t i){return i;},h,{Fr(2),Fr(3),Fr(5)});},"defer without tail barrier accepted");rejects([&]{pcs.authenticate();},"authentication without tail barrier accepted");io.zero_coin=true;rejects([&]{pcs.constrainBaseTails();},"zero tail challenge accepted");
+ }
+-int main(){try{r1::init();zeroTailRows();for(unsigned k=0;k<3;++k){bool rejected=false;try{lifecycle(k);}catch(...){rejected=true;}need(rejected,"missing duplicate or foreign deferred claim rejected");}bool mapRejected=false;try{changedMap();}catch(...){mapRejected=true;}need(mapRejected,"deferred mapping mutation must reject before authentication");run(false);bool rejected=false;try{run(true);}catch(...){rejected=true;}need(rejected,"classified wrong hidden lookup value rejected");std::cout<<"CLASSIFIED_CRYPTO_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"CLASSIFIED_CRYPTO_FAILED "<<e.what()<<'\n';return 1;}}
++void run(bool bad){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(std::initializer_list<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(1048576),Fr(1048576),Fr(1048576)});SessionRandom rng;Tape tx(true);Value base=[](std::size_t i){return Fr(i+1);};Commitments c(tx,p,base,&data,&rng);c.constrainBaseTails();auto view=c.view("unit/native-E");std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};auto h=exchangeHidden(tx,"unit/value",r1::mle(*std::make_shared<std::vector<Fr>>(std::initializer_list<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(1048576),Fr(1048576),Fr(1048576)}),q)+Fr(bad?1:0),&rng);view.open(tx,{q,h.handle},&h,&rng,"unit/view");need(!c.authenticated(),"queued opening is not authenticated");c.authenticate();need(c.authenticated(),"mandatory barrier completed");Tape rx(false);rx.data=tx.data;Commitments v(rx,p,{},nullptr,nullptr);v.constrainBaseTails();auto vv=v.view("unit/native-E");auto vh=exchangeHidden(rx,"unit/value",Fr(0),nullptr);vv.open(rx,{q,vh.handle},nullptr,nullptr,"unit/view");v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"witness-free verifier barrier");
++ if(!bad){
++  rejects([&]{v.authenticate();},"repeated authentication barrier accepted");
++  auto records=tx.data;auto barrier=std::find_if(records.begin(),records.end(),[](auto&m){return m.first=="Classified/all-claims-fixed";});need(barrier!=records.end(),"unit authentication barrier not found");records.erase(barrier,records.end());Tape missing(false);missing.data=std::move(records);Commitments judge(missing,p,{},nullptr,nullptr);judge.constrainBaseTails();auto oracle=judge.view("unit/native-E");auto hidden=exchangeHidden(missing,"unit/value",Fr(0),nullptr);oracle.open(missing,{q,hidden.handle},nullptr,nullptr,"unit/view");rejects([&]{judge.authenticate();},"missing authentication barrier accepted");need(!judge.authenticated(),"missing barrier falsely authenticated");
++ }
++}
++void changedMap(){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(1));SessionRandom rng;Tape tx(true);Value base=[](std::size_t j){return Fr(j+1);};Commitments pcs(tx,p,base,&data,&rng);pcs.constrainBaseTails();auto indices=std::make_shared<std::vector<std::size_t>>(std::initializer_list<std::size_t>{0,1,2,3});std::vector<Fr>point{Fr(3),Fr(7)},wrong{Fr(2),Fr(1),Fr(3),Fr(4)};auto h=exchangeHidden(tx,"mutation/value",r1::mle(wrong,point),&rng);pcs.deferBase("mutation/query",4,4,[indices](std::size_t j){return indices->at(j);},h,point);std::swap(indices->at(0),indices->at(1));pcs.authenticate();}
++void lifecycle(unsigned mode){auto p=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(1));SessionRandom rng;Tape io(true);Value base=[](std::size_t j){return Fr(j+1);};Commitments pcs(io,p,base,&data,&rng);pcs.constrainBaseTails();if(mode==0){pcs.authenticate();return;}auto h=exchangeHidden(io,"lifecycle/value",Fr(1),&rng);std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};if(mode==1){pcs.deferBase("duplicate",5,8,[](std::size_t j){return j;},h,q);pcs.deferBase("duplicate",5,8,[](std::size_t j){return j;},h,q);}else{auto view=pcs.view("unit/native-E");Tape foreign(true);view.open(foreign,{q,h.handle},&h,&rng,"foreign");}}
++}
++int main(){try{r1::init();zeroTailRows();tailBoundaries();for(unsigned k=0;k<3;++k){bool rejected=false;try{lifecycle(k);}catch(...){rejected=true;}need(rejected,"missing duplicate or foreign deferred claim rejected");}bool mapRejected=false;try{changedMap();}catch(...){mapRejected=true;}need(mapRejected,"deferred mapping mutation must reject before authentication");run(false);bool rejected=false;try{run(true);}catch(...){rejected=true;}need(rejected,"classified wrong hidden lookup value rejected");std::cout<<"CLASSIFIED_CRYPTO_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"CLASSIFIED_CRYPTO_FAILED "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/classified_layout.cpp b/src/paper_r7/classified_layout.cpp
+index dad7656ae2cfaf813f4fdde8751dcff15f3c26d8..d2e61d65dcdcf7c980da563a415d404e995618b4 100644
+--- a/src/paper_r7/classified_layout.cpp
++++ b/src/paper_r7/classified_layout.cpp
+@@ -37,7 +37,7 @@ std::string identity(const Layout&p){
+ void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
+ void writeLayout(std::ostream&o,const Layout&p){
+  if(p.master_actual){writePartitionedLayout(o,p);return;}
+- o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:std::min<std::size_t>(1024,r.padded))<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"full_base_registration\":"<<(r.registered?"true":"false")<<'}';}
++ o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:std::min<std::size_t>(1024,r.padded))<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false"<<'}';}
+  o<<"],\"base_coordinate_runs\":[";first=true;for(std::size_t i=0;i<p.base.size();){auto begin=i;auto r=p.base[i];while(++i<p.base.size() && p.base[i].root==r.root && p.base[i].index==r.index+i-begin){}if(!first)o<<',';first=false;o<<"{\"original\":"<<begin<<",\"count\":"<<i-begin<<",\"root\":"<<r.root<<",\"local\":"<<r.index<<'}';}
+  o<<"],\"views\":[";first=true;for(auto&[id,v]:p.views){if(!first)o<<',';first=false;o<<"{\"id\":\""<<id<<"\",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"logical_padded\":"<<v.padded<<",\"mapped\":"<<(v.mapped?"true":"false")<<",\"root\":"<<v.start.root<<",\"offset\":"<<v.start.index<<",\"spans\":[";bool sfirst=true;for(auto&s:v.spans){if(!sfirst)o<<',';sfirst=false;o<<"{\"base\":"<<s.offset<<",\"count\":"<<s.count<<",\"signed_bias_Fr_decimal\":\""<<s.bias.getStr()<<"\"}";}o<<"],\"padding\":\""<<(v.mapped?"virtual-zero":"stored-native-logical-values")<<"\"}";}o<<"]}\n";
+ }
+diff --git a/src/paper_r7/classified_layout.hpp b/src/paper_r7/classified_layout.hpp
+index 00e9db424bffaec42413f93fe3276fa837565fc3..a2244cdd64087bd19aa3606228b780d0fa742496 100644
+--- a/src/paper_r7/classified_layout.hpp
++++ b/src/paper_r7/classified_layout.hpp
+@@ -3,8 +3,10 @@
+ #include "oneblock_sumcheck.hpp"
+ #include <map>
+ namespace zkgpt::r7::oneblock::classified {
+-inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v3";
++inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v4";
+ struct Coordinate {std::uint32_t root=0,index=0;bool operator==(const Coordinate&o)const{return root==o.root&&index==o.index;}};
++// registered classifies native base roots for packing and layout identity only.
++// It does not enable full row knowledge registration.
+ struct RootSpec {std::string id;std::size_t actual=0,padded=0;bool registered=false,model=false;};
+ struct Piece {std::size_t begin=0,count=0;Coordinate start;};
+ struct View {std::string id;std::size_t actual=0,padded=0;bool mapped=false;std::vector<r1::InputSpan>spans;Coordinate start;ObjectKind kind;std::vector<Piece>pieces;};
+diff --git a/src/paper_r7/classified_layout_tests.cpp b/src/paper_r7/classified_layout_tests.cpp
+index d41600bb598fc73288e085eaebb0592db1b44fc0..b904c5f755533fb75adc9dcbfd5a05f2b66f7df8 100644
+--- a/src/paper_r7/classified_layout_tests.cpp
++++ b/src/paper_r7/classified_layout_tests.cpp
+@@ -10,6 +10,6 @@ int main(){try{
+  auto bad=p;bad.base[1]=bad.base[0];bool rejected=false;try{validate(bad,native.context);}catch(...){rejected=true;}need(rejected,"classified wrong map rejected");
+  need(identity(p)==identity(makeLayout(native.context)),"classified deterministic layout");
+  std::size_t registered=0;for(auto&r:p.roots){need(r.padded<=(1u<<24),"classified bounded slab");if(r.registered)registered+=r.actual;}
+- need(registered==native.context.plan.master.actual,"classified full base knowledge retained");
++ need(registered==native.context.plan.master.actual,"classified native base packing classification retained");
+  std::cout<<"CLASSIFIED_LAYOUT_TESTED roots="<<p.roots.size()<<" registered="<<registered<<" views="<<p.views.size()<<'\n';return 0;
+ }catch(const std::exception&e){std::cerr<<"CLASSIFIED_LAYOUT_FAILED "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/classified_probe_main.cpp b/src/paper_r7/classified_probe_main.cpp
+index 5fbd5564cb2635da60f5d9eb67066d1f62f00756..77c47fe6c94330396826609a9fd8222491a4a4f3 100644
+--- a/src/paper_r7/classified_probe_main.cpp
++++ b/src/paper_r7/classified_probe_main.cpp
+@@ -21,7 +21,7 @@ int main(int argc,char**argv){try{
+  View mapped;mapped.id="unit/L1";mapped.actual=mapped.padded=n;mapped.mapped=true;mapped.kind=ObjectKind::MappedChild;mapped.spans={{0,n/2,Fr(-3)},{0,n/2,Fr(5)}};p.views.emplace(mapped.id,mapped);
+  int audit=-1;if(!isP){auto e=std::getenv("R7_PUBLIC_AUDIT_FD");need(e,"classified probe audit FD");audit=std::stoi(e);}
+  PipeIO io(isP,"classified-probe",attack=="challenge"?"challenge":"",classified::suite,PipeIO::Profile::ClassifiedV2,audit);SessionRandom random;Random*rng=isP?&random:nullptr;Value base;if(isP)base=[](std::size_t i){return Fr(int(i%29)-7);};
+- Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.registerBase();
++ Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.constrainBaseTails();
+  if(isP && attack=="late-change")pcs.roots().at(2).secret->values->at(0)+=Fr(1);
+  for(auto&[id,v]:p.views){auto oracle=pcs.view(id);std::vector<Fr>q;for(unsigned k=0;k<r1::log2exact(n);++k)q.push_back(io.coin("probe/"+id+"/query/"+std::to_string(k)));Fr y=0;if(isP){auto weights=r1::weights(q);for(std::size_t i=0;i<n;++i)y+=oracle.value(i)*weights[i];if(attack=="value" && id=="unit/L1")y+=Fr(1);}auto h=exchangeHidden(io,"probe/"+id+"/value",y,rng);oracle.open(io,{q,h.handle},isP?&h:nullptr,rng,"probe/"+id+"/open");}
+  std::vector<Fr>q;for(unsigned j=0;j<r1::log2exact(n);++j)q.push_back(io.coin("probe/GKR-point/"+std::to_string(j)));auto mapping=[=](std::size_t j){return (j+(isP && attack=="map"?1:0))%(2*n);};Fr y=0;if(isP){auto w=r1::weights(q);for(std::size_t j=0;j<n;++j)y+=w[j]*base(mapping(j));}auto h=exchangeHidden(io,"probe/GKR-value",y,rng);pcs.deferBase("probe/GKR-terminal",n,n,mapping,h,q);
+diff --git a/src/paper_r7/fs_io.hpp b/src/paper_r7/fs_io.hpp
+index 7962c675bd1b8dc191789007996c6c0b38a5f3cf..13ab3c0e91ba97f0fec2eaa588a8d82f594d5a41 100644
+--- a/src/paper_r7/fs_io.hpp
++++ b/src/paper_r7/fs_io.hpp
+@@ -3,8 +3,8 @@
+ #include <memory>
+ namespace zkgpt::r7::fs {
+ using namespace crypto;
+-inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
+-inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v1";
++inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v3";
++inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
+ inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
+ inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
+ struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};
+diff --git a/src/paper_r7/fs_probe_main.cpp b/src/paper_r7/fs_probe_main.cpp
+index 89952ffbcb477584f4641b58ea4f4ba523576bf9..7118ed139a9484f8530f5ba82cc3f9b10b7f2b10 100644
+--- a/src/paper_r7/fs_probe_main.cpp
++++ b/src/paper_r7/fs_probe_main.cpp
+@@ -22,7 +22,8 @@ int main(int argc,char**argv){try{
+  const bool isP=true;need(argc==5 || argc==6,"classified P probe arguments");
+ #endif
+  auto n=std::stoull(argv[1]);std::string grouping=argv[2],attack=argc==6?argv[5]:"";need(n>=16 && n<=1024 && !(n&(n-1)) && (grouping=="joint" || grouping=="grouped"),"classified bounded probe dimension/grouping");
+- Layout p;p.native=std::string(64,'a');p.roots={{"C_aux",n,n,true,false},{"C_lookup/queries",n,n,true,false}};for(std::size_t i=0;i<2*n;++i)p.base.push_back({std::uint32_t(i%2),std::uint32_t(i/2)});
++ // Exercise actual physical zero tails in the independent FS component probe.
++ Layout p;p.native=std::string(64,'a');p.roots={{"C_aux",n-3,n,true,false},{"C_lookup/queries",n-3,n,true,false}};for(std::size_t i=0;i<2*(n-3);++i)p.base.push_back({std::uint32_t(i%2),std::uint32_t(i/2)});
+  auto slab=grouping=="joint"?4*n:2*n;for(std::size_t j=0;j<4*n/slab;++j)p.roots.push_back({"C_lookup/helpers/"+std::to_string(j),slab,slab,false,false});
+  Prepared prepared;
+  for(unsigned j=0;j<4;++j){View v;v.id="unit/helper/"+std::to_string(j);v.actual=n-3;v.padded=n;v.kind=ObjectKind::ExpHelper;v.start={std::uint32_t(2+j*n/slab),std::uint32_t(j*n%slab)};p.views.emplace(v.id,v);if(isP){auto x=std::make_shared<std::vector<Fr>>(n,Fr(1048576));for(std::size_t i=0;i<n-3;++i)x->at(i)=Fr(1+j+i%13);prepared.emplace(v.id,x);}}
+@@ -35,10 +36,10 @@ int main(int argc,char**argv){try{
+  zkgpt::r7::fs::FsProverIO transport(argv[3],binding);
+ #endif
+  ProbeIO io(transport,isP && attack=="challenge");SessionRandom random;Random*rng=isP?&random:nullptr;Value base;if(isP)base=[](std::size_t i){return Fr(int(i%29)-7);};
+- Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.registerBase();
++ Commitments pcs(io,p,base,isP?&prepared:nullptr,rng);pcs.constrainBaseTails();
+  if(isP && attack=="late-change")pcs.roots().at(2).secret->values->at(0)+=Fr(1);
+  for(auto&[id,v]:p.views){auto oracle=pcs.view(id);std::vector<Fr>q;for(unsigned k=0;k<r1::log2exact(n);++k)q.push_back(io.coin("probe/"+id+"/query/"+std::to_string(k)));Fr y=0;if(isP){auto weights=r1::weights(q);for(std::size_t i=0;i<n;++i)y+=oracle.value(i)*weights[i];if(attack=="value" && id=="unit/L1")y+=Fr(1);}auto h=exchangeHidden(io,"probe/"+id+"/value",y,rng);oracle.open(io,{q,h.handle},isP?&h:nullptr,rng,"probe/"+id+"/open");}
+  std::vector<Fr>q;for(unsigned j=0;j<r1::log2exact(n);++j)q.push_back(io.coin("probe/GKR-point/"+std::to_string(j)));auto mapping=[=](std::size_t j){return (j+(isP && attack=="map"?1:0))%(2*n);};Fr y=0;if(isP){auto w=r1::weights(q);for(std::size_t j=0;j<n;++j)y+=w[j]*base(mapping(j));}auto h=exchangeHidden(io,"probe/GKR-value",y,rng);pcs.deferBase("probe/GKR-terminal",n,n,mapping,h,q);
+  need(!pcs.authenticated(),"classified pending claim false acceptance");need(!(isP && attack=="missing-barrier"),"test attack: missing authentication barrier");pcs.authenticate();need(pcs.authenticated(),"classified incomplete barrier");transport.finish();std::cerr<<transport.metadataJson()<<'\n';
+- struct rusage r{};getrusage(RUSAGE_SELF,&r);auto m=metrics();std::cerr<<"{\"status\":\""<<(isP?"FS_PROBE_CREATED_CANDIDATE":zkgpt::r7::fs::verifiedStatus)<<"\",\"n\":"<<n<<",\"grouping\":\""<<grouping<<"\",\"roots\":"<<p.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"wire_bytes\":"<<io.wireBytes()<<",\"P_wire_bytes\":"<<io.proofBytes()<<",\"peak_rss_kib\":"<<r.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<"}\n";return 0;
++ struct rusage r{};getrusage(RUSAGE_SELF,&r);auto m=metrics();std::cerr<<"{\"status\":\""<<(isP?"FS_PROBE_CREATED_CANDIDATE":zkgpt::r7::fs::verifiedStatus)<<"\",\"n\":"<<n<<",\"grouping\":\""<<grouping<<"\",\"roots\":"<<p.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()<<",\"wire_bytes\":"<<io.wireBytes()<<",\"P_wire_bytes\":"<<io.proofBytes()<<",\"peak_rss_kib\":"<<r.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<"}\n";return 0;
+  }catch(const std::exception&e){std::cerr<<"REJECT_OR_INCOMPLETE "<<e.what()<<'\n';return 2;}}
+diff --git a/src/paper_r7/fs_tests.cpp b/src/paper_r7/fs_tests.cpp
+index b27fb53352d23b435fd3dd380722fc1f95ee1fa7..a94642117b669c43b5639db6fa7a6da7cbf2abb0 100644
+--- a/src/paper_r7/fs_tests.cpp
++++ b/src/paper_r7/fs_tests.cpp
+@@ -12,6 +12,15 @@ template<class F>void rejects(F f){bool bad=false;try{f();}catch(const std::exce
+ Bytes read(const std::string&p){std::ifstream f(p,std::ios::binary);return {std::istreambuf_iterator<char>(f),{}};}
+ void write(const std::string&p,const Bytes&b){std::ofstream f(p,std::ios::binary);f.write(reinterpret_cast<const char*>(b.data()),b.size());}
+ void consume(const std::string&p,const fs::Binding&b){fs::FsVerifierIO v(p,b);need(v.message("first")==Bytes({7,8}),"FS first");auto c=v.coin("challenge");need(v.message("response")==r1::encode(c*Fr(7)),"FS challenge recomputation");v.finish();}
++void legacySuites(const std::string&p){
++ for(bool full12:{false,true}){fs::Binding b{full12?"Full12":"Oneblock","suite-transition",std::string(64,'a'),{2,7,1,8}};auto name=p+(full12?".full12":".oneblock");
++  {fs::FsProverIO w(name,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));w.finish();}consume(name,b);
++  auto bytes=read(name);std::string current=full12?fs::full12Suite:fs::suite;
++  const std::string legacy=full12?"R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v1":"R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
++  need(current.size()==legacy.size(),"suite transition fixture length");auto pos=std::search(bytes.begin(),bytes.end(),current.begin(),current.end());need(pos!=bytes.end(),"current suite absent from header");std::copy(legacy.begin(),legacy.end(),pos);write(name+".legacy",bytes);
++  bool rejected=false;try{fs::FsVerifierIO v(name+".legacy",b);}catch(const std::exception&e){need(std::string(e.what()).find("unknown suite/version")!=std::string::npos,e.what());rejected=true;}need(rejected,"legacy full-registration suite accepted");
++ }
++}
+ void buffered(const std::string&p,const fs::Binding&b){
+  Bytes big(131073,17);fs::FsProverIO tx(p,b);
+  for(unsigned i=0;i<1000;++i)tx.message("batch/"+std::to_string(i),Bytes(31,std::uint8_t(i)));
+@@ -30,7 +39,7 @@ void buffered(const std::string&p,const fs::Binding&b){
+ int main(){try{
+  r1::init();char pattern[]="build/fs-unit-XXXXXX";auto d=mkdtemp(pattern);need(d,"FS test temp");std::string p=std::string(d)+"/proof.fsproof";
+  fs::Binding b{"Unit","test-context",std::string(64,'a'),{1,2,3}};
+- buffered(p+".buffered",b);
++ buffered(p+".buffered",b);legacySuites(p);
+  fs::CanonicalTranscript t({1,2,3},{4,5});auto initial=t.prefix();need(t.prefix()==initial,"FS prefix mutated state");t.message("m",{7,8});auto c=t.coin("c");std::cout<<"REFERENCE "<<hex(t.prefix())<<' '<<hex(t.challengeDigest())<<' '<<hex(r1::hash(r1::encode(c)))<<' '<<t.rejections()<<'\n';rejects([&]{t.coin("c");});
+  fs::FsProverIO w(p,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));need(!std::filesystem::exists(p),"FS early publication");auto prefix=w.prefix();w.finish();consume(p,b);need(std::filesystem::exists(p) && w.prefix()==prefix,"FS publication/prefix");
+  auto bytes=read(p);rejects([&]{fs::FsProverIO duplicate(p,b);});need(read(p)==bytes,"FS overwrite changed original");
+diff --git a/src/paper_r7/full12_runtime_probe.cpp b/src/paper_r7/full12_runtime_probe.cpp
+index 0164e250adc3021ca50f53438008d030c647ac98..50414a59963788e4a3e78190452dd418bb6611c4 100644
+--- a/src/paper_r7/full12_runtime_probe.cpp
++++ b/src/paper_r7/full12_runtime_probe.cpp
+@@ -14,7 +14,7 @@ int main(int argc,char**argv){try{need(argc==2,"component probe requires proof p
+ std::vector<Fr>W;for(std::size_t j=0;j<11;++j)W.push_back(base(j<5?3+j:16+j-5));std::size_t off=0;
+  for(auto&r:l.roots)if(r.model){model::Trust t;t.anchor.profile="unit";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="unit-full12-model";auto s=zkgpt::r1::PCSpec::make("unit/W/"+std::to_string(trust.size()),r.actual,r.padded,zkgpt::r1::Layout::RowMajor);std::vector<Fr>values(W.begin()+off,W.begin()+off+r.actual);auto padded=values;padded.resize(r.padded,Fr(0));t.anchor.w=zkgpt::r1::commit(s,padded);t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;trust.push_back(t);if(isP)secrets.push_back(model::rerandomize(trust.back(),tx.session(),std::move(values),rng));off+=r.actual;}
+  Prepared prepared;prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(32);for(std::size_t j=0;j<32;++j)prepared["r7/helper"]->at(j)=Fr(j<20?j+7:0);
+- Commitments p(tx,l,isP?base:Value{},isP?&prepared:nullptr,isP?&rng:nullptr,nullptr,nullptr,&trust,isP?&secrets:nullptr);p.registerBase();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
++ Commitments p(tx,l,isP?base:Value{},isP?&prepared:nullptr,isP?&rng:nullptr,nullptr,nullptr,&trust,isP?&secrets:nullptr);p.constrainBaseTails();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
+  for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));Fr value=0;if(isP){std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);value=zkgpt::r1::mle(values,point);}auto h=exchangeHidden(tx,std::string(id)+"/value",value,isP?&rng:nullptr);v.open(tx,{point,h.handle},isP?&h:nullptr,isP?&rng:nullptr,std::string(id)+"/open");}p.authenticate();
+  need(p.authenticated(),"component authentication barrier");tx.finish();std::cerr<<tx.metadataJson()<<'\n';std::cout<<(isP?"PARTITION_COMPONENT_PROOF_CREATED":"PARTITION_COMPONENT_INDEPENDENT_VERIFIED")<<'\n';return 0;
+ }catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/full12_runtime_tests.cpp b/src/paper_r7/full12_runtime_tests.cpp
+index 718bbede51a3744e9b483d715fa25be6774baa7b..5ab566a977da5aba2f5b87b241a49ac25eacc56e 100644
+--- a/src/paper_r7/full12_runtime_tests.cpp
++++ b/src/paper_r7/full12_runtime_tests.cpp
+@@ -7,7 +7,7 @@ int main(){try{zkgpt::r1::init();R7Context c;c.layout_sha256=std::string(64,'a')
+  auto l=makeLayout(c,8);Value base=[](std::size_t j){return Fr(j+1);};std::vector<model::Trust>trust;std::vector<model::Secret>secrets;SessionRandom rng;Tape tx(true);std::vector<Fr>W;for(std::size_t j=0;j<11;++j)W.push_back(base(j<5?3+j:16+j-5));std::size_t off=0;
+  for(auto&r:l.roots)if(r.model){model::Trust t;t.anchor.profile="unit";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="unit-full12-model";auto s=zkgpt::r1::PCSpec::make("unit/W/"+std::to_string(trust.size()),r.actual,r.padded,zkgpt::r1::Layout::RowMajor);std::vector<Fr>values(W.begin()+off,W.begin()+off+r.actual);auto padded=values;padded.resize(r.padded,Fr(0));t.anchor.w=zkgpt::r1::commit(s,padded);t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;trust.push_back(t);secrets.push_back(model::rerandomize(trust.back(),tx.session(),std::move(values),rng));off+=r.actual;}
+  Prepared prepared;prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(32);for(std::size_t j=0;j<32;++j)prepared["r7/helper"]->at(j)=Fr(j<20?j+7:0);
+- Commitments p(tx,l,base,&prepared,&rng,nullptr,nullptr,&trust,&secrets);p.registerBase();std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
++ Commitments p(tx,l,base,&prepared,&rng,nullptr,nullptr,&trust,&secrets);p.constrainBaseTails();need(p.registered_rows==0 && p.registration_bytes==0,"Full12 full base registration disabled");for(auto&m:tx.data){need(m.first.rfind("Classified/register/",0)!=0 && m.first!="Classified/base-registered","Full12 legacy full registration emitted");for(std::size_t k=0;k<l.roots.size();++k)if(l.roots[k].model)need(m.first.rfind("Classified/zero-tail/"+std::to_string(k)+"/",0)!=0,"duplicate model knowledge/tail proof");}std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
+  for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);auto h=exchangeHidden(tx,std::string(id)+"/value",zkgpt::r1::mle(values,point),&rng);v.open(tx,{point,h.handle},&h,&rng,std::string(id)+"/open");}p.authenticate();
+- Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.registerBase();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
++ Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.constrainBaseTails();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
+ }catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/interactive.cpp b/src/paper_r7/interactive.cpp
+index 39783c195895c93b86b3a2e73da98280d1182692..2e0ee5bf74d94bf922a4f13c111ea5404e947351 100644
+--- a/src/paper_r7/interactive.cpp
++++ b/src/paper_r7/interactive.cpp
+@@ -12,7 +12,7 @@ Bytes readFrame(){Bytes head(4);exact(0,head.data(),4,false);Reader r{head};auto
+ }
+ void PipeIO::audit(const Bytes&b){if(audit_fd_>=0)exact(audit_fd_,const_cast<std::uint8_t*>(b.data()),b.size(),true);else public_transcript_.insert(public_transcript_.end(),b.begin(),b.end());}
+ PipeIO::PipeIO(bool p,const std::string&mode,const std::string&attack,const std::string&protocol_suite,Profile profile,int fd):prover_(p),attack_(attack){
+- if(profile==Profile::MasterChunkedV1 || profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){need(protocol_suite==(profile==Profile::MasterChunkedV1?"R7-STAGE3B1-CHUNKED-MASTER-SESSION-v1":profile==Profile::OneblockV1?"R7-ONEBLOCK-INDEPENDENT-INTERACTIVE-v1":"R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v3"),"R7 streaming profile suite mismatch");limit_=std::uint64_t(1)<<30;if(profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){frame_limit_=1048576;live_coins_=std::make_unique<LiveCoins>();}if(!p){struct stat st{};need(fd>2 && fstat(fd,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid() && st.st_size==0 && (fcntl(fd,F_GETFL)&O_ACCMODE)!=O_RDONLY,"R7 streaming audit FD");audit_fd_=fd;}}
++ if(profile==Profile::MasterChunkedV1 || profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){need(protocol_suite==(profile==Profile::MasterChunkedV1?"R7-STAGE3B1-CHUNKED-MASTER-SESSION-v1":profile==Profile::OneblockV1?"R7-ONEBLOCK-INDEPENDENT-INTERACTIVE-v1":"R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v4"),"R7 streaming profile suite mismatch");limit_=std::uint64_t(1)<<30;if(profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){frame_limit_=1048576;live_coins_=std::make_unique<LiveCoins>();}if(!p){struct stat st{};need(fd>2 && fstat(fd,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid() && st.st_size==0 && (fcntl(fd,F_GETFL)&O_ACCMODE)!=O_RDONLY,"R7 streaming audit FD");audit_fd_=fd;}}
+  if(!p){auto b=coins_.bytes(32);Digest d;std::copy(b.begin(),b.end(),d.begin());sid_=hex(d);send("READY/"+mode,Bytes(protocol_suite.begin(),protocol_suite.end()));}
+  else{auto b=readFrame();auto r=R7Wire::decodeLocalRecord(b);need(r.sequence==0 && r.label=="READY/"+mode && r.payload==Bytes(protocol_suite.begin(),protocol_suite.end()),"R7 trusted verifier READY mismatch");sid_=r.session;++seq_;transcript_.record(r.label,b);}
+ }
+diff --git a/src/paper_r7/oneblock_main.cpp b/src/paper_r7/oneblock_main.cpp
+index c5151c706b660704421b62a6fbe86ad14e4f96ed..70d266de96d8e499de78665bcf764e154bfa71cb 100644
+--- a/src/paper_r7/oneblock_main.cpp
++++ b/src/paper_r7/oneblock_main.cpp
+@@ -97,7 +97,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
+  auto layout=classified::makeLayout(ctx);
+  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
+  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
+- for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/knowledge-tail","CLASSIFIED_BASE_REGISTRATION",r.id,r.padded,0});}
++ for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/physical-zero-tail",r.model?"CLASSIFIED_TRUSTED_ANCHOR_TAIL":"CLASSIFIED_ZERO_TAIL",r.id,r.padded,0});}
+  for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
+  plan.required.push_back({"classified/authentication-barrier","CLASSIFIED_AUTHENTICATION",classified::identity(layout),ctx.plan.master.actual,0});
+ #endif
+diff --git a/src/paper_r7/opt2_metrics.cpp b/src/paper_r7/opt2_metrics.cpp
+index 5cf2c9966b19b603cb07de839d8ee8228cc60109..a08d8845772f24379c1c962f63782c7f57777a48 100644
+--- a/src/paper_r7/opt2_metrics.cpp
++++ b/src/paper_r7/opt2_metrics.cpp
+@@ -4,8 +4,8 @@
+ #include <new>
+ #include <iostream>
+ #include <array>
+-namespace {thread_local std::uint64_t allocations=0;thread_local unsigned tracing=0;}
+-void* operator new(std::size_t n){for(;;){if(void*p=std::malloc(n?n:1)){if(tracing)++allocations;return p;}auto handler=std::get_new_handler();if(!handler)throw std::bad_alloc();handler();}}
++namespace {thread_local std::uint64_t allocations=0,allocated_bytes=0;thread_local unsigned tracing=0;}
++void* operator new(std::size_t n){for(;;){if(void*p=std::malloc(n?n:1)){if(tracing){++allocations;allocated_bytes+=n;}return p;}auto handler=std::get_new_handler();if(!handler)throw std::bad_alloc();handler();}}
+ void* operator new[](std::size_t n){return ::operator new(n);}
+ void operator delete(void*p)noexcept{std::free(p);}
+ void operator delete[](void*p)noexcept{std::free(p);}
+@@ -14,6 +14,10 @@ void operator delete[](void*p,std::size_t)noexcept{std::free(p);}
+ namespace zkgpt::r7::crypto {
+ double processCPU(){timespec t{};clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&t);return t.tv_sec+t.tv_nsec*1e-9;}
+ bool opt2MetricsEnabled(){static bool enabled=std::getenv("ZKGPT_OPT2_METRICS")!=nullptr;return enabled;}
++AllocationTrace::AllocationTrace():count_(allocations),bytes_(allocated_bytes){++tracing;}
++AllocationTrace::~AllocationTrace(){--tracing;}
++std::uint64_t AllocationTrace::count()const{return allocations-count_;}
++std::uint64_t AllocationTrace::bytes()const{return allocated_bytes-bytes_;}
+ namespace {
+ struct Bin {std::uint64_t calls=0,terms=0,allocations=0;double cpu=0;};
+ struct Stats {std::array<Bin,6>bins{};~Stats(){if(!opt2MetricsEnabled())return;const char*names[]={"1","2","3-8","9-64","65-1024",">1024"};double total=0;for(auto&b:bins)total+=b.cpu;std::cerr<<"OPT2_MSM {\"cpu_seconds\":"<<total<<",\"allocation_scope\":\"ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation\",\"bins\":[";for(unsigned i=0;i<6;++i){if(i)std::cerr<<',';auto&b=bins[i];std::cerr<<"{\"length\":\""<<names[i]<<"\",\"calls\":"<<b.calls<<",\"terms\":"<<b.terms<<",\"cpu_seconds\":"<<b.cpu<<",\"cpp_allocations\":"<<b.allocations<<'}';}std::cerr<<"]}\n";}};
+diff --git a/src/paper_r7/opt2_metrics.hpp b/src/paper_r7/opt2_metrics.hpp
+index 29056210c8e2827e39f66178322b73f117ee18d9..b8adebe703e94e266a85d6478fee72454b437d39 100644
+--- a/src/paper_r7/opt2_metrics.hpp
++++ b/src/paper_r7/opt2_metrics.hpp
+@@ -5,6 +5,13 @@ namespace zkgpt::r7::crypto {
+ // Public length/time/allocation metadata only. Never inspect scalar bytes here.
+ double processCPU();
+ bool opt2MetricsEnabled();
++// Scoped ordinary C++ allocation counters on this thread (not C malloc/aligned).
++class AllocationTrace {
++ std::uint64_t count_,bytes_;
++ public:AllocationTrace();~AllocationTrace();
++ AllocationTrace(const AllocationTrace&)=delete;AllocationTrace&operator=(const AllocationTrace&)=delete;
++ std::uint64_t count()const;std::uint64_t bytes()const;
++};
+ class MSMTrace {
+  std::size_t bin_;double started_;std::uint64_t allocations_;
+  public:explicit MSMTrace(std::size_t);~MSMTrace();
+diff --git a/src/paper_r7/partitioned_layout.cpp b/src/paper_r7/partitioned_layout.cpp
+index 8aec9e475d1e4262c98ad73bc566f63ed7ebfca2..ed5446d309908c076dc81873cb7936d21ce86ce0 100644
+--- a/src/paper_r7/partitioned_layout.cpp
++++ b/src/paper_r7/partitioned_layout.cpp
+@@ -59,7 +59,7 @@ void writePartitionedLayout(std::ostream&o,const Layout&p){
+  auto pieces=[&](const std::vector<Piece>&parts){bool first=true;for(auto&r:parts){if(!first)o<<',';first=false;o<<"{\"original\":"<<r.begin<<",\"count\":"<<r.count<<",\"root\":"<<r.start.root<<",\"local\":"<<r.start.index<<'}';}};
+  pieces(p.base_runs);o<<"],\"roots\":[";bool first=true;
+  for(auto&r:p.roots){if(!first)o<<',';first=false;const auto columns=r.model?r.padded/(std::size_t(1)<<(r1::log2exact(r.padded)/2)):std::min<std::size_t>(1024,r.padded);
+-  o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"rows\":"<<r.padded/columns<<",\"columns\":"<<columns<<",\"registered\":"<<(r.registered?"true":"false")<<",\"model\":"<<(r.model?"true":"false")<<",\"layout\":\"RowMajor\",\"basis_status\":\""<<(r.model?"PENDING_INDEPENDENT_CHUNK_ANCHOR":"EXISTING_HYRAX_A3")<<"\"}";
++  o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"rows\":"<<r.padded/columns<<",\"columns\":"<<columns<<",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false,\"model\":"<<(r.model?"true":"false")<<",\"layout\":\"RowMajor\",\"basis_status\":\""<<(r.model?"PENDING_INDEPENDENT_CHUNK_ANCHOR":"EXISTING_HYRAX_A3")<<"\"}";
+  }
+  o<<"],\"views\":[";first=true;
+  for(auto&[id,v]:p.views){if(!first)o<<',';first=false;
+diff --git a/src/paper_r7/partitioned_layout_tests.cpp b/src/paper_r7/partitioned_layout_tests.cpp
+index 84e436d1c9be573fd139208757b92ab3e6976fd1..060dc489e60b5d6c4b74715ca094e290b95bb507 100644
+--- a/src/paper_r7/partitioned_layout_tests.cpp
++++ b/src/paper_r7/partitioned_layout_tests.cpp
+@@ -11,7 +11,7 @@ int main(){try{
+  c.objects={{"r7/master","",ObjectKind::BaseMaster,31,32,{},false},{"r7/query","r7/master",ObjectKind::MappedChild,31,32,{{0,31,Fr(2)}},false},{"r7/W","r7/master",ObjectKind::ModelW,11,16,{{3,5,Fr(0)},{16,6,Fr(0)}},false},{"r7/helper","r7/query",ObjectKind::RangeDigit,20,32,{},false}};
+  auto p=makeLayout(c,8);validate(p,c,8);need(p.base.empty() && baseSize(p)==31,"partition map must not allocate per-coordinate array");
+  std::set<std::pair<unsigned,unsigned>>seen;for(std::size_t i=0;i<31;++i){auto x=baseCoordinate(p,i);need(x.root<p.roots.size() && x.index<p.roots[x.root].actual && seen.insert({x.root,x.index}).second,"partition injectivity and bounds");}
+- std::size_t total=0,models=0;std::set<std::string>ids;for(auto&r:p.roots){need(r.padded<=8 && r.actual<=r.padded && ids.insert(r.id).second,"bounded unique physical roots");if(r.registered)total+=r.actual;if(r.model){++models;need(r.registered,"W knowledge retained");}}
++ std::size_t total=0,models=0;std::set<std::string>ids;for(auto&r:p.roots){need(r.padded<=8 && r.actual<=r.padded && ids.insert(r.id).second,"bounded unique physical roots");if(r.registered)total+=r.actual;if(r.model){++models;need(r.registered,"W base packing classification retained");}}
+  need(total==31 && models==2,"complete base routing and W chunks");
+  auto&w=p.views.at("r7/W");for(std::size_t i=0;i<11;++i){auto x=locate(p,w,i);need(!x.constant && x.bias.isZero() && x.coordinate==baseCoordinate(p,i<5?3+i:16+i-5),"W logical to physical coordinates");}
+  need(locate(p,w,15).constant,"W logical padded tail");auto&q=p.views.at("r7/query");need(locate(p,q,7).bias==Fr(2),"source affine bias preserved");need(locate(p,q,31).constant,"query virtual tail");

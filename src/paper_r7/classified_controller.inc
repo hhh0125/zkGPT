@@ -62,7 +62,11 @@
  std::set<std::string>requiredTerminals;for(auto&r:plan.required)if(r.family=="GKR_MASTER_TERMINAL")requiredTerminals.insert(r.id);need(terminals==requiredTerminals,"classified native terminal omission/substitution");
  timed("all-source-original-handles",[&]{for(std::size_t j=0;j<sources.size();++j){auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);std::vector<Fr>point;for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));auto h=exchangeHidden(io,label+"/value",isP?evaluateOracle(v,point):Fr(0),rng);v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");}});
  need(objects.size()==layout.views.size(),"classified unused/missing native view");
+#ifdef R7_UNIFIED_INPUT1
+ timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");for(auto&r:layout.roots)checked(io,"unified-input/root/"+r.id+"/opening");
+#else
  timed("mandatory-classified-authentication-barrier",[&]{pcs.authenticate();});need(pcs.authenticated(),"classified barrier INCOMPLETE");io.authenticationComplete();checked(io,"classified/authentication-barrier");
+#endif
  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
  for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
  if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");

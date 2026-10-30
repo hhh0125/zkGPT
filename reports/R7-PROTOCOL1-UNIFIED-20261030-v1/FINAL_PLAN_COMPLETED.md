@@ -1,0 +1,20 @@
+# Protocol1 implementation and actual acceptance — complete
+
+- [x] Freeze authoritative dirty OPT3-B+No-FullBase baseline394 files and full HEAD diff; migration/AGENTS and exact Windows/Linux source SHA checked.
+- [x] Fresh design and whole implementation/routing review; mathematical/global packing/identity/streaming/hidden claims checked, no critical or important findings in original review scope.
+- [x] Actual single hidden global Unified Input Sumcheck and common-point classified Hyrax openings implemented; trusted StageC maps, all native GKR/FC/Lasso/Memory/Product relations, original Anchor/model/zero-tail preserved. New explicit FS suite/types; no plaintext R6 fallback or complete private input/folded copy.
+- [x] Observed RED→GREEN independent dense algebra/hidden protocol/source/root/affine/stride/padding/mutable callback/cache exhaustion/FS downgrade tests. Release all-target build and CTest92/92 passed.
+- [x] Initial actual Oneblock-v2 P/V plus16 malicious independent V passed and Windows archives/restoration verified, then six complete production entrypoints switched. Old path retained only explicit reference/probe/legacy.
+- [x] Actual Full12-v1 failed before first Kernel with original vector dimension bound, exit2 and noV. Failed397source/ELF/logs/partial Proof preserved, Windows418member/SHA/gzip/restore checked. Actual partial layout proved virtual2^32.
+- [x] TDD boundary correction local to two virtual n log calls; physical2^28 vector and2^24 root/K caps unchanged. Three-scalar sparse oracle/hidden P/V/EOF29..32bits pass;2^33 rejected; first oracle Fr initialization failure and exact source retained. All-target rebuild/CTest92/92 passed.
+- [x] Fresh current production Oneblock-v3 P/V exits0,5358/5358; all16 new independent negative V explicitly rejected exit2. Current397source/120params/953archive members/16negative Proof reconstructions verified on Windows.
+- [x] Fresh real Full12-v2 P then new disk-only V exit0,8112/8112 dynamically required relations VERIFIED.45roots/10trustedW/1502claims/11crossBlock/48FC/612native terminals/GKR7524 preserved.32global authentication rounds/45root openings; oldroot barrier and full-base rows/response0, zero-tail54/15040 and originalPin retained. All Statement/FS/challenge/Proof identities and EOF passed.
+- [x] Four selected Full12 malicious V cases explicitly rejected exit2; raw errors/proofs/deltas/resources retained. Exact old required relation inventory preserved except replacing one old barrier with47 explicit new obligations. Source/binary/120parameter SHA checked after all runs.
+- [x] Full12 source/dependency/configuration/binary/public Anchor/Statement/rawP/V/negative/resource archive890members and downloaded261504622byte Proof SHA verified on Windows, complete Proof re-audited and4 mutants reconstructed/hash checked. No credentials, blinding or private Witness archived; no historical file deleted or substituted.
+- [x] Final paper/code/math/FS/table/tests/commands/performance/security report and13-file incremental v2 patch delivered; reverse patch check0. Final delivery checksum receipts are separate machine-readable artifacts.
+
+Actual final P wall7023.895145749673s, V1058.691154026892s; ProofSHA4c5c63501e67a3c1f558f5ca0d43ff3d5b9f0e84eadb7a8f20cf8d577b53d510. Performance honestly compared with actual same-Statement/120parameter/Anchor OPT3-B: P+110.866%,V+3.949%,Proof-0.836%. Repeated public K/root streaming costs included. No theoretical savings presented as measurements.
+
+Windows remains sole source authority. Branch r7/remove-full-base-registration-20261029 and HEAD8365fc13613a5269970f1fdef83a1cb883a45606 remain unchanged, worktree uncommitted. No GitHub/commit/push/merge/reset/cleanup. Fixed Linux execution directory only; fourCPU/shared-memory monitor and no artificial8GiB AS cap.
+
+Engineering acceptance is complete; formal knowledge soundness/ZK/Fiat–Shamir composition is not established. FS_NIZK_CANDIDATE / BLOCKED_CRYPTOGRAPHIC_DESIGN / may_enter_stage2=false. Earlier in-progress plans remain in stage archives as historical records.

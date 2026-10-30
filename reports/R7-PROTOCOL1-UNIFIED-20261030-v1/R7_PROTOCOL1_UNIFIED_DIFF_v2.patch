@@ -1,0 +1,552 @@
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -1,5 +1,24 @@
+ add_library(paper_r7 STATIC opt2_metrics.cpp framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
+ target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
++target_sources(paper_r7 PRIVATE unified_input.cpp)
++foreach(scope oneblock full12)
++ foreach(role prover verifier)
++  set(candidate r7_protocol1_${scope}_${role})
++  add_executable(${candidate} oneblock_main.cpp)
++  target_link_libraries(${candidate} PRIVATE paper_r7)
++  target_compile_definitions(${candidate} PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_UNIFIED_INPUT1=1)
++  if(scope STREQUAL "full12")
++   target_compile_definitions(${candidate} PRIVATE R7_FS_FULL12=1)
++  endif()
++  if(role STREQUAL "verifier")
++   target_compile_definitions(${candidate} PRIVATE R7_COMPLETE_VERIFIER=1)
++  endif()
++ endforeach()
++endforeach()
++add_executable(r7_unified_input_tests unified_input_tests.cpp)
++target_link_libraries(r7_unified_input_tests PRIVATE paper_r7)
++add_test(NAME r7_unified_input COMMAND r7_unified_input_tests)
++set_tests_properties(r7_unified_input PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+ # Treat unchanged R6 headers as a dependency; keep -Werror on new R7 code.
+ target_include_directories(paper_r7 SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/src)
+ find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+@@ -212,3 +231,9 @@
+ add_executable(r7_full12_component_verifier full12_runtime_probe.cpp)
+ target_compile_definitions(r7_full12_component_verifier PRIVATE R7_FULL12_PROBE_VERIFIER=1)
+ target_link_libraries(r7_full12_component_verifier PRIVATE paper_r7)
++# Enabled only after the real candidate Oneblock P/V and16 independent
++# malicious-Proof cases passed (reports/R7-PROTOCOL1-UNIFIED-20261030-v1).
++# Explicit legacy/probe/reference targets keep their historical protocol.
++foreach(entry r7_complete_prover r7_complete_verifier r7_fs_oneblock_prover r7_fs_oneblock_verifier r7_fs_full12_prover r7_fs_full12_verifier)
++ target_compile_definitions(${entry} PRIVATE R7_UNIFIED_INPUT1=1)
++endforeach()
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -1,5 +1,6 @@
+ #include "classified_commitments.hpp"
+ #include "stage2_opening.hpp"
++#include "unified_input.hpp"
+ #include <algorithm>
+ #include <openssl/evp.h>
+ #include <chrono>
+@@ -19,7 +20,9 @@
+ };
+ 
+ Fr fold(std::vector<Fr>&v,const std::vector<Fr>&q){std::size_t n=v.size();need(r1::log2exact(n)==q.size(),"classified public kernel query");for(auto&x:q){for(std::size_t j=0;j<n/2;++j)v[j]=v[2*j]+x*(v[2*j+1]-v[2*j]);n/=2;}return v[0];}
++std::vector<unified::Block>unifiedBlocks(const Layout&p){std::vector<unified::Block>b;for(auto&r:p.roots){unsigned category=r.model?1:(r.id.rfind("C_aux",0)==0?2:3);need(r.model || r.id.rfind("C_aux",0)==0 || r.id.rfind("C_lookup/",0)==0,"unified unknown classified root category");b.push_back({category,r.padded});}return b;}
+ }
++std::string unifiedInputIdentity(const Layout&p,const std::vector<Fr>&x){need(!x.empty() && x.size()<=(1u<<24),"unified public X identity bound");auto blocks=unifiedBlocks(p);auto packing=unified::pack(blocks,power2(x.size()));Writer w;w.text(unified::suite);w.text(identity(p));w.number(packing.partition_size,8);w.number(packing.domain,8);w.number(x.size(),8);for(auto&v:x){need(v.isValid(),"unified public X identity scalar");w.scalar(v);}w.number(p.roots.size());for(std::size_t k=0;k<p.roots.size();++k){auto&r=p.roots[k];w.text(r.id);w.number(blocks[k].category);w.number(r.actual,8);w.number(r.padded,8);w.number(packing.segments[k+1].offset,8);}return hex(r1::hash(w.b));}
+ // All cached state is owned by one stack-scoped authentication session.
+ // Neither a caller callback nor Layout storage is retained in a frozen map.
+ Commitments::Weights::Weights(const std::vector<Fr>&q,AuthMetrics*m):split_(q.size()/2){auto t=processCPU();a_=r1::weights({q.begin(),q.begin()+split_});b_=r1::weights({q.begin()+split_,q.end()});if(m){++m->weights;m->weight_terms+=a_.size()+b_.size();m->weights_cpu+=processCPU()-t;}}
+@@ -153,4 +156,32 @@
+  if(opt2MetricsEnabled()){std::size_t ram=0,file=0,fallback=0;for(auto&p:auth.claims){if(!p.frozen)++fallback;else if(p.disk_roots.empty())++ram;else ++file;}std::cerr<<"OPT3B_STORAGE {\"RAM_claims\":"<<ram<<",\"file_claims\":"<<file<<",\"fallback_claims\":"<<fallback<<",\"RAM_bytes\":"<<auth.map_bytes<<",\"RAM_limit\":"<<auth.map_budget<<",\"file_bytes\":"<<auth.store.bytes<<",\"file_limit\":"<<auth.store.limit<<",\"file_read_bytes\":"<<auth.store.read_bytes<<",\"file_read_blocks\":"<<auth.store.read_blocks<<",\"bounded_read_scratch_bytes\":"<<mapping::block_runs*sizeof(mapping::Run)<<"}\n";}
+  authenticated_=true;io_.coin("Classified/all-claims-authenticated/ack");
+ }
++void Commitments::authenticateUnifiedInput(const std::vector<Fr>&public_x){
++ namespace ui=unified;
++ need(sealed_ && tails_constrained_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && io_.session()==session_ && identity(layout_)==identity_,"unified missing/closed/mutated authentication");
++ need(!public_x.empty() && public_x.size()<=(1u<<24),"unified public X bound");
++ auto blocks=unifiedBlocks(layout_);
++ auto packing=ui::pack(blocks,power2(public_x.size()));
++ Writer layout;layout.text(ui::suite);layout.text(unifiedInputIdentity(layout_,public_x));layout.text(identity_);layout.text(session_);layout.number(packing.partition_size,8);layout.number(packing.domain,8);layout.number(public_x.size(),8);for(auto&x:public_x){need(x.isValid(),"unified public X scalar");layout.scalar(x);}layout.number(roots_.size());
++ for(std::size_t k=0;k<roots_.size();++k){auto&r=roots_[k];auto s=packing.segments[k+1];layout.text(r.spec.id);layout.number(blocks[k].category);layout.number(s.offset,8);layout.number(r.spec.actual,8);layout.number(s.padded,8);Writer rows;rows.number(r.pc.rows,8);rows.number(r.pc.columns,8);for(auto&p:r.pc.points)rows.point(p);auto digest=r1::hash(rows.b);layout.raw(Bytes(digest.begin(),digest.end()));}
++ bindPublic(io_,"UnifiedInput/layout",layout.b);
++ Writer declarations;declarations.text(ui::suite);declarations.number(claims_.size());for(auto&c:claims_){declarations.text(c.id);declarations.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));}bindPublic(io_,"UnifiedInput/all-claims-fixed",declarations.b);
++ Authentication auth(claims_.size(),layout_.master_actual!=0);std::vector<Fr>biases;for(std::size_t i=0;i<claims_.size();++i)biases.push_back(prepareClaim(claims_[i],auth,i));
++ // Every mapping/bias is fully revalidated BEFORE any aggregation draw.
++ std::vector<Fr>rho;std::vector<Hidden>values;Fr bias=0;
++ for(std::size_t i=0;i<claims_.size();++i){rho.push_back(io_.coin("UnifiedInput/rho/"+std::to_string(i)));need(!rho.back().isZero(),"unified zero aggregation challenge");values.push_back(claims_[i].value);bias+=rho.back()*biases[i];}
++ auto initial=combine(session_,"UnifiedInput/initial",values,rho);initial.value-=bias;initial.handle.point-=scalarCommit(bias,Fr(0));bindPublic(io_,"UnifiedInput/initial",encode(initial.handle));
++ Value x=[&](std::size_t j){return j<public_x.size()?public_x[j]:Fr(0);};
++ ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
++ auto endpoint=[&](const std::vector<Fr>&point){Fr expected=0;for(std::size_t k=0;k<roots_.size();++k){auto K=kernel(k,rho,auth);auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(point.begin(),point.begin()+d);expected+=ui::selector(packing.segments[k+1],point)*fold(K,q);}return expected;};
++ auto reduced=ui::reduce(io_,packing.domain,packing.segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck");auto opening_started=Clock::now();auto opening_cpu=processCPU();
++ std::vector<Hidden>opened;std::vector<Fr>selectors;
++ for(std::size_t k=0;k<roots_.size();++k){auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(reduced.point.begin(),reduced.point.begin()+d);Fr value=0;if(io_.prover()){Weights w(q);for(std::size_t j=0;j<roots_[k].spec.padded;++j)value+=w.at(j)*roots_[k].value(j);}auto name="UnifiedInput/opening/root/"+std::to_string(k);auto h=exchangeHidden(io_,name+"/evaluation",value,rng_);rootOpening(k,{q,h.handle},io_.prover()?&h:nullptr,name+"/hyrax");opened.push_back(h);selectors.push_back(ui::selector(packing.segments[k+1],reduced.point));}
++ auto dx=r1::log2exact(packing.segments[0].padded);std::vector<Fr>qx(reduced.point.begin(),reduced.point.begin()+dx);Weights wx(qx);Fr public_value=0;for(std::size_t j=0;j<public_x.size();++j)public_value+=wx.at(j)*public_x[j];public_value*=ui::selector(packing.segments[0],reduced.point);
++ auto stitched=combine(session_,"UnifiedInput/opening/stitched",opened,selectors);bindPublic(io_,"UnifiedInput/opening/stitched",encode(stitched.handle));auto public_part=publicHidden(io_,"UnifiedInput/opening/public-X",public_value);
++ std::vector<Hidden>w{stitched,public_part,reduced.endpoints.at(0)};Relations relation;relation.role="UnifiedInput/opening/input-consistency";for(auto&h:w)relation.handles.push_back(h.handle);relation.linear={{Fr(1),Fr(1),Fr(-1)}};sigma(io_,relation,io_.prover()?&w:nullptr,rng_);
++ Writer completed;completed.text(ui::suite);completed.number(claims_.size());completed.number(opened.size());completed.number(reduced.point.size());bindPublic(io_,"UnifiedInput/all-claims-authenticated",completed.b);io_.coin("UnifiedInput/all-claims-authenticated/ack");authenticated_=true;
++ std::cerr<<"UNIFIED_OPENING {\"roots\":"<<opened.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(Clock::now()-opening_started).count()<<",\"cpu_seconds\":"<<processCPU()-opening_cpu<<",\"includes_root_MLE_and_hidden_stitch\":true}\n";
++ std::cerr<<"UNIFIED_INPUT {\"claims\":"<<claims_.size()<<",\"roots_opened\":"<<opened.size()<<",\"partition_size\":"<<packing.partition_size<<",\"domain\":"<<packing.domain<<",\"sumcheck_rounds\":"<<reduced.point.size()<<",\"full_input_copy_bytes\":0,\"private_folded_input_copy_bytes\":0,\"old_root_sumchecks\":0,\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}\n";
+ }
++}
+diff --git a/src/paper_r7/classified_commitments.hpp b/src/paper_r7/classified_commitments.hpp
+--- a/src/paper_r7/classified_commitments.hpp
++++ b/src/paper_r7/classified_commitments.hpp
+@@ -13,6 +13,7 @@
+ struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
+  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
+  double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0,kernel_wall=0,partial_wall=0,map_wall=0;};
++std::string unifiedInputIdentity(const Layout&,const std::vector<Fr>&public_x);
+ class Commitments {
+  friend struct AuthenticationTestAccess;
+  mutable AuthMetrics auth_metrics_;
+@@ -56,7 +57,11 @@
+  VectorOracle view(const std::string&);
+  void defer(Claim);
+  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);
++ // Legacy OPT3-B barrier, retained for explicit reference/unit/probe targets.
++ // Current complete Oneblock/Full12 entrypoints use the unified path below.
+  void authenticate();
++ // Protocol1(6),(7) candidate; real Oneblock replacement gate passed.
++ void authenticateUnifiedInput(const std::vector<Fr>&public_x);
+  bool authenticated()const{return authenticated_;}
+  std::size_t claims()const{return claims_.size();}
+  const std::vector<Root>&roots()const{return roots_;}
+diff --git a/src/paper_r7/classified_controller.inc b/src/paper_r7/classified_controller.inc
+--- a/src/paper_r7/classified_controller.inc
++++ b/src/paper_r7/classified_controller.inc
+@@ -62,7 +62,11 @@
+  std::set<std::string>requiredTerminals;for(auto&r:plan.required)if(r.family=="GKR_MASTER_TERMINAL")requiredTerminals.insert(r.id);need(terminals==requiredTerminals,"classified native terminal omission/substitution");
+  timed("all-source-original-handles",[&]{for(std::size_t j=0;j<sources.size();++j){auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);std::vector<Fr>point;for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));auto h=exchangeHidden(io,label+"/value",isP?evaluateOracle(v,point):Fr(0),rng);v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");}});
+  need(objects.size()==layout.views.size(),"classified unused/missing native view");
++#ifdef R7_UNIFIED_INPUT1
++ timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");for(auto&r:layout.roots)checked(io,"unified-input/root/"+r.id+"/opening");
++#else
+  timed("mandatory-classified-authentication-barrier",[&]{pcs.authenticate();});need(pcs.authenticated(),"classified barrier INCOMPLETE");io.authenticationComplete();checked(io,"classified/authentication-barrier");
++#endif
+  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
+  for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
+  if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
+diff --git a/src/paper_r7/fs_io.cpp b/src/paper_r7/fs_io.cpp
+--- a/src/paper_r7/fs_io.cpp
++++ b/src/paper_r7/fs_io.cpp
+@@ -32,9 +32,11 @@
+ }
+ Bytes digestBytes(const Bytes&b){Hash h;h.add(b);return bytes(h.digest());}
+ bool hexadecimal(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0' && c<='9') || (c>='a' && c<='f');});}
+-void validate(const Binding&b){need((b.proof_type=="Full12" || b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
+-Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(b.proof_type=="Full12"?full12Suite:suite);w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
+-Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==(b.proof_type=="Full12"?full12Suite:suite) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
++bool full12(const Binding&b){return b.proof_type=="Full12" || b.proof_type=="Full12Unified";}
++const char* bindingSuite(const Binding&b){if(b.proof_type=="Full12Unified")return unifiedFull12Suite;if(b.proof_type=="OneblockUnified")return unifiedSuite;return full12(b)?full12Suite:suite;}
++void validate(const Binding&b){need((full12(b) || b.proof_type=="OneblockUnified" || b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
++Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(bindingSuite(b));w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
++Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==bindingSuite(b) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
+ }
+ struct CanonicalTranscript::Impl {
+  Hash state,audit;std::set<std::pair<char,std::string>>labels;std::uint64_t seq=0,msg=0,coins=0,rejected=0,max_events=eventLimit;double candidate_seconds=0;
+@@ -74,10 +76,10 @@
+  Bytes readEvent(char tag,const std::string&label){auto b=receive(17);Reader h{b};need(h.number(1)==std::uint8_t(tag) && h.number(8)==transcript->events(),"FS reordered/unknown event or sequence");auto n=h.number(8);h.end();need(n==label.size() && n>0 && n<=256,"FS unexpected label length");auto text=receive(n);need(text==Bytes(label.begin(),label.end()),"FS unexpected/reordered message label");b=receive(8);Reader length{b};auto size=length.number(8);length.end();need(size<=payloadLimit && size<=limit-total,"FS message length bound");max_payload=std::max<std::uint64_t>(max_payload,size);return receive(size);}
+ };
+ FsIO::FsIO(bool p,const std::string&path,const Binding&b):impl_(std::make_unique<Impl>(p)){
+- validate(b);auto&v=*impl_;v.limit=b.proof_type=="Full12"?64ull<<30:byteLimit;v.suite_name=b.proof_type=="Full12"?full12Suite:suite;Bytes h;
++ validate(b);auto&v=*impl_;v.limit=full12(b)?64ull<<30:byteLimit;v.suite_name=bindingSuite(b);Bytes h;
+  if(p){OSRandom random;auto nonce=random.bytes(32);h=header(b,nonce);std::filesystem::path target(path);auto parent=target.parent_path();if(parent.empty())parent=".";v.final_name=target.filename().string();need(!v.final_name.empty() && v.final_name!="." && v.final_name!=".." && v.final_name.size()<=128,"FS output filename");v.dir=::open(parent.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);need(v.dir>=0,"FS output directory");struct stat st{};need(fstat(v.dir,&st)==0 && st.st_uid==getuid(),"FS output directory ownership");errno=0;need(fstatat(v.dir,v.final_name.c_str(),&st,AT_SYMLINK_NOFOLLOW)<0 && errno==ENOENT,"FS output exists; no overwrite");v.temp_name=v.final_name+".partial."+hex(r1::hash(nonce));v.fd=::openat(v.dir,v.temp_name.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);need(v.fd>=0,"FS exclusive temporary output");Writer start;start.raw(Bytes{'Z','K','R','7','F','S','1',0});start.number(h.size());v.send(start.b);v.send(h);
+  }else{v.fd=::open(path.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC);need(v.fd>=0 && fstat(v.fd,&v.original)==0 && S_ISREG(v.original.st_mode) && v.original.st_size>0 && std::uint64_t(v.original.st_size)<=v.limit,"FS regular bounded proof input");auto magic=v.receive(12);Reader r{magic};need(r.raw(8)==Bytes({'Z','K','R','7','F','S','1',0}),"FS magic: interactive/foreign proof rejected");auto n=r.number();r.end();need(n>0 && n<=4096,"FS header length bound");h=v.receive(n);nonceFrom(h,b);}
+- v.transcript=std::make_unique<CanonicalTranscript>(h,b.public_instance,b.proof_type=="Full12");Hash session;session.text("zkGPT.R7.FS.session.v1");session.add(bytes(v.transcript->prefix()));v.sid=hex(session.digest());
++ v.transcript=std::make_unique<CanonicalTranscript>(h,b.public_instance,full12(b));Hash session;session.text("zkGPT.R7.FS.session.v1");session.add(bytes(v.transcript->prefix()));v.sid=hex(session.digest());
+ }
+ FsIO::~FsIO()=default;
+ bool FsIO::prover()const{return impl_->prover;}std::string FsIO::session()const{return impl_->sid;}Digest FsIO::prefix()const{return impl_->transcript->prefix();}
+diff --git a/src/paper_r7/fs_io.hpp b/src/paper_r7/fs_io.hpp
+--- a/src/paper_r7/fs_io.hpp
++++ b/src/paper_r7/fs_io.hpp
+@@ -5,6 +5,8 @@
+ using namespace crypto;
+ inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v3";
+ inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
++inline constexpr const char* unifiedSuite="R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
++inline constexpr const char* unifiedFull12Suite="R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
+ inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
+ inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
+ struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};
+diff --git a/src/paper_r7/fs_tests.cpp b/src/paper_r7/fs_tests.cpp
+--- a/src/paper_r7/fs_tests.cpp
++++ b/src/paper_r7/fs_tests.cpp
+@@ -21,6 +21,14 @@
+   bool rejected=false;try{fs::FsVerifierIO v(name+".legacy",b);}catch(const std::exception&e){need(std::string(e.what()).find("unknown suite/version")!=std::string::npos,e.what());rejected=true;}need(rejected,"legacy full-registration suite accepted");
+  }
+ }
++void unifiedSuites(const std::string&p){
++ for(bool full:{false,true}){fs::Binding old{full?"Full12":"Oneblock","protocol1-transition",std::string(64,'a'),{2,7,1,8}};auto candidate=old;candidate.proof_type=full?"Full12Unified":"OneblockUnified";auto name=p+(full?".unified-full12":".unified-oneblock");
++  {fs::FsProverIO w(name,old);w.message("first",{7,8});auto c=w.coin("challenge");w.message("response",r1::encode(c*Fr(7)));w.finish();}
++  rejects([&]{fs::FsVerifierIO v(name,candidate);});
++  {fs::FsProverIO w(name+".new",candidate);w.message("first",{7,8});auto c=w.coin("challenge");w.message("response",r1::encode(c*Fr(7)));w.finish();}
++  consume(name+".new",candidate);rejects([&]{fs::FsVerifierIO v(name+".new",old);});
++ }
++}
+ void buffered(const std::string&p,const fs::Binding&b){
+  Bytes big(131073,17);fs::FsProverIO tx(p,b);
+  for(unsigned i=0;i<1000;++i)tx.message("batch/"+std::to_string(i),Bytes(31,std::uint8_t(i)));
+@@ -39,7 +47,7 @@
+ int main(){try{
+  r1::init();char pattern[]="build/fs-unit-XXXXXX";auto d=mkdtemp(pattern);need(d,"FS test temp");std::string p=std::string(d)+"/proof.fsproof";
+  fs::Binding b{"Unit","test-context",std::string(64,'a'),{1,2,3}};
+- buffered(p+".buffered",b);legacySuites(p);
++ buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
+  fs::CanonicalTranscript t({1,2,3},{4,5});auto initial=t.prefix();need(t.prefix()==initial,"FS prefix mutated state");t.message("m",{7,8});auto c=t.coin("c");std::cout<<"REFERENCE "<<hex(t.prefix())<<' '<<hex(t.challengeDigest())<<' '<<hex(r1::hash(r1::encode(c)))<<' '<<t.rejections()<<'\n';rejects([&]{t.coin("c");});
+  fs::FsProverIO w(p,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));need(!std::filesystem::exists(p),"FS early publication");auto prefix=w.prefix();w.finish();consume(p,b);need(std::filesystem::exists(p) && w.prefix()==prefix,"FS publication/prefix");
+  auto bytes=read(p);rejects([&]{fs::FsProverIO duplicate(p,b);});need(read(p)==bytes,"FS overwrite changed original");
+diff --git a/src/paper_r7/full12_runtime_tests.cpp b/src/paper_r7/full12_runtime_tests.cpp
+--- a/src/paper_r7/full12_runtime_tests.cpp
++++ b/src/paper_r7/full12_runtime_tests.cpp
+@@ -8,6 +8,6 @@
+  for(auto&r:l.roots)if(r.model){model::Trust t;t.anchor.profile="unit";t.anchor.profile_hash=std::string(64,'1');t.anchor.manifest_hash=std::string(64,'2');t.anchor.circuit=std::string(64,'3');t.anchor.model_id="unit-full12-model";auto s=zkgpt::r1::PCSpec::make("unit/W/"+std::to_string(trust.size()),r.actual,r.padded,zkgpt::r1::Layout::RowMajor);std::vector<Fr>values(W.begin()+off,W.begin()+off+r.actual);auto padded=values;padded.resize(r.padded,Fr(0));t.anchor.w=zkgpt::r1::commit(s,padded);t.anchor_hash=zkgpt::r5b::digestHex(zkgpt::r6::encodeAnchor(t.anchor));t.manifest_hash=t.anchor.manifest_hash;trust.push_back(t);secrets.push_back(model::rerandomize(trust.back(),tx.session(),std::move(values),rng));off+=r.actual;}
+  Prepared prepared;prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(32);for(std::size_t j=0;j<32;++j)prepared["r7/helper"]->at(j)=Fr(j<20?j+7:0);
+  Commitments p(tx,l,base,&prepared,&rng,nullptr,nullptr,&trust,&secrets);p.constrainBaseTails();need(p.registered_rows==0 && p.registration_bytes==0,"Full12 full base registration disabled");for(auto&m:tx.data){need(m.first.rfind("Classified/register/",0)!=0 && m.first!="Classified/base-registered","Full12 legacy full registration emitted");for(std::size_t k=0;k<l.roots.size();++k)if(l.roots[k].model)need(m.first.rfind("Classified/zero-tail/"+std::to_string(k)+"/",0)!=0,"duplicate model knowledge/tail proof");}std::vector<Fr>q{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)};
+- for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);auto h=exchangeHidden(tx,std::string(id)+"/value",zkgpt::r1::mle(values,point),&rng);v.open(tx,{point,h.handle},&h,&rng,std::string(id)+"/open");}p.authenticate();
+- Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.constrainBaseTails();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticate();need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
++ for(auto id:{"r7/query","r7/helper","r7/W"}){auto v=p.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(v.padded));std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);auto h=exchangeHidden(tx,std::string(id)+"/value",zkgpt::r1::mle(values,point),&rng);v.open(tx,{point,h.handle},&h,&rng,std::string(id)+"/open");}p.authenticateUnifiedInput({Fr(2),Fr(3)});
++ Tape rx(false);rx.data=tx.data;Commitments v(rx,l,{},nullptr,nullptr,nullptr,nullptr,&trust,nullptr);v.constrainBaseTails();for(auto id:{"r7/query","r7/helper","r7/W"}){auto a=v.view(id);auto point=q;point.resize(zkgpt::r1::log2exact(a.padded));auto h=exchangeHidden(rx,std::string(id)+"/value",Fr(0),nullptr);a.open(rx,{point,h.handle},nullptr,nullptr,std::string(id)+"/open");}v.authenticateUnifiedInput({Fr(2),Fr(3)});need(v.authenticated() && rx.at==rx.data.size(),"independent cross-root mandatory authentication");std::cout<<"FULL12_PARTITION_CRYPTO_TESTED roots="<<l.roots.size()<<" registered_rows="<<v.registered_rows<<'\n';return 0;
+ }catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/interactive.cpp b/src/paper_r7/interactive.cpp
+--- a/src/paper_r7/interactive.cpp
++++ b/src/paper_r7/interactive.cpp
+@@ -12,7 +12,7 @@
+ }
+ void PipeIO::audit(const Bytes&b){if(audit_fd_>=0)exact(audit_fd_,const_cast<std::uint8_t*>(b.data()),b.size(),true);else public_transcript_.insert(public_transcript_.end(),b.begin(),b.end());}
+ PipeIO::PipeIO(bool p,const std::string&mode,const std::string&attack,const std::string&protocol_suite,Profile profile,int fd):prover_(p),attack_(attack){
+- if(profile==Profile::MasterChunkedV1 || profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){need(protocol_suite==(profile==Profile::MasterChunkedV1?"R7-STAGE3B1-CHUNKED-MASTER-SESSION-v1":profile==Profile::OneblockV1?"R7-ONEBLOCK-INDEPENDENT-INTERACTIVE-v1":"R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v4"),"R7 streaming profile suite mismatch");limit_=std::uint64_t(1)<<30;if(profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){frame_limit_=1048576;live_coins_=std::make_unique<LiveCoins>();}if(!p){struct stat st{};need(fd>2 && fstat(fd,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid() && st.st_size==0 && (fcntl(fd,F_GETFL)&O_ACCMODE)!=O_RDONLY,"R7 streaming audit FD");audit_fd_=fd;}}
++ if(profile==Profile::MasterChunkedV1 || profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){auto expected=profile==Profile::MasterChunkedV1?"R7-STAGE3B1-CHUNKED-MASTER-SESSION-v1":profile==Profile::OneblockV1?"R7-ONEBLOCK-INDEPENDENT-INTERACTIVE-v1":"R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v4";const bool unified=profile==Profile::ClassifiedV2 && protocol_suite=="R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1";need(protocol_suite==expected || unified,"R7 streaming profile suite mismatch");limit_=std::uint64_t(1)<<30;if(profile==Profile::OneblockV1 || profile==Profile::ClassifiedV2){frame_limit_=1048576;live_coins_=std::make_unique<LiveCoins>();}if(!p){struct stat st{};need(fd>2 && fstat(fd,&st)==0 && S_ISREG(st.st_mode) && st.st_uid==getuid() && st.st_size==0 && (fcntl(fd,F_GETFL)&O_ACCMODE)!=O_RDONLY,"R7 streaming audit FD");audit_fd_=fd;}}
+  if(!p){auto b=coins_.bytes(32);Digest d;std::copy(b.begin(),b.end(),d.begin());sid_=hex(d);send("READY/"+mode,Bytes(protocol_suite.begin(),protocol_suite.end()));}
+  else{auto b=readFrame();auto r=R7Wire::decodeLocalRecord(b);need(r.sequence==0 && r.label=="READY/"+mode && r.payload==Bytes(protocol_suite.begin(),protocol_suite.end()),"R7 trusted verifier READY mismatch");sid_=r.session;++seq_;transcript_.record(r.label,b);}
+ }
+diff --git a/src/paper_r7/oneblock_main.cpp b/src/paper_r7/oneblock_main.cpp
+--- a/src/paper_r7/oneblock_main.cpp
++++ b/src/paper_r7/oneblock_main.cpp
+@@ -30,13 +30,25 @@
+ namespace {
+ #ifdef R7_FS_ONEBLOCK
+ #ifdef R7_FS_FULL12
++#ifdef R7_UNIFIED_INPUT1
++constexpr auto liveSuite=zkgpt::r7::fs::unifiedFull12Suite;
++#else
+ constexpr auto liveSuite=zkgpt::r7::fs::full12Suite;
++#endif
++#else
++#ifdef R7_UNIFIED_INPUT1
++constexpr auto liveSuite=zkgpt::r7::fs::unifiedSuite;
+ #else
+ constexpr auto liveSuite=zkgpt::r7::fs::suite;
++#endif
+ #endif
+ constexpr auto coverageAccepted=zkgpt::r7::fs::verifiedStatus;
+ #elif defined(R7_CLASSIFIED_V2)
++#ifdef R7_UNIFIED_INPUT1
++constexpr auto liveSuite="R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1";
++#else
+ constexpr auto liveSuite=classified::suite;
++#endif
+ constexpr auto liveProfile=PipeIO::Profile::ClassifiedV2;
+ constexpr auto coverageAccepted="ONEBLOCK_INTERACTIVE_ACCEPT";
+ #else
+@@ -59,7 +71,7 @@
+  bool prover()const override{return base_.prover();}std::string session()const override{return base_.session();}Digest prefix()const override{return base_.prefix();}
+  Bytes message(const std::string&label,const Bytes&v={})override{last_=label;if(!prover() || attack_.empty() || changed_)return base_.message(label,v);auto b=v;if(prover() && !changed_){
+   if(attack_=="wrong-commitment" && label=="Classified/root/1/PC"){auto pc=decodeVector(b);pc.points[0]+=parameters(1).scalar;b=encodeVector(pc);changed_=true;}
+-  if(attack_=="missing-authentication" && label=="Classified/all-claims-fixed"){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
++  if(attack_=="missing-authentication" && (label=="Classified/all-claims-fixed" || label=="UnifiedInput/all-claims-fixed")){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
+   if(attack_=="model-response" && label=="oneblock/model/register/0/responses"){auto x=r1::decodeFr(Bytes(b.begin(),b.begin()+32));auto c=r1::encode(x+Fr(1));std::copy(c.begin(),c.end(),b.begin());changed_=true;}
+   if(attack_=="truncated" && label=="oneblock/model/register/0/responses"){b.pop_back();changed_=true;}
+   if(attack_=="missing-constraint" && label.find("Oneblock/GKR/")!=std::string::npos){close(1);throw std::runtime_error("Oneblock deliberate missing constraint");}
+@@ -99,7 +111,13 @@
+  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
+  for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/physical-zero-tail",r.model?"CLASSIFIED_TRUSTED_ANCHOR_TAIL":"CLASSIFIED_ZERO_TAIL",r.id,r.padded,0});}
+  for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
++#ifdef R7_UNIFIED_INPUT1
++ plan.required.push_back({"unified-input/sumcheck","UNIFIED_INPUT_SUMCHECK",classified::identity(layout),ctx.plan.master.actual,0});
++ plan.required.push_back({"unified-input/classified-opening","UNIFIED_INPUT_OPENING",classified::identity(layout),ctx.plan.master.actual,0});
++ for(auto&r:layout.roots)plan.required.push_back({"unified-input/root/"+r.id+"/opening","UNIFIED_CLASSIFIED_ROOT_OPENING",r.id,r.padded,0});
++#else
+  plan.required.push_back({"classified/authentication-barrier","CLASSIFIED_AUTHENTICATION",classified::identity(layout),ctx.plan.master.actual,0});
++#endif
+ #endif
+ #ifdef R7_COMPLETE_VERIFIER
+  constexpr bool isP=false;
+@@ -131,6 +149,9 @@
+  auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+ #endif
+  Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
++#ifdef R7_UNIFIED_INPUT1
++ instance.text(classified::unifiedInputIdentity(layout,s.x));
++#endif
+ #ifdef R7_FS_FULL12
+  instance.text(full12::trustIdentity(fsTrust));
+ #else
+@@ -139,9 +160,21 @@
+ instance.raw(statement_bytes);
+  #ifdef R7_FS_FULL12
+  std::vector<G1>extraGenerators;for(auto&t:fsTrust.chunks){auto&g=r1::generators(t.anchor.w.spec).g;extraGenerators.insert(extraGenerators.end(),g.begin(),g.end());}
+- fs::Binding fsBinding{"Full12",argv[3],fs::generatorIdentity(extraGenerators),instance.b};
+-#else
+- fs::Binding fsBinding{"Oneblock",argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
++ fs::Binding fsBinding{
++#ifdef R7_UNIFIED_INPUT1
++ "Full12Unified",
++#else
++ "Full12",
++#endif
++ argv[3],fs::generatorIdentity(extraGenerators),instance.b};
++#else
++ fs::Binding fsBinding{
++#ifdef R7_UNIFIED_INPUT1
++ "OneblockUnified",
++#else
++ "Oneblock",
++#endif
++ argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
+ #endif
+ #ifdef R7_COMPLETE_VERIFIER
+  fs::FsVerifierIO pipe(argv[2],fsBinding);
+diff --git a/src/paper_r7/unified_input.cpp b/src/paper_r7/unified_input.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/unified_input.cpp
+@@ -0,0 +1,73 @@
++#include "unified_input.hpp"
++#include <algorithm>
++#include <map>
++#include <chrono>
++#include <iostream>
++#include "opt2_metrics.hpp"
++namespace zkgpt::r7::oneblock::unified {
++namespace {
++constexpr std::size_t maxDomain=std::size_t(1)<<32;
++bool power(std::size_t n){return n && !(n&(n-1));}
++// The virtual domain is never materialized. Do not apply r1::log2exact's
++// separate 2^28 allocation bound to its metadata-only round count.
++unsigned domainBits(std::size_t n){need(power(n) && n<=maxDomain,"unified virtual domain dimension bound");unsigned bits=0;while(n>1){n>>=1;++bits;}return bits;}
++class SplitWeights {
++ std::vector<Fr>low_,high_;unsigned split_;
++ public:explicit SplitWeights(const std::vector<Fr>&q):split_(q.size()/2){low_=r1::weights({q.begin(),q.begin()+split_});high_=r1::weights({q.begin()+split_,q.end()});}
++ Fr at(std::size_t j)const{return low_[j&(low_.size()-1)]*high_[j>>split_];}
++};
++Fr fixedBits(const Segment&s,const std::vector<Fr>&point,unsigned begin){Fr weight=1;for(unsigned j=begin;j<point.size();++j)weight*=((s.offset>>j)&1)?point[j]:Fr(1)-point[j];return weight;}
++}
++void validate(std::size_t n,const std::vector<Segment>&segments){
++ need(power(n) && n<=maxDomain && !segments.empty() && segments.size()<=8193,"unified input domain/segment bound");
++ auto sorted=segments;std::sort(sorted.begin(),sorted.end(),[](auto a,auto b){return a.offset<b.offset;});std::size_t end=0;
++ for(auto s:sorted){need(power(s.padded) && s.padded<=n && s.offset<=n-s.padded && s.offset%s.padded==0 && s.offset>=end,"unified unaligned/overlapping/out-of-domain segment");end=s.offset+s.padded;}
++}
++Packing pack(const std::vector<Block>&blocks,std::size_t public_padded){
++ need(power(public_padded) && public_padded<=maxDomain/4 && blocks.size()<=8192,"unified public input packing bound");
++ Packing out;std::array<std::size_t,4>cursor{public_padded,0,0,0};out.segments.push_back({0,public_padded});
++ for(auto b:blocks){need(b.category>=1 && b.category<=3 && power(b.padded) && b.padded<=maxDomain/4,"unified private category/block bound");auto&at=cursor[b.category];need(at<=maxDomain/4-(b.padded-1),"unified packing alignment overflow");auto begin=(at+b.padded-1)&~(b.padded-1);need(begin<=maxDomain/4-b.padded,"unified partition bound");out.segments.push_back({begin,b.padded});at=begin+b.padded;}
++ auto longest=*std::max_element(cursor.begin(),cursor.end());out.partition_size=1;while(out.partition_size<longest)out.partition_size*=2;out.domain=4*out.partition_size;
++ for(std::size_t k=0;k<blocks.size();++k)out.segments[k+1].offset+=blocks[k].category*out.partition_size;
++ validate(out.domain,out.segments);return out;
++}
++Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
++Round quadraticRound(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider){
++ validate(n,segments);need(prefix.size()<domainBits(n) && provider,"unified round prefix/provider");const auto t=unsigned(prefix.size());Round out;
++ struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
++ auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;}};
++ for(std::size_t k=0;k<segments.size();++k){auto s=segments[k];auto d=r1::log2exact(s.padded);auto low=std::min<unsigned>(t,d);SplitWeights weights({prefix.begin(),prefix.begin()+low});const auto block=std::size_t(1)<<low;unsigned calls=0;
++  provider(k,[&](const Value&a,const Value&b){++calls;need(calls==1 && a && b,"unified factor oracle invocation");
++   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);v.b+=w*b(index);}}return v;};
++   if(t<d){for(std::size_t j=0;j<(s.padded>>t)/2;++j){auto left=folded(2*j),right=folded(2*j+1);product(left.a,right.a,left.b,right.b);}}
++   else{auto v=folded(0);auto w=fixedBits(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=w*v.a;target.b+=w*v.b;}
++  });need(calls==1,"unified missing factor oracle");
++ }
++ // Large aligned blocks occupy complete suffix pairs; scalar blocks can
++ // collide, so combine both factors first (including X with a zero K block).
++ for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
++ return out;
++}
++Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
++ const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role){
++ auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
++ validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
++ crypto::validate(initial.handle,io.session(),initial.handle.role);
++ Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
++ auto previous=initial;std::vector<Fr>point;Round last;
++ for(unsigned t=0;t<domainBits(n);++t){auto name=role+"/round/"+std::to_string(t);if(io.prover())last=quadraticRound(n,segments,point,factors);
++  std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
++  Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
++  auto r=io.coin(name+"/r");point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
++ }
++ Fr input=0,actual_kernel=0;if(io.prover()){
++  if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}
++  else{auto r=point.back();input=last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]);actual_kernel=last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]);}
++ }
++ auto expected=kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
++ auto input_end=exchangeHidden(io,role+"/input-evaluation",input,rng);auto public_kernel=publicHidden(io,role+"/public-kernel",expected);bindPublic(io,role+"/public-kernel",encode(public_kernel.handle));
++ std::vector<Hidden>w{input_end,public_kernel,previous};Relations terminal;terminal.role=role+"/terminal";for(auto&h:w)terminal.handles.push_back(h.handle);terminal.products={{0,1,2}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
++ std::cerr<<"UNIFIED_SUMCHECK {\"domain\":"<<n<<",\"rounds\":"<<point.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"includes_public_kernel_endpoint\":true}\n";
++ return {initial,{input_end,public_kernel},point};
++}
++}
+diff --git a/src/paper_r7/unified_input.hpp b/src/paper_r7/unified_input.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/unified_input.hpp
+@@ -0,0 +1,23 @@
++#pragma once
++#include "oneblock_sumcheck.hpp"
++#include <array>
++namespace zkgpt::r7::oneblock::unified {
++inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-UNIFIED-INPUT-v1";
++struct Block {unsigned category;std::size_t padded;};
++struct Segment {std::size_t offset,padded;};
++struct Packing {std::size_t partition_size=0,domain=0;std::vector<Segment>segments;};
++// Segment0 is public X. Later segments preserve original physical root order.
++Packing pack(const std::vector<Block>&,std::size_t public_padded);
++void validate(std::size_t,const std::vector<Segment>&);
++Fr selector(const Segment&,const std::vector<Fr>&global_point);
++using Consume=std::function<void(const Value&,const Value&)>;
++// A provider invokes consume exactly once with a borrowed sealed input oracle
++// and its public kernel. At most one physical-root kernel is live at a time.
++using Factors=std::function<void(std::size_t,const Consume&)>;
++struct Round {std::array<Fr,3>coefficients{Fr(0),Fr(0),Fr(0)};std::array<Fr,2>input_pair{Fr(0),Fr(0)},kernel_pair{Fr(0),Fr(0)};};
++Round quadraticRound(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&prefix,const Factors&);
++// One hidden degree-two Sumcheck, with a verifier-computed public K endpoint.
++Reduction reduce(IO&,std::size_t,const std::vector<Segment>&,const Hidden&,
++ const Factors&onlyP,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,
++ Random*,const std::string&role);
++}
+diff --git a/src/paper_r7/unified_input_tests.cpp b/src/paper_r7/unified_input_tests.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/unified_input_tests.cpp
+@@ -0,0 +1,131 @@
++// Reuse only the existing small real commitment fixture and tape transport.
++#define main classified_fixture_main
++#include "classified_crypto_tests.cpp"
++#undef main
++#include "unified_input.hpp"
++#include "interactive.hpp"
++#include <sys/socket.h>
++#include <sys/wait.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <map>
++namespace ui=zkgpt::r7::oneblock::unified;
++void largeVirtualDomainTests(){
++ // A virtual domain is metadata, not a materialized vector. Keep only three
++ // scalar blocks while testing every round through the 29..32-bit domains.
++ for(unsigned bits=29;bits<=32;++bits){
++  auto n=std::size_t(1)<<bits;std::vector<ui::Segment>segments{{0,1},{(n>>1)+17,1},{n-1,1}};
++  std::array<Fr,3>a{Fr(2),Fr(-3),Fr(5)},b{Fr(7),Fr(11),Fr(-13)};
++  ui::Factors factors=[&](std::size_t k,const ui::Consume&consume){consume([&,k](std::size_t j){need(j==0,"virtual sparse private index");return a[k];},[&,k](std::size_t j){need(j==0,"virtual sparse kernel index");return b[k];});};
++  std::vector<Fr>prefix;
++  for(unsigned t=0;t<bits;++t){
++   std::array<Fr,3>values{Fr(0),Fr(0),Fr(0)};
++   for(unsigned q=0;q<3;++q){std::map<std::size_t,std::pair<Fr,Fr>>suffix;
++    for(std::size_t k=0;k<segments.size();++k){auto coordinate=segments[k].offset;Fr weight=1;for(unsigned j=0;j<t;++j)weight*=((coordinate>>j)&1)?prefix[j]:Fr(1)-prefix[j];weight*=((coordinate>>t)&1)?Fr(q):Fr(1)-Fr(q);auto&entry=suffix.try_emplace(coordinate>>(t+1),Fr(0),Fr(0)).first->second;entry.first+=weight*a[k];entry.second+=weight*b[k];}
++    for(auto&entry:suffix)values[q]+=entry.second.first*entry.second.second;
++   }
++   std::array<Fr,3>want;want[0]=values[0];want[2]=(values[2]-Fr(2)*values[1]+values[0])/Fr(2);want[1]=values[1]-want[0]-want[2];auto round=ui::quadraticRound(n,segments,prefix,factors);need(round.coefficients==want,"large virtual domain sparse reference mismatch");prefix.push_back(Fr(-2-int(t)));
++  }
++  auto endpoint=[&](const std::vector<Fr>&point){Fr result=0;for(std::size_t k=0;k<segments.size();++k){Fr weight=1;for(unsigned j=0;j<bits;++j)weight*=((segments[k].offset>>j)&1)?point[j]:Fr(1)-point[j];result+=weight*b[k];}return result;};
++  SessionRandom rng;Tape p(true);auto initial=publicHidden(p,"large-virtual/initial",a[0]*b[0]+a[1]*b[1]+a[2]*b[2]);auto reduced=ui::reduce(p,n,segments,initial,factors,endpoint,&rng,"large-virtual/sumcheck");need(reduced.point.size()==bits,"large virtual domain round count");Tape v(false);v.data=p.data;auto vi=publicHidden(v,"large-virtual/initial",a[0]*b[0]+a[1]*b[1]+a[2]*b[2]);ui::reduce(v,n,segments,vi,{},endpoint,nullptr,"large-virtual/sumcheck");need(v.at==v.data.size(),"large virtual domain independent EOF");
++ }
++ rejects([]{ui::quadraticRound(std::size_t(1)<<33,{{0,1}},{},[](std::size_t,const ui::Consume&){});},"unsupported virtual domain accepted");
++ need(r1::kMaxVector==(std::size_t(1)<<28),"materialized vector limit changed");std::cout<<"UNIFIED_LARGE_VIRTUAL_DOMAIN_TESTED bits=29..32 private_scalars=3 unchanged_materialized_bound="<<r1::kMaxVector<<'\n';
++}
++void denseRoundTests(){
++ for(unsigned variant=0;variant<9;++variant){
++  std::vector<ui::Block>blocks{{1,8},{2,2},{3,16},{2,8},{3,1}};
++  if(variant==8)blocks.clear();
++  auto plan=ui::pack(blocks,variant==8?1:4);
++  std::vector<std::vector<Fr>>a(plan.segments.size()),b(a.size());
++  std::vector<Fr>denseA(plan.domain,Fr(0)),denseB(plan.domain,Fr(0));
++  for(std::size_t k=0;k<a.size();++k){auto seg=plan.segments[k];a[k].resize(seg.padded);b[k].resize(seg.padded);
++   for(std::size_t j=0;j<seg.padded;++j){a[k][j]=Fr(int((k+2)*(j+3))-11);b[k][j]=k==0?Fr(0):Fr(int(k+3*j)-7);denseA[seg.offset+j]=a[k][j];denseB[seg.offset+j]=b[k][j];}}
++  ui::Factors factors=[&](std::size_t k,const ui::Consume&consume){Value av=[&,k](std::size_t j){return a[k].at(j);};Value bv=[&,k](std::size_t j){return b[k].at(j);};consume(av,bv);};
++  std::vector<Fr>prefix;std::size_t current=plan.domain;
++  while(current>1){
++   // Independent oracle: dense low-bit folding and evaluations at0,1,2.
++   std::array<Fr,3>evaluation{Fr(0),Fr(0),Fr(0)};
++   for(unsigned t=0;t<3;++t)for(std::size_t j=0;j<current/2;++j){auto x=denseA[2*j]*(Fr(1)-Fr(t))+denseA[2*j+1]*Fr(t);auto y=denseB[2*j]*(Fr(1)-Fr(t))+denseB[2*j+1]*Fr(t);evaluation[t]+=x*y;}
++   std::array<Fr,3>want;want[0]=evaluation[0];want[2]=(evaluation[2]-Fr(2)*evaluation[1]+evaluation[0])/Fr(2);want[1]=evaluation[1]-want[0]-want[2];
++   auto got=ui::quadraticRound(plan.domain,plan.segments,prefix,factors);
++   need(got.coefficients==want,"streaming global polynomial differs from independent dense oracle");
++   if(current==2)need(got.input_pair[0]==denseA[0] && got.input_pair[1]==denseA[1] && got.kernel_pair[0]==denseB[0] && got.kernel_pair[1]==denseB[1],"global terminal pairs lost crossroot contributions");
++   Fr r=variant%3==0?Fr(0):(variant%3==1?Fr(1):Fr(-3-int(prefix.size())));prefix.push_back(r);
++   for(std::size_t j=0;j<current/2;++j){denseA[j]=denseA[2*j]*(Fr(1)-r)+denseA[2*j+1]*r;denseB[j]=denseB[2*j]*(Fr(1)-r)+denseB[2*j+1]*r;}current/=2;
++  }
++  Fr stitchedA=0,stitchedB=0;
++  for(std::size_t k=0;k<a.size();++k){auto d=r1::log2exact(a[k].size());std::vector<Fr>q(prefix.begin(),prefix.begin()+d);auto weight=ui::selector(plan.segments[k],prefix);stitchedA+=weight*r1::mle(a[k],q);stitchedB+=weight*r1::mle(b[k],q);}
++  need(stitchedA==denseA[0] && stitchedB==denseB[0],"common point classified stitching differs from full input MLE");
++ }
++ rejects([]{ui::pack({{0,4}},4);},"private block placed into public partition");
++ rejects([]{ui::pack({{4,4}},4);},"unknown category accepted");
++ rejects([]{ui::pack({{1,3}},4);},"non power-of-two block accepted");
++ rejects([]{ui::validate(16,{{0,8},{4,4}});},"overlapping blocks accepted");
++ rejects([]{ui::validate(16,{{2,4}});},"unaligned block accepted");
++ rejects([]{ui::validate(16,{{16,1}});},"out-of-domain block accepted");
++ std::cout<<"UNIFIED_DENSE_ROUNDS_TESTED\n";
++}
++void contract(){
++ r1::init();auto layout=small();Prepared data;
++ data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(7));
++ SessionRandom rng;Tape tx(true);Commitments pcs(tx,layout,[](std::size_t j){return Fr(j+1);},&data,&rng);
++ pcs.constrainBaseTails();std::vector<Fr>point{Fr(3),Fr(5),Fr(7)};
++ auto oracle=pcs.view("unit/native-E");auto value=exchangeHidden(tx,"unified-test/value",Fr(7),&rng);
++ oracle.open(tx,{point,value.handle},&value,&rng,"unified-test/source");
++ pcs.authenticateUnifiedInput({Fr(11),Fr(13),Fr(17)});
++ Tape rx(false);rx.data=tx.data;Commitments verifier(rx,layout,{},nullptr,nullptr);verifier.constrainBaseTails();auto source=verifier.view("unit/native-E");auto hidden=exchangeHidden(rx,"unified-test/value",Fr(0),nullptr);source.open(rx,{point,hidden.handle},nullptr,nullptr,"unified-test/source");verifier.authenticateUnifiedInput({Fr(11),Fr(13),Fr(17)});need(verifier.authenticated() && rx.at==rx.data.size(),"unified classified witness-free verification/EOF failed");
++ std::size_t unified=0,oldRoots=0;
++ for(auto&m:tx.data){unified+=m.first=="UnifiedInput/sumcheck/statement";oldRoots+=m.first.find("Classified/root-proof/")==0;}
++ need(unified==1 && oldRoots==0,"one global Unified Input Sumcheck required; old root barrier is not equivalent");
++}
++void hiddenProtocolTests(){
++ for(unsigned mode=0;mode<5;++mode){
++  auto plan=ui::pack({{1,4},{2,2},{3,1}},2);std::vector<Fr>a(plan.domain,Fr(0)),b(a.size(),Fr(0));
++  for(std::size_t k=0;k<plan.segments.size();++k){auto s=plan.segments[k];for(std::size_t j=0;j<s.padded;++j){a[s.offset+j]=Fr(k+2*j+1);b[s.offset+j]=k?Fr(3*k+j):Fr(0);}}
++  Fr sum=0;for(std::size_t j=0;j<a.size();++j)sum+=a[j]*b[j];
++  ui::Factors factors=[&](std::size_t k,const ui::Consume&f){auto offset=plan.segments[k].offset;f([&,offset](std::size_t j){return a.at(offset+j);},[&,offset](std::size_t j){return b.at(offset+j);});};
++  auto kernel=[&](const std::vector<Fr>&r){return r1::mle(b,r);};SessionRandom rng;Tape p(true);auto h=exchangeHidden(p,"hidden-input-test/initial",sum,&rng);
++  ui::reduce(p,plan.domain,plan.segments,h,factors,kernel,&rng,"UnifiedInput/sumcheck");Tape v(false);v.data=p.data;
++  if(mode==1){for(auto&m:v.data)if(m.first=="hidden-input-test/initial/commitment"){auto x=decodeHandle(m.second);x.point+=parameters(1).scalar;m.second=encode(x);break;}}
++  if(mode==2){for(auto&m:v.data)if(m.first=="UnifiedInput/sumcheck/round/0/c/0/commitment"){auto x=decodeHandle(m.second);x.point+=parameters(1).scalar;m.second=encode(x);break;}}
++  if(mode==3){for(auto&m:v.data)if(m.first=="UnifiedInput/sumcheck/input-evaluation/commitment"){auto x=decodeHandle(m.second);x.point+=parameters(1).scalar;m.second=encode(x);break;}}
++  auto replay=[&]{auto initial=exchangeHidden(v,"hidden-input-test/initial",Fr(0),nullptr);auto vk=[&](const std::vector<Fr>&r){return kernel(r)+Fr(mode==4?1:0);};ui::reduce(v,plan.domain,plan.segments,initial,{},vk,nullptr,"UnifiedInput/sumcheck");need(v.at==v.data.size(),"hidden input proof has unconsumed messages");};
++  if(mode)rejects(replay,"malicious hidden unified input proof accepted");else replay();
++ }
++ // Zero-dimensional physical blocks are exercised above; also test n=1 driver.
++ Tape p(true);SessionRandom rng;auto initial=publicHidden(p,"unit-domain/initial",Fr(21));ui::Factors f=[](std::size_t,const ui::Consume&c){c([](std::size_t){return Fr(3);},[](std::size_t){return Fr(7);});};auto k=[](const std::vector<Fr>&){return Fr(7);};ui::reduce(p,1,{{0,1}},initial,f,k,&rng,"unit-domain");Tape v(false);v.data=p.data;auto vi=publicHidden(v,"unit-domain/initial",Fr(21));ui::reduce(v,1,{{0,1}},vi,{},k,nullptr,"unit-domain");need(v.at==v.data.size(),"unit-domain EOF");
++ std::cout<<"UNIFIED_HIDDEN_PROTOCOL_TESTED\n";
++}
++void mappedProtocolTests(){
++ for(unsigned pattern=0;pattern<4;++pattern){
++  auto l=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>();for(unsigned j=0;j<8;++j)data["unit/native-E"]->push_back(Fr(j+2));
++  auto map=[pattern](std::size_t j)->Located{if(pattern==3 && j>=5)return {{},Fr(-2),true};auto root=unsigned(j&1);auto index=pattern==2?0:(pattern==1?4-unsigned(j/2):unsigned(j/2));return {{root,index},pattern==3?Fr(3):Fr(0),false};};
++  std::vector<Fr>logical;for(unsigned j=0;j<8;++j){auto v=map(j);logical.push_back(v.constant?v.bias:Fr(v.coordinate.index+(v.coordinate.root?2:1))+v.bias);}std::vector<Fr>point{Fr(3),Fr(5),Fr(7)};
++  SessionRandom rng;Tape p(true);Commitments pcs(p,l,[](std::size_t j){return Fr(j+1);},&data,&rng);pcs.constrainBaseTails();auto h=exchangeHidden(p,"mapped-protocol/value",r1::mle(logical,point),&rng);std::size_t calls=0;pcs.defer({"mapped-protocol/claim","trusted-test-map",h,point,8,[&](std::size_t j){++calls;return map(j);}});pcs.authenticateUnifiedInput({Fr(11),Fr(13)});need(calls==16,"frozen unified map invoked mutable callback again");
++  for(unsigned attack=0;attack<9;++attack){Tape v(false);v.data=p.data;
++   if(attack==1)for(auto&m:v.data)if(m.first=="Classified/root/1/PC"){auto c=decodeVector(m.second);c.points[0]+=parameters(1).scalar;m.second=encodeVector(c);break;}
++   if(attack==2)for(auto&m:v.data)if(m.first=="mapped-protocol/value/commitment"){auto c=decodeHandle(m.second);c.point+=parameters(1).scalar;m.second=encode(c);break;}
++   if(attack==3)for(auto&m:v.data)if(m.first.find("UnifiedInput/opening/root/0/hyrax/")==0 && m.second.size()>=32){m.second.back()^=1;break;}
++   if(attack==4)for(auto&m:v.data)if(m.first=="UnifiedInput/all-claims-authenticated"){m.second.back()^=1;break;}
++   if(attack==8)for(auto&m:v.data)if(m.first.find("Classified/zero-tail/")==0 && m.first.find("/responses")!=std::string::npos){auto end=Bytes(m.second.end()-32,m.second.end());auto changed=r1::encode(r1::decodeFr(end)+Fr(1));std::copy(changed.begin(),changed.end(),m.second.end()-32);break;}
++   auto replay=[&]{Commitments judge(v,l,{},nullptr,nullptr);judge.constrainBaseTails();auto value=exchangeHidden(v,"mapped-protocol/value",Fr(0),nullptr);judge.defer({"mapped-protocol/claim","trusted-test-map",value,point,8,[&](std::size_t j){auto at=map(j);if(attack==5 && !at.constant)at.coordinate.index=(at.coordinate.index+1)%5;if(attack==7)at.bias+=Fr(1);return at;}});judge.authenticateUnifiedInput(attack==6?std::vector<Fr>{Fr(12),Fr(13)}:std::vector<Fr>{Fr(11),Fr(13)});need(judge.authenticated() && v.at==v.data.size(),"mapped unified verifier EOF");};
++   if(attack)rejects(replay,"independent verifier accepted malicious mapping/root/claim/opening/X/completion");else replay();
++  }
++ }
++ std::cout<<"UNIFIED_MAPPED_PROTOCOL_TESTED\n";
++}
++void exhaustedProtocolTest(){
++ constexpr std::size_t n=std::size_t(1)<<22;auto l=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(7));std::vector<Fr>point(22,Fr(3));
++ auto location=[](std::size_t j)->Located{std::uint64_t h=j+0x9e3779b97f4a7c15ull;h=(h^(h>>30))*0xbf58476d1ce4e5b9ull;h=(h^(h>>27))*0x94d049bb133111ebull;h^=h>>31;return {{std::uint32_t(h&1),std::uint32_t((h>>1)%5)},Fr(0),false};};
++ Tape p(true);SessionRandom rng;Commitments pcs(p,l,[](std::size_t){return Fr(7);},&data,&rng);pcs.constrainBaseTails();auto h=exchangeHidden(p,"exhausted/value",Fr(7),&rng);std::size_t calls=0;pcs.defer({"exhausted/query","trusted-exhausted-map",h,point,n,[&](std::size_t j){++calls;return location(j);}});pcs.authenticateUnifiedInput({Fr(11),Fr(13)});need(calls>2*n,"cache exhaustion fixture did not exercise checked fallback");
++ for(bool changed:{false,true}){Tape v(false);v.data=p.data;std::size_t vcalls=0;auto replay=[&]{Commitments judge(v,l,{},nullptr,nullptr);judge.constrainBaseTails();auto value=exchangeHidden(v,"exhausted/value",Fr(0),nullptr);judge.defer({"exhausted/query","trusted-exhausted-map",value,point,n,[&](std::size_t j){auto at=location(j);++vcalls;if(changed && vcalls>2*n)at.coordinate.index=(at.coordinate.index+1)%5;return at;}});judge.authenticateUnifiedInput({Fr(11),Fr(13)});need(judge.authenticated() && v.at==v.data.size(),"checked fallback verifier EOF");};if(changed)rejects(replay,"mutable exhausted fallback mapping accepted");else replay();}
++ std::cout<<"UNIFIED_EXHAUSTED_PROTOCOL_TESTED callbacks="<<calls<<" initial_twice="<<2*n<<'\n';
++}
++void interactiveReady(){
++ int sockets[2];need(socketpair(AF_UNIX,SOCK_STREAM,0,sockets)==0,"unified READY socketpair");char name[]="build/protocol1-ready-XXXXXX";int audit=mkstemp(name);need(audit>2,"unified READY audit file");auto child=fork();need(child>=0,"unified READY fork");
++ if(!child){close(sockets[0]);dup2(sockets[1],0);dup2(sockets[1],1);close(sockets[1]);try{PipeIO io(false,"unified-ready","","R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1",PipeIO::Profile::ClassifiedV2,audit);_exit(0);}catch(const std::exception&e){std::cerr<<e.what()<<'\n';_exit(2);}}
++ close(sockets[1]);Bytes frame;std::array<unsigned char,4096>buffer;for(;;){auto n=read(sockets[0],buffer.data(),buffer.size());if(n<0 && errno==EINTR)continue;need(n>=0,"unified READY read");if(!n)break;frame.insert(frame.end(),buffer.begin(),buffer.begin()+n);}close(sockets[0]);int status=0;need(waitpid(child,&status,0)==child,"unified READY wait");close(audit);need(WIFEXITED(status) && WEXITSTATUS(status)==0 && frame.size()>4,"new unified interactive READY rejected");
++ Bytes header(frame.begin(),frame.begin()+4);Reader length{header};need(length.number()==frame.size()-4,"unified READY frame length");auto record=R7Wire::decodeLocalRecord(Bytes(frame.begin()+4,frame.end()));std::string expected="R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1";need(record.label=="READY/unified-ready" && record.payload==Bytes(expected.begin(),expected.end()),"unified READY suite was downgraded");std::cout<<"UNIFIED_INTERACTIVE_READY_TESTED audit="<<name<<'\n';
++}
++int main(int argc,char**argv){try{r1::init();if(argc>1 && std::string(argv[1])=="large-domain"){largeVirtualDomainTests();return 0;}if(argc>1 && std::string(argv[1])=="interactive"){interactiveReady();return 0;}if(argc>1 && std::string(argv[1])=="exhaustion"){exhaustedProtocolTest();return 0;}denseRoundTests();largeVirtualDomainTests();hiddenProtocolTests();mappedProtocolTests();if(argc==1 || std::string(argv[1])!="algebra")contract();std::cout<<"UNIFIED_INPUT_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"UNIFIED_INPUT_FAILED "<<e.what()<<'\n';return 1;}}
