@@ -1,0 +1,35 @@
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp:18:15: error: ‘Writer’ is not a member of ‘zkgpt::r7’; did you mean ‘zkgpt::r7::crypto::Writer’?
+   18 |    zkgpt::r7::Writer w;w.scalar(total);w.scalar(v[rep]);w.number(address,8);struct rusage usage{};getrusage(RUSAGE_SELF,&usage);
+      |               ^~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/sigma.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_sumcheck.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/unified_input.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:12:8: note: ‘zkgpt::r7::crypto::Writer’ declared here
+   12 | struct Writer{Bytes b;void number(std::uint64_t,unsigned=4);void raw(const Bytes&);void text(const std::string&);void scalar(const Fr&);void point(const G1&);};
+      |        ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp:18:24: error: ‘w’ was not declared in this scope
+   18 |    zkgpt::r7::Writer w;w.scalar(total);w.scalar(v[rep]);w.number(address,8);struct rusage usage{};getrusage(RUSAGE_SELF,&usage);
+      |                        ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp:19:350: error: ‘hex’ is not a member of ‘zkgpt::r7’
+   19 |    std::cout<<std::setprecision(14)<<"{\"repeat\":"<<rep<<",\"prefix_bits\":"<<t<<",\"phase\":"<<phase<<",\"coordinates\":"<<n<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-wall).count()<<",\"cpu_seconds\":"<<zkgpt::r7::crypto::processCPU()-cpu<<",\"rss_kib\":"<<usage.ru_maxrss<<",\"digest\":\""<<zkgpt::r7::hex(r1::hash(w.b))<<"\"}\n";
+      |                                                                                                                                                                                                                                                                                                                                                              ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/profile.cpp:19:350: note: suggested alternatives:
+In file included from /usr/include/c++/12/ios:42,
+                 from /usr/include/c++/12/istream:38,
+                 from /usr/include/c++/12/sstream:38,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/cybozu/exception.hpp:41,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/cybozu/stream.hpp:13,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp.hpp:29,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp_tower.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn256.hpp:10,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:2:
+/usr/include/c++/12/bits/ios_base.h:1067:3: note:   ‘std::hex’
+ 1067 |   hex(ios_base& __base)
+      |   ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:36:13: note:   ‘zkgpt::r7::crypto::hex’
+   36 | std::string hex(const Digest&);
+      |             ^~~

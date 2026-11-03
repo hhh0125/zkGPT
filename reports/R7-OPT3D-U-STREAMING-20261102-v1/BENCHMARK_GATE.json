@@ -1,0 +1,57 @@
+{
+  "success": true,
+  "small": "reports/R7-OPT3D-U-STREAMING-20261102-v1/small-20261102T141330Z",
+  "native": "reports/R7-OPT3D-U-STREAMING-20261102-v1/native-20261102T143552Z",
+  "small_medians": {
+    "1024": {
+      "reference-1": 0.009119853,
+      "unfactored-1": 0.01145717,
+      "getter-1": 0.007565166,
+      "stream-1": 0.007407303,
+      "stream-2": 0.010681843,
+      "stream-4": 0.010906928
+    },
+    "16384": {
+      "reference-1": 0.131350782,
+      "unfactored-1": 0.108967387,
+      "getter-1": 0.072483697,
+      "stream-1": 0.070710935,
+      "stream-2": 0.110166387,
+      "stream-4": 0.110607415
+    },
+    "1048576": {
+      "reference-1": 5.264506809,
+      "unfactored-1": 5.664507012,
+      "getter-1": 3.174491065,
+      "stream-1": 3.053433539,
+      "stream-2": 2.422111013,
+      "stream-4": 2.051764875
+    },
+    "16777216": {
+      "reference-1": 98.595249963,
+      "unfactored-1": 102.022039243,
+      "getter-1": 64.244999666,
+      "stream-1": 61.283387667,
+      "stream-2": 49.712372366,
+      "stream-4": 40.893223852
+    }
+  },
+  "native_medians": {
+    "16777216": {
+      "reference-1": 1342.083462034,
+      "unfactored-1": 1384.519225171,
+      "getter-1": 842.977159443,
+      "stream-1": 814.894027781,
+      "stream-2": 707.099789076,
+      "stream-4": 705.033413162
+    }
+  },
+  "selected_threads": 4,
+  "selected_mode": "stream",
+  "three_repeats_each": true,
+  "small_serial": true,
+  "native_concurrent_cases": 3,
+  "native_cases_share_same_total_four_cores": true,
+  "exact_coefficient_challenge_endpoint_equal": true,
+  "selection_reason": "minimum measured median for standalone2^24 stream1/2/4, matching a single real authentication onCPU0-3"
+}

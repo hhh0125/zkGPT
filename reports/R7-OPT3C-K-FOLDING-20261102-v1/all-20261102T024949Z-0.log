@@ -1,0 +1,306 @@
+[  0%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/bint-x64-amd64.S.o
+[  0%] Building CXX object 3rd/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[  1%] Built target mcl
+[  2%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/x86-64.S.o
+[  2%] Built target mclbn256
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384.dir/src/bn_c384.cpp.o
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384_256.dir/src/bn_c384_256.cpp.o
+[  9%] Built target gpt_lib
+[ 13%] Built target paper_r1
+[ 14%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/lookup_batch.cpp.o
+[ 14%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/mapped_input.cpp.o
+[ 14%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/core.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+[ 15%] Linking CXX shared library ../../lib/libmclbn384.so
+[ 15%] Linking CXX shared library ../../lib/libmclbn384_256.so
+[ 15%] Built target mclbn384
+[ 15%] Building CXX object src/paper_r1/CMakeFiles/r1_fixtures.dir/fixtures_main.cpp.o
+[ 15%] Built target mclbn384_256
+[ 15%] Building CXX object src/paper_r1/CMakeFiles/r1_integer_tests.dir/tests_integer.cpp.o
+[ 15%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/pc.cpp.o
+[ 16%] Linking CXX executable r1_integer_tests
+[ 16%] Built target r1_integer_tests
+[ 16%] Building CXX object src/paper_r1/CMakeFiles/r1_matrix_tests.dir/tests_matrix.cpp.o
+[ 16%] Linking CXX executable r1_matrix_tests
+[ 16%] Built target r1_matrix_tests
+[ 16%] Building CXX object src/paper_r1/CMakeFiles/r1_exp_tests.dir/tests_exp.cpp.o
+[ 16%] Linking CXX executable r1_fixtures
+[ 16%] Built target r1_fixtures
+[ 16%] Building CXX object src/paper_r1/CMakeFiles/r1_division_tests.dir/tests_division.cpp.o
+[ 16%] Linking CXX static library ../../lib/libmcl.a
+[ 16%] Built target mcl_st
+[ 17%] Building CXX object src/paper_r1/CMakeFiles/r1_positive_sqrt_tests.dir/tests_positive_sqrt.cpp.o
+[ 18%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/sumcheck.cpp.o
+[ 19%] Linking CXX executable r1_exp_tests
+[ 19%] Built target r1_exp_tests
+[ 19%] Building CXX object src/paper_r1/CMakeFiles/r2_mapped_input_tests.dir/tests_mapped_input.cpp.o
+[ 19%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/memory.cpp.o
+[ 19%] Linking CXX executable r1_division_tests
+[ 19%] Built target r1_division_tests
+[ 20%] Building CXX object src/paper_r1/CMakeFiles/r2_lookup_batch_tests.dir/tests_lookup_batch.cpp.o
+[ 20%] Linking CXX executable r1_positive_sqrt_tests
+[ 20%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/range.cpp.o
+[ 20%] Built target r1_positive_sqrt_tests
+[ 20%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/input.cpp.o
+[ 21%] Linking CXX executable r2_mapped_input_tests
+[ 21%] Built target r2_mapped_input_tests
+[ 21%] Building CXX object src/paper_r1/CMakeFiles/r2_scale_bench.dir/scale_bench.cpp.o
+[ 21%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/gkr.cpp.o
+[ 22%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/bundle.cpp.o
+[ 22%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/wire.cpp.o
+[ 22%] Linking CXX executable r2_scale_bench
+[ 22%] Built target r2_scale_bench
+[ 22%] Building CXX object src/paper_r1/CMakeFiles/r2_exp_profile_tests.dir/tests_exp_profile.cpp.o
+[ 22%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/integer_relations.cpp.o
+[ 22%] Linking CXX executable r2_lookup_batch_tests
+[ 22%] Built target r2_lookup_batch_tests
+[ 23%] Building CXX object src/paper_r1/CMakeFiles/r6b_memory_ownership_tests.dir/tests_memory_ownership.cpp.o
+[ 23%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/matrix.cpp.o
+[ 23%] Linking CXX executable r2_exp_profile_tests
+[ 23%] Built target r2_exp_profile_tests
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/exp.cpp.o
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/division.cpp.o
+[ 24%] Linking CXX executable r6b_memory_ownership_tests
+[ 24%] Built target r6b_memory_ownership_tests
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/opt2_span_bounds_tests.dir/tests_opt2_span_bounds.cpp.o
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/p0a_g1_validation_tests.dir/tests_g1_validation.cpp.o
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/positive_sqrt.cpp.o
+[ 24%] Building CXX object src/paper_r1/CMakeFiles/p0b_kernel_tests.dir/tests_mapped_kernel.cpp.o
+[ 25%] Linking CXX executable opt2_span_bounds_tests
+[ 25%] Built target opt2_span_bounds_tests
+[ 25%] Linking CXX static library libpaper_r1_verifier.a
+[ 25%] Building CXX object src/CMakeFiles/demo_llm_run.dir/main_demo_llm.cpp.o
+[ 25%] Built target paper_r1_verifier
+[ 26%] Building CXX object src/CMakeFiles/gkr_test_support.dir/tests/gkr_test_fixture.cpp.o
+[ 26%] Building CXX object src/CMakeFiles/gkr_test_support.dir/tests/zkgpt_artifact_test_fixture.cpp.o
+[ 26%] Linking CXX executable p0b_kernel_tests
+[ 26%] Built target p0b_kernel_tests
+[ 26%] Building CXX object src/CMakeFiles/zkgpt_decoder_resource_tests.dir/main_zkgpt_decoder_resource_tests.cpp.o
+[ 26%] Linking CXX executable p0a_g1_validation_tests
+[ 26%] Built target p0a_g1_validation_tests
+[ 26%] Building CXX object src/CMakeFiles/range_artifact_verify.dir/main_range_artifact_verify.cpp.o
+[ 26%] Linking CXX static library libgkr_test_support.a
+[ 26%] Built target gkr_test_support
+[ 26%] Building CXX object src/CMakeFiles/zkgpt_artifact_verify.dir/main_zkgpt_artifact_verify.cpp.o
+[ 26%] Linking CXX executable demo_llm_run
+[ 26%] Built target demo_llm_run
+[ 27%] Building CXX object src/CMakeFiles/lasso_folding_tests.dir/main_lasso_folding_tests.cpp.o
+[ 28%] Linking CXX executable zkgpt_decoder_resource_tests
+[ 28%] Built target zkgpt_decoder_resource_tests
+[ 28%] Building CXX object src/CMakeFiles/prover_lifecycle_tests.dir/main_prover_lifecycle_tests.cpp.o
+[ 28%] Linking CXX executable range_artifact_verify
+[ 28%] Linking CXX executable zkgpt_artifact_verify
+[ 28%] Built target range_artifact_verify
+[ 28%] Building CXX object src/CMakeFiles/hyrax_opening_tests.dir/main_hyrax_opening_tests.cpp.o
+[ 28%] Built target zkgpt_artifact_verify
+[ 28%] Building CXX object src/CMakeFiles/circuit_storage_tests.dir/main_circuit_storage_tests.cpp.o
+[ 28%] Linking CXX executable lasso_folding_tests
+[ 28%] Built target lasso_folding_tests
+[ 28%] Building CXX object src/CMakeFiles/model_binding.dir/main_model_binding.cpp.o
+[ 28%] Linking CXX executable prover_lifecycle_tests
+[ 28%] Linking CXX executable circuit_storage_tests
+[ 28%] Built target prover_lifecycle_tests
+[ 28%] Building CXX object src/CMakeFiles/model_binding_tests.dir/main_model_binding_tests.cpp.o
+[ 28%] Built target circuit_storage_tests
+[ 29%] Building CXX object src/CMakeFiles/exp_lookup_tests.dir/main_exp_lookup_tests.cpp.o
+[ 29%] Linking CXX executable hyrax_opening_tests
+[ 29%] Built target hyrax_opening_tests
+[ 30%] Building CXX object src/CMakeFiles/r2_gkr_terminal_tests.dir/main_r2_gkr_terminal_tests.cpp.o
+[ 31%] Linking CXX executable model_binding
+[ 31%] Built target model_binding
+[ 33%] Built target paper_r2
+[ 33%] Building CXX object src/CMakeFiles/opt2_ownership_tests.dir/main_opt2_ownership_tests.cpp.o
+[ 33%] Linking CXX executable r2_gkr_terminal_tests
+[ 33%] Built target r2_gkr_terminal_tests
+[ 33%] Building CXX object src/CMakeFiles/opt2_allocation_tests.dir/main_opt2_allocation_tests.cpp.o
+[ 33%] Linking CXX executable exp_lookup_tests
+[ 33%] Built target exp_lookup_tests
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/r1_core_tests.dir/tests_core.cpp.o
+[ 34%] Linking CXX executable model_binding_tests
+[ 34%] Built target model_binding_tests
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/r1_memory_tests.dir/tests_memory.cpp.o
+[ 34%] Linking CXX executable r1_core_tests
+[ 34%] Built target r1_core_tests
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/r1_range_tests.dir/tests_range.cpp.o
+[ 34%] Linking CXX executable r1_memory_tests
+[ 34%] Built target r1_memory_tests
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/r1_input_tests.dir/tests_input.cpp.o
+[ 34%] Linking CXX executable opt2_ownership_tests
+[ 34%] Built target opt2_ownership_tests
+[ 34%] Building CXX object src/paper_r1/CMakeFiles/r1_gkr_tests.dir/tests_gkr.cpp.o
+[ 34%] Linking CXX executable r1_range_tests
+[ 34%] Built target r1_range_tests
+[ 35%] Building CXX object src/paper_r1/CMakeFiles/r1_verify.dir/verify_main.cpp.o
+[ 35%] Linking CXX executable r1_input_tests
+[ 35%] Built target r1_input_tests
+[ 35%] Building CXX object src/paper_r1/CMakeFiles/r2_lookup_verify.dir/lookup_verify_main.cpp.o
+[ 36%] Linking CXX executable r1_gkr_tests
+[ 37%] Linking CXX executable opt2_allocation_tests
+[ 37%] Built target r1_gkr_tests
+[ 38%] Building CXX object src/paper_r1/CMakeFiles/r2_sparse_verifier_tests.dir/tests_sparse_verifier.cpp.o
+[ 38%] Built target opt2_allocation_tests
+[ 38%] Building CXX object src/paper_r2/CMakeFiles/r2_integration_tests.dir/tests_integration.cpp.o
+[ 38%] Linking CXX executable r1_verify
+[ 38%] Built target r1_verify
+[ 38%] Building CXX object src/paper_r2/CMakeFiles/r2_model_probe.dir/model_probe.cpp.o
+[ 38%] Linking CXX executable r2_lookup_verify
+[ 38%] Built target r2_lookup_verify
+[ 39%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/protocol.cpp.o
+[ 39%] Linking CXX executable r2_sparse_verifier_tests
+[ 39%] Built target r2_sparse_verifier_tests
+[ 39%] Building CXX object src/paper_r2/CMakeFiles/r2_model_queries_tests.dir/tests_model_queries.cpp.o
+[ 39%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/wire.cpp.o
+[ 39%] Linking CXX executable r2_model_probe
+[ 39%] Built target r2_model_probe
+[ 39%] Building CXX object src/paper_r2/CMakeFiles/r2_model_source_probe.dir/model_source_probe.cpp.o
+[ 40%] Linking CXX executable r2_model_queries_tests
+[ 40%] Built target r2_model_queries_tests
+[ 40%] Building CXX object src/paper_r2/CMakeFiles/r2_model_integrated.dir/model_integrated.cpp.o
+[ 40%] Linking CXX executable r2_integration_tests
+[ 40%] Built target r2_integration_tests
+[ 40%] Building CXX object src/paper_r2/CMakeFiles/r2_model_attack_artifacts.dir/model_attack_artifacts.cpp.o
+[ 40%] Linking CXX executable r2_model_source_probe
+[ 40%] Built target r2_model_source_probe
+[ 40%] Building CXX object src/paper_r2/CMakeFiles/r3_model_resources_tests.dir/tests_model_resources.cpp.o
+[ 40%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/model_queries.cpp.o
+[ 40%] Linking CXX executable r3_model_resources_tests
+[ 40%] Built target r3_model_resources_tests
+[ 40%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/model_resources.cpp.o
+[ 41%] Linking CXX executable r2_model_integrated
+[ 41%] Built target r2_model_integrated
+[ 42%] Building CXX object src/paper_r2/CMakeFiles/r3_model_plan.dir/model_plan.cpp.o
+[ 43%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/r5b_trust.cpp.o
+[ 43%] Linking CXX executable r2_model_attack_artifacts
+[ 43%] Built target r2_model_attack_artifacts
+[ 43%] Building CXX object src/paper_r2/CMakeFiles/r3_model_semantics_probe.dir/model_semantics_probe.cpp.o
+[ 43%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/r6_model.cpp.o
+[ 43%] Linking CXX executable r3_model_plan
+[ 43%] Built target r3_model_plan
+[ 43%] Building CXX object src/paper_r2/CMakeFiles/r3_progress_tests.dir/tests_progress.cpp.o
+[ 44%] Linking CXX executable r3_model_semantics_probe
+[ 44%] Built target r3_model_semantics_probe
+[ 44%] Building CXX object src/paper_r2/CMakeFiles/r4_numerical_tests.dir/tests_numerical_candidate.cpp.o
+[ 44%] Building CXX object src/paper_r2/CMakeFiles/paper_r2_verifier.dir/r6_trust.cpp.o
+[ 44%] Building CXX object src/paper_r2/CMakeFiles/r4_model_numerical_probe.dir/model_numerical_probe.cpp.o
+[ 44%] Linking CXX executable r3_progress_tests
+[ 44%] Built target r3_progress_tests
+[ 45%] Building CXX object src/paper_r2/CMakeFiles/r5b_trust_tests.dir/tests_r5b_trust.cpp.o
+[ 45%] Linking CXX static library libpaper_r2_verifier.a
+[ 45%] Built target paper_r2_verifier
+[ 46%] Building CXX object src/paper_r2/CMakeFiles/r5b_model_preprocess.dir/r5b_model_preprocess.cpp.o
+[ 46%] Linking CXX executable r4_numerical_tests
+[ 46%] Built target r4_numerical_tests
+[ 46%] Building CXX object src/paper_r2/CMakeFiles/r5b_model_prove.dir/r5b_model_prove.cpp.o
+[ 47%] Linking CXX executable r4_model_numerical_probe
+[ 47%] Built target r4_model_numerical_probe
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r5b_model_verify.dir/r5b_model_verify.cpp.o
+[ 48%] Linking CXX executable r5b_trust_tests
+[ 48%] Built target r5b_trust_tests
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r5b_mapping_tests.dir/tests_r5b_mapping.cpp.o
+[ 48%] Linking CXX executable r5b_model_preprocess
+[ 48%] Built target r5b_model_preprocess
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_builder_tests.dir/tests_r6_builder.cpp.o
+[ 48%] Linking CXX executable r5b_model_verify
+[ 48%] Built target r5b_model_verify
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_trust_tests.dir/tests_r6_trust.cpp.o
+[ 48%] Linking CXX executable r6_builder_tests
+[ 48%] Built target r6_builder_tests
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_model_preprocess.dir/r6_model_preprocess.cpp.o
+[ 48%] Linking CXX executable r5b_mapping_tests
+[ 48%] Built target r5b_mapping_tests
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_witness_tests.dir/tests_r6_witness.cpp.o
+[ 48%] Linking CXX executable r5b_model_prove
+[ 48%] Built target r5b_model_prove
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_model_plan.dir/r6_model_plan.cpp.o
+[ 48%] Linking CXX executable r6_trust_tests
+[ 48%] Built target r6_trust_tests
+[ 48%] Building CXX object src/paper_r2/CMakeFiles/r6_model_prove.dir/r6_model_prove.cpp.o
+[ 48%] Linking CXX executable r6_witness_tests
+[ 49%] Linking CXX executable r6_model_preprocess
+[ 49%] Built target r6_witness_tests
+[ 49%] Building CXX object src/paper_r2/CMakeFiles/r6_model_verify.dir/r6_model_verify.cpp.o
+[ 49%] Built target r6_model_preprocess
+[ 50%] Building CXX object src/paper_r2/CMakeFiles/r6_integration_tests.dir/tests_r6_integration.cpp.o
+[ 50%] Linking CXX executable r6_model_plan
+[ 50%] Built target r6_model_plan
+[ 50%] Building CXX object src/paper_r2/CMakeFiles/r6_rowmajor_tests.dir/rowmajor_tests.cpp.o
+[ 50%] Linking CXX executable r6_model_prove
+[ 50%] Built target r6_model_prove
+[ 50%] Building CXX object src/paper_r2/CMakeFiles/r6_resources_tests.dir/tests_r6_resources.cpp.o
+[ 51%] Linking CXX executable r6_model_verify
+[ 51%] Built target r6_model_verify
+[ 60%] Built target paper_r7
+[ 60%] Building CXX object src/CMakeFiles/range_tests.dir/main_range_tests.cpp.o
+[ 61%] Linking CXX executable r6_rowmajor_tests
+[ 61%] Linking CXX executable r6_integration_tests
+[ 61%] Built target r6_rowmajor_tests
+[ 61%] Building CXX object src/CMakeFiles/range_protocol_tests.dir/main_range_tests.cpp.o
+[ 61%] Built target r6_integration_tests
+[ 61%] Building CXX object src/CMakeFiles/gkr_mutation_tests.dir/main_gkr_mutation_tests.cpp.o
+[ 61%] Linking CXX executable r6_resources_tests
+[ 61%] Built target r6_resources_tests
+[ 61%] Building CXX object src/CMakeFiles/zkgpt_artifact_mutation_tests.dir/main_zkgpt_artifact_mutation_tests.cpp.o
+[ 61%] Linking CXX executable gkr_mutation_tests
+[ 61%] Built target gkr_mutation_tests
+[ 61%] Building CXX object src/CMakeFiles/r5a_host_tests.dir/main_r5a_host_tests.cpp.o
+[ 62%] Linking CXX executable zkgpt_artifact_mutation_tests
+[ 62%] Built target zkgpt_artifact_mutation_tests
+[ 62%] Building CXX object src/CMakeFiles/r5b_tests.dir/main_r5b_tests.cpp.o
+[ 62%] Linking CXX executable range_tests
+[ 63%] Linking CXX executable r5a_host_tests
+[ 63%] Built target range_tests
+[ 63%] Building CXX object src/CMakeFiles/r5b_gkr_tests.dir/main_r5b_gkr_tests.cpp.o
+[ 63%] Built target r5a_host_tests
+[ 63%] Building CXX object src/paper_r2/CMakeFiles/r2_verify.dir/verify_main.cpp.o
+[ 64%] Linking CXX executable range_protocol_tests
+[ 64%] Linking CXX executable r5b_tests
+[ 64%] Built target range_protocol_tests
+[ 64%] Building CXX object src/paper_r2/CMakeFiles/r2_model_source_verify.dir/model_source_verify.cpp.o
+[ 64%] Built target r5b_tests
+[ 65%] Building CXX object src/paper_r2/CMakeFiles/r2_model_verify.dir/model_verify.cpp.o
+[ 65%] Linking CXX executable r2_verify
+[ 65%] Built target r2_verify
+[ 65%] Built target r7_opt3c_folding_tests
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/r7_opt3c_folding_bench.dir/opt3c_folding_bench.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_bench.cpp:4:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3b_mapping_tests.cpp:1: warning: "main" redefined
+    1 | #define main opt3a_fixture_main
+      | 
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_bench.cpp:3: note: this is the location of the previous definition
+    3 | #define main opt3b_fixture_main
+      | 
+[ 66%] Linking CXX executable r5b_gkr_tests
+[ 66%] Built target r5b_gkr_tests
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/r7_protocol1_oneblock_prover.dir/oneblock_main.cpp.o
+[ 66%] Linking CXX executable r2_model_verify
+[ 66%] Built target r2_model_verify
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/r7_protocol1_oneblock_verifier.dir/oneblock_main.cpp.o
+[ 66%] Linking CXX executable r2_model_source_verify
+[ 66%] Built target r2_model_source_verify
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/r7_protocol1_full12_prover.dir/oneblock_main.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_bench.cpp:28:5: error: redefinition of ‘int main(int, char**)’
+   28 | int main(int argc,char**argv){try{r1::init();need(argc>=4,"benchmark fixture mode size/path");std::string fixture=argv[1],mode=argv[2];if(fixture=="native"){NativeMaps native(argv[3]);foldingBench(native.f,"Full12-public-mapping",0,mode);}else{auto n=std::stoull(argv[3]);Fixture f;f.setup(n,6,1);foldingBench(f,"six-root-public-map",n,mode);}return 0;}catch(const std::exception&e){std::cerr<<"OPT3C_BENCH_FAILED "<<e.what()<<'\n';return 1;}}
+      |     ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3b_mapping_tests.cpp:143:5: note: ‘int main(int, char**)’ previously defined here
+  143 | int main(int argc,char**argv){try{r1::init();need(argc>=2,"OPT3B mode required");std::string mode=argv[1];if(mode=="profile"){need(argc==3,"profile input");profile(argv[2]);}else if(mode=="contract")rootCentricContract();else if(mode=="correctness"){rootCentricContract();for(auto n:{1024u,16384u})for(unsigned pattern=0;pattern<5;++pattern)for(bool tight:{false,true})equivalenceB(n,pattern,tight);spillAndNegatives();partialExhaustionAndIO();std::cout<<"OPT3B_MAPPING_EQUIVALENCE_PASS\n";}
+      |     ^~~~
+gmake[2]: *** [src/paper_r7/CMakeFiles/r7_opt3c_folding_bench.dir/build.make:79: src/paper_r7/CMakeFiles/r7_opt3c_folding_bench.dir/opt3c_folding_bench.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:3655: src/paper_r7/CMakeFiles/r7_opt3c_folding_bench.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+[ 66%] Linking CXX executable r7_protocol1_oneblock_prover
+[ 66%] Built target r7_protocol1_oneblock_prover
+[ 67%] Linking CXX executable r7_protocol1_oneblock_verifier
+[ 67%] Built target r7_protocol1_oneblock_verifier
+[ 67%] Linking CXX executable r7_protocol1_full12_prover
+[ 67%] Built target r7_protocol1_full12_prover
+gmake: *** [Makefile:146: all] Error 2

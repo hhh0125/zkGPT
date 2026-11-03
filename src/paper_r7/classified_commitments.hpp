@@ -9,6 +9,10 @@ struct Root {
  RootSpec spec;VectorPC pc;std::optional<VectorSecret>secret;Value value;
  std::function<void(IO&,const Query&,const Hidden*,Random*,const std::string&)>open;
  std::vector<G1>basis;std::vector<Fr>blinds;
+ // Borrowed original sealed storage; never a new private vector. Models have
+ // an implicit zero suffix, helper secrets already store their padded length.
+ const Fr*sealed_data=nullptr;std::size_t sealed_stored=0;
+ std::function<bool()>sealed_storage_valid;
 };
 struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;

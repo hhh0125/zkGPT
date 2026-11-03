@@ -1,0 +1,25 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/opt3d-u-streaming-release",
+      "-j4",
+      "--target",
+      "r7_opt3d_streaming_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/review-seal-red-20261102T133624Z-0.log"
+  },
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0-3",
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_opt3d_streaming_tests",
+      "seal"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/review-seal-red-20261102T133624Z-1.log"
+  }
+]

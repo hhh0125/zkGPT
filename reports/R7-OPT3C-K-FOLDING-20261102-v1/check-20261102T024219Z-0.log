@@ -1,0 +1,40 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 17%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 60%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_opt3c_folding_tests.dir/opt3c_folding_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_tests.cpp: In function ‘int main(int, char**)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_tests.cpp:67:209: error: reference to ‘messages’ is ambiguous
+   67 | int main(int argc,char**argv){try{r1::init();if(argc==1 || std::string(argv[1])=="contract")kernelCallContract();if(argc==1 || std::string(argv[1])=="states")states();if(argc==1 || std::string(argv[1])=="fs")messages();return 0;}catch(const std::exception&e){std::cerr<<"OPT3C_FAILED "<<e.what()<<'\n';return 1;}}
+      |                                                                                                                                                                                                                 ^~~~~~~~
+In file included from /usr/include/c++/12/string:43,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/cybozu/stream.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp.hpp:29,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp_tower.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:11,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn256.hpp:10,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/framework.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/r6_adapter.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_layout.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/streaming_master.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_bridge.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/master_registration.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_plan.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_layout.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/lookup_prepare.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_commitments.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/classified_crypto_tests.cpp:1,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_tests.cpp:2:
+/usr/include/c++/12/bits/localefwd.h:206:11: note: candidates are: ‘template<class _CharT> class std::__cxx11::messages’
+  206 |     class messages;
+      |           ^~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/opt3c_folding_tests.cpp:57:6: note:                 ‘void messages()’
+   57 | void messages(){
+      |      ^~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_opt3c_folding_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_opt3c_folding_tests.dir/opt3c_folding_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3615: src/paper_r7/CMakeFiles/r7_opt3c_folding_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:3622: src/paper_r7/CMakeFiles/r7_opt3c_folding_tests.dir/rule] Error 2
+gmake: *** [Makefile:1284: r7_opt3c_folding_tests] Error 2

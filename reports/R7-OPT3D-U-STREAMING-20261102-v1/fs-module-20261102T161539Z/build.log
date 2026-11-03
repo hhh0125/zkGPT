@@ -1,0 +1,4 @@
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/fs_module_28_32.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3D-U-STREAMING-20261102-v1/fs_module_28_32.cpp:34:179: error: ‘fold’ was not declared in this scope
+   34 |  auto endpoint=[&](const std::vector<Fr>&point){Fr out=0;for(std::size_t k=1;k<segments.size();++k){auto d=r1::log2exact(segments[k].padded);out+=ui::selector(segments[k],point)*fold(build(k),{point.begin(),point.begin()+d});}return out;};
+      |                                                                                                                                                                                   ^~~~

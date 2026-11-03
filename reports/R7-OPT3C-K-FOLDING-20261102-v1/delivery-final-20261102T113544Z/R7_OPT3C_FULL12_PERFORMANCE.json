@@ -1,0 +1,838 @@
+{
+  "prover": {
+    "command": [
+      "build/opt3c-k-folding-release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-OPT3C-K-FOLDING-20261102-v1/full12-v1/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/full12/20261102/opt3c-v1"
+    ],
+    "pid": 3415909,
+    "exit_code": 0,
+    "wall_seconds": 4486.098574739881,
+    "user_cpu_seconds": 4450.381235,
+    "system_cpu_seconds": 105.914989,
+    "cpu_seconds": 4556.296224,
+    "peak_rss_kib": 52091656,
+    "peak_vmsize_kib": 52741988,
+    "ru_inblock": 71931544,
+    "ru_oublock": 37960320,
+    "os_storage_read_bytes": 36828950528,
+    "os_storage_write_bytes": 19435683840,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-11-02T10:51:52.356103+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/opt3c-k-folding-release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-OPT3C-K-FOLDING-20261102-v1/full12-v1/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/full12/20261102/opt3c-v1"
+    ],
+    "pid": 3532635,
+    "exit_code": 0,
+    "wall_seconds": 1048.8351313564926,
+    "user_cpu_seconds": 1074.951839,
+    "system_cpu_seconds": 20.517736,
+    "cpu_seconds": 1095.469575,
+    "peak_rss_kib": 6309068,
+    "peak_vmsize_kib": 6641076,
+    "ru_inblock": 0,
+    "ru_oublock": 1538232,
+    "os_storage_read_bytes": 0,
+    "os_storage_write_bytes": 787574784,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-11-02T11:09:21.613364+00:00"
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 4482.41,
+    "wire_bytes": 261504624,
+    "P_wire_bytes": 261504624,
+    "frames": 663867,
+    "peak_rss_kib": 52091656,
+    "MSM_calls": 1268601,
+    "MSM_terms": 558010440,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 311.557,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34579412,
+        "cumulative_peak_rss_kib": 34579412
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 739.533,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 542722,
+        "rss_end_kib": 36493996,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0274004,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 36493996,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0293403,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 36493996,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 218.173,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36494124,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1068.11,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30100620,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 58.046,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30100624,
+        "cumulative_peak_rss_kib": 52091656
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 2008.26,
+        "P_wire_bytes": 25036952,
+        "MSM_calls": 1988,
+        "rss_end_kib": 30100748,
+        "cumulative_peak_rss_kib": 52091656
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 1046.15,
+    "wire_bytes": 261504624,
+    "P_wire_bytes": 261504624,
+    "frames": 663867,
+    "peak_rss_kib": 6309068,
+    "MSM_calls": 276697,
+    "MSM_terms": 1289828,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.51549,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5559956,
+        "cumulative_peak_rss_kib": 5559956
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 93.163,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 0,
+        "rss_end_kib": 5586944,
+        "cumulative_peak_rss_kib": 5586944
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.021766,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 5586944,
+        "cumulative_peak_rss_kib": 5586944
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0332111,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 5601464,
+        "cumulative_peak_rss_kib": 5601464
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 51.8074,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5612796,
+        "cumulative_peak_rss_kib": 5751964
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 358.937,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5711572,
+        "cumulative_peak_rss_kib": 6184492
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.2912,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5711660,
+        "cumulative_peak_rss_kib": 6184492
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 428.09,
+        "P_wire_bytes": 25036952,
+        "MSM_calls": 815,
+        "rss_end_kib": 5787188,
+        "cumulative_peak_rss_kib": 6309068
+      }
+    ]
+  },
+  "proof_bytes": 261504624,
+  "proof_sha256": "9b3c57ce0dd7f67d12665be6f3f156d4050369ea31fcaee40ee22d48fba11043",
+  "comparison": {
+    "baseline_prover_wall_seconds": 7023.895145749673,
+    "baseline_verifier_wall_seconds": 1058.691154026892,
+    "prover_speedup": 1.5657023644775667,
+    "verifier_speedup": 1.0093971134029924,
+    "prover_wall_reduction_percent": 36.13090056655351,
+    "verifier_wall_reduction_percent": 0.9309629756431348,
+    "scope": "historical Protocol1 measured baseline versus one new independently verified run, not a confidence interval"
+  },
+  "historical_OPT3B_performance_only": {
+    "prover_wall_seconds": 3330.973576589953,
+    "verifier_wall_seconds": 1018.4756479156204,
+    "new_prover_time_ratio": 1.3467829964993219,
+    "not_a_protocol_correctness_reference": true
+  },
+  "opt3c_metrics": {
+    "P": {
+      "initial_physical_root_kernel_calls": 45,
+      "initial_physical_root_kernel_wall_seconds": 68.096328349,
+      "initial_physical_root_kernel_cpu_seconds": 68.08324569,
+      "later_physical_kernel_calls": 70,
+      "later_physical_kernel_wall_seconds": 111.581279,
+      "later_physical_kernel_cpu_seconds": 111.555785,
+      "mapping_plan_RAM_bytes": 2619520,
+      "mapping_plan_file_bytes": 784365232,
+      "kernel_calls": 115,
+      "kernel_coordinates": 6504025872,
+      "kernel_cpu_seconds": 179.639,
+      "K_initial_builds": 116,
+      "fallback_rebuild_calls": 70,
+      "K_fold_coordinates": 2109804452,
+      "K_state_read_coordinates": 1447104859,
+      "K_initial_build_seconds": 179.684,
+      "K_fold_cpu_seconds": 62.4796,
+      "K_fold_wall_seconds": 70.344,
+      "K_file_read_bytes": 36775664032,
+      "K_file_write_bytes": 18387827424,
+      "K_RAM_peak_bytes": 1010259296,
+      "K_builder_peak_bytes": 536870912,
+      "K_dirty_write_window_bytes": 16777216,
+      "K_file_peak_bytes": 4294967296,
+      "K_io_wall_seconds": 28.6635,
+      "RAM_root_admissions": 5,
+      "file_root_admissions": 41,
+      "rebuild_root_visits": 70,
+      "RAM_limit": 536870912,
+      "file_limit": 4294967296,
+      "files_allowed": true,
+      "file_page_cache_cost_is_zero": false,
+      "raw_log_sha256": "5050dc9de75eea45eafc625ed07cc03b0b4a7f42ecbdb3cfe156123983585181",
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 1482.23,
+        "cpu_seconds": 1471.67,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 6504025872,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 6504025872,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 6546009938,
+        "kernel_and_partial_Fr_additions": 6504025872,
+        "kernel_wall_seconds": 179.678,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 213.177,
+        "kernel_and_partial_cpp_allocations": 115,
+        "kernel_and_partial_cpp_allocated_bytes": 60733587456
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 414.944,
+        "kernel_calls": 115,
+        "kernel_coordinates": 6504025872,
+        "kernel_cpu_seconds": 179.639,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.131011,
+        "weight_products": 6542052624,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 588.706,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 90,
+            "terms": 90,
+            "cpu_seconds": 0.003565,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 724443,
+            "terms": 1448886,
+            "cpu_seconds": 40.7673,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 180,
+            "terms": 1080,
+            "cpu_seconds": 0.0226761,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 270,
+            "terms": 10080,
+            "cpu_seconds": 0.180528,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 543578,
+            "terms": 556427424,
+            "cpu_seconds": 546.729,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 40,
+            "terms": 122880,
+            "cpu_seconds": 1.003,
+            "cpp_allocations": 0
+          }
+        ]
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 132.452
+        },
+        {
+          "round": 1,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 140.796
+        },
+        {
+          "round": 2,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 115.924
+        },
+        {
+          "round": 3,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 69.8085
+        },
+        {
+          "round": 4,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 43.6262
+        },
+        {
+          "round": 5,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 39.869
+        },
+        {
+          "round": 6,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 37.9699
+        },
+        {
+          "round": 7,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 37.3509
+        },
+        {
+          "round": 8,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.3155
+        },
+        {
+          "round": 9,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.054
+        },
+        {
+          "round": 10,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.0578
+        },
+        {
+          "round": 11,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.8587
+        },
+        {
+          "round": 12,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9364
+        },
+        {
+          "round": 13,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9159
+        },
+        {
+          "round": 14,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.8755
+        },
+        {
+          "round": 15,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.8405
+        },
+        {
+          "round": 16,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.8854
+        },
+        {
+          "round": 17,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.8573
+        },
+        {
+          "round": 18,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9356
+        },
+        {
+          "round": 19,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9192
+        },
+        {
+          "round": 20,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.0803
+        },
+        {
+          "round": 21,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.4365
+        },
+        {
+          "round": 22,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.4337
+        },
+        {
+          "round": 23,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.1305
+        },
+        {
+          "round": 24,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.933
+        },
+        {
+          "round": 25,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.999
+        },
+        {
+          "round": 26,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 36.1611
+        },
+        {
+          "round": 27,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9547
+        },
+        {
+          "round": 28,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9811
+        },
+        {
+          "round": 29,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9366
+        },
+        {
+          "round": 30,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9595
+        },
+        {
+          "round": 31,
+          "private_U_scan_coordinates": 723519488,
+          "sumcheck_round_seconds": 35.9665
+        }
+      ],
+      "private_U_scan_coordinates": 23152623616,
+      "sampled_cgroup_file_peak_bytes": 1053224960,
+      "sampled_ancestor_cgroup_file_peak_bytes": 153232551936,
+      "sampled_cgroup_file_scope": "every5s; deepest applicable cgroup per sample (job SSH session), includes all file cache charged to that group, not isolated K cache; separate ancestor peak includes other users/host workloads"
+    },
+    "V": {
+      "initial_physical_root_kernel_calls": 45,
+      "initial_physical_root_kernel_wall_seconds": 67.072794466,
+      "initial_physical_root_kernel_cpu_seconds": 67.047254947,
+      "later_physical_kernel_calls": 0,
+      "later_physical_kernel_wall_seconds": 0,
+      "later_physical_kernel_cpu_seconds": 0,
+      "mapping_plan_RAM_bytes": 2619520,
+      "mapping_plan_file_bytes": 784365232,
+      "kernel_calls": 45,
+      "kernel_coordinates": 2461708448,
+      "kernel_cpu_seconds": 67.0473,
+      "K_RAM_peak_bytes": 536870912,
+      "K_persistent_cache_RAM_bytes": 0,
+      "K_file_peak_bytes": 0,
+      "K_file_read_bytes": 0,
+      "K_file_write_bytes": 0,
+      "fallback_rebuild_calls": 0,
+      "K_RAM_scope": "one live root kernel builder; common mapping/weight/U scratch excluded",
+      "raw_log_sha256": "cc8e762378542497819a141d610ee985f6f8da3c60b7498f10b639d6314b94c5",
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 88.8503,
+        "cpu_seconds": 88.8159,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 2461708448,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 2482729247,
+        "kernel_and_partial_Fr_additions": 2461708448,
+        "kernel_wall_seconds": 67.0728,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 209.458,
+        "kernel_and_partial_cpp_allocations": 45,
+        "kernel_and_partial_cpp_allocated_bytes": 23152623616
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 411.744,
+        "kernel_calls": 45,
+        "kernel_coordinates": 2461708448,
+        "kernel_cpu_seconds": 67.0473,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.142418,
+        "weight_products": 2499735200,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 22.064,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 276066,
+            "terms": 552132,
+            "cpu_seconds": 15.1149,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 601,
+            "terms": 614816,
+            "cpu_seconds": 5.97606,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 30,
+            "terms": 122880,
+            "cpu_seconds": 0.973021,
+            "cpp_allocations": 0
+          }
+        ]
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.0032964
+        },
+        {
+          "round": 1,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00327002
+        },
+        {
+          "round": 2,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.0032743
+        },
+        {
+          "round": 3,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00327076
+        },
+        {
+          "round": 4,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326325
+        },
+        {
+          "round": 5,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325988
+        },
+        {
+          "round": 6,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00324947
+        },
+        {
+          "round": 7,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326709
+        },
+        {
+          "round": 8,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326295
+        },
+        {
+          "round": 9,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325948
+        },
+        {
+          "round": 10,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00330256
+        },
+        {
+          "round": 11,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325889
+        },
+        {
+          "round": 12,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00324369
+        },
+        {
+          "round": 13,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325162
+        },
+        {
+          "round": 14,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325662
+        },
+        {
+          "round": 15,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00327867
+        },
+        {
+          "round": 16,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00327775
+        },
+        {
+          "round": 17,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00324906
+        },
+        {
+          "round": 18,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326019
+        },
+        {
+          "round": 19,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00328472
+        },
+        {
+          "round": 20,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326068
+        },
+        {
+          "round": 21,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00324759
+        },
+        {
+          "round": 22,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00328437
+        },
+        {
+          "round": 23,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00328308
+        },
+        {
+          "round": 24,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00326915
+        },
+        {
+          "round": 25,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325598
+        },
+        {
+          "round": 26,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.0032639
+        },
+        {
+          "round": 27,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325745
+        },
+        {
+          "round": 28,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00328754
+        },
+        {
+          "round": 29,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00330821
+        },
+        {
+          "round": 30,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.0032609
+        },
+        {
+          "round": 31,
+          "private_U_scan_coordinates": 0,
+          "sumcheck_round_seconds": 0.00325905
+        }
+      ],
+      "private_U_scan_coordinates": 0,
+      "sampled_cgroup_file_peak_bytes": 1054900224,
+      "sampled_ancestor_cgroup_file_peak_bytes": 153261912064,
+      "sampled_cgroup_file_scope": "every5s; deepest applicable cgroup per sample (job SSH session), includes all file cache charged to that group, not isolated K cache; separate ancestor peak includes other users/host workloads"
+    }
+  },
+  "metrics_notes": {
+    "raw_K_initial_build_seconds_scope": "cumulative ALL K builder calls, including fallback; first physical root kernel cost is derived separately from first OPT2_KERNEL per root; zero-X construction remains included in total wall",
+    "overlapping_timers": "fold wall includes its IO; K_io_wall includes construction/coefficient reads/folds and cannot be added to fold wall",
+    "RAM_scope": "explicit K cache capacities, one-root builder, bounded scratch and metadata; process RSS also reported; common unchanged mapping/weight/U scratch and allocator bookkeeping excluded from K_RAM",
+    "file_scope": "K_file_peak_bytes is simultaneous logical file length, not exact allocated disk blocks",
+    "page_cache_scope": "nonzero memory cost; cgroup file is sampled every5s for native and shared across all3 same-mode workers",
+    "OS_IO_scope": "wait4 ru_inblock/ru_oublock times512 include process metadata/log IO and differ from exact K pread/pwrite bytes",
+    "benchmark_scope": "synthetic deterministic PUBLIC U with real public mappings, never real witness/proof speed",
+    "benchmark_affinity": "same CPU0-3 total shared by3 same-mode repeats; modes run in separate batches; threads4,arena2",
+    "kernel_coordinates": "matched mapping contributions; distinct from unique padded physical slots and K fold/state read coordinates",
+    "observer_recovery": "native reference repeat2 has complete directly measured C++ arithmetic wall/CPU/RSS/kernel/round/digest output, but the optional Python observer hit a reproduced zombie /proc/io PermissionError before wait4; final process exit and exact OS storage/user/system CPU counters are NULL, last observed IO is labelled;9 arithmetic self-reports,8 observed wait4 zero exits; no fabricated counters or repeated cryptographic proof",
+    "cache_admission_timing": "builder timers exclude subsequent cache admission/copy, file allocation and initial checksum work; K_io_wall measures transfer/sync/advice and excludes SHA computation. Admission/checksum work is included in enclosing round/authentication/process totals; benchmark whole calculation timer also includes constructor/metadata allocations. Real reduce timer starts after PublicK constructor, while authentication and full process wall include it. No separate complete admission CPU timer was collected; do not fabricate or add overlapping timers."
+  }
+}

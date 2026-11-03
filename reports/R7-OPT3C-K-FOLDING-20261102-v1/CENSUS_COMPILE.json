@@ -1,0 +1,56 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/c++",
+        "-DMCLBN_NO_AUTOLINK",
+        "-DMCL_NO_AUTOLINK",
+        "-DMCL_USE_LLVM=1",
+        "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7",
+        "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2",
+        "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+        "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include",
+        "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1",
+        "-isystem",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src",
+        "-pthread",
+        "-O3",
+        "-DNDEBUG",
+        "-std=gnu++17",
+        "-c",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3C-K-FOLDING-20261102-v1/k_census.cpp",
+        "-o",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3C-K-FOLDING-20261102-v1/k_census.o"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/census-compile-0.log"
+    },
+    {
+      "command": [
+        "/usr/bin/c++",
+        "-pthread",
+        "-O3",
+        "-DNDEBUG",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3C-K-FOLDING-20261102-v1/k_census.o",
+        "-o",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-OPT3C-K-FOLDING-20261102-v1/k_census",
+        "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/opt3c-k-folding-release/lib",
+        "libpaper_r7.a",
+        "../paper_r2/libpaper_r2.a",
+        "../libgpt_lib.a",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+        "-lz",
+        "../paper_r1/libpaper_r1.a",
+        "../../lib/libmclbn256.so.1.74",
+        "../../lib/libmcl.so.1.74",
+        "-lpthread",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/census-compile-1.log"
+    }
+  ],
+  "source_sha256": "58e3dfc8eb8acb1daf7bd8eff7baa24699425a8a4577c9714a4b3371597e9926",
+  "binary_sha256": "55a35953105631e431ec8843d3edebbf69f11fefbb11a734a5abe5854085925e",
+  "runtime_source_unchanged": true
+}

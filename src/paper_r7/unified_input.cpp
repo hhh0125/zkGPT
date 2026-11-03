@@ -1,4 +1,5 @@
 #include "unified_input.hpp"
+#include "public_k.hpp"
 #include <algorithm>
 #include <map>
 #include <chrono>
@@ -32,13 +33,13 @@ Packing pack(const std::vector<Block>&blocks,std::size_t public_padded){
  validate(out.domain,out.segments);return out;
 }
 Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
-Round quadraticRound(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider){
+static Round quadraticRoundImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,bool folded_kernel){
  validate(n,segments);need(prefix.size()<domainBits(n) && provider,"unified round prefix/provider");const auto t=unsigned(prefix.size());Round out;
  struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
  auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;}};
  for(std::size_t k=0;k<segments.size();++k){auto s=segments[k];auto d=r1::log2exact(s.padded);auto low=std::min<unsigned>(t,d);SplitWeights weights({prefix.begin(),prefix.begin()+low});const auto block=std::size_t(1)<<low;unsigned calls=0;
   provider(k,[&](const Value&a,const Value&b){++calls;need(calls==1 && a && b,"unified factor oracle invocation");
-   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);v.b+=w*b(index);}}return v;};
+   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);if(!folded_kernel)v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);if(!folded_kernel)v.b+=w*b(index);}}if(folded_kernel)v.b=b(j);return v;};
    if(t<d){for(std::size_t j=0;j<(s.padded>>t)/2;++j){auto left=folded(2*j),right=folded(2*j+1);product(left.a,right.a,left.b,right.b);}}
    else{auto v=folded(0);auto w=fixedBits(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=w*v.a;target.b+=w*v.b;}
   });need(calls==1,"unified missing factor oracle");
@@ -48,23 +49,32 @@ Round quadraticRound(std::size_t n,const std::vector<Segment>&segments,const std
  for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
  return out;
 }
+Round quadraticRound(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,false);}
+Round quadraticRoundFolded(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,true);}
 Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
- const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role){
+ const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role,PublicK*state,const Inputs&inputs){
  auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
  validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
+ need(io.prover() || !state,"unified verifier cannot use prover K cache");
+ need(io.prover() || !inputs,"OPT3D verifier cannot access sealed U storage");
  crypto::validate(initial.handle,io.session(),initial.handle.role);
  Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
  auto previous=initial;std::vector<Fr>point;Round last;
- for(unsigned t=0;t<domainBits(n);++t){auto name=role+"/round/"+std::to_string(t);if(io.prover())last=quadraticRound(n,segments,point,factors);
+ for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);if(io.prover()){
+  if(state && inputs){UMetrics m;last=quadraticRoundStreaming(n,segments,point,factors,inputs,UOptions::environment(),&m);
+   if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROUND {\"round\":"<<t<<",\"U_scan_coordinates_including_public_X\":"<<m.coordinates<<",\"U_bytes_read\":"<<m.bytes<<",\"U_K_fused_load_bytes\":"<<m.fused_load_bytes<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall<<",\"U_Fr_multiplications\":"<<m.multiplications<<",\"U_Fr_additions\":"<<m.additions<<",\"coefficient_Fr_multiplications\":"<<m.product_multiplications<<",\"coefficient_Fr_additions\":"<<m.product_additions<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<",\"main_thread_cpp_allocations_including_K_provider\":"<<m.allocations<<",\"main_thread_cpp_allocated_bytes_including_K_provider\":"<<m.allocated_bytes<<"}\n";
+  }else last=state?quadraticRoundFolded(n,segments,point,factors):quadraticRound(n,segments,point,factors);
+ }
   std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
   Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
-  auto r=io.coin(name+"/r");point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
+  auto r=io.coin(name+"/r");if(state)state->advance(io.session(),r);point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
+  if(crypto::opt2MetricsEnabled()){std::uint64_t u=0;for(std::size_t k=1;k<segments.size();++k)u+=segments[k].padded;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
  }
  Fr input=0,actual_kernel=0;if(io.prover()){
   if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}
   else{auto r=point.back();input=last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]);actual_kernel=last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]);}
  }
- auto expected=kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
+ auto expected=state?state->endpoint(io.session(),point):kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
  auto input_end=exchangeHidden(io,role+"/input-evaluation",input,rng);auto public_kernel=publicHidden(io,role+"/public-kernel",expected);bindPublic(io,role+"/public-kernel",encode(public_kernel.handle));
  std::vector<Hidden>w{input_end,public_kernel,previous};Relations terminal;terminal.role=role+"/terminal";for(auto&h:w)terminal.handles.push_back(h.handle);terminal.products={{0,1,2}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
  std::cerr<<"UNIFIED_SUMCHECK {\"domain\":"<<n<<",\"rounds\":"<<point.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"includes_public_kernel_endpoint\":true}\n";

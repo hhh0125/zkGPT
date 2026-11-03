@@ -1,0 +1,420 @@
+diff --git a/src/paper_r7/CMakeLists.txt b/src/paper_r7/CMakeLists.txt
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -1,6 +1,12 @@
+ add_library(paper_r7 STATIC opt2_metrics.cpp framework.cpp wire.cpp r6_adapter.cpp crypto.cpp opening.cpp sigma.cpp committed_sumcheck.cpp interactive.cpp research.cpp hyrax_a3.cpp fixed_cw.cpp stage2_opening.cpp stage2_sumcheck.cpp stage2_fixture.cpp master_layout.cpp streaming_master.cpp master_bridge.cpp master_registration.cpp global_bridge.cpp oneblock_plan.cpp oneblock_sumcheck.cpp classified_layout.cpp classified_commitments.cpp lookup_prepare.cpp oneblock_vectors.cpp oneblock_model.cpp oneblock_lookup.cpp oneblock_gkr.cpp oneblock_bindings.cpp oneblock_public.cpp)
+ target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+-target_sources(paper_r7 PRIVATE unified_input.cpp)
++target_sources(paper_r7 PRIVATE unified_input.cpp public_k.cpp)
++add_executable(r7_opt3c_folding_tests opt3c_folding_tests.cpp)
++target_link_libraries(r7_opt3c_folding_tests PRIVATE paper_r7)
++add_test(NAME r7_opt3c_folding COMMAND r7_opt3c_folding_tests)
++add_executable(r7_opt3c_folding_bench opt3c_folding_bench.cpp)
++target_link_libraries(r7_opt3c_folding_bench PRIVATE paper_r7)
++set_tests_properties(r7_opt3c_folding PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+ foreach(scope oneblock full12)
+  foreach(role prover verifier)
+   set(candidate r7_protocol1_${scope}_${role})
+diff --git a/src/paper_r7/classified_commitments.cpp b/src/paper_r7/classified_commitments.cpp
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -1,6 +1,7 @@
+ #include "classified_commitments.hpp"
+ #include "stage2_opening.hpp"
+ #include "unified_input.hpp"
++#include "public_k.hpp"
+ #include <algorithm>
+ #include <openssl/evp.h>
+ #include <chrono>
+@@ -172,9 +173,14 @@
+  for(std::size_t i=0;i<claims_.size();++i){rho.push_back(io_.coin("UnifiedInput/rho/"+std::to_string(i)));need(!rho.back().isZero(),"unified zero aggregation challenge");values.push_back(claims_[i].value);bias+=rho.back()*biases[i];}
+  auto initial=combine(session_,"UnifiedInput/initial",values,rho);initial.value-=bias;initial.handle.point-=scalarCommit(bias,Fr(0));bindPublic(io_,"UnifiedInput/initial",encode(initial.handle));
+  Value x=[&](std::size_t j){return j<public_x.size()?public_x[j]:Fr(0);};
+- ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
++ std::unique_ptr<ui::PublicK>public_k;
++ const auto*reference=std::getenv("ZKGPT_K_REFERENCE");
++ if(io_.prover() && !(reference && std::string(reference)=="1"))public_k=std::make_unique<ui::PublicK>(packing.segments,[&](std::size_t k){return k?kernel(k-1,rho,auth):std::vector<Fr>(packing.segments[0].padded,Fr(0));},ui::KBudget::environment(),session_,packing.domain);
++ ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){
++  if(public_k){public_k->withRoot(k,session_,[&](const Value&b){consume(k?roots_[k-1].value:x,b);});return;}
++  if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
+  auto endpoint=[&](const std::vector<Fr>&point){Fr expected=0;for(std::size_t k=0;k<roots_.size();++k){auto K=kernel(k,rho,auth);auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(point.begin(),point.begin()+d);expected+=ui::selector(packing.segments[k+1],point)*fold(K,q);}return expected;};
+- auto reduced=ui::reduce(io_,packing.domain,packing.segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck");auto opening_started=Clock::now();auto opening_cpu=processCPU();
++ auto reduced=ui::reduce(io_,packing.domain,packing.segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck",public_k.get());if(public_k)public_k->report();public_k.reset();auto opening_started=Clock::now();auto opening_cpu=processCPU();
+  std::vector<Hidden>opened;std::vector<Fr>selectors;
+  for(std::size_t k=0;k<roots_.size();++k){auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(reduced.point.begin(),reduced.point.begin()+d);Fr value=0;if(io_.prover()){Weights w(q);for(std::size_t j=0;j<roots_[k].spec.padded;++j)value+=w.at(j)*roots_[k].value(j);}auto name="UnifiedInput/opening/root/"+std::to_string(k);auto h=exchangeHidden(io_,name+"/evaluation",value,rng_);rootOpening(k,{q,h.handle},io_.prover()?&h:nullptr,name+"/hyrax");opened.push_back(h);selectors.push_back(ui::selector(packing.segments[k+1],reduced.point));}
+  auto dx=r1::log2exact(packing.segments[0].padded);std::vector<Fr>qx(reduced.point.begin(),reduced.point.begin()+dx);Weights wx(qx);Fr public_value=0;for(std::size_t j=0;j<public_x.size();++j)public_value+=wx.at(j)*public_x[j];public_value*=ui::selector(packing.segments[0],reduced.point);
+diff --git a/src/paper_r7/opt3c_folding_bench.cpp b/src/paper_r7/opt3c_folding_bench.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/opt3c_folding_bench.cpp
+@@ -0,0 +1,46 @@
++// Reuse the public mapping reader and deterministic public test input provider.
++// This executable is a benchmark, never a production witness/proof generator.
++#define main opt3a_fixture_main
++#include "opt3a_kernel_tests.cpp"
++#undef main
++#include "public_k.hpp"
++namespace ui=zkgpt::r7::oneblock::unified;
++struct NativeMaps {
++ Fixture f;layeredCircuit graph;std::uint64_t coordinates=0;
++ explicit NativeMaps(const char*path){
++  auto context=master3::trustedContext(12);f.layout=makeLayout(context);
++  LLM nn(12,12,64,768,3072);{master3::QuietStdout quiet;zkgpt::r6::configure(nn);graph=nn.buildPublicCircuit();}
++  auto&roots=Access::roots(*f.pcs);roots.clear();for(auto&s:f.layout.roots){Root r;r.spec=s;r.value=[](std::size_t j){return Fr(1+j%29);};roots.push_back(std::move(r));}
++  std::ifstream in(path,std::ios::binary);need(bool(in),"OPT3B public input open");Bytes bytes((std::istreambuf_iterator<char>(in)),{});Reader all{bytes};auto pub=all.raw(all.number());Reader pr{pub};pr.text();need(pr.text()==identity(f.layout),"OPT3B public map layout identity");auto count=pr.number();auto indices=std::make_shared<std::vector<std::size_t>>();for(std::size_t i=0;i<count;++i){indices->push_back(pr.number(8));pr.scalar();}pr.end();
++  auto&claims=Access::claims(*f.pcs);claims.clear();auto n=all.number();need(n==1502,"OPT3B native declaration count");
++  for(std::size_t i=0;i<n;++i){auto payload=all.raw(all.number());Reader r{payload};need(r.text()==classified::suite && r.text()==identity(f.layout),"OPT3B old defer identity");Claim c;c.id=r.text();c.map_id=r.text();auto digest=r.raw(32);std::copy(digest.begin(),digest.end(),c.map_digest.begin());r.text();r.text();r.text();r.point();c.padded=r.number(8);for(unsigned j=0;j<r1::log2exact(c.padded);++j)c.point.push_back(r.scalar());r.end();
++   if(c.map_id=="native-base/public/X-Y-constants")c.map=[this,indices](std::size_t j)->Located{++f.map_queries;if(j>=indices->size())return {{},Fr(0),true};++f.rowmajor_queries;return {baseCoordinate(f.layout,indices->at(j)),Fr(0),false};};
++   else if(c.map_id.rfind("native-base/gkr/layer/",0)==0){std::stringstream ss(c.id);std::string word;std::vector<std::string>parts;while(std::getline(ss,word,'/'))parts.push_back(word);need(parts.size()==6,"OPT3B terminal name");auto layer=std::stoull(parts[2]);auto*ids=parts[4]=="v"?&graph.circuit.at(layer).ori_id_v:&graph.circuit.at(layer).ori_id_u;c.map=[this,ids](std::size_t j)->Located{++f.map_queries;if(j>=ids->size())return {{},Fr(0),true};++f.rowmajor_queries;return {baseCoordinate(f.layout,ids->at(j)),Fr(0),false};};}
++   else{const auto*v=&f.layout.views.at(c.map_id);if(!v->mapped && v->pieces.size()<=1)c.only_root=int(v->start.root);c.map=[this,v](std::size_t j){++f.map_queries;auto l=locate(f.layout,*v,j);f.rowmajor_queries+=v->mapped && !l.constant;return l;};}
++   coordinates+=c.padded;claims.push_back(std::move(c));
++  }all.end();
++ }
++};
++
++void foldingBench(Fixture&f,const std::string&fixture,std::size_t n,const std::string&mode){
++ auto&c=*f.pcs;auto&claims=Access::claims(c);auto&roots=Access::roots(c);Access::Auth auth(claims.size(),true);
++ std::vector<Fr>rho;for(std::size_t i=0;i<claims.size();++i){Access::prepare(c,auth,i);rho.push_back(Fr(int(i%97)+3));}
++ std::vector<ui::Segment>segments{{0,fixture=="Full12-public-mapping"?32768u:4u}};
++ std::array<std::size_t,4>cursor{};
++ for(std::size_t k=0;k<roots.size();++k){auto&r=roots[k];auto category=fixture=="Full12-public-mapping"?(r.spec.model?1u:(r.spec.id.rfind("C_aux",0)==0?2u:3u)):unsigned(k%3+1);auto padded=r.spec.padded;auto&at=cursor[category];at=(at+padded-1)&~(padded-1);segments.push_back({category*(std::size_t(1)<<30)+at,padded});at+=padded;}
++ const auto domain=std::size_t(1)<<32;ui::validate(domain,segments);Access::metrics(c)=AuthMetrics{};
++ auto started=std::chrono::steady_clock::now();auto cpu=processCPU();crypto::AllocationTrace allocations;
++ std::unique_ptr<ui::PublicK>state;ui::KBudget cap=mode=="ram"?ui::KBudget{2ull<<30,0}:mode=="file"?ui::KBudget{0,4ull<<30}:ui::KBudget{512ull<<20,4ull<<30};
++ std::uint64_t capacity=0;for(auto s:segments)capacity+=s.padded*sizeof(Fr);if(mode=="ram")need(capacity<=cap.ram,"benchmark RAM mode exceeds hard cap; report infeasible rather than allocating");
++ auto build=[&](std::size_t k){return k?Access::kernel(c,k-1,rho,auth):std::vector<Fr>(segments[0].padded,Fr(0));};
++ if(fixture!="Full12-public-mapping" && mode=="hybrid")cap={std::min<std::uint64_t>(512ull<<20,n*16),std::min<std::uint64_t>(4ull<<30,n*32)};
++ if(mode!="reference")state=std::make_unique<ui::PublicK>(segments,build,cap,f.io.session(),domain);
++ ui::Factors factors=[&](std::size_t k,const ui::Consume&consume){Value a=k?roots[k-1].value:Value([](std::size_t j){return Fr(j+11);});if(state)state->withRoot(k,f.io.session(),[&](const Value&b){consume(a,b);});else{auto b=build(k);consume(a,[&](std::size_t j){return b.at(j);});}};
++ std::vector<Fr>point;Writer digest;std::vector<double>rounds;ui::Round last;std::uint64_t u=0;
++ for(unsigned t=0;t<32;++t){auto roundStart=std::chrono::steady_clock::now();last=state?ui::quadraticRoundFolded(domain,segments,point,factors):ui::quadraticRound(domain,segments,point,factors);for(auto&v:last.coefficients)digest.scalar(v);auto r=Fr(-3-int(t));if(state)state->advance(f.io.session(),r);point.push_back(r);digest.scalar(r);rounds.push_back(std::chrono::duration<double>(std::chrono::steady_clock::now()-roundStart).count());for(auto&r:roots)u+=r.spec.padded;}
++ Fr endpoint=0;if(state)endpoint=state->endpoint(f.io.session(),point);else for(std::size_t k=0;k<segments.size();++k){auto b=build(k);auto d=r1::log2exact(b.size());auto length=b.size();for(unsigned t=0;t<d;++t){for(std::size_t j=0;j<length/2;++j)b[j]=b[2*j]+point[t]*(b[2*j+1]-b[2*j]);length/=2;}endpoint+=ui::selector(segments[k],point)*b[0];}
++ auto r=point.back();need(endpoint==last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]),"benchmark terminal K mismatch");digest.scalar(endpoint);digest.scalar(last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]));
++ auto wall=std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();auto&m=Access::metrics(c);struct rusage usage{};getrusage(RUSAGE_SELF,&usage);
++ std::cout<<std::setprecision(12)<<"OPT3C_BENCH {\"fixture\":\""<<fixture<<"\",\"n\":"<<n<<",\"mode\":\""<<mode<<"\",\"roots\":"<<roots.size()<<",\"claims\":"<<claims.size()<<",\"rounds\":32,\"unique_root_padded_bytes\":"<<capacity<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"private_U_scan_coordinates\":"<<u<<",\"unified_sumcheck_seconds\":"<<wall<<",\"cpu_seconds\":"<<processCPU()-cpu<<",\"prover_peak_rss_kib\":"<<usage.ru_maxrss<<",\"cpp_allocations\":"<<allocations.count()<<",\"cpp_allocated_bytes\":"<<allocations.bytes()<<",\"coefficient_challenge_endpoint_digest\":\""<<hex(r1::hash(digest.b))<<"\",\"synthetic_public_U_only\":true,\"sumcheck_round_seconds\":[";for(unsigned j=0;j<rounds.size();++j){if(j)std::cout<<',';std::cout<<rounds[j];}std::cout<<"]}"<<std::endl;if(state)state->report();
++}
++int main(int argc,char**argv){try{r1::init();need(argc>=4,"benchmark fixture mode size/path");std::string fixture=argv[1],mode=argv[2];if(fixture=="native"){NativeMaps native(argv[3]);foldingBench(native.f,"Full12-public-mapping",0,mode);}else{auto n=std::stoull(argv[3]);Fixture f;f.setup(n,6,1);foldingBench(f,"six-root-public-map",n,mode);}return 0;}catch(const std::exception&e){std::cerr<<"OPT3C_BENCH_FAILED "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/opt3c_folding_tests.cpp b/src/paper_r7/opt3c_folding_tests.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/opt3c_folding_tests.cpp
+@@ -0,0 +1,90 @@
++#define main classified_fixture_main
++#include "classified_crypto_tests.cpp"
++#undef main
++#include "unified_input.hpp"
++#include "public_k.hpp"
++#include "fs_io.hpp"
++#include <filesystem>
++#include <fstream>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/syscall.h>
++namespace kFault {enum Mode{normal,shortIO,earlyEOF,corrupt,writeError};thread_local Mode mode=normal;thread_local unsigned reads=0,writes=0;thread_local std::uint64_t dirty=0,maxDirty=0;}
++// Fix ONLY the FS header entropy draw in this test binary. Production uses
++// getrandom unchanged; this is not linked into any prover/verifier executable.
++thread_local bool fixedHeaderNonce=false;
++extern "C" ssize_t getrandom(void*p,size_t n,unsigned flags){if(fixedHeaderNonce){need(n==32,"OPT3C test header nonce length");for(std::size_t j=0;j<n;++j)static_cast<unsigned char*>(p)[j]=std::uint8_t(j+17);fixedHeaderNonce=false;return n;}return ::syscall(SYS_getrandom,p,n,flags);}
++extern "C" ssize_t pread(int fd,void*p,size_t n,off_t at){auto call=kFault::reads++;if(kFault::mode==kFault::shortIO && call==0){errno=EINTR;return -1;}if(kFault::mode==kFault::earlyEOF)return 0;if(kFault::mode==kFault::shortIO)n=std::min(n,size_t(37));auto result=::syscall(SYS_pread64,fd,p,n,at);if(kFault::mode==kFault::corrupt && result>0)static_cast<unsigned char*>(p)[0]^=1;return result;}
++extern "C" ssize_t pwrite(int fd,const void*p,size_t n,off_t at){auto call=kFault::writes++;if(kFault::mode==kFault::shortIO && call==0){errno=EINTR;return -1;}if(kFault::mode==kFault::writeError && call>0){errno=EIO;return -1;}if(kFault::mode==kFault::shortIO || kFault::mode==kFault::writeError)n=std::min(n,size_t(37));auto result=::syscall(SYS_pwrite64,fd,p,n,at);if(result>0){kFault::dirty+=result;kFault::maxDirty=std::max(kFault::maxDirty,kFault::dirty);}return result;}
++extern "C" int fdatasync(int fd){auto result=::syscall(SYS_fdatasync,fd);if(result==0)kFault::dirty=0;return result;}
++namespace ui=zkgpt::r7::oneblock::unified;
++namespace fs=zkgpt::r7::fs;
++namespace zkgpt::r7::oneblock::classified {
++struct AuthenticationTestAccess {static const AuthMetrics&metrics(const Commitments&c){return c.auth_metrics_;}};
++}
++void kernelCallContract(){
++ auto l=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(7));
++ Tape p(true);SessionRandom rng;Commitments pcs(p,l,[](std::size_t j){return Fr(j+1);},&data,&rng);
++ pcs.constrainBaseTails();auto view=pcs.view("unit/native-E");std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};
++ auto h=exchangeHidden(p,"opt3c/value",Fr(7),&rng);view.open(p,{q,h.handle},&h,&rng,"opt3c/query");
++ pcs.authenticateUnifiedInput({Fr(11),Fr(13)});
++ const auto&m=AuthenticationTestAccess::metrics(pcs);
++ need(m.kernel_calls==l.roots.size(),"OPT3C regression: public K rebuilt after initialization");
++ std::cout<<"OPT3C_KERNEL_CALL_CONTRACT roots="<<l.roots.size()<<" calls="<<m.kernel_calls<<'\n';
++}
++void states(){
++ for(unsigned mode=0;mode<4;++mode)for(unsigned variant=0;variant<3;++variant){
++  auto p=ui::pack({{1,16384},{2,2},{3,16},{2,8},{3,1}},4);
++  std::vector<std::vector<Fr>>a(p.segments.size()),b(a.size());std::vector<Fr>da(p.domain,Fr(0)),db(da.size());
++  for(std::size_t k=0;k<a.size();++k){auto s=p.segments[k];a[k].resize(s.padded);b[k].resize(s.padded);for(std::size_t j=0;j<s.padded;++j){a[k][j]=Fr(int(j%71)-29+int(k));b[k][j]=k && j+3<s.padded?Fr(int((j*7+k)%79)-39):Fr(0);da[s.offset+j]=a[k][j];db[s.offset+j]=b[k][j];}}
++  std::vector<unsigned>calls(a.size());ui::KBudget cap=mode==0?ui::KBudget{8ull<<20,0}:mode==1?ui::KBudget{0,8ull<<20}:mode==2?ui::KBudget{128,16384}:ui::KBudget{0,0};
++  ui::PublicK state(p.segments,[&](std::size_t k){++calls[k];return b[k];},cap,"state-test");
++  ui::Factors reference=[&](std::size_t k,const ui::Consume&c){c([&,k](std::size_t j){return a[k].at(j);},[&,k](std::size_t j){return b[k].at(j);});};
++  ui::Factors optimized=[&](std::size_t k,const ui::Consume&c){state.withRoot(k,"state-test",[&](const Value&v){c([&,k](std::size_t j){return a[k].at(j);},v);});};
++  std::vector<Fr>point;std::size_t current=p.domain;
++  while(current>1){
++   // Compare every local coordinate BEFORE each round against the independent
++   // dense global state, even after unequal roots collide at high selector bits.
++   for(std::size_t k=0;k<a.size();++k)state.withRoot(k,"state-test",[&](const Value&v){auto want=b[k];std::size_t length=want.size();for(auto r:point){if(length==1)break;for(std::size_t z=0;z<length/2;++z)want[z]=want[2*z]*(Fr(1)-r)+want[2*z+1]*r;length/=2;}for(std::size_t j=0;j<length;++j)need(v(j)==want[j],"OPT3C local K state differs before/after challenge");});
++   std::array<Fr,3>ev{Fr(0),Fr(0),Fr(0)};for(unsigned x=0;x<3;++x)for(std::size_t j=0;j<current/2;++j)ev[x]+=(da[2*j]*(Fr(1)-Fr(x))+da[2*j+1]*Fr(x))*(db[2*j]*(Fr(1)-Fr(x))+db[2*j+1]*Fr(x));
++   std::array<Fr,3>want;want[0]=ev[0];want[2]=(ev[2]-Fr(2)*ev[1]+ev[0])/Fr(2);want[1]=ev[1]-want[0]-want[2];
++   auto old=ui::quadraticRound(p.domain,p.segments,point,reference),got=ui::quadraticRoundFolded(p.domain,p.segments,point,optimized);need(old.coefficients==want && got.coefficients==want,"OPT3C degree2 differs from dense/reference");
++   need(Fr(2)*got.coefficients[0]+got.coefficients[1]+got.coefficients[2]==ev[0]+ev[1],"OPT3C recurrence");
++   Fr r=variant==0?Fr(0):variant==1?Fr(1):Fr(-3-int(point.size()));state.advance("state-test",r);point.push_back(r);
++   for(std::size_t j=0;j<current/2;++j){da[j]=da[2*j]*(Fr(1)-r)+da[2*j+1]*r;db[j]=db[2*j]*(Fr(1)-r)+db[2*j+1]*r;}current/=2;
++  }
++  need(state.endpoint("state-test",point)==db[0],"OPT3C final K(r) differs from dense");
++  if(mode==0)for(auto c:calls)need(c==1,"OPT3C RAM rebuilt kernel");
++  if(mode==1)need(state.metrics().file_roots==a.size() && state.metrics().file_read_bytes>0 && state.metrics().file_write_bytes>0,"OPT3C file path was not exercised");
++  if(mode>=2)need(state.metrics().fallback_rebuild_calls>0,"OPT3C budget fallback was not counted");
++  rejects([&]{state.withRoot(0,"foreign",[](const Value&){});},"OPT3C foreign session accepted");auto wrong=point;wrong.back()+=Fr(1);rejects([&]{state.endpoint("state-test",wrong);},"OPT3C wrong endpoint point accepted");
++ }
++ std::cout<<"OPT3C_EXACT_STATES_DENSE_COEFFICIENTS_AND_BUDGETS_TESTED\n";
++}
++struct FixedRandom:Random {std::uint64_t counter=0;void fill(std::uint8_t*p,std::size_t n)override{while(n){Writer w;w.text("opt3c-test-only-random");w.number(counter++,8);auto d=r1::hash(w.b);auto take=std::min(n,d.size());std::copy_n(d.data(),take,p);p+=take;n-=take;}}};
++Bytes readFile(const std::string&p){std::ifstream f(p,std::ios::binary);return {std::istreambuf_iterator<char>(f),{}};}
++void fsMessages(){
++ char name[]="build/opt3c-fs-XXXXXX";auto dir=mkdtemp(name);need(dir,"OPT3C FS test directory");Bytes first;Digest prefix{};
++ fs::Binding binding{"OneblockUnified","opt3c-exact-equivalence",std::string(64,'a'),{2,7,1,8}};
++ for(unsigned mode=0;mode<4;++mode){auto path=std::string(dir)+"/proof-"+std::to_string(mode);setenv("ZKGPT_K_REFERENCE",mode==0?"1":"0",1);setenv("ZKGPT_K_RAM_BYTES",mode==2?"0":mode==3?"64":"1048576",1);setenv("ZKGPT_K_FILE_BYTES",mode==2?"1048576":"0",1);
++  {fixedHeaderNonce=true;fs::FsProverIO p(path,binding);FixedRandom rng;auto l=small();Prepared data;data["unit/native-E"]=std::make_shared<std::vector<Fr>>(8,Fr(7));Commitments pcs(p,l,[](std::size_t j){return Fr(j+1);},&data,&rng);pcs.constrainBaseTails();auto view=pcs.view("unit/native-E");std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};auto h=exchangeHidden(p,"opt3c/value",Fr(7),&rng);view.open(p,{q,h.handle},&h,&rng,"opt3c/query");pcs.authenticateUnifiedInput({Fr(11),Fr(13)});p.finish();if(!mode)prefix=p.prefix();else need(prefix==p.prefix(),"OPT3C SHA256 transcript changed");}
++  auto bytes=readFile(path);if(!mode)first=bytes;else need(bytes==first,"OPT3C canonical proof messages or FS challenges changed");
++  {fs::FsVerifierIO v(path,binding);auto l=small();Commitments pcs(v,l,{},nullptr,nullptr);pcs.constrainBaseTails();auto view=pcs.view("unit/native-E");std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};auto h=exchangeHidden(v,"opt3c/value",Fr(0),nullptr);view.open(v,{q,h.handle},nullptr,nullptr,"opt3c/query");pcs.authenticateUnifiedInput({Fr(11),Fr(13)});v.finish();need(v.prefix()==prefix,"OPT3C verifier transcript/EOF");}
++ }
++ unsetenv("ZKGPT_K_REFERENCE");unsetenv("ZKGPT_K_RAM_BYTES");unsetenv("ZKGPT_K_FILE_BYTES");std::cout<<"OPT3C_EXACT_FS_PROOF_TRANSCRIPT_AND_ROOT_OPENINGS_TESTED bytes="<<first.size()<<'\n';
++}
++void fileFaults(){
++ for(auto mode:{kFault::shortIO,kFault::earlyEOF,kFault::corrupt,kFault::writeError}){
++  kFault::mode=mode;kFault::reads=kFault::writes=0;
++  auto run=[&]{ui::PublicK state({{0,16384}},[](std::size_t){std::vector<Fr>v(16384);for(std::size_t j=0;j<v.size();++j)v[j]=Fr(j+3);return v;},{0,1ull<<20},"fault-test");
++   state.withRoot(0,"fault-test",[](const Value&v){for(std::size_t j=0;j<16384;++j)need(v(j)==Fr(j+3),"OPT3C short I/O changed scalar");});
++   need(state.metrics().file_roots==1,"OPT3C file fault path unavailable");state.advance("fault-test",Fr(3));state.withRoot(0,"fault-test",[](const Value&v){for(std::size_t j=0;j<8192;++j)need(v(j)==Fr(2*j+6),"OPT3C short I/O fold changed scalar");});};
++  if(mode==kFault::shortIO)run();else rejects(run,"OPT3C corrupt/EOF/partial-write file accepted");
++  kFault::mode=kFault::normal;
++ }
++ std::cout<<"OPT3C_FILE_EINTR_SHORT_IO_EOF_CORRUPTION_WRITE_FAILURE_TESTED\n";
++}
++void stateMachine(){ui::PublicK state({{8,1}},[](std::size_t){return std::vector<Fr>{Fr(7)};},{1024,0},"lifecycle");state.withRoot(0,"lifecycle",[](const Value&){});rejects([&]{state.endpoint("lifecycle",{});},"OPT3C premature virtual-domain endpoint accepted");std::vector<Fr>point;for(unsigned t=0;t<4;++t){state.withRoot(0,"lifecycle",[](const Value&){});state.advance("lifecycle",Fr(3));point.push_back(Fr(3));}state.endpoint("lifecycle",point);rejects([&]{state.advance("lifecycle",Fr(3));},"OPT3C post-terminal advance accepted");std::cout<<"OPT3C_TERMINAL_STATE_MACHINE_TESTED\n";}
++void writeWindow(){kFault::dirty=kFault::maxDirty=0;ui::PublicK state({{0,1u<<20}},[](std::size_t){return std::vector<Fr>(1u<<20,Fr(7));},{0,64ull<<20},"write-window");state.withRoot(0,"write-window",[](const Value&v){need(v(0)==Fr(7),"OPT3C write window value");});need(state.metrics().file_roots==1 && kFault::maxDirty<=16ull<<20,"OPT3C unbounded dirty page-cache write burst");std::cout<<"OPT3C_BOUNDED_FILE_WRITE_WINDOW_TESTED max_dirty="<<kFault::maxDirty<<'\n';}
++void failedState(){ui::PublicK state({{0,2},{2,2}},[](std::size_t){return std::vector<Fr>{Fr(2),Fr(5)};},{1024,0},"failed-state");state.withRoot(0,"failed-state",[](const Value&){});rejects([&]{state.advance("failed-state",Fr(3));},"OPT3C incomplete round accepted");rejects([&]{state.withRoot(0,"failed-state",[](const Value&){});},"OPT3C partially advanced state reused after failure");std::cout<<"OPT3C_FAILED_STATE_CANNOT_BE_REUSED_TESTED\n";}
++int main(int argc,char**argv){try{r1::init();if(argc==1 || std::string(argv[1])=="contract")kernelCallContract();if(argc==1 || std::string(argv[1])=="states")states();if(argc==1 || std::string(argv[1])=="fs")fsMessages();if(argc==1 || std::string(argv[1])=="io")fileFaults();if(argc==1 || std::string(argv[1])=="lifecycle")stateMachine();if(argc==1 || std::string(argv[1])=="write-window")writeWindow();if(argc==1 || std::string(argv[1])=="failed-state")failedState();return 0;}catch(const std::exception&e){std::cerr<<"OPT3C_FAILED "<<e.what()<<'\n';return 1;}}
+diff --git a/src/paper_r7/public_k.cpp b/src/paper_r7/public_k.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/public_k.cpp
+@@ -0,0 +1,110 @@
++#include "public_k.hpp"
++#include "opt2_metrics.hpp"
++#include <algorithm>
++#include <cerrno>
++#include <chrono>
++#include <cstdlib>
++#include <fstream>
++#include <iostream>
++#include <openssl/sha.h>
++#include <fcntl.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include <unistd.h>
++namespace zkgpt::r7::oneblock::unified {
++namespace {
++using Clock=std::chrono::steady_clock;
++constexpr std::size_t chunk=4096;
++constexpr std::uint64_t dirtyWindow=16ull<<20;
++double seconds(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
++Digest hash(const Fr*p,std::size_t n){Digest d{};need(SHA256(reinterpret_cast<const unsigned char*>(p),n*sizeof(Fr),d.data()),"public K checksum failure");return d;}
++std::uint64_t limit(const char*name,std::uint64_t value,std::uint64_t maximum){auto*s=std::getenv(name);if(!s)return value;std::string text(s);need(!text.empty() && text.find_first_not_of("0123456789")==std::string::npos,"public K invalid budget");std::size_t used=0;auto n=std::stoull(text,&used);need(used==text.size() && n<=maximum,"public K budget cap");return n;}
++// Consider every applicable cgroup ancestor, including memory charged for file
++// cache. Missing/unreadable controls disable the file optimization, not safety.
++bool memoryRoom(std::uint64_t reserve){
++ std::ifstream cg("/proc/self/cgroup");std::string line,path;while(std::getline(cg,line))if(line.rfind("0::/",0)==0)path=line.substr(3);
++ if(path.empty())return false;
++ std::string directory="/sys/fs/cgroup"+path;bool inspected=false;
++ for(;;){std::ifstream cap(directory+"/memory.max"),usage(directory+"/memory.current");std::string maximum;std::uint64_t current=0;
++  if(cap>>maximum){inspected=true;if(maximum!="max"){if(!(usage>>current))return false;auto bound=std::stoull(maximum);if(current>=bound || reserve>bound-current)return false;}}
++  if(directory=="/sys/fs/cgroup")break;
++  auto pos=directory.find_last_of('/');if(pos<std::string("/sys/fs/cgroup").size())directory="/sys/fs/cgroup";else directory.resize(pos);
++ }
++ std::ifstream info("/proc/meminfo");std::string key,unit;std::uint64_t kb=0,available=0;while(info>>key>>kb>>unit)if(key=="MemAvailable:")available=kb*1024;
++ std::ifstream pressure("/proc/pressure/memory");std::string kind,average;if(!(pressure>>kind>>average) || average.rfind("avg10=",0)!=0)return false;
++ return inspected && available>reserve && std::stod(average.substr(6))<1.0;
++}
++struct File {
++ int fd=-1;std::size_t count=0;std::vector<Digest>checksums;KMetrics&m;
++ explicit File(KMetrics&metrics):m(metrics){}
++ ~File(){if(fd>=0)::close(fd);}
++ void transfer(void*data,std::size_t bytes,std::uint64_t at,bool writing){
++  need(at<=count*sizeof(Fr) && bytes<=count*sizeof(Fr)-at,"public K file bounds");auto started=Clock::now();auto*p=static_cast<unsigned char*>(data);
++  while(bytes){auto n=writing ? ::pwrite(fd,p,bytes,off_t(at)) : ::pread(fd,p,bytes,off_t(at));if(n<0 && errno==EINTR)continue;need(n>0,"public K file I/O failed or premature EOF");p+=n;bytes-=std::size_t(n);at+=std::size_t(n);if(writing)m.file_write_bytes+=n;else m.file_read_bytes+=n;}
++  m.io_wall_seconds+=seconds(started);
++ }
++ void read(std::size_t page,Fr*out){auto start=page*chunk;need(start<count,"public K page bounds");auto n=std::min(chunk,count-start);transfer(out,n*sizeof(Fr),start*sizeof(Fr),false);need(hash(out,n)==checksums.at(page),"public K corrupted file state");auto started=Clock::now();need(::posix_fadvise(fd,off_t(start*sizeof(Fr)),off_t(n*sizeof(Fr)),POSIX_FADV_DONTNEED)==0,"public K read page cache advice failed");m.io_wall_seconds+=seconds(started);}
++ void write(std::size_t page,Fr*in,std::size_t n){need(n && n<=chunk,"public K write page bound");transfer(in,n*sizeof(Fr),page*chunk*sizeof(Fr),true);checksums.at(page)=hash(in,n);}
++ void evict(){auto started=Clock::now();int rc;do{rc=::fdatasync(fd);}while(rc<0 && errno==EINTR);need(rc==0,"public K file sync failed");need(::posix_fadvise(fd,0,0,POSIX_FADV_DONTNEED)==0,"public K page cache advice failed");m.io_wall_seconds+=seconds(started);}
++};
++}
++KBudget KBudget::environment(){return {limit("ZKGPT_K_RAM_BYTES",512ull<<20,2ull<<30),limit("ZKGPT_K_FILE_BYTES",4ull<<30,8ull<<30)};}
++struct PublicK::Impl {
++ struct Root {std::vector<Fr>ram;std::unique_ptr<File>file;std::size_t size=0,builds=0;bool touched=false;};
++ std::vector<Segment>segments;Build build;KBudget budget;std::string session;std::vector<Fr>point;std::vector<Root>roots;unsigned bits=0;bool ended=false,failed=false;
++ KMetrics metrics;std::uint64_t ram_bytes=0,file_bytes=0;bool files_allowed=false;
++ // One scratch window shared by all roots; public K only. File checksum
++ // metadata is separately bounded by file budget / chunk size.
++ std::array<Fr,2*chunk>scratch;std::size_t cached_root=std::size_t(-1),cached_page=0;
++ Impl(const std::vector<Segment>&s,Build b,KBudget cap,const std::string&id,std::size_t domain):segments(s),build(std::move(b)),budget(cap),session(id),roots(s.size()){
++  need(build && !session.empty() && !segments.empty() && segments.size()<=8193 && budget.ram<=2ull<<30 && budget.file<=8ull<<30,"public K constructor bound");
++  std::size_t end=0;for(auto segment:segments){need(segment.padded && !(segment.padded&(segment.padded-1)) && segment.padded<=r1::kMaxVector && segment.offset<=(std::size_t(1)<<32)-segment.padded,"public K physical root bound");end=std::max(end,segment.offset+segment.padded);}
++  if(!domain){domain=1;while(domain<end)domain*=2;}validate(domain,segments);while(domain>1){++bits;domain/=2;}
++  struct statvfs fs{};files_allowed=budget.file && ::statvfs(".",&fs)==0 && fs.f_bavail*std::uint64_t(fs.f_frsize)>budget.file+(1ull<<30) && memoryRoom(budget.ram+dirtyWindow+(64ull<<20));
++  peak();
++ }
++ void check(const std::string&id)const{need(id==session,"public K foreign authentication session");}
++ void peak(std::uint64_t temporary=0){std::uint64_t metadata=roots.capacity()*sizeof(Root)+segments.capacity()*sizeof(Segment)+point.capacity()*sizeof(Fr)+session.capacity();for(auto&r:roots)if(r.file)metadata+=sizeof(File)+r.file->checksums.capacity()*sizeof(Digest);metrics.ram_peak_bytes=std::max(metrics.ram_peak_bytes,ram_bytes+temporary+sizeof(scratch)+metadata);metrics.file_peak_bytes=std::max(metrics.file_peak_bytes,file_bytes);}
++ Fr at(std::size_t k,std::size_t j){auto&r=roots.at(k);need(j<r.size,"public K read index");++metrics.state_read_coordinates;if(!r.file)return r.ram.at(j);auto page=j/chunk;if(cached_root!=k || cached_page!=page){r.file->read(page,scratch.data());cached_root=k;cached_page=page;}return scratch[j%chunk];}
++ void with(std::size_t k,const std::function<void(const Value&)>&consume){
++  auto&r=roots.at(k);r.touched=true;if(!r.ram.empty() || r.file){consume([this,k](std::size_t j){return at(k,j);});return;}
++  auto started=Clock::now();auto v=build(k);need(v.size()==segments[k].padded,"public K builder shape");metrics.builder_peak_bytes=std::max<std::uint64_t>(metrics.builder_peak_bytes,v.capacity()*sizeof(Fr));peak(v.capacity()*sizeof(Fr));++metrics.initial_builds;if(r.builds++)++metrics.fallback_rebuild_calls;
++  metrics.initial_build_seconds+=seconds(started);std::size_t count=v.size();auto cpu=crypto::processCPU();auto foldStarted=Clock::now();
++  for(std::size_t t=0;t<point.size() && count>1;++t){for(std::size_t j=0;j<count/2;++j)v[j]=v[2*j]+point[t]*(v[2*j+1]-v[2*j]);metrics.fold_coordinates+=count;count/=2;}
++  metrics.fold_cpu_seconds+=crypto::processCPU()-cpu;metrics.fold_wall_seconds+=seconds(foldStarted);r.size=count;
++  auto bytes=count*sizeof(Fr);
++  if(bytes<=budget.ram-ram_bytes){
++   if(v.capacity()*sizeof(Fr)<=budget.ram-ram_bytes){v.resize(count);r.ram=std::move(v);}else r.ram.assign(v.begin(),v.begin()+count);
++   ram_bytes+=r.ram.capacity()*sizeof(Fr);++metrics.ram_roots;peak(v.capacity()*sizeof(Fr));consume([this,k](std::size_t j){return at(k,j);});return;
++  }
++  if(files_allowed && bytes<=budget.file-file_bytes && memoryRoom(v.capacity()*sizeof(Fr)+budget.ram+dirtyWindow+(64ull<<20))){
++   auto f=std::make_unique<File>(metrics);f->fd=::open(".",O_TMPFILE|O_RDWR|O_CLOEXEC,0600);
++   if(f->fd>=0){struct stat info{};need(::fstat(f->fd,&info)==0 && (info.st_mode&0777)==0600,"public K file permissions");f->count=count;need(::ftruncate(f->fd,off_t(bytes))==0,"public K file allocation failed");f->checksums.resize((count+chunk-1)/chunk);
++    for(std::size_t start=0;start<count;start+=chunk){f->write(start/chunk,v.data()+start,std::min(chunk,count-start));if(((start+chunk)*sizeof(Fr))%dirtyWindow==0)f->evict();}
++    f->evict();r.file=std::move(f);file_bytes+=bytes;++metrics.file_roots;peak(v.capacity()*sizeof(Fr));std::vector<Fr>().swap(v);cached_root=std::size_t(-1);consume([this,k](std::size_t j){return at(k,j);});return;
++   }files_allowed=false;
++  }
++  ++metrics.rebuild_roots;consume([&](std::size_t j){need(j<count,"public K fallback bounds");++metrics.state_read_coordinates;return v[j];});
++ }
++ void advance(const Fr&r){
++  auto started=Clock::now();auto cpu=crypto::processCPU();cached_root=std::size_t(-1);
++  for(auto&root:roots){need(root.touched,"public K incomplete round state");root.touched=false;if(root.size<=1 || (root.ram.empty() && !root.file))continue;
++   auto old=root.size;metrics.fold_coordinates+=old;
++   if(!root.file){for(std::size_t j=0;j<old/2;++j)root.ram[j]=root.ram[2*j]+r*(root.ram[2*j+1]-root.ram[2*j]);root.ram.resize(old/2);}
++   else{auto&f=*root.file;
++    // Consume both input pages before writing a lower output page. Neither
++    // unread input values nor unread checksums are overwritten.
++    for(std::size_t start=0;start<old;start+=2*chunk){auto count=std::min(2*chunk,old-start);f.read(start/chunk,scratch.data());if(count>chunk)f.read(start/chunk+1,scratch.data()+chunk);for(std::size_t j=0;j<count/2;++j)scratch[j]=scratch[2*j]+r*(scratch[2*j+1]-scratch[2*j]);f.write(start/(2*chunk),scratch.data(),count/2);if(((start+2*chunk)/2*sizeof(Fr))%dirtyWindow==0)f.evict();}
++    f.count=old/2;f.checksums.resize((f.count+chunk-1)/chunk);need(::ftruncate(f.fd,off_t(f.count*sizeof(Fr)))==0,"public K truncate folded state");file_bytes-=(old/2)*sizeof(Fr);f.evict();
++   }root.size=old/2;
++  }point.push_back(r);metrics.fold_cpu_seconds+=crypto::processCPU()-cpu;metrics.fold_wall_seconds+=seconds(started);peak();
++ }
++};
++PublicK::PublicK(const std::vector<Segment>&s,Build b,KBudget cap,const std::string&id,std::size_t domain):p_(std::make_unique<Impl>(s,std::move(b),cap,id,domain)){}
++PublicK::~PublicK()=default;
++void PublicK::withRoot(std::size_t k,const std::string&id,const std::function<void(const Value&)>&consume){p_->check(id);need(!p_->ended && !p_->failed && bool(consume),"public K closed/failed state or missing consumer");try{p_->with(k,consume);}catch(...){p_->failed=true;throw;}}
++void PublicK::advance(const std::string&id,const Fr&r){p_->check(id);need(!p_->ended && !p_->failed && r.isValid() && p_->point.size()<p_->bits,"public K challenge/phase bound");try{p_->advance(r);}catch(...){p_->failed=true;throw;}}
++Fr PublicK::endpoint(const std::string&id,const std::vector<Fr>&point){p_->check(id);need(!p_->ended && !p_->failed && point==p_->point && point.size()==p_->bits,"public K endpoint state order/terminal dimension");p_->ended=true;Fr out=0;for(std::size_t k=0;k<p_->segments.size();++k)p_->with(k,[&](const Value&v){out+=selector(p_->segments[k],point)*v(0);});return out;}
++const KMetrics&PublicK::metrics()const{return p_->metrics;}
++void PublicK::report()const{auto&m=p_->metrics;std::cerr<<"OPT3C_K {\"K_initial_builds\":"<<m.initial_builds<<",\"fallback_rebuild_calls\":"<<m.fallback_rebuild_calls<<",\"K_fold_coordinates\":"<<m.fold_coordinates<<",\"K_state_read_coordinates\":"<<m.state_read_coordinates<<",\"K_initial_build_seconds\":"<<m.initial_build_seconds<<",\"K_fold_cpu_seconds\":"<<m.fold_cpu_seconds<<",\"K_fold_wall_seconds\":"<<m.fold_wall_seconds<<",\"K_file_read_bytes\":"<<m.file_read_bytes<<",\"K_file_write_bytes\":"<<m.file_write_bytes<<",\"K_RAM_peak_bytes\":"<<m.ram_peak_bytes<<",\"K_builder_peak_bytes\":"<<m.builder_peak_bytes<<",\"K_dirty_write_window_bytes\":"<<dirtyWindow<<",\"K_file_peak_bytes\":"<<m.file_peak_bytes<<",\"K_io_wall_seconds\":"<<m.io_wall_seconds<<",\"RAM_root_admissions\":"<<m.ram_roots<<",\"file_root_admissions\":"<<m.file_roots<<",\"rebuild_root_visits\":"<<m.rebuild_roots<<",\"RAM_limit\":"<<p_->budget.ram<<",\"file_limit\":"<<p_->budget.file<<",\"files_allowed\":"<<(p_->files_allowed?"true":"false")<<",\"file_page_cache_cost_is_zero\":false}\n";}
++}
+diff --git a/src/paper_r7/public_k.hpp b/src/paper_r7/public_k.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/paper_r7/public_k.hpp
+@@ -0,0 +1,29 @@
++#pragma once
++#include "unified_input.hpp"
++namespace zkgpt::r7::oneblock::unified {
++struct KBudget {
++ std::uint64_t ram=512ull<<20,file=4ull<<30;
++ static KBudget environment();
++};
++struct KMetrics {
++ std::uint64_t initial_builds=0,fallback_rebuild_calls=0,fold_coordinates=0,state_read_coordinates=0;
++ std::uint64_t file_read_bytes=0,file_write_bytes=0,ram_peak_bytes=0,file_peak_bytes=0;
++ std::uint64_t builder_peak_bytes=0;
++ std::uint64_t ram_roots=0,file_roots=0,rebuild_roots=0;
++ double initial_build_seconds=0,fold_cpu_seconds=0,fold_wall_seconds=0,io_wall_seconds=0;
++};
++// Public data only. The builder must return an authenticated, rho-fixed kernel;
++// it must never return witness values. No object is shared across authentication.
++class PublicK {
++ struct Impl;std::unique_ptr<Impl>p_;
++ public:
++ using Build=std::function<std::vector<Fr>(std::size_t)>;
++ PublicK(const std::vector<Segment>&,Build,KBudget,const std::string&session,std::size_t domain=0);
++ ~PublicK();PublicK(const PublicK&)=delete;PublicK&operator=(const PublicK&)=delete;
++ void withRoot(std::size_t,const std::string&session,const std::function<void(const Value&)>&);
++ void advance(const std::string&session,const Fr&challenge);
++ Fr endpoint(const std::string&session,const std::vector<Fr>&point);
++ const KMetrics&metrics()const;
++ void report()const;
++};
++}
+diff --git a/src/paper_r7/unified_input.cpp b/src/paper_r7/unified_input.cpp
+--- a/src/paper_r7/unified_input.cpp
++++ b/src/paper_r7/unified_input.cpp
+@@ -1,4 +1,5 @@
+ #include "unified_input.hpp"
++#include "public_k.hpp"
+ #include <algorithm>
+ #include <map>
+ #include <chrono>
+@@ -32,13 +33,13 @@
+  validate(out.domain,out.segments);return out;
+ }
+ Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
+-Round quadraticRound(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider){
++static Round quadraticRoundImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,bool folded_kernel){
+  validate(n,segments);need(prefix.size()<domainBits(n) && provider,"unified round prefix/provider");const auto t=unsigned(prefix.size());Round out;
+  struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
+  auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;}};
+  for(std::size_t k=0;k<segments.size();++k){auto s=segments[k];auto d=r1::log2exact(s.padded);auto low=std::min<unsigned>(t,d);SplitWeights weights({prefix.begin(),prefix.begin()+low});const auto block=std::size_t(1)<<low;unsigned calls=0;
+   provider(k,[&](const Value&a,const Value&b){++calls;need(calls==1 && a && b,"unified factor oracle invocation");
+-   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);v.b+=w*b(index);}}return v;};
++   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);if(!folded_kernel)v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);if(!folded_kernel)v.b+=w*b(index);}}if(folded_kernel)v.b=b(j);return v;};
+    if(t<d){for(std::size_t j=0;j<(s.padded>>t)/2;++j){auto left=folded(2*j),right=folded(2*j+1);product(left.a,right.a,left.b,right.b);}}
+    else{auto v=folded(0);auto w=fixedBits(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=w*v.a;target.b+=w*v.b;}
+   });need(calls==1,"unified missing factor oracle");
+@@ -48,23 +49,27 @@
+  for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
+  return out;
+ }
++Round quadraticRound(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,false);}
++Round quadraticRoundFolded(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,true);}
+ Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
+- const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role){
++ const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role,PublicK*state){
+  auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
+  validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
++ need(io.prover() || !state,"unified verifier cannot use prover K cache");
+  crypto::validate(initial.handle,io.session(),initial.handle.role);
+  Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
+  auto previous=initial;std::vector<Fr>point;Round last;
+- for(unsigned t=0;t<domainBits(n);++t){auto name=role+"/round/"+std::to_string(t);if(io.prover())last=quadraticRound(n,segments,point,factors);
++ for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);if(io.prover())last=state?quadraticRoundFolded(n,segments,point,factors):quadraticRound(n,segments,point,factors);
+   std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
+   Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
+-  auto r=io.coin(name+"/r");point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
++  auto r=io.coin(name+"/r");if(state)state->advance(io.session(),r);point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
++  if(crypto::opt2MetricsEnabled()){std::uint64_t u=0;for(std::size_t k=1;k<segments.size();++k)u+=segments[k].padded;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
+  }
+  Fr input=0,actual_kernel=0;if(io.prover()){
+   if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}
+   else{auto r=point.back();input=last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]);actual_kernel=last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]);}
+  }
+- auto expected=kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
++ auto expected=state?state->endpoint(io.session(),point):kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
+  auto input_end=exchangeHidden(io,role+"/input-evaluation",input,rng);auto public_kernel=publicHidden(io,role+"/public-kernel",expected);bindPublic(io,role+"/public-kernel",encode(public_kernel.handle));
+  std::vector<Hidden>w{input_end,public_kernel,previous};Relations terminal;terminal.role=role+"/terminal";for(auto&h:w)terminal.handles.push_back(h.handle);terminal.products={{0,1,2}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
+  std::cerr<<"UNIFIED_SUMCHECK {\"domain\":"<<n<<",\"rounds\":"<<point.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"includes_public_kernel_endpoint\":true}\n";
+diff --git a/src/paper_r7/unified_input.hpp b/src/paper_r7/unified_input.hpp
+--- a/src/paper_r7/unified_input.hpp
++++ b/src/paper_r7/unified_input.hpp
+@@ -2,6 +2,7 @@
+ #include "oneblock_sumcheck.hpp"
+ #include <array>
+ namespace zkgpt::r7::oneblock::unified {
++class PublicK;
+ inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-UNIFIED-INPUT-v1";
+ struct Block {unsigned category;std::size_t padded;};
+ struct Segment {std::size_t offset,padded;};
+@@ -16,8 +17,10 @@
+ using Factors=std::function<void(std::size_t,const Consume&)>;
+ struct Round {std::array<Fr,3>coefficients{Fr(0),Fr(0),Fr(0)};std::array<Fr,2>input_pair{Fr(0),Fr(0)},kernel_pair{Fr(0),Fr(0)};};
+ Round quadraticRound(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&prefix,const Factors&);
++// Kernel oracle is already low-bit folded; sealed input oracle is unchanged.
++Round quadraticRoundFolded(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&prefix,const Factors&);
+ // One hidden degree-two Sumcheck, with a verifier-computed public K endpoint.
+ Reduction reduce(IO&,std::size_t,const std::vector<Segment>&,const Hidden&,
+  const Factors&onlyP,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,
+- Random*,const std::string&role);
++ Random*,const std::string&role,PublicK*onlyP_state=nullptr);
+ }

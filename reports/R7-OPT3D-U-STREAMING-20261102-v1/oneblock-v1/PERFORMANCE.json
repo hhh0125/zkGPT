@@ -1,0 +1,230 @@
+{
+  "prover": {
+    "command": [
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_fs_oneblock_prover",
+      "prove",
+      "reports/R7-OPT3D-U-STREAMING-20261102-v1/oneblock-v1/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/oneblock/20261102/opt3d-v1"
+    ],
+    "pid": 83165,
+    "exit_code": 0,
+    "wall_seconds": 531.958068725653,
+    "user_cpu_seconds": 548.4622,
+    "system_cpu_seconds": 14.451641,
+    "cpu_seconds": 562.913841,
+    "peak_rss_kib": 4413280,
+    "peak_vmsize_kib": 4793072,
+    "ru_inblock": 16804896,
+    "ru_oublock": 8796224,
+    "os_storage_read_bytes": 8604106752,
+    "os_storage_write_bytes": 4503666688,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+    "ended_utc": "2026-11-02T16:28:23.310317+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "reports/R7-OPT3D-U-STREAMING-20261102-v1/oneblock-v1/protocol1-new.fsproof",
+      "zkGPT/R7/Protocol1/Unified/oneblock/20261102/opt3d-v1"
+    ],
+    "pid": 93842,
+    "exit_code": 0,
+    "wall_seconds": 215.8190476084128,
+    "user_cpu_seconds": 216.971158,
+    "system_cpu_seconds": 2.126933,
+    "cpu_seconds": 219.098091,
+    "peak_rss_kib": 1211668,
+    "peak_vmsize_kib": 1367168,
+    "ru_inblock": 0,
+    "ru_oublock": 131704,
+    "os_storage_read_bytes": 0,
+    "os_storage_write_bytes": 67432448,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+    "ended_utc": "2026-11-02T16:31:59.389397+00:00"
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5358,
+    "coverage_sha256": "83c4711459d2e833c0f0c5220e728da7f2959991b9a70147f8c364005222ecea",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 1171,
+    "tail_response_bytes": 49504,
+    "GKR_rounds": 627,
+    "seconds": 529.756,
+    "wire_bytes": 142894016,
+    "P_wire_bytes": 142894016,
+    "frames": 413073,
+    "peak_rss_kib": 4413280,
+    "MSM_calls": 510205,
+    "MSM_terms": 55522301,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 34.6308,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 3356084,
+        "cumulative_peak_rss_kib": 3356084
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 69.6205,
+        "P_wire_bytes": 2391110,
+        "MSM_calls": 53249,
+        "rss_end_kib": 4412224,
+        "cumulative_peak_rss_kib": 4412224
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.600522,
+        "P_wire_bytes": 132590,
+        "MSM_calls": 2,
+        "rss_end_kib": 4412224,
+        "cumulative_peak_rss_kib": 4412224
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.173531,
+        "P_wire_bytes": 2627402,
+        "MSM_calls": 1,
+        "rss_end_kib": 4412224,
+        "cumulative_peak_rss_kib": 4412224
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 14.9364,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 7843,
+        "rss_end_kib": 4413064,
+        "cumulative_peak_rss_kib": 4413280
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 287.148,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 448576,
+        "rss_end_kib": 3860216,
+        "cumulative_peak_rss_kib": 4413280
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 3.52198,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 16,
+        "rss_end_kib": 3860216,
+        "cumulative_peak_rss_kib": 4413280
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 109.891,
+        "P_wire_bytes": 3601952,
+        "MSM_calls": 518,
+        "rss_end_kib": 3860360,
+        "cumulative_peak_rss_kib": 4413280
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5358,
+    "coverage_sha256": "83c4711459d2e833c0f0c5220e728da7f2959991b9a70147f8c364005222ecea",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 1171,
+    "tail_response_bytes": 49504,
+    "GKR_rounds": 627,
+    "seconds": 213.274,
+    "wire_bytes": 142894016,
+    "P_wire_bytes": 142894016,
+    "frames": 413073,
+    "peak_rss_kib": 1211668,
+    "MSM_calls": 176140,
+    "MSM_terms": 426505,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 0.515775,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 625328,
+        "cumulative_peak_rss_kib": 625328
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 9.24643,
+        "P_wire_bytes": 2391110,
+        "MSM_calls": 0,
+        "rss_end_kib": 625328,
+        "cumulative_peak_rss_kib": 625328
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.509178,
+        "P_wire_bytes": 132590,
+        "MSM_calls": 2,
+        "rss_end_kib": 625328,
+        "cumulative_peak_rss_kib": 625328
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.173075,
+        "P_wire_bytes": 2627402,
+        "MSM_calls": 1,
+        "rss_end_kib": 625328,
+        "cumulative_peak_rss_kib": 625328
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 4.52956,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 2953,
+        "rss_end_kib": 614472,
+        "cumulative_peak_rss_kib": 753640
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 144.959,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 172989,
+        "rss_end_kib": 665980,
+        "cumulative_peak_rss_kib": 753640
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 1.555,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 0,
+        "rss_end_kib": 665980,
+        "cumulative_peak_rss_kib": 753640
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 40.4013,
+        "P_wire_bytes": 3601952,
+        "MSM_calls": 195,
+        "rss_end_kib": 690600,
+        "cumulative_peak_rss_kib": 1211668
+      }
+    ]
+  },
+  "proof_bytes": 142894016,
+  "proof_sha256": "7bc5db0457fd962ce73e671d0eb81530c2f0ec4c3934f22275ba490486f30411"
+}

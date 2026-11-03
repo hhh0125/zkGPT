@@ -1,0 +1,68 @@
+{
+  "success": true,
+  "ctest": [
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "build/opt3c-k-folding-release",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/all-20261102T033004Z-0.log"
+    },
+    {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/opt3c-k-folding-release",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/all-20261102T033004Z-1.log"
+    }
+  ],
+  "explicit": [
+    {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "build/opt3c-k-folding-release/src/paper_r7/r7_fs_io_tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/required-20261102T031023Z-r7_fs_io_tests.log"
+    },
+    {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "build/opt3c-k-folding-release/src/paper_r7/r7_oneblock_gkr_tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/required-20261102T031023Z-r7_oneblock_gkr_tests.log"
+    },
+    {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "build/opt3c-k-folding-release/src/paper_r7/r7_oneblock_lookup_tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/required-20261102T031023Z-r7_oneblock_lookup_tests.log"
+    },
+    {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "build/opt3c-k-folding-release/src/paper_r7/r7_oneblock_model_tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/required-20261102T031023Z-r7_oneblock_model_tests.log"
+    }
+  ]
+}

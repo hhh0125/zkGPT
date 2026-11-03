@@ -1,6 +1,7 @@
 #include "classified_commitments.hpp"
 #include "stage2_opening.hpp"
 #include "unified_input.hpp"
+#include "public_k.hpp"
 #include <algorithm>
 #include <openssl/evp.h>
 #include <chrono>
@@ -93,7 +94,7 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
    root.secret=commitVectorOwned(root.spec.id,root.spec.actual,root.spec.padded,std::move(packed),*rng);root.pc=root.secret->pc;
   }
   auto bytes=io.message("Classified/root/"+std::to_string(k)+"/PC",io.prover()?encodeVector(root.pc):Bytes{});root.pc=decodeVector(bytes);need(root.pc.id==root.spec.id && root.pc.actual==root.spec.actual && root.pc.padded==root.spec.padded && root.pc.layout==r1::Layout::RowMajor,"classified wrong commitment identity/shape");root.basis=hyrax_a3::generators(root.pc.columns);
-  if(io.prover()){auto values=root.secret->values;root.value=[values](std::size_t i){return values->at(i);};root.blinds=root.secret->blinds;}
+  if(io.prover()){auto values=root.secret->values;root.value=[values](std::size_t i){return values->at(i);};root.blinds=root.secret->blinds;root.sealed_data=values->data();root.sealed_stored=values->size();root.sealed_storage_valid=[values,data=values->data(),size=values->size()]{return values->data()==data && values->size()==size;};}
   rootTiming("pack-and-commit",root.spec.id,rootStarted);
  }
  if(io.prover() && layout.master_actual){need(usedPrepared.size()==prepared->size(),"classified unused/missing partitioned helper");prepared->clear();}
@@ -102,7 +103,7 @@ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,
   const model::Trust*activeTrust=layout.master_actual?&chunks->at(chunkIndex):trust;model::Secret*activeSecret=layout.master_actual?(io.prover()?&chunkSecrets->at(chunkIndex):nullptr):modelSecret;need(activeTrust,"classified missing model authority");
   std::string scope=layout.master_actual?"Full12/model/chunk/"+std::to_string(chunkIndex):"";std::optional<stage2::ScopedIO>scoped;if(!scope.empty())scoped.emplace(io,scope);IO&activeIO=scoped?static_cast<IO&>(*scoped):io;
   auto pub=model::registerModel(activeIO,*activeTrust,activeSecret,rng);auto&root=roots_[k];need(root.spec.actual==pub.spec.actual && root.spec.padded==pub.spec.padded,"classified W trusted dimensions");root.pc={root.spec.id,pub.spec.actual,pub.spec.padded,pub.spec.rows,pub.spec.columns,pub.rows,r1::Layout::RowMajor};root.basis=r1::generators(activeTrust->anchor.w.spec).g;
-  if(io.prover()){root.value=[activeSecret](std::size_t i){return activeSecret->value(i);};root.blinds=activeSecret->blinds;}
+  if(io.prover()){root.value=[activeSecret](std::size_t i){return activeSecret->value(i);};root.blinds=activeSecret->blinds;root.sealed_data=activeSecret->values.data();root.sealed_stored=activeSecret->values.size();root.sealed_storage_valid=[activeSecret,data=activeSecret->values.data(),size=activeSecret->values.size()]{return activeSecret->values.data()==data && activeSecret->values.size()==size;};}
   root.open=[activeTrust,pub,activeSecret,scope](IO&live,const Query&q,const Hidden*h,Random*r,const std::string&id){if(scope.empty())model::opening(live,*activeTrust,pub,q,activeSecret,h,r,id);else{stage2::ScopedIO scoped(live,scope);model::opening(scoped,*activeTrust,pub,q,activeSecret,h,r,id);}};
   ++chunkIndex;
  }
@@ -172,9 +173,19 @@ void Commitments::authenticateUnifiedInput(const std::vector<Fr>&public_x){
  for(std::size_t i=0;i<claims_.size();++i){rho.push_back(io_.coin("UnifiedInput/rho/"+std::to_string(i)));need(!rho.back().isZero(),"unified zero aggregation challenge");values.push_back(claims_[i].value);bias+=rho.back()*biases[i];}
  auto initial=combine(session_,"UnifiedInput/initial",values,rho);initial.value-=bias;initial.handle.point-=scalarCommit(bias,Fr(0));bindPublic(io_,"UnifiedInput/initial",encode(initial.handle));
  Value x=[&](std::size_t j){return j<public_x.size()?public_x[j]:Fr(0);};
- ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
+ std::unique_ptr<ui::PublicK>public_k;
+ const auto*reference=std::getenv("ZKGPT_K_REFERENCE");
+ if(io_.prover() && !(reference && std::string(reference)=="1"))public_k=std::make_unique<ui::PublicK>(packing.segments,[&](std::size_t k){return k?kernel(k-1,rho,auth):std::vector<Fr>(packing.segments[0].padded,Fr(0));},ui::KBudget::environment(),session_,packing.domain);
+ ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){
+  if(public_k){public_k->withRoot(k,session_,[&](const Value&b){consume(k?roots_[k-1].value:x,b);});return;}
+  if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
  auto endpoint=[&](const std::vector<Fr>&point){Fr expected=0;for(std::size_t k=0;k<roots_.size();++k){auto K=kernel(k,rho,auth);auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(point.begin(),point.begin()+d);expected+=ui::selector(packing.segments[k+1],point)*fold(K,q);}return expected;};
- auto reduced=ui::reduce(io_,packing.domain,packing.segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck");auto opening_started=Clock::now();auto opening_cpu=processCPU();
+ ui::Inputs inputs;const auto*u_reference=std::getenv("ZKGPT_U_REFERENCE");
+ if(io_.prover() && public_k && !(u_reference && std::string(u_reference)=="1")){
+  for(auto&r:roots_){need(r.sealed_storage_valid && r.sealed_storage_valid(),"OPT3D sealed storage changed");need(r.sealed_data && r.sealed_stored==(r.spec.model?r.spec.actual:r.spec.padded),"OPT3D sealed root storage identity/length");}
+  inputs=[&](std::size_t k){need(k<packing.segments.size(),"OPT3D sealed root plan bounds");if(!k)return ui::InputSpan{public_x.data(),public_x.size(),packing.segments[0].padded};auto&r=roots_[k-1];need(r.sealed_storage_valid && r.sealed_storage_valid(),"OPT3D sealed storage changed");return ui::InputSpan{r.sealed_data,r.sealed_stored,r.spec.padded};};
+ }
+ auto reduced=ui::reduce(io_,packing.domain,packing.segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck",public_k.get(),inputs);if(public_k)public_k->report();public_k.reset();auto opening_started=Clock::now();auto opening_cpu=processCPU();
  std::vector<Hidden>opened;std::vector<Fr>selectors;
  for(std::size_t k=0;k<roots_.size();++k){auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(reduced.point.begin(),reduced.point.begin()+d);Fr value=0;if(io_.prover()){Weights w(q);for(std::size_t j=0;j<roots_[k].spec.padded;++j)value+=w.at(j)*roots_[k].value(j);}auto name="UnifiedInput/opening/root/"+std::to_string(k);auto h=exchangeHidden(io_,name+"/evaluation",value,rng_);rootOpening(k,{q,h.handle},io_.prover()?&h:nullptr,name+"/hyrax");opened.push_back(h);selectors.push_back(ui::selector(packing.segments[k+1],reduced.point));}
  auto dx=r1::log2exact(packing.segments[0].padded);std::vector<Fr>qx(reduced.point.begin(),reduced.point.begin()+dx);Weights wx(qx);Fr public_value=0;for(std::size_t j=0;j<public_x.size();++j)public_value+=wx.at(j)*public_x[j];public_value*=ui::selector(packing.segments[0],reduced.point);

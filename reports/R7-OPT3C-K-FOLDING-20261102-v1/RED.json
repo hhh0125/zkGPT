@@ -1,0 +1,27 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/opt3c-k-folding-release",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DZKGPT_BUILD_R7_FRAMEWORK=ON",
+      "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+      "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/opt3c-k-folding-release",
+      "-j4",
+      "--target",
+      "r7_opt3c_folding_tests"
+    ],
+    "exit_code": 2
+  }
+]

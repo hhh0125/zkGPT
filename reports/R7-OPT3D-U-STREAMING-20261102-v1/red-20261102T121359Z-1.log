@@ -1,0 +1,16 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 21%] Built target paper_r1
+[ 52%] Built target gpt_lib
+[ 60%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_opt3d_streaming_tests.dir/opt3d_streaming_tests.cpp.o
+[100%] Linking CXX executable r7_opt3d_streaming_tests
+/usr/bin/ld: CMakeFiles/r7_opt3d_streaming_tests.dir/opt3d_streaming_tests.cpp.o: in function `streaming()':
+opt3d_streaming_tests.cpp:(.text+0x9a01): undefined reference to `zkgpt::r7::oneblock::unified::quadraticRoundStreaming(unsigned long, std::vector<zkgpt::r7::oneblock::unified::Segment, std::allocator<zkgpt::r7::oneblock::unified::Segment> > const&, std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > > const&, std::function<void (unsigned long, std::function<void (std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> const&, std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> const&)> const&)> const&, std::function<zkgpt::r7::oneblock::unified::InputSpan (unsigned long)> const&, zkgpt::r7::oneblock::unified::UOptions, zkgpt::r7::oneblock::unified::UMetrics*)'
+/usr/bin/ld: opt3d_streaming_tests.cpp:(.text+0xa106): undefined reference to `zkgpt::r7::oneblock::unified::quadraticRoundStreaming(unsigned long, std::vector<zkgpt::r7::oneblock::unified::Segment, std::allocator<zkgpt::r7::oneblock::unified::Segment> > const&, std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > > const&, std::function<void (unsigned long, std::function<void (std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> const&, std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> const&)> const&)> const&, std::function<zkgpt::r7::oneblock::unified::InputSpan (unsigned long)> const&, zkgpt::r7::oneblock::unified::UOptions, zkgpt::r7::oneblock::unified::UMetrics*)'
+collect2: error: ld returned 1 exit status
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_opt3d_streaming_tests.dir/build.make:108: src/paper_r7/r7_opt3d_streaming_tests] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3624: src/paper_r7/CMakeFiles/r7_opt3d_streaming_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:3631: src/paper_r7/CMakeFiles/r7_opt3d_streaming_tests.dir/rule] Error 2
+gmake: *** [Makefile:1284: r7_opt3d_streaming_tests] Error 2

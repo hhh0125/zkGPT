@@ -1,0 +1,42 @@
+[
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0,1,2,3",
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_fs_io_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/required-20261102T135626Z-r7_fs_io_tests.log"
+  },
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0,1,2,3",
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_oneblock_gkr_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/required-20261102T135626Z-r7_oneblock_gkr_tests.log"
+  },
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0,1,2,3",
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_oneblock_lookup_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/required-20261102T135626Z-r7_oneblock_lookup_tests.log"
+  },
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0,1,2,3",
+      "build/opt3d-u-streaming-release/src/paper_r7/r7_oneblock_model_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3D-U-STREAMING-20261102-v1/required-20261102T135626Z-r7_oneblock_model_tests.log"
+  }
+]
