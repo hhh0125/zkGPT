@@ -7,6 +7,8 @@ inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDI
 inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
 inline constexpr const char* unifiedSuite="R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
 inline constexpr const char* unifiedFull12Suite="R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
+inline constexpr const char* singleSuite="R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1";
+inline constexpr const char* singleFull12Suite="R7-FULL12-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1";
 inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
 inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
 struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};

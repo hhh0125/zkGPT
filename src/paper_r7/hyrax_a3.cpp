@@ -4,9 +4,9 @@
 #include <map>
 namespace zkgpt::r7::hyrax_a3 {
 namespace {
-void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..1024");}
+void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..4096");}
 G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
- need(g.size()==x.size() && !g.empty() && g.size()<=maxTrustedR6Dot+1,"A3 MSM dimension");
+ need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
  auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
  MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
 }

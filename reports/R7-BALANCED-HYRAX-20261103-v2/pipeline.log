@@ -1,0 +1,17 @@
+{"name": "r7_oneblock_vectors_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_vectors_tests"], "exit_code": 0, "wall_seconds": 1.6582255940884352, "peak_rss_kib": 9580, "user_cpu_seconds": 1.6096, "system_cpu_seconds": 0.047928}
+{"name": "r7_oneblock_gkr_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_gkr_tests"], "exit_code": 0, "wall_seconds": 0.43552222568541765, "peak_rss_kib": 9600, "user_cpu_seconds": 0.42856299999999997, "system_cpu_seconds": 0.00801}
+{"name": "r7_oneblock_lookup_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_lookup_tests"], "exit_code": 0, "wall_seconds": 22.48434362746775, "peak_rss_kib": 35180, "user_cpu_seconds": 22.380724999999998, "system_cpu_seconds": 0.09998499999999999}
+{"name": "r7_oneblock_model_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_model_tests"], "exit_code": 0, "wall_seconds": 2.3521533459424973, "peak_rss_kib": 9612, "user_cpu_seconds": 2.347125, "system_cpu_seconds": 0.003998}
+{"name": "r7_oneblock_bindings_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_bindings_tests"], "exit_code": 0, "wall_seconds": 3.41236406378448, "peak_rss_kib": 483912, "user_cpu_seconds": 5.9255569999999995, "system_cpu_seconds": 0.319652}
+{"name": "r7_oneblock_public_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_oneblock_public_tests"], "exit_code": 0, "wall_seconds": 1.7064395351335406, "peak_rss_kib": 11016, "user_cpu_seconds": 1.6530179999999999, "system_cpu_seconds": 0.052031999999999995}
+{"name": "r7_fs_io_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_fs_io_tests"], "exit_code": 0, "wall_seconds": 0.021273997612297535, "peak_rss_kib": 9616, "user_cpu_seconds": 0.018584, "system_cpu_seconds": 0.0}
+{"name": "r7_full12_anchor_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_full12_anchor_tests"], "exit_code": 0, "wall_seconds": 14.61303975339979, "peak_rss_kib": 4647104, "user_cpu_seconds": 28.928575, "system_cpu_seconds": 1.8917760000000001}
+{"name": "r7_full12_plan_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_full12_plan_tests"], "exit_code": 0, "wall_seconds": 35.324939431622624, "peak_rss_kib": 5251472, "user_cpu_seconds": 64.602613, "system_cpu_seconds": 2.979567}
+{"name": "r7_partitioned_layout_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_partitioned_layout_tests"], "exit_code": 0, "wall_seconds": 0.008522085845470428, "peak_rss_kib": 9632, "user_cpu_seconds": 0.0, "system_cpu_seconds": 0.007528999999999999}
+{"name": "r7_rowmajor_anchor_tests", "command": ["build/balanced-hyrax-20261103-v2/src/paper_r7/r7_rowmajor_anchor_tests"], "exit_code": 1, "wall_seconds": 0.006330601871013641, "peak_rss_kib": 9640, "user_cpu_seconds": 0.0, "system_cpu_seconds": 0.005437}
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-BALANCED-HYRAX-20261103-v2/run_validation.py", line 120, in <module>
+    try:main()
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-BALANCED-HYRAX-20261103-v2/run_validation.py", line 115, in main
+    results[name]=run(tests,name,[str(BIN/name)]);assert results[name]['exit_code']==0,name+' failed'
+AssertionError: r7_rowmajor_anchor_tests failed

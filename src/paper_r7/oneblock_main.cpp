@@ -26,9 +26,19 @@
 #include <optional>
 #include <sstream>
 #include <algorithm>
+#if defined(R7_SINGLE_HYRAX) && (!defined(R7_UNIFIED_INPUT1) || !defined(R7_FS_ONEBLOCK))
+#error Single Hyrax production requires the hidden unified-input FS protocol
+#endif
 using namespace zkgpt::r7;using namespace oneblock;using namespace crypto;namespace r6=zkgpt::r6;namespace r2=zkgpt::r2;
 namespace {
 #ifdef R7_FS_ONEBLOCK
+#ifdef R7_SINGLE_HYRAX
+#ifdef R7_FS_FULL12
+constexpr auto liveSuite=zkgpt::r7::fs::singleFull12Suite;
+#else
+constexpr auto liveSuite=zkgpt::r7::fs::singleSuite;
+#endif
+#else
 #ifdef R7_FS_FULL12
 #ifdef R7_UNIFIED_INPUT1
 constexpr auto liveSuite=zkgpt::r7::fs::unifiedFull12Suite;
@@ -40,6 +50,7 @@ constexpr auto liveSuite=zkgpt::r7::fs::full12Suite;
 constexpr auto liveSuite=zkgpt::r7::fs::unifiedSuite;
 #else
 constexpr auto liveSuite=zkgpt::r7::fs::suite;
+#endif
 #endif
 #endif
 constexpr auto coverageAccepted=zkgpt::r7::fs::verifiedStatus;
@@ -71,6 +82,7 @@ class Tracked final:public IO,public EvidenceSink {
  bool prover()const override{return base_.prover();}std::string session()const override{return base_.session();}Digest prefix()const override{return base_.prefix();}
  Bytes message(const std::string&label,const Bytes&v={})override{last_=label;if(!prover() || attack_.empty() || changed_)return base_.message(label,v);auto b=v;if(prover() && !changed_){
   if(attack_=="wrong-commitment" && label=="Classified/root/1/PC"){auto pc=decodeVector(b);pc.points[0]+=parameters(1).scalar;b=encodeVector(pc);changed_=true;}
+  if(attack_=="wrong-commitment" && label=="SingleHyrax/rows/0"){Reader rows{b};auto n=rows.number();Writer out;out.number(n);for(std::size_t j=0;j<n;++j){auto a=rows.point();if(!j)a+=parameters(1).scalar;out.point(a);}rows.end();b=out.b;changed_=true;}
   if(attack_=="missing-authentication" && (label=="Classified/all-claims-fixed" || label=="UnifiedInput/all-claims-fixed")){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
   if(attack_=="model-response" && label=="oneblock/model/register/0/responses"){auto x=r1::decodeFr(Bytes(b.begin(),b.begin()+32));auto c=r1::encode(x+Fr(1));std::copy(c.begin(),c.end(),b.begin());changed_=true;}
   if(attack_=="truncated" && label=="oneblock/model/register/0/responses"){b.pop_back();changed_=true;}
@@ -109,12 +121,26 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  auto layout=classified::makeLayout(ctx);
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
+#ifdef R7_SINGLE_HYRAX
+ // Remove external model authority only in this explicitly different statement
+ // scope. Native W mappings, all arithmetic and all parameter links remain.
+ plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="MODEL_AUTHORITY" || r.family=="MODEL_RERANDOMIZATION";}),plan.required.end());
+ plan.required.push_back({"model/frozen-numerical-profile","NUMERICAL_PROFILE",ctx.plan.circuit_id,0,0});
+ plan.required.push_back({"model/weights-bound-in-C_U","MODEL_WITNESS_BINDING",single::modelScope,ctx.plan.sources.back().spec.actual,0});
+ plan.required.push_back({"single/commitment","SINGLE_HYRAX_COMMITMENT",classified::identity(layout),ctx.plan.master.actual,0});
+ plan.required.push_back({"single/public-X-and-padding","SINGLE_HYRAX_FIXED_CELLS",classified::identity(layout),ctx.plan.master.actual,0});
+#else
  for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/physical-zero-tail",r.model?"CLASSIFIED_TRUSTED_ANCHOR_TAIL":"CLASSIFIED_ZERO_TAIL",r.id,r.padded,0});}
+#endif
  for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
 #ifdef R7_UNIFIED_INPUT1
  plan.required.push_back({"unified-input/sumcheck","UNIFIED_INPUT_SUMCHECK",classified::identity(layout),ctx.plan.master.actual,0});
  plan.required.push_back({"unified-input/classified-opening","UNIFIED_INPUT_OPENING",classified::identity(layout),ctx.plan.master.actual,0});
+#ifdef R7_SINGLE_HYRAX
+ plan.required.push_back({"single/hidden-opening","SINGLE_HYRAX_OPENING",classified::identity(layout),ctx.plan.master.actual,0});
+#else
  for(auto&r:layout.roots)plan.required.push_back({"unified-input/root/"+r.id+"/opening","UNIFIED_CLASSIFIED_ROOT_OPENING",r.id,r.padded,0});
+#endif
 #else
  plan.required.push_back({"classified/authentication-barrier","CLASSIFIED_AUTHENTICATION",classified::identity(layout),ctx.plan.master.actual,0});
 #endif
@@ -143,21 +169,34 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
  #ifdef R7_FS_ONEBLOCK
  need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
+#ifndef R7_SINGLE_HYRAX
  #ifdef R7_FS_FULL12
  auto fsTrust=full12::loadTrust(ctx);
 #else
  auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
 #endif
+#endif
  Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
 #ifdef R7_UNIFIED_INPUT1
  instance.text(classified::unifiedInputIdentity(layout,s.x));
 #endif
-#ifdef R7_FS_FULL12
+#ifdef R7_SINGLE_HYRAX
+ instance.text(single::modelScope);instance.raw(single::descriptor(classified::singlePlan(layout,s.x)));
+#elif defined(R7_FS_FULL12)
  instance.text(full12::trustIdentity(fsTrust));
 #else
  instance.text(model::trustIdentity(fsTrust));
 #endif
 instance.raw(statement_bytes);
+#ifdef R7_SINGLE_HYRAX
+ fs::Binding fsBinding{
+#ifdef R7_FS_FULL12
+ "Full12SingleHyrax",
+#else
+ "OneblockSingleHyrax",
+#endif
+ argv[3],fs::generatorIdentity(),instance.b};
+#else
  #ifdef R7_FS_FULL12
  std::vector<G1>extraGenerators;for(auto&t:fsTrust.chunks){auto&g=r1::generators(t.anchor.w.spec).g;extraGenerators.insert(extraGenerators.end(),g.begin(),g.end());}
  fs::Binding fsBinding{
@@ -175,6 +214,7 @@ instance.raw(statement_bytes);
  "Oneblock",
 #endif
  argv[3],fs::generatorIdentity(r1::generators(fsTrust.anchor.w.spec).g),instance.b};
+#endif
 #endif
 #ifdef R7_COMPLETE_VERIFIER
  fs::FsVerifierIO pipe(argv[2],fsBinding);

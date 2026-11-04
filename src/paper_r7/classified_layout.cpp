@@ -1,4 +1,5 @@
 #include "classified_layout.hpp"
+#include "oneblock_vectors.hpp"
 #include <algorithm>
 #include <openssl/evp.h>
 #include <sstream>
@@ -25,6 +26,8 @@ Layout makeLayout(const R7Context&c,std::size_t cap){
  return p;
 }
 Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"classified view query bounds");if(!v.mapped && !v.pieces.empty()){for(auto&part:v.pieces)if(j>=part.begin && j-part.begin<part.count)return {{part.start.root,std::uint32_t(part.start.index+j-part.begin)},Fr(0),false};throw std::runtime_error("partitioned helper map omission");}if(!v.mapped)return {{v.start.root,std::uint32_t(v.start.index+j)},Fr(0),false};if(j>=v.actual)return {{},Fr(0),true};for(auto&s:v.spans){if(j<s.count){need(s.offset+j<baseSize(p),"classified trusted map bounds");return {baseCoordinate(p,s.offset+j),s.bias,false};}j-=s.count;}throw std::runtime_error("classified missing source span");}
+// Logical packing/map identity is also pinned inside the existing model bundle.
+// Ordinary matrix wire/version is bound separately; never rewrite model authority.
 std::string identity(const Layout&p){
  if(p.master_actual)return partitionedIdentity(p);
  Writer w;w.text(suite);w.text("hyrax-row-major-low-column-bits-v1");w.text(p.native);w.number(p.roots.size());for(auto&r:p.roots){w.text(r.id);w.number(r.actual,8);w.number(r.padded,8);w.number(r.registered);w.number(r.model);}w.number(p.views.size());
@@ -37,7 +40,7 @@ std::string identity(const Layout&p){
 void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
 void writeLayout(std::ostream&o,const Layout&p){
  if(p.master_actual){writePartitionedLayout(o,p);return;}
- o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:std::min<std::size_t>(1024,r.padded))<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false"<<'}';}
+ o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:vectorShape(r.padded).columns)<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false"<<'}';}
  o<<"],\"base_coordinate_runs\":[";first=true;for(std::size_t i=0;i<p.base.size();){auto begin=i;auto r=p.base[i];while(++i<p.base.size() && p.base[i].root==r.root && p.base[i].index==r.index+i-begin){}if(!first)o<<',';first=false;o<<"{\"original\":"<<begin<<",\"count\":"<<i-begin<<",\"root\":"<<r.root<<",\"local\":"<<r.index<<'}';}
  o<<"],\"views\":[";first=true;for(auto&[id,v]:p.views){if(!first)o<<',';first=false;o<<"{\"id\":\""<<id<<"\",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"logical_padded\":"<<v.padded<<",\"mapped\":"<<(v.mapped?"true":"false")<<",\"root\":"<<v.start.root<<",\"offset\":"<<v.start.index<<",\"spans\":[";bool sfirst=true;for(auto&s:v.spans){if(!sfirst)o<<',';sfirst=false;o<<"{\"base\":"<<s.offset<<",\"count\":"<<s.count<<",\"signed_bias_Fr_decimal\":\""<<s.bias.getStr()<<"\"}";}o<<"],\"padding\":\""<<(v.mapped?"virtual-zero":"stored-native-logical-values")<<"\"}";}o<<"]}\n";
 }

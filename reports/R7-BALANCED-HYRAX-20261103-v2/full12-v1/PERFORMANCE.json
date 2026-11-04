@@ -1,0 +1,240 @@
+{
+  "prover": {
+    "command": [
+      "build/balanced-hyrax-20261103-v2/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-BALANCED-HYRAX-20261103-v2/full12-v1/balanced.fsproof",
+      "zkGPT/R7/balanced/full12/20261103/v2"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 3318.127267642878,
+    "peak_rss_kib": 51992196,
+    "user_cpu_seconds": 3615.913,
+    "system_cpu_seconds": 116.306451
+  },
+  "verifier": {
+    "command": [
+      "build/balanced-hyrax-20261103-v2/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-BALANCED-HYRAX-20261103-v2/full12-v1/balanced.fsproof",
+      "zkGPT/R7/balanced/full12/20261103/v2"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 915.6333740530536,
+    "peak_rss_kib": 6280020,
+    "user_cpu_seconds": 943.066299,
+    "system_cpu_seconds": 22.1427
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 37,
+    "tail_response_bytes": 34976,
+    "GKR_rounds": 7524,
+    "seconds": 3317.03,
+    "wire_bytes": 242010370,
+    "P_wire_bytes": 242010370,
+    "frames": 663993,
+    "peak_rss_kib": 51992196,
+    "MSM_calls": 1268361,
+    "MSM_terms": 557908902,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 296.99,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34577460,
+        "cumulative_peak_rss_kib": 34577460
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 633.56,
+        "P_wire_bytes": 11267680,
+        "MSM_calls": 542752,
+        "rss_end_kib": 36394388,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0298986,
+        "P_wire_bytes": 38290,
+        "MSM_calls": 2,
+        "rss_end_kib": 36394388,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0289982,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 36394388,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 205.036,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36394388,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1060.58,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30000880,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 58.1872,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30000880,
+        "cumulative_peak_rss_kib": 51992196
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 982.037,
+        "P_wire_bytes": 18531071,
+        "MSM_calls": 1717,
+        "rss_end_kib": 30001024,
+        "cumulative_peak_rss_kib": 51992196
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 8112,
+    "coverage_sha256": "6b09fb1e0eb05fbeda1bd850691fb3451aece01010f03b281048f06ce7a2c171",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 37,
+    "tail_response_bytes": 34976,
+    "GKR_rounds": 7524,
+    "seconds": 915.208,
+    "wire_bytes": 242010370,
+    "P_wire_bytes": 242010370,
+    "frames": 663993,
+    "peak_rss_kib": 6280020,
+    "MSM_calls": 276301,
+    "MSM_terms": 1086850,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.47296,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5560180,
+        "cumulative_peak_rss_kib": 5560180
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 43.9359,
+        "P_wire_bytes": 11267680,
+        "MSM_calls": 0,
+        "rss_end_kib": 5562352,
+        "cumulative_peak_rss_kib": 5562352
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0221658,
+        "P_wire_bytes": 38290,
+        "MSM_calls": 2,
+        "rss_end_kib": 5562616,
+        "cumulative_peak_rss_kib": 5562616
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0332151,
+        "P_wire_bytes": 2680200,
+        "MSM_calls": 1,
+        "rss_end_kib": 5576872,
+        "cumulative_peak_rss_kib": 5576872
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 52.0672,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5587044,
+        "cumulative_peak_rss_kib": 5717916
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 357.156,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5682528,
+        "cumulative_peak_rss_kib": 6155452
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.6722,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5682616,
+        "cumulative_peak_rss_kib": 6155452
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 346.24,
+        "P_wire_bytes": 18531071,
+        "MSM_calls": 418,
+        "rss_end_kib": 5758672,
+        "cumulative_peak_rss_kib": 6280020
+      }
+    ]
+  },
+  "proof_bytes": 242010370,
+  "commit_wall_seconds": 555.1033064699998,
+  "prover_a3": [
+    {
+      "knowledge_wall_seconds": 2.43359,
+      "inner_product_wall_seconds": 18.152,
+      "knowledge_payload_bytes": 5710880,
+      "inner_product_payload_bytes": 39872
+    }
+  ],
+  "verifier_a3": [
+    {
+      "knowledge_wall_seconds": 1.45772,
+      "inner_product_wall_seconds": 1.67501,
+      "knowledge_payload_bytes": 5710880,
+      "inner_product_payload_bytes": 39872
+    }
+  ],
+  "opening_p": [
+    {
+      "roots": 45,
+      "wall_seconds": 135.156,
+      "cpu_seconds": 135.128,
+      "includes_root_MLE_and_hidden_stitch": true
+    }
+  ],
+  "opening_v": [
+    {
+      "roots": 45,
+      "wall_seconds": 26.874,
+      "cpu_seconds": 26.8663,
+      "includes_root_MLE_and_hidden_stitch": true
+    }
+  ]
+}

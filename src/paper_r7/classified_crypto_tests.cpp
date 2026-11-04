@@ -8,10 +8,10 @@ Layout small(){Layout p;p.native=std::string(64,'a');p.roots={{"C_aux",5,8,true,
 void zeroTailRows(){
  Layout layout;layout.native=std::string(64,'a');layout.roots={{"C_aux",1041,4096,true,false}};for(unsigned i=0;i<1041;++i)layout.base.push_back({0,i});
  Prepared prepared;SessionRandom rng;Tape p(true);Commitments pcs(p,layout,[](std::size_t i){return Fr(i+1);},&prepared,&rng);pcs.constrainBaseTails();need(pcs.registered_rows==0 && pcs.registration_bytes==0,"full base row registration must be absent");
- std::size_t responses=0;for(auto&m:p.data){need(m.first.rfind("Classified/register/",0)!=0 && m.first!="Classified/base-registered","legacy full row registration message emitted");if(m.first.find("/responses")!=std::string::npos)responses+=m.second.size();}need(responses==640,"tail proof must skip full active row and constrain all zero rows");
- auto&root=pcs.roots().at(0);for(unsigned i=2;i<4;++i)need(root.pc.points[i]==parameters(1).hiding*root.blinds[i],"fully padded row has nonzero values");
+ std::size_t responses=0;for(auto&m:p.data){need(m.first.rfind("Classified/register/",0)!=0 && m.first!="Classified/base-registered","legacy full row registration message emitted");if(m.first.find("/responses")!=std::string::npos)responses+=m.second.size();}need(responses==2080,"tail proof must skip full active row and constrain all zero rows");
+ auto&root=pcs.roots().at(0);for(unsigned i=17;i<64;++i)need(root.pc.points[i]==parameters(1).hiding*root.blinds[i],"fully padded row has nonzero values");
  Tape v(false);v.data=p.data;Commitments checked(v,layout,{},nullptr,nullptr);checked.constrainBaseTails();need(v.at==v.data.size() && checked.registered_rows==0,"independent tail-only verification");
- need(pcs.tail_rows==3 && pcs.tail_response_bytes==640 && checked.tail_rows==3 && checked.tail_response_bytes==640,"truthful tail-only metrics");
+ need(pcs.tail_rows==48 && pcs.tail_response_bytes==2080 && checked.tail_rows==48 && checked.tail_response_bytes==2080,"truthful tail-only metrics");
  // Only the very last blind response is changed: the final zero row equation
  // must reject, rather than the framing or an earlier active row.
  Tape bad(false);bad.data=p.data;for(auto&message:bad.data)if(message.first.find("/responses")!=std::string::npos){auto&b=message.second;auto f=r1::decodeFr(Bytes(b.end()-32,b.end()));auto bytes=r1::encode(f+Fr(1));std::copy(bytes.begin(),bytes.end(),b.end()-32);}
@@ -25,7 +25,7 @@ void zeroTailRows(){
 }
 void tailBoundaries(){
  struct Case{std::size_t actual,padded,rows,bytes;};
- for(auto c:{Case{1024,1024,0,0},Case{4096,4096,0,0},Case{2048,4096,2,64},Case{1023,1024,1,32768},Case{1024,131072,127,4064}}){
+ for(auto c:{Case{1024,1024,0,0},Case{4096,4096,0,0},Case{2048,4096,32,1024},Case{1023,1024,1,1024},Case{1024,131072,254,8128}}){
   Layout l;l.native=std::string(64,'a');l.roots={{"C_aux",c.actual,c.padded,true,false}};for(std::size_t i=0;i<c.actual;++i)l.base.push_back({0,std::uint32_t(i)});SessionRandom rng;Prepared empty;Tape p(true);Commitments pcs(p,l,[](std::size_t i){return Fr(i+1);},&empty,&rng);pcs.constrainBaseTails();need(pcs.tail_rows==c.rows && pcs.tail_response_bytes==c.bytes && pcs.registered_rows==0,"tail row boundary/chunk count");
   Tape v(false);v.data=p.data;Commitments verifier(v,l,{},nullptr,nullptr);verifier.constrainBaseTails();need(v.at==v.data.size() && verifier.tail_rows==c.rows,"independent boundary/chunk verification");
   if(!c.rows)for(auto&m:p.data)need(m.first.rfind("Classified/zero-tail/",0)!=0,"full active rows produced unnecessary knowledge proof");

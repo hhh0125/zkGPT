@@ -1,5 +1,6 @@
 #include "fs_io.hpp"
 #include "hyrax_a3.hpp"
+#include "oneblock_vectors.hpp"
 #include <openssl/evp.h>
 #include <algorithm>
 #include <chrono>
@@ -32,9 +33,9 @@ Bytes eventHeader(char tag,std::uint64_t sequence,const std::string&label,std::u
 }
 Bytes digestBytes(const Bytes&b){Hash h;h.add(b);return bytes(h.digest());}
 bool hexadecimal(const std::string&s){return s.size()==64 && std::all_of(s.begin(),s.end(),[](char c){return (c>='0' && c<='9') || (c>='a' && c<='f');});}
-bool full12(const Binding&b){return b.proof_type=="Full12" || b.proof_type=="Full12Unified";}
-const char* bindingSuite(const Binding&b){if(b.proof_type=="Full12Unified")return unifiedFull12Suite;if(b.proof_type=="OneblockUnified")return unifiedSuite;return full12(b)?full12Suite:suite;}
-void validate(const Binding&b){need((full12(b) || b.proof_type=="OneblockUnified" || b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
+bool full12(const Binding&b){return b.proof_type=="Full12" || b.proof_type=="Full12Unified" || b.proof_type=="Full12SingleHyrax";}
+const char* bindingSuite(const Binding&b){if(b.proof_type=="Full12SingleHyrax")return singleFull12Suite;if(b.proof_type=="OneblockSingleHyrax")return singleSuite;if(b.proof_type=="Full12Unified")return unifiedFull12Suite;if(b.proof_type=="OneblockUnified")return unifiedSuite;return full12(b)?full12Suite:suite;}
+void validate(const Binding&b){need((full12(b) || b.proof_type=="OneblockSingleHyrax" || b.proof_type=="OneblockUnified" || b.proof_type=="Oneblock" || b.proof_type=="ClassifiedProbe" || b.proof_type=="Unit") && !b.context.empty() && b.context.size()<=256 && hexadecimal(b.parameter_id) && !b.public_instance.empty() && b.public_instance.size()<=payloadLimit,"FS independent public binding bounds");}
 Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(bindingSuite(b));w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
 Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==bindingSuite(b) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
 }
@@ -55,7 +56,7 @@ Fr CanonicalTranscript::coin(const std::string&s){auto&v=*impl_;need(!v.labels.c
 Digest CanonicalTranscript::prefix()const{return impl_->state.digest();}Digest CanonicalTranscript::challengeDigest()const{return impl_->audit.digest();}
 std::uint64_t CanonicalTranscript::events()const{return impl_->seq;}std::uint64_t CanonicalTranscript::messages()const{return impl_->msg;}std::uint64_t CanonicalTranscript::coins()const{return impl_->coins;}std::uint64_t CanonicalTranscript::rejections()const{return impl_->rejected;}
 double CanonicalTranscript::seconds()const{return impl_->state.seconds+impl_->audit.seconds+impl_->candidate_seconds;}
-std::string generatorIdentity(const std::vector<G1>&extra){Writer w;w.text("R7-FS-MCL-BN254-original-generators-v1");w.text(crypto::suite);w.text(hyrax_a3::suite);w.text(hyrax_a3::trustedR6Suite);w.text(r1::kModulus);auto p=parameters(1);w.point(p.scalar);w.point(p.hiding);auto g=hyrax_a3::generators(1024);w.number(g.size());for(auto&x:g)w.point(x);w.number(extra.size());for(auto&x:extra)w.point(x);return hex(r1::hash(w.b));}
+std::string generatorIdentity(const std::vector<G1>&extra){Writer w;w.text("R7-FS-MCL-BN254-original-generators-balanced-v2");w.text(crypto::suite);w.text(hyrax_a3::suite);w.text(oneblock::vectorSuite);w.text(oneblock::vectorLayout);w.text(hyrax_a3::trustedR6Suite);w.text(r1::kModulus);auto p=parameters(1);w.point(p.scalar);w.point(p.hiding);auto g=hyrax_a3::generators(hyrax_a3::maxDot);w.number(g.size());for(auto&x:g)w.point(x);w.number(extra.size());for(auto&x:extra)w.point(x);return hex(r1::hash(w.b));}
 struct FsIO::Impl {
  bool prover,finished=false;int fd=-1,dir=-1;std::string final_name,temp_name,sid;std::unique_ptr<CanonicalTranscript>transcript;Hash file_hash;std::uint64_t total=0,max_payload=0,file_syscalls=0,limit=byteLimit;std::string suite_name=suite;std::array<std::uint8_t,65536>buffer{};std::size_t used=0,cursor=0;double io_seconds=0;struct stat original{};
  explicit Impl(bool p):prover(p){}~Impl(){if(fd>=0)::close(fd);if(dir>=0)::close(dir);}

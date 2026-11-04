@@ -3,6 +3,7 @@
 #include "oneblock_vectors.hpp"
 #include "oneblock_model.hpp"
 #include "classified_mapping_plan.hpp"
+#include "single_hyrax.hpp"
 namespace zkgpt::r7::oneblock::classified {
 struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};};
 struct Root {
@@ -18,6 +19,7 @@ struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,k
  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
  double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0,kernel_wall=0,partial_wall=0,map_wall=0;};
 std::string unifiedInputIdentity(const Layout&,const std::vector<Fr>&public_x);
+single::Plan singlePlan(const Layout&,const std::vector<Fr>&public_x);
 class Commitments {
  friend struct AuthenticationTestAccess;
  mutable AuthMetrics auth_metrics_;
@@ -48,6 +50,8 @@ class Commitments {
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
  std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
+ std::optional<single::Public>single_pc_;std::optional<single::Secret>single_secret_;std::vector<Fr>single_x_;
+ void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
  Digest mapDigest(const Claim&)const;
@@ -55,7 +59,8 @@ class Commitments {
  // Full base row knowledge registration is disabled; retain truthful legacy metrics.
  static constexpr std::uint64_t registration_bytes=0,registered_rows=0;
  std::uint64_t tail_response_bytes=0,tail_rows=0;
- Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr);
+ Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr,const std::vector<Fr>*single_x=nullptr);
+ Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const std::vector<Fr>&x):Commitments(io,layout,std::move(base),prepared,rng,nullptr,nullptr,nullptr,nullptr,&x){}
  ~Commitments();
  void constrainBaseTails();
  VectorOracle view(const std::string&);
@@ -69,5 +74,7 @@ class Commitments {
  bool authenticated()const{return authenticated_;}
  std::size_t claims()const{return claims_.size();}
  const std::vector<Root>&roots()const{return roots_;}
+ std::size_t logicalCommitments()const{return single_pc_?1:roots_.size();}
+ const single::Public&singlePublic()const{need(bool(single_pc_),"single commitment mode required");return *single_pc_;}
 };
 }

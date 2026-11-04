@@ -5,8 +5,9 @@ namespace zkgpt::r7::hyrax_a3 {
 using namespace crypto;
 inline constexpr const char* suite="R7-MCL-BN254-HYRAX-A3-INTERACTIVE-v1";
 inline constexpr const char* messageVersion="R7-HYRAX-A3-PROOF-v1";
-inline constexpr std::size_t maxDot=1024;
-// Separate approved-R6-basis route. This does not raise old PC/default caps.
+inline constexpr std::size_t maxDot=4096;
+// Separate approved-R6-basis route; role-specific derivation is unchanged.
+// The legacy crypto PC/default caps are independent of the ordinary A.3 cap.
 inline constexpr const char* trustedR6Suite="R7-MCL-BN254-HYRAX-A3-TRUSTED-R6-ROWMAJOR-BASIS-v2";
 inline constexpr std::size_t maxTrustedR6Dot=4096;
 struct DotWitness {std::vector<Fr>values;Fr blind=0;Hidden evaluation;};

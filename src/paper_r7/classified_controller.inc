@@ -1,5 +1,6 @@
 // Included only in the v2 branch of the actual complete Oneblock entrypoint.
 // Shares statement isolation, native discovery, PipeIO and verifier-local ledger.
+#ifndef R7_SINGLE_HYRAX
 #ifdef R7_FS_ONEBLOCK
  const auto&trust=fsTrust;
 #else
@@ -10,40 +11,68 @@
 #else
  std::optional<model::Secret>modelSecret;
 #endif
+#endif
  R7WitnessStore witness;Value master;
  std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;
  classified::Prepared prepared;
  timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
   {master3::QuietStdout quiet;
 #ifdef R7_FS_FULL12
+#ifdef R7_SINGLE_HYRAX
+ witness.generateR6(ctx,executionTarget(12).manifest_path);
+#else
  witness.generateR6(ctx,executionTarget(12).manifest_path);modelSecrets=full12::prepare(trust,ctx,masterValue(witness),io.session(),random);
+#endif
+#else
+#ifdef R7_SINGLE_HYRAX
+ witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");
 #else
  witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);
+#endif
 #endif
  }
   graph=&witness.executionForR7().C;master=masterValue(witness);
   if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
   prepared=classified::prepareLookup(ctx,master);
   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
-  if(attack=="wrong-mapping")std::swap(layout.base[0],layout.base[1]);
+  if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);}
  }else{master3::QuietStdout quiet;network.emplace(ctx.plan.shape.layer_count,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
  std::optional<classified::Commitments>commitments;
  timed("all-classified-roots-prechallenge-seal",[&]{
-#ifdef R7_FS_FULL12
+#ifdef R7_SINGLE_HYRAX
+ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,s.x);
+#elif defined(R7_FS_FULL12)
  commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,nullptr,nullptr,&trust.chunks,isP?&modelSecrets:nullptr);
 #else
  commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,&trust,isP?&*modelSecret:nullptr);
 #endif
 });
- auto&pcs=*commitments;for(auto&r:layout.roots)checked(io,"classified/root/"+r.id+"/commitment");
+ auto&pcs=*commitments;
+#ifdef R7_SINGLE_HYRAX
+ need(pcs.logicalCommitments()==1,"production single Hyrax identity count");checked(io,"single/commitment");checked(io,"model/frozen-numerical-profile");
+ if(isP && attack=="wrong-model-witness"){auto it=std::find_if(pcs.roots().begin(),pcs.roots().end(),[](auto&r){return r.spec.model;});need(it!=pcs.roots().end() && it->sealed_data,"single model mutation target");const_cast<Fr*>(it->sealed_data)[0]+=Fr(1);}
+#else
+ for(auto&r:layout.roots)checked(io,"classified/root/"+r.id+"/commitment");
  checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
  #ifdef R7_FS_FULL12
  if(isP && attack=="wrong-model-witness")modelSecrets.front().values.at(0)+=Fr(1);
 #else
  if(isP && attack=="wrong-model-witness")modelSecret->values.at(0)+=Fr(1);
 #endif
- timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/physical-zero-tail");
- if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;classified::writeLayout(out,layout);output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
+#endif
+ timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
+#ifdef R7_SINGLE_HYRAX
+ checked(io,"single/public-X-and-padding");
+#else
+ for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/physical-zero-tail");
+#endif
+ if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;
+#ifdef R7_SINGLE_HYRAX
+ single::writeLayout(out,pcs.singlePublic());
+#else
+ classified::writeLayout(out,layout);
+#endif
+ output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
  timed("classified-public-X-Y-constants",[&]{
   auto entries=trustedPublicEntries(s,ctx);auto all=std::make_shared<PublicEntries>(std::move(entries.x));all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
   Writer binding;binding.text(liveSuite);binding.text(classified::identity(layout));binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
@@ -63,7 +92,12 @@
  timed("all-source-original-handles",[&]{for(std::size_t j=0;j<sources.size();++j){auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);std::vector<Fr>point;for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));auto h=exchangeHidden(io,label+"/value",isP?evaluateOracle(v,point):Fr(0),rng);v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");}});
  need(objects.size()==layout.views.size(),"classified unused/missing native view");
 #ifdef R7_UNIFIED_INPUT1
- timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");for(auto&r:layout.roots)checked(io,"unified-input/root/"+r.id+"/opening");
+ timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");
+#ifdef R7_SINGLE_HYRAX
+ checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
+#else
+ for(auto&r:layout.roots)checked(io,"unified-input/root/"+r.id+"/opening");
+#endif
 #else
  timed("mandatory-classified-authentication-barrier",[&]{pcs.authenticate();});need(pcs.authenticated(),"classified barrier INCOMPLETE");io.authenticationComplete();checked(io,"classified/authentication-barrier");
 #endif
@@ -74,4 +108,5 @@
  pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
 #endif
  io.save(true);
- struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
+ const auto a3metrics=hyrax_a3::measurement();std::cerr<<"A3_TIMING {\"knowledge_wall_seconds\":"<<a3metrics.guard_seconds<<",\"inner_product_wall_seconds\":"<<a3metrics.core_seconds<<",\"knowledge_payload_bytes\":"<<a3metrics.guard_payload_bytes<<",\"inner_product_payload_bytes\":"<<a3metrics.core_payload_bytes<<"}\n";
+ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;

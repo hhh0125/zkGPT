@@ -1,0 +1,278 @@
+{
+  "success": true,
+  "scope": "oneblock",
+  "suite": "R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1",
+  "root_count": 1,
+  "required_count": 5346,
+  "verified_count": 5346,
+  "proof_sha256": "d21b8ee05bce763cbc0aae59adabaf9f0b612fc02e1a0ea910dd9f36ceca42a0",
+  "proof_bytes": 145904209,
+  "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+  "prover": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-hyrax-20261104-v1/src/paper_r7/r7_fs_oneblock_prover",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-20261103-v1/validation-20261104/single-hyrax-oneblock-v2/oneblock.fsproof",
+      "zkGPT/R7/single-hyrax/oneblock/20261104/v1"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 910.3118565753102,
+    "peak_rss_kib": 5026064,
+    "user_cpu_seconds": 943.699479,
+    "system_cpu_seconds": 19.793778
+  },
+  "verifier": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-hyrax-20261104-v1/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-20261103-v1/validation-20261104/single-hyrax-oneblock-v2/oneblock.fsproof",
+      "zkGPT/R7/single-hyrax/oneblock/20261104/v1"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 388.80792066827416,
+    "peak_rss_kib": 1195472,
+    "user_cpu_seconds": 392.761545,
+    "system_cpu_seconds": 3.064043
+  },
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5346,
+    "coverage_sha256": "3426bfd62794f00280de0a4bbcff640b724a7a9f022f3da2d4c829f2f9c6e276",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 1,
+    "source_segments": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 49254,
+    "tail_response_bytes": 1767872,
+    "GKR_rounds": 627,
+    "seconds": 909.711,
+    "wire_bytes": 145904209,
+    "P_wire_bytes": 145904209,
+    "frames": 425165,
+    "peak_rss_kib": 5026064,
+    "MSM_calls": 526536,
+    "MSM_terms": 72347764,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 41.2908,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 2797036,
+        "cumulative_peak_rss_kib": 2797036
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 151.431,
+        "P_wire_bytes": 2110920,
+        "MSM_calls": 69668,
+        "rss_end_kib": 4370864,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 30.4184,
+        "P_wire_bytes": 5547146,
+        "MSM_calls": 16,
+        "rss_end_kib": 4370864,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.24601,
+        "P_wire_bytes": 2627397,
+        "MSM_calls": 1,
+        "rss_end_kib": 4370864,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 28.1964,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 7843,
+        "rss_end_kib": 4370928,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 442.85,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 448576,
+        "rss_end_kib": 3818148,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 4.88537,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 16,
+        "rss_end_kib": 3818152,
+        "cumulative_peak_rss_kib": 5026064
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 193.78,
+        "P_wire_bytes": 1477801,
+        "MSM_calls": 416,
+        "rss_end_kib": 3818296,
+        "cumulative_peak_rss_kib": 5026064
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1",
+    "required_count": 5346,
+    "coverage_sha256": "3426bfd62794f00280de0a4bbcff640b724a7a9f022f3da2d4c829f2f9c6e276",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 1,
+    "source_segments": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 49254,
+    "tail_response_bytes": 1767872,
+    "GKR_rounds": 627,
+    "seconds": 388.635,
+    "wire_bytes": 145904209,
+    "P_wire_bytes": 145904209,
+    "frames": 425165,
+    "peak_rss_kib": 1195472,
+    "MSM_calls": 176179,
+    "MSM_terms": 475010,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 1.24285,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 607016,
+        "cumulative_peak_rss_kib": 607016
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 31.9956,
+        "P_wire_bytes": 2110920,
+        "MSM_calls": 0,
+        "rss_end_kib": 607016,
+        "cumulative_peak_rss_kib": 607016
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 36.6834,
+        "P_wire_bytes": 5547146,
+        "MSM_calls": 48,
+        "rss_end_kib": 607016,
+        "cumulative_peak_rss_kib": 607016
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.362464,
+        "P_wire_bytes": 2627397,
+        "MSM_calls": 1,
+        "rss_end_kib": 607180,
+        "cumulative_peak_rss_kib": 607180
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 6.5478,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 2953,
+        "rss_end_kib": 612452,
+        "cumulative_peak_rss_kib": 743428
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 203.672,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 172989,
+        "rss_end_kib": 649784,
+        "cumulative_peak_rss_kib": 743428
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 2.21113,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 0,
+        "rss_end_kib": 649784,
+        "cumulative_peak_rss_kib": 743428
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 68.3854,
+        "P_wire_bytes": 1477801,
+        "MSM_calls": 188,
+        "rss_end_kib": 674416,
+        "cumulative_peak_rss_kib": 1195472
+      }
+    ]
+  },
+  "fs_prover": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1",
+    "session": "f3dd014b3821742d2437945f592b4972d883a44319a911ff51b09578f5638b80",
+    "complete": true,
+    "proof_bytes": 145904209,
+    "proof_sha256": "d21b8ee05bce763cbc0aae59adabaf9f0b612fc02e1a0ea910dd9f36ceca42a0",
+    "transcript_digest": "ae08c4e42d1be7cfd59aef216b2592c6864489f5499bf8136e9544de3cc057a1",
+    "challenge_digest": "341065d70bc40bdf2e7fd9b46594c19e9cdb6ff8f6d1ec4e82f22fc3f6fd5243",
+    "challenges": 101485,
+    "prover_messages": 323678,
+    "events": 425165,
+    "field_rejections": 603215,
+    "hash_seconds": 1.09579,
+    "file_io_seconds": 0.254219,
+    "file_syscalls": 2131,
+    "file_buffer_bytes": 65536,
+    "max_message_payload_bytes": 2626363,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "fs_verifier": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1",
+    "session": "f3dd014b3821742d2437945f592b4972d883a44319a911ff51b09578f5638b80",
+    "complete": true,
+    "proof_bytes": 145904209,
+    "proof_sha256": "d21b8ee05bce763cbc0aae59adabaf9f0b612fc02e1a0ea910dd9f36ceca42a0",
+    "transcript_digest": "ae08c4e42d1be7cfd59aef216b2592c6864489f5499bf8136e9544de3cc057a1",
+    "challenge_digest": "341065d70bc40bdf2e7fd9b46594c19e9cdb6ff8f6d1ec4e82f22fc3f6fd5243",
+    "challenges": 101485,
+    "prover_messages": 323678,
+    "events": 425165,
+    "field_rejections": 603215,
+    "hash_seconds": 0.951229,
+    "file_io_seconds": 0.0743663,
+    "file_syscalls": 2228,
+    "file_buffer_bytes": 65536,
+    "max_message_payload_bytes": 2626363,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "a3_timing_prover": [
+    {
+      "knowledge_wall_seconds": 0.125598,
+      "inner_product_wall_seconds": 0.861846,
+      "knowledge_payload_bytes": 131232,
+      "inner_product_payload_bytes": 896
+    }
+  ],
+  "a3_timing_verifier": [
+    {
+      "knowledge_wall_seconds": 0.0471005,
+      "inner_product_wall_seconds": 0.0536858,
+      "knowledge_payload_bytes": 131232,
+      "inner_product_payload_bytes": 896
+    }
+  ],
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

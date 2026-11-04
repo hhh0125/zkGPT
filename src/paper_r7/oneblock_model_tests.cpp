@@ -47,7 +47,7 @@ int main(){try{
  a3::DotWitness basisW{{Fr(4),Fr(9),Fr(0),Fr(0)},Fr(3),h};auto wrongXi=a3::vectorCommit(basisW.values,basisW.blind);std::vector<Fr>coeff{Fr(-2),Fr(3),Fr(0),Fr(0)};
  Tape bp(true);a3::dotProductTrustedR6Basis(bp,t.anchor.w.spec,wrongXi,h.handle,coeff,&basisW,&rng);Tape judge(false);judge.records=bp.records;reject([&]{a3::dotProductTrustedR6Basis(judge,t.anchor.w.spec,wrongXi,h.handle,coeff,nullptr,nullptr);},"vector knowledge equation");
  Tape legacy(false);legacy.records=bp.records;reject([&]{a3::dotProduct(legacy,wrongXi,h.handle,coeff,nullptr,nullptr);},"test message order");
- reject([&]{a3::generators(2048);},"dimension");check(a3::maxDot==1024,"old A3 cap retained");
+ reject([&]{a3::generators(8192);},"dimension");check(a3::generators(4096).size()==4096,"ordinary A3 expanded independently of trusted basis");
  reject([&]{model::rerandomize(t,p.session(),{Fr(2),Fr(3),Fr(5),Fr(7),Fr(1),Fr(0),Fr(0),Fr(0)},rng);},"nonzero padded W tail");
  check(s.value(4).isZero(),"model zero padding oracle");
  // The second 64-row chunk must be verified too, including zero-padded rows.
