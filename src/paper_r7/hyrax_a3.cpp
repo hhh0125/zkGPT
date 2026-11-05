@@ -2,9 +2,10 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
+#include <set>
 namespace zkgpt::r7::hyrax_a3 {
 namespace {
-void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..4096");}
+void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
 G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
  need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
  auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
@@ -74,7 +75,8 @@ std::vector<G1> generators(std::size_t n){
  static std::map<std::size_t,std::vector<G1>>cache;auto found=cache.find(n);if(found!=cache.end())return found->second;
  auto g=parameters(std::min<std::size_t>(n,64)).columns;
  for(std::size_t i=g.size();i<n;++i){G1 point;mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");g.push_back(point);}
- auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);for(std::size_t i=0;i<all.size();++i)for(std::size_t j=0;j<i;++j)need(all[i]!=all[j] && all[i]!=-all[j],"A3 generator collision");
+ auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);std::set<Bytes>seen;
+ for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
  cache.emplace(n,g);return g;
 }
 G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());for(auto&v:x)need(v.isValid(),"A3 invalid witness scalar");need(r.isValid(),"A3 invalid vector blind");return wideMSM(g,x)+parameters(1).hiding*r;}

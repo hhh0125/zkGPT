@@ -31,13 +31,14 @@ Layout partitionedFixture(){
 }
 void run(IO&io,const Layout&l,SessionRandom*rng,unsigned attack=0){
  Prepared prepared;if(io.prover())prepared["r7/helper"]=std::make_shared<std::vector<Fr>>(std::initializer_list<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(7),Fr(8),Fr(9)});
- auto x=std::vector<Fr>{Fr(101),Fr(103),Fr(107)};if(attack==4)x[0]+=Fr(1);
+ auto x=std::vector<Fr>{Fr(1)};if(attack==4 || attack==5)x[0]+=Fr(1);
  Value base;if(io.prover())base=[](std::size_t i){return Fr(i+1);};
  Commitments pcs(io,l,base,io.prover()?&prepared:nullptr,rng,x);need(pcs.logicalCommitments()==1,"single integrated commitment count");
  pcs.constrainBaseTails();
  const std::vector<Fr>q{Fr(2),Fr(3)};
  for(auto id:{"r7/W","r7/helper"}){auto v=pcs.view(id);std::vector<Fr>point=q;point.resize(r1::log2exact(v.padded),Fr(5));Fr y=0;if(io.prover()){std::vector<Fr>values(v.padded);for(std::size_t j=0;j<v.padded;++j)values[j]=v.value(j);
-   const std::vector<Fr>expected=std::string(id)=="r7/helper"?std::vector<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(7),Fr(8),Fr(9)}:(l.master_actual?std::vector<Fr>{Fr(5),Fr(6),Fr(2),Fr(0)}:std::vector<Fr>{Fr(1),Fr(2),Fr(3),Fr(0)});
+   auto expected=std::string(id)=="r7/helper"?std::vector<Fr>{Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(7),Fr(8),Fr(9)}:(l.master_actual?std::vector<Fr>{Fr(5),Fr(6),Fr(2),Fr(0)}:std::vector<Fr>{Fr(1),Fr(2),Fr(3),Fr(0)});
+   if(attack==5 && !l.master_actual && std::string(id)=="r7/W")expected[0]=Fr(2);
    need(values==expected,"single native W order/helper pieces changed witness values");y=r1::mle(values,point);}
   auto h=exchangeHidden(io,std::string(id)+"/value",y,rng);v.open(io,{point,h.handle},io.prover()?&h:nullptr,rng,std::string(id)+"/claim");}
  // Literal native values pin GKR and Lasso's cross-source coordinate mapping.
@@ -52,13 +53,13 @@ void run(IO&io,const Layout&l,SessionRandom*rng,unsigned attack=0){
 }
 }
 int main(){try{r1::init();SessionRandom rng;for(bool partitioned:{false,true}){auto l=partitioned?partitionedFixture():fixture();Tape p(true);run(p,l,&rng);Tape v(false);v.data=p.data;run(v,l,nullptr);need(v.at==v.data.size(),"single integrated trailing frames");
- std::size_t headers=0;for(auto&m:p.data){headers+=m.first=="SingleHyrax/header";need(m.first.find("Classified/root/")==std::string::npos && m.first.find("UnifiedInput/opening/root/")==std::string::npos,"single path emitted physical root PC/opening");}need(headers==1,"single header count");
+ std::size_t headers=0;for(auto&m:p.data){headers+=m.first=="SingleHyrax/header";need(m.first.find("Classified/root/")==std::string::npos && m.first.find("UnifiedInput/opening/root/")==std::string::npos && m.first.find("fixed-cells")==std::string::npos,"single path emitted independent root PC/opening or obsolete fixed-cell proof");}need(headers==1,"single header count");
  for(unsigned attack=1;attack<=4;++attack){Tape bad(false);bad.data=p.data;rejects([&]{run(bad,l,nullptr,attack);});}
  // Both peers agree on the changed map/Y declaration. Rejection must then be
  // the actual algebraic consistency equation, rather than statement mismatch.
  // The prover's shared Sigma code also checks this equation, so retain the
  // partial transcript through that response and replay it in a witness-free V.
- for(unsigned attack=1;attack<=3;++attack){Tape malicious(true);bool stopped=false;try{run(malicious,l,&rng,attack);}catch(const std::exception&e){need(std::string(e.what()).find("Sigma compressed linear relation failed")!=std::string::npos,e.what());stopped=true;}need(stopped,"malicious integrated claim did not reach expected Sigma failure");
+ for(unsigned attack:{1u,2u,3u,5u}){Tape malicious(true);bool stopped=false;try{run(malicious,l,&rng,attack);}catch(const std::exception&e){need(std::string(e.what()).find("Sigma compressed linear relation failed")!=std::string::npos,e.what());stopped=true;}need(stopped,"malicious integrated claim did not reach expected Sigma failure");
   Tape judge(false);judge.data=malicious.data;bool rejected=false;try{run(judge,l,nullptr,attack);}catch(const std::exception&e){need(std::string(e.what()).find("Sigma compressed linear relation failed")!=std::string::npos,e.what());rejected=true;}need(rejected,"real verifier accepted consistently declared wrong map/Y");}
  for(unsigned attack=0;attack<3;++attack){Tape bad(false);bad.data=p.data;if(attack==0)std::swap(bad.data[0],bad.data[1]);if(attack==1)bad.data.pop_back();if(attack==2)bad.data[0].first="Classified/root/0/PC";rejects([&]{run(bad,l,nullptr);});}
  }

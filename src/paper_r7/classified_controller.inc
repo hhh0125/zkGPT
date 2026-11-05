@@ -62,7 +62,7 @@
 #endif
  timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
 #ifdef R7_SINGLE_HYRAX
- checked(io,"single/public-X-and-padding");
+ checked(io,"single/compact-mapping-and-virtual-zero");
 #else
  for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/physical-zero-tail");
 #endif
@@ -73,11 +73,23 @@
  classified::writeLayout(out,layout);
 #endif
  output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
- timed("classified-public-X-Y-constants",[&]{
-  auto entries=trustedPublicEntries(s,ctx);auto all=std::make_shared<PublicEntries>(std::move(entries.x));all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
+ timed("classified-public-Y-constants-and-input-definition",[&]{
+  auto entries=trustedPublicEntries(s,ctx);
+#ifdef R7_SINGLE_HYRAX
+  auto all=std::make_shared<PublicEntries>();
+#else
+  auto all=std::make_shared<PublicEntries>(std::move(entries.x));
+#endif
+  all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
   Writer binding;binding.text(liveSuite);binding.text(classified::identity(layout));binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
   auto N=classified::power2(all->size());std::vector<Fr>point;for(unsigned j=0;j<r1::log2exact(N);++j)point.push_back(io.coin("Classified/public-query/"+std::to_string(j)));auto weights=r1::weights(point);Fr expected=0;for(std::size_t j=0;j<all->size();++j)expected+=weights[j]*all->at(j).second;
-  pcs.deferBase("public/X-Y-constants",all->size(),N,[all](std::size_t j){return all->at(j).first;},publicHidden(io,"Classified/public-expected",expected),point);
+  pcs.deferBase(
+#ifdef R7_SINGLE_HYRAX
+   "public/Y-constants",
+#else
+   "public/X-Y-constants",
+#endif
+   all->size(),N,[all](std::size_t j){return all->at(j).first;},publicHidden(io,"Classified/public-expected",expected),point);
  });for(auto id:{"public/X","public/Y","public/constants"})checked(io,id);
  std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;
  // Every later private read is served by sealed classified roots/model W.

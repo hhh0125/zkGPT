@@ -1,14 +1,20 @@
 #pragma once
 #include "oneblock_sumcheck.hpp"
 #include <array>
+#include <ostream>
 namespace zkgpt::r7::oneblock::unified {
 class PublicK;
-inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-UNIFIED-INPUT-v1";
+inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT-v2";
 struct Block {unsigned category;std::size_t padded;};
 struct Segment {std::size_t offset,padded;};
-struct Packing {std::size_t partition_size=0,domain=0;std::vector<Segment>segments;};
+struct Region {std::size_t used=0,capacity=0,alignment=1,base=0;};
+struct Packing {std::size_t domain=0;std::vector<Segment>segments;std::array<Region,4>regions{};std::vector<unsigned>categories;};
 // Segment0 is public X. Later segments preserve original physical root order.
 Packing pack(const std::vector<Block>&,std::size_t public_padded);
+std::array<std::size_t,4>independentCapacities(const std::array<std::size_t,4>&);
+void validate(const Packing&);
+Bytes descriptor(const Packing&);
+void writeLayout(std::ostream&,const Packing&);
 void validate(std::size_t,const std::vector<Segment>&);
 Fr selector(const Segment&,const std::vector<Fr>&global_point);
 using Consume=std::function<void(const Value&,const Value&)>;

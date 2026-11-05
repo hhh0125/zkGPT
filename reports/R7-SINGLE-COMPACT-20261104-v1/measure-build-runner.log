@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/compact_measure_build.py", line 17, in <module>
+    result=subprocess.run(command,cwd=BUILD,stdout=log,stderr=subprocess.STDOUT);assert result.returncode==0,command
+AssertionError: ['/usr/bin/c++', '-pthread', '-O3', '-DNDEBUG', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/compact_measure.o', '-o', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/compact_measure', '-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/lib', 'libpaper_r7.a', '../paper_r2/libpaper_r2.a', '../libgpt_lib.a', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a', '-lz', '../paper_r1/libpaper_r1.a', '../../lib/libmclbn256.so.1.74', '../../lib/libmcl.so.1.74', '-lpthread', '/usr/lib/x86_64-linux-gnu/libcrypto.so']

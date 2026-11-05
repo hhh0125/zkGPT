@@ -53,7 +53,7 @@ int main(){try{
  }
  Tape noinput(true);rejected([&]{a3::dotProduct(noinput,xi,hidden.handle,{},nullptr,nullptr);},"dimension");
  rejected([&]{a3::dotProduct(noinput,xi,hidden.handle,{Fr(0),Fr(0)},nullptr,nullptr);},"zero public vector");
- rejected([&]{a3::generators(3);},"dimension");rejected([&]{a3::generators(8192);},"dimension");
+ rejected([&]{a3::generators(3);},"dimension");rejected([&]{a3::generators(131072);},"dimension");
  // a=(4,-1), fold c=2 -> ahat=0: fail closed before Figure8 loses U.
  auto zeroa=std::vector<Fr>{Fr(4),Fr(-1)};auto zeroW=witness;zeroW.evaluation.value=5;zeroW.evaluation.handle.point=scalarCommit(Fr(5),hidden.blind);
  Tape deg(true);CountRandom rr;rejected([&]{a3::dotProduct(deg,xi,zeroW.evaluation.handle,zeroa,&zeroW,&rr);},"zero final coefficient");

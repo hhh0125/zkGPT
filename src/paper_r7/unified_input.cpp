@@ -25,12 +25,27 @@ void validate(std::size_t n,const std::vector<Segment>&segments){
  for(auto s:sorted){need(power(s.padded) && s.padded<=n && s.offset<=n-s.padded && s.offset%s.padded==0 && s.offset>=end,"unified unaligned/overlapping/out-of-domain segment");end=s.offset+s.padded;}
 }
 Packing pack(const std::vector<Block>&blocks,std::size_t public_padded){
- need(power(public_padded) && public_padded<=maxDomain/4 && blocks.size()<=8192,"unified public input packing bound");
- Packing out;std::array<std::size_t,4>cursor{public_padded,0,0,0};out.segments.push_back({0,public_padded});
- for(auto b:blocks){need(b.category>=1 && b.category<=3 && power(b.padded) && b.padded<=maxDomain/4,"unified private category/block bound");auto&at=cursor[b.category];need(at<=maxDomain/4-(b.padded-1),"unified packing alignment overflow");auto begin=(at+b.padded-1)&~(b.padded-1);need(begin<=maxDomain/4-b.padded,"unified partition bound");out.segments.push_back({begin,b.padded});at=begin+b.padded;}
- auto longest=*std::max_element(cursor.begin(),cursor.end());out.partition_size=1;while(out.partition_size<longest)out.partition_size*=2;out.domain=4*out.partition_size;
- for(std::size_t k=0;k<blocks.size();++k)out.segments[k+1].offset+=blocks[k].category*out.partition_size;
+ need(power(public_padded) && public_padded<=maxDomain && blocks.size()<=8192,"unified public input packing bound");
+ Packing out;out.regions[0]={public_padded,public_padded,public_padded,0};out.segments.push_back({0,public_padded});out.categories.push_back(0);
+ auto align=[](std::size_t at,std::size_t alignment){auto rest=at%alignment;if(!rest)return at;auto gap=alignment-rest;need(at<=maxDomain-gap,"unified alignment overflow");return at+gap;};
+ for(auto b:blocks){need(b.category>=1 && b.category<=3 && power(b.padded) && b.padded<=maxDomain,"unified private category/block bound");auto&r=out.regions[b.category];auto begin=align(r.used,b.padded);need(begin<=maxDomain-b.padded,"unified local region bound");out.segments.push_back({begin,b.padded});out.categories.push_back(b.category);r.used=begin+b.padded;r.alignment=std::max(r.alignment,b.padded);}
+ std::array<std::size_t,4>used{};for(unsigned k=0;k<4;++k)used[k]=out.regions[k].used;auto capacities=independentCapacities(used);std::size_t end=0;
+ for(unsigned k=0;k<4;++k){auto&r=out.regions[k];r.capacity=capacities[k];r.base=r.capacity?align(end,r.alignment):end;need(r.base<=maxDomain-r.capacity,"unified global region bound");end=r.base+r.capacity;}
+ for(std::size_t k=0;k<out.segments.size();++k)out.segments[k].offset+=out.regions[out.categories[k]].base;
+ out.domain=1;while(out.domain<end)out.domain*=2;
  validate(out.domain,out.segments);return out;
+}
+std::array<std::size_t,4>independentCapacities(const std::array<std::size_t,4>&used){std::array<std::size_t,4>out{};for(unsigned k=0;k<4;++k){need(used[k]<=maxDomain,"unified region capacity overflow");if(used[k]){out[k]=1;while(out[k]<used[k])out[k]*=2;}}return out;}
+void validate(const Packing&p){
+ need(!p.segments.empty() && p.categories.size()==p.segments.size() && p.categories[0]==0,"unified packing categories");std::vector<Block>blocks;for(std::size_t k=1;k<p.segments.size();++k)blocks.push_back({p.categories[k],p.segments[k].padded});auto expected=pack(blocks,p.segments[0].padded);
+ need(p.domain==expected.domain,"unified nonminimal/noncanonical logical domain");
+ for(unsigned k=0;k<4;++k){const auto&a=p.regions[k];const auto&b=expected.regions[k];need(a.used==b.used && a.capacity==b.capacity && a.alignment==b.alignment && a.base==b.base,"unified noncanonical independent region metadata");}
+ for(std::size_t k=0;k<p.segments.size();++k){need(p.segments[k].offset==expected.segments[k].offset,"unified noncanonical segment offset");}
+ validate(p.domain,p.segments);
+}
+Bytes descriptor(const Packing&p){validate(p);Writer w;w.text(suite);w.number(p.domain,8);for(const auto&r:p.regions)for(auto n:{r.used,r.capacity,r.alignment,r.base})w.number(n,8);w.number(p.segments.size());for(std::size_t k=0;k<p.segments.size();++k){w.number(p.categories[k]);w.number(p.segments[k].offset,8);w.number(p.segments[k].padded,8);}return w.b;}
+void writeLayout(std::ostream&out,const Packing&p){validate(p);out<<"{\"suite\":\""<<suite<<"\",\"logical_domain\":"<<p.domain<<",\"logical_rounds\":"<<domainBits(p.domain)<<",\"regions\":[";std::size_t gaps=0,end=0,segment_gap=0;for(unsigned k=0;k<4;++k){if(k)out<<',';const auto&r=p.regions[k];out<<"{\"category\":"<<k<<",\"used\":"<<r.used<<",\"capacity\":"<<r.capacity<<",\"alignment\":"<<r.alignment<<",\"base\":"<<r.base<<'}';gaps+=r.base-end;end=r.base+r.capacity;std::size_t lengths=0;for(std::size_t j=0;j<p.segments.size();++j)if(p.categories[j]==k)lengths+=p.segments[j].padded;segment_gap+=r.used-lengths;}
+ out<<"],\"region_gap_elements\":"<<gaps<<",\"segment_alignment_gap_elements\":"<<segment_gap<<",\"global_tail_elements\":"<<p.domain-end<<",\"segments\":[";for(std::size_t k=0;k<p.segments.size();++k){if(k)out<<',';out<<"{\"source\":"<<k<<",\"category\":"<<p.categories[k]<<",\"offset\":"<<p.segments[k].offset<<",\"padded\":"<<p.segments[k].padded<<'}';}out<<"]}";
 }
 Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
 static Round quadraticRoundImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,bool folded_kernel){

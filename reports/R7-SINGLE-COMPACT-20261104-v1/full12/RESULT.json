@@ -1,0 +1,525 @@
+{
+  "success": true,
+  "scope": "full12",
+  "prover": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/full12/full12.fsproof",
+      "zkGPT/R7/compact-independent/full12/20261104/v3"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 6107.571241770871,
+    "peak_rss_kib": 52054100,
+    "user_cpu_seconds": 7966.15856,
+    "system_cpu_seconds": 312.619094
+  },
+  "verifier": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/full12/full12.fsproof",
+      "zkGPT/R7/compact-independent/full12/20261104/v3"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1126.2940559117123,
+    "peak_rss_kib": 6228680,
+    "user_cpu_seconds": 1151.858116,
+    "system_cpu_seconds": 26.42509
+  },
+  "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+  "proof_sha256": "31d359a7aa347abe46bfaf3d98259151cb9cab701d359c79e0f0c4816dab698c",
+  "proof_bytes": 526435844,
+  "fs": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "suite": "R7-FULL12-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+    "session": "2bddc0474394d36965380e8f26cf28eba9e731b2e0a68cbb6a68b0ca70291bf9",
+    "complete": true,
+    "proof_bytes": 526435844,
+    "proof_sha256": "31d359a7aa347abe46bfaf3d98259151cb9cab701d359c79e0f0c4816dab698c",
+    "transcript_digest": "a9e26eaf593cbed04dd036e17221c722ba7a21a805bd5f0a81c0db87fcd3e618",
+    "challenge_digest": "b551cc9162141c3442b76985b56c0646bc8d113717eab030a858311e663acbb8",
+    "challenges": 165784,
+    "prover_messages": 499855,
+    "events": 665641,
+    "field_rejections": 979179,
+    "hash_seconds": 2.42774,
+    "file_io_seconds": 0.640318,
+    "file_syscalls": 3786,
+    "file_buffer_bytes": 65536,
+    "max_message_payload_bytes": 2097743,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "census": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+    "required_count": 8011,
+    "coverage_sha256": "79adaae96991b64d392441a44f69447aa8adb3a7259528b8b7523658fc0309dc",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 1,
+    "source_segments": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 0,
+    "tail_response_bytes": 0,
+    "GKR_rounds": 7524,
+    "seconds": 1125.85,
+    "wire_bytes": 526435844,
+    "P_wire_bytes": 526435844,
+    "frames": 665641,
+    "peak_rss_kib": 6228680,
+    "MSM_calls": 276607,
+    "MSM_terms": 10290249,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.44803,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5538932,
+        "cumulative_peak_rss_kib": 5538932
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 7.36159,
+        "P_wire_bytes": 1715370,
+        "MSM_calls": 0,
+        "rss_end_kib": 5538932,
+        "cumulative_peak_rss_kib": 5538932
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.000392251,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5538932,
+        "cumulative_peak_rss_kib": 5538932
+      },
+      {
+        "name": "classified-public-Y-constants-and-input-definition",
+        "seconds": 0.0155372,
+        "P_wire_bytes": 1369460,
+        "MSM_calls": 1,
+        "rss_end_kib": 5539124,
+        "cumulative_peak_rss_kib": 5539124
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 53.5301,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5532876,
+        "cumulative_peak_rss_kib": 5668088
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 431.892,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5630504,
+        "cumulative_peak_rss_kib": 6103336
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 32.4829,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5630504,
+        "cumulative_peak_rss_kib": 6103336
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 485.077,
+        "P_wire_bytes": 313857838,
+        "MSM_calls": 726,
+        "rss_end_kib": 5733072,
+        "cumulative_peak_rss_kib": 6228680
+      }
+    ]
+  },
+  "coverage_count": 8011,
+  "logical_layout": {
+    "suite": "R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT-v2",
+    "logical_domain": 2147483648,
+    "logical_rounds": 31,
+    "regions": [
+      {
+        "category": 0,
+        "used": 32768,
+        "capacity": 32768,
+        "alignment": 32768,
+        "base": 0
+      },
+      {
+        "category": 1,
+        "used": 167772160,
+        "capacity": 268435456,
+        "alignment": 16777216,
+        "base": 16777216
+      },
+      {
+        "category": 2,
+        "used": 2048,
+        "capacity": 2048,
+        "alignment": 2048,
+        "base": 285212672
+      },
+      {
+        "category": 3,
+        "used": 570425344,
+        "capacity": 1073741824,
+        "alignment": 16777216,
+        "base": 301989888
+      }
+    ],
+    "region_gap_elements": 33519616,
+    "segment_alignment_gap_elements": 14680064,
+    "global_tail_elements": 771751936,
+    "segments": [
+      {
+        "source": 0,
+        "category": 0,
+        "offset": 0,
+        "padded": 32768
+      },
+      {
+        "source": 1,
+        "category": 1,
+        "offset": 16777216,
+        "padded": 16777216
+      },
+      {
+        "source": 2,
+        "category": 1,
+        "offset": 33554432,
+        "padded": 16777216
+      },
+      {
+        "source": 3,
+        "category": 1,
+        "offset": 50331648,
+        "padded": 16777216
+      },
+      {
+        "source": 4,
+        "category": 1,
+        "offset": 67108864,
+        "padded": 16777216
+      },
+      {
+        "source": 5,
+        "category": 1,
+        "offset": 83886080,
+        "padded": 16777216
+      },
+      {
+        "source": 6,
+        "category": 1,
+        "offset": 100663296,
+        "padded": 16777216
+      },
+      {
+        "source": 7,
+        "category": 1,
+        "offset": 117440512,
+        "padded": 16777216
+      },
+      {
+        "source": 8,
+        "category": 1,
+        "offset": 134217728,
+        "padded": 16777216
+      },
+      {
+        "source": 9,
+        "category": 1,
+        "offset": 150994944,
+        "padded": 16777216
+      },
+      {
+        "source": 10,
+        "category": 1,
+        "offset": 167772160,
+        "padded": 16777216
+      },
+      {
+        "source": 11,
+        "category": 3,
+        "offset": 301989888,
+        "padded": 16777216
+      },
+      {
+        "source": 12,
+        "category": 2,
+        "offset": 285212672,
+        "padded": 2048
+      },
+      {
+        "source": 13,
+        "category": 3,
+        "offset": 318767104,
+        "padded": 16777216
+      },
+      {
+        "source": 14,
+        "category": 3,
+        "offset": 335544320,
+        "padded": 2097152
+      },
+      {
+        "source": 15,
+        "category": 3,
+        "offset": 352321536,
+        "padded": 16777216
+      },
+      {
+        "source": 16,
+        "category": 3,
+        "offset": 369098752,
+        "padded": 16777216
+      },
+      {
+        "source": 17,
+        "category": 3,
+        "offset": 385875968,
+        "padded": 16777216
+      },
+      {
+        "source": 18,
+        "category": 3,
+        "offset": 402653184,
+        "padded": 16777216
+      },
+      {
+        "source": 19,
+        "category": 3,
+        "offset": 419430400,
+        "padded": 16777216
+      },
+      {
+        "source": 20,
+        "category": 3,
+        "offset": 436207616,
+        "padded": 16777216
+      },
+      {
+        "source": 21,
+        "category": 3,
+        "offset": 452984832,
+        "padded": 16777216
+      },
+      {
+        "source": 22,
+        "category": 3,
+        "offset": 469762048,
+        "padded": 16777216
+      },
+      {
+        "source": 23,
+        "category": 3,
+        "offset": 486539264,
+        "padded": 16777216
+      },
+      {
+        "source": 24,
+        "category": 3,
+        "offset": 503316480,
+        "padded": 16777216
+      },
+      {
+        "source": 25,
+        "category": 3,
+        "offset": 520093696,
+        "padded": 16777216
+      },
+      {
+        "source": 26,
+        "category": 3,
+        "offset": 536870912,
+        "padded": 16777216
+      },
+      {
+        "source": 27,
+        "category": 3,
+        "offset": 553648128,
+        "padded": 16777216
+      },
+      {
+        "source": 28,
+        "category": 3,
+        "offset": 570425344,
+        "padded": 16777216
+      },
+      {
+        "source": 29,
+        "category": 3,
+        "offset": 587202560,
+        "padded": 16777216
+      },
+      {
+        "source": 30,
+        "category": 3,
+        "offset": 603979776,
+        "padded": 16777216
+      },
+      {
+        "source": 31,
+        "category": 3,
+        "offset": 620756992,
+        "padded": 16777216
+      },
+      {
+        "source": 32,
+        "category": 3,
+        "offset": 637534208,
+        "padded": 16777216
+      },
+      {
+        "source": 33,
+        "category": 3,
+        "offset": 654311424,
+        "padded": 16777216
+      },
+      {
+        "source": 34,
+        "category": 3,
+        "offset": 671088640,
+        "padded": 16777216
+      },
+      {
+        "source": 35,
+        "category": 3,
+        "offset": 687865856,
+        "padded": 16777216
+      },
+      {
+        "source": 36,
+        "category": 3,
+        "offset": 704643072,
+        "padded": 16777216
+      },
+      {
+        "source": 37,
+        "category": 3,
+        "offset": 721420288,
+        "padded": 16777216
+      },
+      {
+        "source": 38,
+        "category": 3,
+        "offset": 738197504,
+        "padded": 16777216
+      },
+      {
+        "source": 39,
+        "category": 3,
+        "offset": 754974720,
+        "padded": 16777216
+      },
+      {
+        "source": 40,
+        "category": 3,
+        "offset": 771751936,
+        "padded": 16777216
+      },
+      {
+        "source": 41,
+        "category": 3,
+        "offset": 788529152,
+        "padded": 16777216
+      },
+      {
+        "source": 42,
+        "category": 3,
+        "offset": 805306368,
+        "padded": 16777216
+      },
+      {
+        "source": 43,
+        "category": 3,
+        "offset": 822083584,
+        "padded": 16777216
+      },
+      {
+        "source": 44,
+        "category": 3,
+        "offset": 838860800,
+        "padded": 16777216
+      },
+      {
+        "source": 45,
+        "category": 3,
+        "offset": 855638016,
+        "padded": 16777216
+      }
+    ]
+  },
+  "physical": {
+    "physical_values": 714184720,
+    "physical_domain": 1073741824,
+    "rows": 32768,
+    "columns": 32768,
+    "logical_values": 714250256,
+    "logical_gap": 1433233392,
+    "physical_padding": 359557104
+  },
+  "commit_metrics": [
+    {
+      "logical_roots": 1,
+      "rows": 32768,
+      "columns": 32768,
+      "domain": 2147483648,
+      "physical_domain": 1073741824,
+      "physical_values": 714184720,
+      "logical_values": 714250256,
+      "logical_gap": 1433233392,
+      "physical_padding": 359557104,
+      "workers": 4,
+      "row_scalar_scratch_bound_bytes": 4194304,
+      "seconds": 499.154
+    }
+  ],
+  "query_metrics_P": [
+    {
+      "rank_terms": 148,
+      "logical_domain": 2147483648,
+      "physical_domain": 1073741824,
+      "preparation_seconds": 63.682,
+      "total_seconds": 650.406,
+      "logical_coefficient_array_bytes": 0
+    }
+  ],
+  "query_metrics_V": [
+    {
+      "rank_terms": 148,
+      "logical_domain": 2147483648,
+      "physical_domain": 1073741824,
+      "preparation_seconds": 0.468176,
+      "total_seconds": 76.1037,
+      "logical_coefficient_array_bytes": 0
+    }
+  ],
+  "a3_metrics_P": [
+    {
+      "knowledge_wall_seconds": 65.3161,
+      "inner_product_wall_seconds": 513.015,
+      "knowledge_payload_bytes": 155212928,
+      "inner_product_payload_bytes": 161024
+    }
+  ],
+  "a3_metrics_V": [
+    {
+      "knowledge_wall_seconds": 31.9587,
+      "inner_product_wall_seconds": 33.8359,
+      "knowledge_payload_bytes": 155212928,
+      "inner_product_payload_bytes": 161024
+    }
+  ],
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

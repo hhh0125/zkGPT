@@ -4,6 +4,7 @@
 #include "oneblock_model.hpp"
 #include "classified_mapping_plan.hpp"
 #include "single_hyrax.hpp"
+#include <unordered_map>
 namespace zkgpt::r7::oneblock::classified {
 struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};};
 struct Root {
@@ -51,6 +52,8 @@ class Commitments {
  std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
  std::optional<single::Public>single_pc_;std::optional<single::Secret>single_secret_;std::vector<Fr>single_x_;
+ std::unordered_map<std::uint64_t,std::size_t>single_public_coordinates_;
+ Located publicLocation(Located)const;
  void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;

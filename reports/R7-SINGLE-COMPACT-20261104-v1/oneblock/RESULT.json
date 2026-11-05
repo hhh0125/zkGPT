@@ -1,0 +1,291 @@
+{
+  "success": true,
+  "scope": "oneblock",
+  "prover": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_oneblock_prover",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/oneblock/oneblock.fsproof",
+      "zkGPT/R7/compact-independent/oneblock/20261104/v3"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1050.8613468352705,
+    "peak_rss_kib": 5035488,
+    "user_cpu_seconds": 1195.691431,
+    "system_cpu_seconds": 22.347577
+  },
+  "verifier": {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/oneblock/oneblock.fsproof",
+      "zkGPT/R7/compact-independent/oneblock/20261104/v3"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 334.24914530385286,
+    "peak_rss_kib": 1198756,
+    "user_cpu_seconds": 339.871675,
+    "system_cpu_seconds": 2.755705
+  },
+  "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+  "proof_sha256": "80141c1f09e6ac8e6efa259673125859256b554d3f3f5523dfd109fafd867268",
+  "proof_bytes": 149315129,
+  "fs": {
+    "security_status": "FS_NIZK_CANDIDATE",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+    "session": "3c185ca7f26ea494c239124bfc0437da5ec79be3238a6227a832c4318bc0a7a3",
+    "complete": true,
+    "proof_bytes": 149315129,
+    "proof_sha256": "80141c1f09e6ac8e6efa259673125859256b554d3f3f5523dfd109fafd867268",
+    "transcript_digest": "a1835c4f0d03c7b80a20ddac0bc2e587f29307d77449f4d94e63c32dbc5b88b9",
+    "challenge_digest": "a2199f9d06660d1df7abbdb325dda059b019d2c3357ff89b4f76164f1d17626a",
+    "challenges": 98673,
+    "prover_messages": 314551,
+    "events": 413226,
+    "field_rejections": 584529,
+    "hash_seconds": 1.62665,
+    "file_io_seconds": 0.322598,
+    "file_syscalls": 2108,
+    "file_buffer_bytes": 65536,
+    "max_message_payload_bytes": 2097731,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "census": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+    "required_count": 5346,
+    "coverage_sha256": "1ebe2f2e271ada954e946de863e0d0c3e2126da758a8af39997ca3eebedf3116",
+    "layout_id": "3d1e35e2f6fad4e8b74a447d5fb384ee57f9bed17883457a80933b3cae578182",
+    "root_count": 1,
+    "source_segments": 6,
+    "claims": 936,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 0,
+    "tail_response_bytes": 0,
+    "GKR_rounds": 627,
+    "seconds": 334.071,
+    "wire_bytes": 149315129,
+    "P_wire_bytes": 149315129,
+    "frames": 413226,
+    "peak_rss_kib": 1198756,
+    "MSM_calls": 176144,
+    "MSM_terms": 678067,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 1.25531,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 617564,
+        "cumulative_peak_rss_kib": 617564
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 4.75919,
+        "P_wire_bytes": 920516,
+        "MSM_calls": 0,
+        "rss_end_kib": 617564,
+        "cumulative_peak_rss_kib": 617564
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.321158,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 617564,
+        "cumulative_peak_rss_kib": 617564
+      },
+      {
+        "name": "classified-public-Y-constants-and-input-definition",
+        "seconds": 0.353274,
+        "P_wire_bytes": 1316662,
+        "MSM_calls": 1,
+        "rss_end_kib": 617736,
+        "cumulative_peak_rss_kib": 617736
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 7.38889,
+        "P_wire_bytes": 2032192,
+        "MSM_calls": 2953,
+        "rss_end_kib": 606620,
+        "cumulative_peak_rss_kib": 745788
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 209.85,
+        "P_wire_bytes": 129942016,
+        "MSM_calls": 172989,
+        "rss_end_kib": 652800,
+        "cumulative_peak_rss_kib": 745788
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 2.48974,
+        "P_wire_bytes": 18289,
+        "MSM_calls": 0,
+        "rss_end_kib": 653060,
+        "cumulative_peak_rss_kib": 745788
+      },
+      {
+        "name": "protocol1-unified-input-sumcheck-and-opening",
+        "seconds": 51.9801,
+        "P_wire_bytes": 12936957,
+        "MSM_calls": 201,
+        "rss_end_kib": 681636,
+        "cumulative_peak_rss_kib": 1198756
+      }
+    ]
+  },
+  "coverage_count": 5346,
+  "logical_layout": {
+    "suite": "R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT-v2",
+    "logical_domain": 134217728,
+    "logical_rounds": 27,
+    "regions": [
+      {
+        "category": 0,
+        "used": 32768,
+        "capacity": 32768,
+        "alignment": 32768,
+        "base": 0
+      },
+      {
+        "category": 1,
+        "used": 16777216,
+        "capacity": 16777216,
+        "alignment": 16777216,
+        "base": 16777216
+      },
+      {
+        "category": 2,
+        "used": 128,
+        "capacity": 128,
+        "alignment": 128,
+        "base": 33554432
+      },
+      {
+        "category": 3,
+        "used": 67108864,
+        "capacity": 67108864,
+        "alignment": 16777216,
+        "base": 50331648
+      }
+    ],
+    "region_gap_elements": 33521536,
+    "segment_alignment_gap_elements": 12582912,
+    "global_tail_elements": 16777216,
+    "segments": [
+      {
+        "source": 0,
+        "category": 0,
+        "offset": 0,
+        "padded": 32768
+      },
+      {
+        "source": 1,
+        "category": 1,
+        "offset": 16777216,
+        "padded": 16777216
+      },
+      {
+        "source": 2,
+        "category": 3,
+        "offset": 50331648,
+        "padded": 4194304
+      },
+      {
+        "source": 3,
+        "category": 2,
+        "offset": 33554432,
+        "padded": 128
+      },
+      {
+        "source": 4,
+        "category": 3,
+        "offset": 67108864,
+        "padded": 16777216
+      },
+      {
+        "source": 5,
+        "category": 3,
+        "offset": 83886080,
+        "padded": 16777216
+      },
+      {
+        "source": 6,
+        "category": 3,
+        "offset": 100663296,
+        "padded": 16777216
+      }
+    ]
+  },
+  "physical": {
+    "physical_values": 66664296,
+    "physical_domain": 67108864,
+    "rows": 8192,
+    "columns": 8192,
+    "logical_values": 66729832,
+    "logical_gap": 67487896,
+    "physical_padding": 444568
+  },
+  "commit_metrics": [
+    {
+      "logical_roots": 1,
+      "rows": 8192,
+      "columns": 8192,
+      "domain": 134217728,
+      "physical_domain": 67108864,
+      "physical_values": 66664296,
+      "logical_values": 66729832,
+      "logical_gap": 67487896,
+      "physical_padding": 444568,
+      "workers": 4,
+      "row_scalar_scratch_bound_bytes": 1048576,
+      "seconds": 43.6014
+    }
+  ],
+  "query_metrics_P": [
+    {
+      "rank_terms": 19,
+      "logical_domain": 134217728,
+      "physical_domain": 67108864,
+      "preparation_seconds": 11.3924,
+      "total_seconds": 48.2568,
+      "logical_coefficient_array_bytes": 0
+    }
+  ],
+  "query_metrics_V": [
+    {
+      "rank_terms": 19,
+      "logical_domain": 134217728,
+      "physical_domain": 67108864,
+      "preparation_seconds": 0.206503,
+      "total_seconds": 6.62404,
+      "logical_coefficient_array_bytes": 0
+    }
+  ],
+  "a3_metrics_P": [
+    {
+      "knowledge_wall_seconds": 4.2387,
+      "inner_product_wall_seconds": 30.6463,
+      "knowledge_payload_bytes": 4983776,
+      "inner_product_payload_bytes": 18240
+    }
+  ],
+  "a3_metrics_V": [
+    {
+      "knowledge_wall_seconds": 1.63497,
+      "inner_product_wall_seconds": 1.79245,
+      "knowledge_payload_bytes": 4983776,
+      "inner_product_payload_bytes": 18240
+    }
+  ],
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

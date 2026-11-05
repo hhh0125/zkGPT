@@ -5,14 +5,14 @@ namespace zkgpt::r7::fs {
 using namespace crypto;
 inline constexpr const char* suite="R7-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v3";
 inline constexpr const char* full12Suite="R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2";
-inline constexpr const char* unifiedSuite="R7-ONEBLOCK-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
-inline constexpr const char* unifiedFull12Suite="R7-FULL12-PROTOCOL1-UNIFIED-HIDDEN-FS-CANDIDATE-v1";
-inline constexpr const char* singleSuite="R7-ONEBLOCK-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1";
-inline constexpr const char* singleFull12Suite="R7-FULL12-SINGLE-HYRAX-HIDDEN-FS-CANDIDATE-v1";
+inline constexpr const char* unifiedSuite="R7-ONEBLOCK-PROTOCOL1-INDEPENDENT-REGIONS-HIDDEN-FS-CANDIDATE-v2";
+inline constexpr const char* unifiedFull12Suite="R7-FULL12-PROTOCOL1-INDEPENDENT-REGIONS-HIDDEN-FS-CANDIDATE-v2";
+inline constexpr const char* singleSuite="R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3";
+inline constexpr const char* singleFull12Suite="R7-FULL12-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3";
 inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
 inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
 struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};
-std::string generatorIdentity(const std::vector<G1>& trusted_extra={});
+std::string generatorIdentity(const std::vector<G1>& trusted_extra={},bool compact=false);
 class CanonicalTranscript {
  struct Impl;std::unique_ptr<Impl>impl_;
  public:CanonicalTranscript(const Bytes&header,const Bytes&public_instance,bool full12=false);~CanonicalTranscript();

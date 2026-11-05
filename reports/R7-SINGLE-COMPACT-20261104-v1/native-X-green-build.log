@@ -1,0 +1,19 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 21%] Built target paper_r1
+[ 52%] Built target gpt_lib
+[ 60%] Built target paper_r2
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_commitments.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp: In function ‘mcl::bn::Fr zkgpt::r7::oneblock::single::evaluate(const Secret&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp:139:2: error: this ‘for’ clause does not guard... [-Werror=misleading-indentation]
+  139 |  for(const auto&run:s.pc.plan.runs)for(std::size_t j=0;j<run.count;++j)result+=basis.at(s.pc.plan.segments[run.source].offset+run.source_offset+j)*s.sources[run.source](run.source_offset+j);return result;
+      |  ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp:139:191: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+  139 |  for(const auto&run:s.pc.plan.runs)for(std::size_t j=0;j<run.count;++j)result+=basis.at(s.pc.plan.segments[run.source].offset+run.source_offset+j)*s.sources[run.source](run.source_offset+j);return result;
+      |                                                                                                                                                                                               ^~~~~~
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:513: src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3611: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:3655: src/paper_r7/CMakeFiles/r7_single_hyrax_tests.dir/rule] Error 2
+gmake: *** [Makefile:1284: r7_single_hyrax_tests] Error 2

@@ -33,6 +33,16 @@ void largeVirtualDomainTests(){
  need(r1::kMaxVector==(std::size_t(1)<<28),"materialized vector limit changed");std::cout<<"UNIFIED_LARGE_VIRTUAL_DOMAIN_TESTED bits=29..32 private_scalars=3 unchanged_materialized_bound="<<r1::kMaxVector<<'\n';
 }
 void denseRoundTests(){
+ need(ui::pack({{1,1},{2,1},{3,8}},1).domain==16,"independent regions must remove shared maximum capacity");
+ for(auto c:std::vector<std::pair<std::array<std::size_t,4>,std::array<std::size_t,4>>>{{{1,5,7,0},{1,8,8,0}},{{2,8,8,0},{2,8,8,0}},{{3,5,17,0},{4,8,32,0}},{{1,1,1,0},{1,1,1,0}},{{0,0,0,0},{0,0,0,0}}})need(ui::independentCapacities(c.first)==c.second,"independent capacity literal example");
+ std::vector<ui::Block>full_blocks;for(unsigned j=0;j<10;++j)full_blocks.push_back({1,1u<<24});full_blocks.push_back({2,2048});for(unsigned j=0;j<34;++j)full_blocks.push_back({3,1u<<24});
+ auto full=ui::pack(full_blocks,32768);need(full.domain==(std::size_t(1)<<31),"Full12 independent-region metadata derived domain");
+ const std::array<std::size_t,4>capacity{32768,1u<<28,2048,1u<<30},used{32768,167772160,2048,570425344},base{0,16777216,285212672,301989888};
+ for(unsigned k=0;k<4;++k)need(full.regions[k].capacity==capacity[k] && full.regions[k].used==used[k] && full.regions[k].base==base[k],"Full12 independently derived region capacity/base/alignment");
+ for(unsigned attack=0;attack<5;++attack){auto bad=full;if(attack==0)bad.regions[1].capacity*=2;if(attack==1)bad.regions[2].base+=2048;if(attack==2)bad.segments.back().offset=std::size_t(3)<<30;if(attack==3)bad.domain*=2;if(attack==4)bad.categories[1]=3;rejects([&]{ui::descriptor(bad);},"tampered region/domain/old-offset descriptor accepted");}
+ need(ui::pack({},1).domain==1,"unit public region must stay size one without empty-region allocation");
+ rejects([]{ui::independentCapacities({(std::size_t(1)<<32)+1,0,0,0});},"region capacity overflow accepted");
+ rejects([]{ui::pack({{1,std::size_t(1)<<32}},1);},"region base plus capacity overflow accepted");
  for(unsigned variant=0;variant<9;++variant){
   std::vector<ui::Block>blocks{{1,8},{2,2},{3,16},{2,8},{3,1}};
   if(variant==8)blocks.clear();
@@ -65,6 +75,21 @@ void denseRoundTests(){
  rejects([]{ui::validate(16,{{2,4}});},"unaligned block accepted");
  rejects([]{ui::validate(16,{{16,1}});},"out-of-domain block accepted");
  std::cout<<"UNIFIED_DENSE_ROUNDS_TESTED\n";
+}
+void relocationTests(){
+ auto plan=ui::pack({{1,1},{2,1},{3,8}},1);auto old_segments=plan.segments;
+ old_segments[0].offset=0;old_segments[1].offset=8;old_segments[2].offset=16;old_segments[3].offset=24;
+ Fr reference=0;
+ for(bool old:{true,false}){auto n=old?std::size_t(32):plan.domain;auto segments=old?old_segments:plan.segments;std::vector<Fr>a(n,Fr(0)),b(n,Fr(0));
+  for(std::size_t k=0;k<segments.size();++k)for(std::size_t j=0;j<segments[k].padded;++j){a[segments[k].offset+j]=Fr(2+k+j);b[segments[k].offset+j]=k?Fr(3*k+2*j):Fr(0);}
+  auto total=r1::dot(a,b);if(old)reference=total;else need(total==reference,"logical relocation changed original computational inner-product relation");
+  ui::Factors factors=[&](std::size_t k,const ui::Consume&consume){auto offset=segments[k].offset;consume([&,offset](std::size_t j){return a[offset+j];},[&,offset](std::size_t j){return b[offset+j];});};
+  auto kernel=[&](const std::vector<Fr>&q){return r1::mle(b,q);};SessionRandom rng;Tape p(true);auto initial=publicHidden(p,"relocation/initial",total);auto end=ui::reduce(p,n,segments,initial,factors,kernel,&rng,"relocation/sumcheck");
+  auto secret=crypto::commit(crypto::PCSpec::make("relocation/dense",n,n),a,rng);hyrax_a3::opening(p,secret.public_pc,{end.point,end.endpoints[0].handle},&secret,&end.endpoints[0],&rng);
+  Tape v(false);v.data=p.data;auto expected=publicHidden(v,"relocation/initial",total);auto ve=ui::reduce(v,n,segments,expected,{},kernel,nullptr,"relocation/sumcheck");hyrax_a3::opening(v,secret.public_pc,{ve.point,ve.endpoints[0].handle},nullptr,nullptr,nullptr);need(v.at==v.data.size(),"old/new relocated Sumcheck and authenticated opening EOF");
+  if(!old){Tape wrong(false);wrong.data=p.data;rejects([&]{auto value=publicHidden(wrong,"relocation/initial",total);ui::reduce(wrong,32,old_segments,value,{},kernel,nullptr,"relocation/sumcheck");},"old mapping/32-domain rounds accepted as new relocated Sumcheck");}
+ }
+ std::cout<<"UNIFIED_OLD_NEW_COMPUTATIONAL_RELATION_AND_OPENINGS_TESTED\n";
 }
 void contract(){
  r1::init();auto layout=small();Prepared data;
@@ -124,8 +149,8 @@ void exhaustedProtocolTest(){
 }
 void interactiveReady(){
  int sockets[2];need(socketpair(AF_UNIX,SOCK_STREAM,0,sockets)==0,"unified READY socketpair");char name[]="build/protocol1-ready-XXXXXX";int audit=mkstemp(name);need(audit>2,"unified READY audit file");auto child=fork();need(child>=0,"unified READY fork");
- if(!child){close(sockets[0]);dup2(sockets[1],0);dup2(sockets[1],1);close(sockets[1]);try{PipeIO io(false,"unified-ready","","R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1",PipeIO::Profile::ClassifiedV2,audit);_exit(0);}catch(const std::exception&e){std::cerr<<e.what()<<'\n';_exit(2);}}
+ if(!child){close(sockets[0]);dup2(sockets[1],0);dup2(sockets[1],1);close(sockets[1]);try{PipeIO io(false,"unified-ready","","R7-CLASSIFIED-PROTOCOL1-INDEPENDENT-REGIONS-INTERACTIVE-v2",PipeIO::Profile::ClassifiedV2,audit);_exit(0);}catch(const std::exception&e){std::cerr<<e.what()<<'\n';_exit(2);}}
  close(sockets[1]);Bytes frame;std::array<unsigned char,4096>buffer;for(;;){auto n=read(sockets[0],buffer.data(),buffer.size());if(n<0 && errno==EINTR)continue;need(n>=0,"unified READY read");if(!n)break;frame.insert(frame.end(),buffer.begin(),buffer.begin()+n);}close(sockets[0]);int status=0;need(waitpid(child,&status,0)==child,"unified READY wait");close(audit);need(WIFEXITED(status) && WEXITSTATUS(status)==0 && frame.size()>4,"new unified interactive READY rejected");
- Bytes header(frame.begin(),frame.begin()+4);Reader length{header};need(length.number()==frame.size()-4,"unified READY frame length");auto record=R7Wire::decodeLocalRecord(Bytes(frame.begin()+4,frame.end()));std::string expected="R7-CLASSIFIED-PROTOCOL1-UNIFIED-INTERACTIVE-v1";need(record.label=="READY/unified-ready" && record.payload==Bytes(expected.begin(),expected.end()),"unified READY suite was downgraded");std::cout<<"UNIFIED_INTERACTIVE_READY_TESTED audit="<<name<<'\n';
+ Bytes header(frame.begin(),frame.begin()+4);Reader length{header};need(length.number()==frame.size()-4,"unified READY frame length");auto record=R7Wire::decodeLocalRecord(Bytes(frame.begin()+4,frame.end()));std::string expected="R7-CLASSIFIED-PROTOCOL1-INDEPENDENT-REGIONS-INTERACTIVE-v2";need(record.label=="READY/unified-ready" && record.payload==Bytes(expected.begin(),expected.end()),"unified READY suite was downgraded");std::cout<<"UNIFIED_INTERACTIVE_READY_TESTED audit="<<name<<'\n';
 }
-int main(int argc,char**argv){try{r1::init();if(argc>1 && std::string(argv[1])=="large-domain"){largeVirtualDomainTests();return 0;}if(argc>1 && std::string(argv[1])=="interactive"){interactiveReady();return 0;}if(argc>1 && std::string(argv[1])=="exhaustion"){exhaustedProtocolTest();return 0;}denseRoundTests();largeVirtualDomainTests();hiddenProtocolTests();mappedProtocolTests();if(argc==1 || std::string(argv[1])!="algebra")contract();std::cout<<"UNIFIED_INPUT_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"UNIFIED_INPUT_FAILED "<<e.what()<<'\n';return 1;}}
+int main(int argc,char**argv){try{r1::init();if(argc>1 && std::string(argv[1])=="large-domain"){largeVirtualDomainTests();return 0;}if(argc>1 && std::string(argv[1])=="interactive"){interactiveReady();return 0;}if(argc>1 && std::string(argv[1])=="exhaustion"){exhaustedProtocolTest();return 0;}denseRoundTests();relocationTests();largeVirtualDomainTests();hiddenProtocolTests();mappedProtocolTests();if(argc==1 || std::string(argv[1])!="algebra")contract();std::cout<<"UNIFIED_INPUT_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"UNIFIED_INPUT_FAILED "<<e.what()<<'\n';return 1;}}

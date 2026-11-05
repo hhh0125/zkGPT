@@ -95,7 +95,10 @@ void streaming(){
  std::vector<std::vector<Fr>>a(p.segments.size()),b(a.size());std::vector<std::size_t>stored(a.size());
  for(std::size_t k=0;k<a.size();++k){auto n=p.segments[k].padded;a[k].resize(n);b[k].resize(n);for(std::size_t j=0;j<n;++j){a[k][j]=Fr(int(j%31)-15+int(k));b[k][j]=k?Fr(int((j+k)%17)-8):Fr(0);}stored[k]=k==2?0:k==0?2:n>3?n-3:n;std::fill(a[k].begin()+stored[k],a[k].end(),Fr(0));}
  for(unsigned bits:{28u,32u})for(unsigned threads:{1u,2u,4u})for(unsigned variant=0;variant<3;++variant){
-  auto bb=b;FixedRandom random;std::vector<Fr>point;auto segments=p.segments;for(auto&s:segments){auto category=s.offset/p.partition_size;s.offset=category*(std::size_t(1)<<(bits-2))+(s.offset%p.partition_size);}
+  auto bb=b;FixedRandom random;std::vector<Fr>point;auto segments=p.segments;
+  // Sparse virtual-domain stress fixture, independent of production region
+  // capacities. Preserve each source's new region-local aligned offset.
+  for(std::size_t k=0;k<segments.size();++k){auto category=p.categories[k];segments[k].offset=category*(std::size_t(1)<<(bits-2))+(segments[k].offset-p.regions[category].base);}
   ui::Factors f=[&](std::size_t k,const ui::Consume&c){c([&,k](std::size_t j){return a[k].at(j);},[&,k](std::size_t j){return bb[k].at(j);});};
   ui::Inputs spans=[&](std::size_t k){return ui::InputSpan{a[k].data(),stored[k],a[k].size()};};
   for(unsigned t=0;t<bits;++t){

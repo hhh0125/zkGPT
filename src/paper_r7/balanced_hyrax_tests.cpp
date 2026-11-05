@@ -72,7 +72,7 @@ void largeA3(){
   Tape badtau(false);badtau.records=p.records;auto tau=w.evaluation.handle;tau.point+=parameters(1).scalar;reject([&]{hyrax_a3::dotProduct(badtau,xi,tau,a,nullptr,nullptr);},"large changed evaluation");
   std::cout<<"A3_DIMENSION_PASS "<<n<<" knowledge_and_inner_product\n";
  }
- reject([]{hyrax_a3::generators(8192);},"overbound A3");reject([]{hyrax_a3::generators(3072);},"nonpower A3");
+ reject([]{hyrax_a3::generators(131072);},"overbound A3");reject([]{hyrax_a3::generators(3072);},"nonpower A3");
 }
 }
 int main(int argc,char**argv){try{r1::init();std::string mode=argc>1?argv[1]:"all";if(mode=="all"||mode=="shape")shapes();if(mode=="all"||mode=="a3")largeA3();if(mode=="all"||mode=="mle")mle();std::cout<<"BALANCED_HYRAX_PASS "<<mode<<'\n';return 0;}catch(const std::exception&e){std::cerr<<"BALANCED_HYRAX_FAIL "<<e.what()<<'\n';return 1;}}
