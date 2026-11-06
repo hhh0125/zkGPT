@@ -1,0 +1,8 @@
+candidate-green-configure {"args": ["cmake", "-S", ".", "-B", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-candidate", "-DCMAKE_BUILD_TYPE=Release", "-DZKGPT_BUILD_R7_FRAMEWORK=ON", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include", "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"], "exit_code": 0, "wall_seconds": 1.4054406508803368, "expected_exit_code": 0}
+candidate-green-all-targets {"args": ["cmake", "--build", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-candidate", "-j4"], "exit_code": 2, "wall_seconds": 83.12155982479453, "expected_exit_code": 0}
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_candidate_green.py", line 35, in <module>
+    run('candidate-green-all-targets',['cmake','--build',BUILD,'-j4'],wall=1800)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_candidate_green.py", line 29, in run
+    result={'args':[str(x) for x in args],'exit_code':p.returncode,'wall_seconds':time.monotonic()-started,'expected_exit_code':expected};save(name+'.json',result);print(name,json.dumps(result),flush=True);assert p.returncode==expected,('STOP_BUILD_OR_CORRECTNESS',name,p.returncode)
+AssertionError: ('STOP_BUILD_OR_CORRECTNESS', 'candidate-green-all-targets', 2)

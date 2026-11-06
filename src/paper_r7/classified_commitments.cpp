@@ -2,10 +2,13 @@
 #include "stage2_opening.hpp"
 #include "unified_input.hpp"
 #include "public_k.hpp"
+#include "k_terminal.hpp"
+#include "static_source_map.hpp"
 #include <algorithm>
 #include <openssl/evp.h>
 #include <chrono>
 #include <iostream>
+#include <cstring>
 #include <sys/resource.h>
 namespace zkgpt::r7::oneblock::classified {
 namespace {
@@ -14,9 +17,21 @@ void rootTiming(const char*phase,const std::string&id,Clock::time_point started)
 class MapHash {
  std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)>ctx_{EVP_MD_CTX_new(),EVP_MD_CTX_free};
  std::array<unsigned char,32768>buffer_{};std::size_t used_=0;
+ AuthMetrics*metrics_;
+ std::array<unsigned char,32>bias_bytes_{};Fr bias_;bool have_bias_=false,reuse_bias_;
  void flush(){if(used_){need(EVP_DigestUpdate(ctx_.get(),buffer_.data(),used_)==1,"classified map digest update");used_=0;}}
- public:MapHash(){need(ctx_ && EVP_DigestInit_ex(ctx_.get(),EVP_sha256(),nullptr)==1,"classified map digest init");}
- void append(const Located&l){if(used_+41>buffer_.size())flush();buffer_[used_++]=l.constant?1:0;for(auto n:{l.coordinate.root,l.coordinate.index})for(unsigned j=0;j<4;++j)buffer_[used_++]=std::uint8_t(n>>(8*j));need(l.bias.isValid() && l.bias.serialize(buffer_.data()+used_,32)==32,"classified canonical map bias");used_+=32;}
+ public:explicit MapHash(AuthMetrics*m=nullptr):metrics_(m){const auto*reference=std::getenv("ZKGPT_PERF3_MAP_REFERENCE");reuse_bias_=!reference || std::string(reference)!="1";need(ctx_ && EVP_DigestInit_ex(ctx_.get(),EVP_sha256(),nullptr)==1,"classified map digest init");}
+ void append(const Located&l){
+  if(used_+41>buffer_.size()){flush();}
+  buffer_[used_++]=l.constant?1:0;for(auto n:{l.coordinate.root,l.coordinate.index})for(unsigned j=0;j<4;++j)buffer_[used_++]=std::uint8_t(n>>(8*j));
+  // Only canonical bytes of an exactly equal, previously validated public Fr
+  // are reused. Coordinates and the complete hash stream are always rebuilt.
+  if(reuse_bias_ && have_bias_ && l.bias==bias_){std::memcpy(buffer_.data()+used_,bias_bytes_.data(),32);if(metrics_)++metrics_->map_bias_reuses;}
+  else{
+   need(l.bias.isValid() && l.bias.serialize(buffer_.data()+used_,32)==32,"classified canonical map bias");if(metrics_)++metrics_->map_bias_serializations;
+   if(reuse_bias_){bias_=l.bias;std::memcpy(bias_bytes_.data(),buffer_.data()+used_,32);have_bias_=true;}
+  }used_+=32;
+ }
  Digest finish(){flush();Digest d{};unsigned n=0;need(EVP_DigestFinal_ex(ctx_.get(),d.data(),&n)==1 && n==32,"classified map digest end");return d;}
 };
 
@@ -31,6 +46,7 @@ std::size_t Commitments::Weights::bytes()const{return (a_.capacity()+b_.capacity
 Fr Commitments::Weights::at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>>split_];}
 
 bool Commitments::usesBaseCoordinates(const Claim&c)const{
+ if(c.static_locator)return false;
  // Built-in native-terminal and mapped-view callbacks perform exactly one
  // baseCoordinate lookup for each nonconstant location. Custom test maps do not.
  auto it=layout_.views.find(c.map_id);return c.map_id.rfind("native-base/",0)==0 || (it!=layout_.views.end() && it->second.mapped);
@@ -38,7 +54,7 @@ bool Commitments::usesBaseCoordinates(const Claim&c)const{
 Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)const{
  auto started=processCPU();auto wall=Clock::now();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
  auto&p=auth.claims[i];mapping::Builder builder(p,auth.store,auth.map_budget-auth.map_bytes,roots_.size());
- auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest;const bool baseMapped=usesBaseCoordinates(c);
+ auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;MapHash digest(&auth_metrics_);const bool baseMapped=usesBaseCoordinates(c);
  for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;
   need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
   if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");
@@ -68,6 +84,52 @@ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda,co
  if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"coordinates\":"<<visited<<",\"matched_coordinates\":"<<matched<<",\"fallback_map_queries\":"<<fallback<<",\"Fr_multiplications\":"<<multiplies<<",\"Fr_additions\":"<<matched<<",\"wall_seconds\":"<<seconds<<",\"cpu_seconds\":"<<cpu<<"}\n";
  return result;
 }
+Fr Commitments::kernelEndpoint(std::size_t k,const std::vector<Fr>&rho,const Authentication&auth,const std::vector<Fr>&point)const{
+ const auto n=roots_.at(k).spec.padded;need(point.size()==r1::log2exact(n) && rho.size()==claims_.size() && auth.claims.size()==claims_.size(),"K terminal shape");
+ const bool timing=opt2MetricsEnabled();auto start=timing?Clock::now():Clock::time_point{};auto&m=auth_metrics_;++m.endpoint_calls;
+ auto elapsed=[&](Clock::time_point t){return timing?std::chrono::duration<double>(Clock::now()-t).count():0.;};AllocationTrace allocations;
+ auto finish=[&]{m.endpoint_allocations+=allocations.count();m.endpoint_allocated_bytes+=allocations.bytes();};
+ const auto*reference=std::getenv("ZKGPT_PERF2_K_REFERENCE");
+ // PERF2 did not meet its predeclared performance gate. Explicit opt-in only.
+ if(!reference || std::string(reference)!="0"){
+  auto matched=m.kernel_matched;auto v=kernel(k,rho,auth);m.endpoint_dense_coordinates+=m.kernel_matched-matched;m.endpoint_dense_bytes+=n*sizeof(Fr);m.endpoint_build_seconds+=elapsed(start);auto begin=timing?Clock::now():Clock::time_point{};
+  auto out=fold(v,point);m.endpoint_fold_coordinates+=2*n-2;m.endpoint_fold_seconds+=elapsed(begin);m.endpoint_seconds+=elapsed(start);finish();return out;
+ }
+ std::vector<Fr>dense;std::size_t active=0;Fr total=0;std::uint64_t fast=0,blocks=0,visited=0;
+ for(std::size_t i=0;i<claims_.size();++i){const auto&c=claims_[i];const auto&p=auth.claims[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;if(p.frozen && !p.hasRoot(k))continue;
+  std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&m);const auto&w=p.weights?*p.weights:*scratch;std::optional<TerminalBasis>basis;
+  auto add=[&](std::size_t begin,std::size_t count,std::int64_t at,std::int64_t stride,std::size_t step){
+   if(dense.empty()){dense.assign(n,Fr(0));m.endpoint_dense_bytes+=n*sizeof(Fr);}
+   auto last=at+std::int64_t(count-1)*stride;active=std::max(active,std::size_t(std::max(at,last))+1);
+   w.scaled(begin,count,rho[i],[&](const Fr&weight){dense[std::size_t(at)]+=weight;at+=stride;},step);visited+=count;
+  };
+  if(p.frozen)p.forRoot(k,auth.store,[&](const mapping::Run&run){
+   need(run.count && run.logical_step && run.begin<c.padded && run.count<=1+(c.padded-1-run.begin)/run.logical_step,"K terminal verified logical run bounds");
+   const auto actual=roots_[k].spec.actual;need(run.stride>=-std::int64_t(actual) && run.stride<=std::int64_t(actual),"K terminal verified stride bound");
+   const auto last=std::int64_t(run.first.index)+std::int64_t(run.count-1)*run.stride;need(run.first.root==k && run.first.index<actual && last>=0 && std::uint64_t(last)<actual,"K terminal verified source run bounds");
+   if(run.logical_step!=1 || (run.stride!=0 && run.stride!=1) || run.count<64 || (run.stride==1 && (run.begin%64!=run.first.index%64))){add(run.begin,run.count,run.first.index,run.stride,run.logical_step);return;}
+   if(!basis)basis.emplace(c.point,point);
+   auto j=run.begin,z=std::size_t(run.first.index),remaining=run.count;
+   while(remaining){std::size_t length=1;unsigned bits=0;while(length<=remaining/2 && !(j&length) && (!run.stride || !(z&length))){length*=2;++bits;}
+    if(length>=64){total+=rho[i]*basis->block(j,z,bits,run.stride==0);fast+=length;++blocks;}
+    else add(j,length,z,run.stride,1);
+    j+=length;if(run.stride)z+=length;remaining-=length;
+   }
+  });
+  else{
+   // Keep canonical callback revalidation for the existing budget fallback.
+   MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"K terminal fallback source bounds");add(j,1,l.coordinate.index,0,1);}}
+   need(digest.finish()==c.map_digest,"classified source map changed after defer");
+  }
+ }
+ m.endpoint_build_seconds+=elapsed(start);auto begin=timing?Clock::now():Clock::time_point{};std::size_t width=1;while(width<active)width*=2;
+ if(active){unsigned t=0;for(auto count=width;count>1;count/=2,++t){m.endpoint_fold_coordinates+=count;for(std::size_t j=0;j<count/2;++j)dense[j]=dense[2*j]+point[t]*(dense[2*j+1]-dense[2*j]);}
+  auto residual=dense[0];for(;t<point.size();++t)residual*=Fr(1)-point[t];total+=residual;
+ }
+ m.endpoint_fast_coordinates+=fast;m.endpoint_fast_blocks+=blocks;m.endpoint_dense_coordinates+=visited;m.endpoint_fold_seconds+=elapsed(begin);m.endpoint_seconds+=elapsed(start);
+ if(timing)std::cerr<<"PERF2_K {\"root\":"<<k<<",\"fast_coordinates\":"<<fast<<",\"fast_blocks\":"<<blocks<<",\"dense_coordinates\":"<<visited<<",\"dense_initialized_bytes\":"<<(dense.empty()?0:n*sizeof(Fr))<<",\"dense_fold_extent\":"<<(active?width:0)<<",\"copy_bytes\":0}\n";
+ finish();return total;
+}
 std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authentication&auth)const{
  auto started=processCPU();auto wall=Clock::now();crypto::AllocationTrace allocation;std::vector<Fr>values(roots_.size(),Fr(0));std::uint64_t visited=0,matched=0,multiplies=0,fallback=0;
  for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
@@ -83,6 +145,7 @@ std::vector<Fr>Commitments::partialDot(const std::vector<Fr>&lambda,const Authen
  return values;
 }
 Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret,const std::vector<model::Trust>*chunks,std::vector<model::Secret>*chunkSecrets,const std::vector<Fr>*single_x):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
+ if(layout.master_actual){auto text=std::getenv("ZKGPT_PERF4_SOURCE_REFERENCE");need(!text || std::string(text)=="0" || std::string(text)=="1","PERF4 static source mode");static_source_enabled_=!text || std::string(text)!="1";}
  if(single_x){need(!trust && !modelSecret && !chunks && !chunkSecrets,"single prover-selected model cannot import independent root authority");initializeSingle(std::move(base),prepared,*single_x);return;}
  auto modelCount=std::count_if(layout.roots.begin(),layout.roots.end(),[](auto&r){return r.model;});need(layout.master_actual?(chunks && chunks->size()==std::size_t(modelCount) && !trust && !modelSecret && (io.prover()?(chunkSecrets && chunkSecrets->size()==chunks->size()):!chunkSecrets)):(!chunks && !chunkSecrets),"classified Full12 independently loaded chunk trust boundary");
  need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(vectorSuite);binding.text(vectorLayout);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());std::set<std::string>usedPrepared;
@@ -128,8 +191,17 @@ void Commitments::constrainBaseTails(){
  Writer end;end.text(identity_);end.number(tail_rows,8);end.number(tail_response_bytes,8);bindPublic(io_,"Classified/base-tails-constrained",end.b);tails_constrained_=true;
 }
 void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const std::string&id){auto started=Clock::now();auto&r=roots_.at(k);if(r.spec.model)r.open(io_,q,h,rng_,id);else openVector(io_,r.pc,q,io_.prover()?&*r.secret:nullptr,h,rng_,id);rootTiming("opening",r.spec.id,started);}
+std::shared_ptr<const StaticBaseMap>Commitments::staticBase(){
+ need(static_source_enabled_,"PERF4 static base disabled");if(!static_base_){static_base_=std::make_shared<const StaticBaseMap>(layout_);++auth_metrics_.static_base_builds;auth_metrics_.static_locator_bytes+=static_base_->bytes();}return static_base_;
+}
 VectorOracle Commitments::view(const std::string&id){
  need(sealed_ && !authenticated_,"classified view lifecycle");const auto&v=layout_.views.at(id);VectorOracle out;out.id=id;out.actual=v.actual;out.padded=v.padded;
+ if(static_source_enabled_ && (v.mapped || !v.pieces.empty())){
+  auto&plan=static_sources_[id];if(!plan){plan=std::make_shared<const StaticSourceMap>(layout_,v,*staticBase());++auth_metrics_.static_source_builds;auth_metrics_.static_locator_bytes+=plan->bytes();}else ++auth_metrics_.static_source_hits;
+  if(io_.prover())out.value=[this,plan](std::size_t j){auto l=publicLocation(plan->at(j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
+  const auto map_id=v.id;const auto padded=v.padded;const int hint=!v.mapped && v.pieces.size()<=1?int(v.start.root):-1;
+  out.open=[this,plan,map_id,padded,hint](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,map_id,value,q.point,padded,[plan](std::size_t j){return plan->at(j);}};c.only_root=hint;c.static_locator=true;defer(std::move(c));};return out;
+ }
  if(io_.prover())out.value=[this,&v](std::size_t j){auto l=publicLocation(locate(layout_,v,j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
  out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);defer(std::move(c));};return out;
 }
@@ -138,13 +210,18 @@ void Commitments::defer(Claim c){
   if(c.only_root>=0)for(const auto&entry:single_public_coordinates_)if((entry.first>>32)==std::size_t(c.only_root)){c.only_root=-1;break;}}
  need(sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_,"classified unconstrained tails/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
 }
-void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
+void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");
+ if(static_source_enabled_){auto base=staticBase();Claim c{id,"native-base/"+id,h,q,padded,[base,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};return {base->at(index(j)),Fr(0),false};}};c.static_locator=true;defer(std::move(c));return;}
+ defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
 Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
 std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
  auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
  return result;
 }
 Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;
+ std::cerr<<"PERF4_STATIC_SOURCE {\"base_builds\":"<<m.static_base_builds<<",\"view_builds\":"<<m.static_source_builds<<",\"view_hits\":"<<m.static_source_hits<<",\"owned_plan_bytes\":"<<m.static_locator_bytes<<",\"claim_digest_and_builder_reused\":false}\n";
+ std::cerr<<"PERF3_MAP {\"prepare_bias_serializations\":"<<m.map_bias_serializations<<",\"prepare_bias_encoding_reuses\":"<<m.map_bias_reuses<<"}\n";
+ std::cerr<<"PERF2_K_TOTAL {\"endpoint_calls\":"<<m.endpoint_calls<<",\"fast_coordinates\":"<<m.endpoint_fast_coordinates<<",\"fast_blocks\":"<<m.endpoint_fast_blocks<<",\"dense_coordinates\":"<<m.endpoint_dense_coordinates<<",\"dense_initialized_bytes\":"<<m.endpoint_dense_bytes<<",\"fold_coordinates\":"<<m.endpoint_fold_coordinates<<",\"build_seconds\":"<<m.endpoint_build_seconds<<",\"fold_seconds\":"<<m.endpoint_fold_seconds<<",\"endpoint_seconds\":"<<m.endpoint_seconds<<",\"allocations\":"<<m.endpoint_allocations<<",\"allocated_bytes\":"<<m.endpoint_allocated_bytes<<",\"copy_bytes\":0}\n";
  std::cerr<<"OPT3A_AUTH {\"builtin_RowMajor_base_coordinate_lookups\":"<<m.rowmajor_coordinate_lookups<<",\"kernel_matched_coordinates\":"<<m.kernel_matched<<",\"partial_visited_coordinates\":"<<m.partial_coordinates<<",\"frozen_kernel_coordinates\":"<<m.frozen_coordinates<<",\"fallback_map_queries\":"<<m.fallback_map_queries<<",\"kernel_and_partial_Fr_multiplications\":"<<m.fr_multiplications<<",\"kernel_and_partial_Fr_additions\":"<<m.fr_additions<<",\"kernel_wall_seconds\":"<<m.kernel_wall<<",\"partial_wall_seconds\":"<<m.partial_wall<<",\"prepare_wall_seconds\":"<<m.map_wall<<",\"kernel_and_partial_cpp_allocations\":"<<m.cpp_allocations<<",\"kernel_and_partial_cpp_allocated_bytes\":"<<m.cpp_allocated_bytes<<"}\n";std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
 void Commitments::authenticate(){
  need(!single_pc_,"single commitment requires global unified-input Sumcheck; legacy barrier forbidden");
@@ -186,7 +263,7 @@ void Commitments::authenticateUnifiedInput(const std::vector<Fr>&public_x){
  ui::Factors factors;if(io_.prover())factors=[&](std::size_t k,const ui::Consume&consume){
   if(public_k){public_k->withRoot(k,session_,[&](const Value&b){consume(k?roots_[k-1].value:x,b);});return;}
   if(!k){consume(x,[](std::size_t){return Fr(0);});return;}auto K=kernel(k-1,rho,auth);consume(roots_[k-1].value,[&K](std::size_t j){return K.at(j);});};
- auto endpoint=[&](const std::vector<Fr>&point){Fr expected=0;for(std::size_t k=0;k<roots_.size();++k){auto K=kernel(k,rho,auth);auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(point.begin(),point.begin()+d);expected+=ui::selector(packing.segments[k+1],point)*fold(K,q);}return expected;};
+ auto endpoint=[&](const std::vector<Fr>&point){Fr expected=0;for(std::size_t k=0;k<roots_.size();++k){auto d=r1::log2exact(roots_[k].spec.padded);std::vector<Fr>q(point.begin(),point.begin()+d);expected+=ui::selector(packing.segments[k+1],point)*kernelEndpoint(k,rho,auth,q);}return expected;};
  ui::Inputs inputs;const auto*u_reference=std::getenv("ZKGPT_U_REFERENCE");
  if(io_.prover() && public_k && !(u_reference && std::string(u_reference)=="1")){
   for(auto&r:roots_){need(r.sealed_storage_valid && r.sealed_storage_valid(),"OPT3D sealed storage changed");need(r.sealed_data && r.sealed_stored==((single_pc_ || r.spec.model)?r.spec.actual:r.spec.padded),"OPT3D sealed root storage identity/length");}

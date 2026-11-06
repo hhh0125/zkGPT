@@ -1,0 +1,18 @@
+{
+  "candidate": "A-canonical-map-bias-encoding-reuse",
+  "baseline": "PERF2 final default, failed scan and K candidates disabled",
+  "optimized_side": "Verifier canonical map digest in defer/prepareClaim",
+  "fixture": "bounded Single-Hyrax FS, n=65536 per root, 3 roots, 16 claims: contiguous, multiple spans with affine bias, root-interleaved spans, native indexed claims and virtual-zero suffix",
+  "scope": "whole bounded independent verifier replay; public layout preprocessing also reported, no real Oneblock or Full12",
+  "samples": 7,
+  "warmups": 1,
+  "replays_per_side": 2,
+  "paired_ratio_median_min": 1.05,
+  "paired_ratio_min_min": 0.98,
+  "max_ratio_range_relative_to_median": 0.15,
+  "prover_candidate_over_reference_max": 1.10,
+  "rss_candidate_over_reference_max": 1.10,
+  "proof_bytes_must_equal": true,
+  "resource": {"test_address_space_gib":4,"build_address_space_gib":12,"test_cpu_seconds":600,"build_cpu_seconds":1800,"single_test_wall_seconds":180,"build_wall_seconds":1800,"cores":4},
+  "failure": "STOP_PERFORMANCE, default off, no further performance fixture or candidate"
+}

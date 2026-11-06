@@ -4,6 +4,7 @@
 #include <ostream>
 namespace zkgpt::r7::oneblock::unified {
 class PublicK;
+class FoldedU;
 inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT-v2";
 struct Block {unsigned category;std::size_t padded;};
 struct Segment {std::size_t offset,padded;};
@@ -31,9 +32,18 @@ using Inputs=std::function<InputSpan(std::size_t)>;
 struct UOptions {unsigned threads=1;std::size_t tile_pairs=1024;bool factored=true;
  // Test-only immediate observer. Production leaves empty; never serialized.
  std::function<void(std::size_t,std::size_t,const Fr*,std::size_t)>observe;
+ // Reference execution retains arithmetic on the public implicit zero suffix.
+ // Both choices keep every tile, K query, product and endpoint obligation.
+ // Experimental: exact arithmetic tests pass, but A/B showed an unstable
+ // whole-round regression. Keep production on the reference scan by default.
+ bool elide_zero_suffix=false;
+ // PERF3 independent dot-accumulator candidate; no zero suffix elision.
+ bool striped_dot=false;
  static UOptions environment();};
-struct UMetrics {std::uint64_t coordinates=0,bytes=0,mapping_calls=0,multiplications=0,additions=0,tile_bytes=0,thread_bytes=0,extra_bytes=0,allocations=0,allocated_bytes=0,fused_load_bytes=0,product_multiplications=0,product_additions=0;double scan_cpu=0,scan_wall=0,product_wall=0;};
-Round quadraticRoundStreaming(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics* =nullptr);
+ struct UMetrics {std::uint64_t coordinates=0,bytes=0,mapping_calls=0,multiplications=0,additions=0,tile_bytes=0,thread_bytes=0,extra_bytes=0,allocations=0,allocated_bytes=0,fused_load_bytes=0,product_multiplications=0,product_additions=0,striped_dot_groups=0;
+ std::uint64_t contracted_coordinates=0,implicit_zero_coordinates=0;
+ double scan_cpu=0,scan_wall=0,product_wall=0;};
+Round quadraticRoundStreaming(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics* =nullptr,FoldedU* =nullptr,const std::string&session={});
 // One hidden degree-two Sumcheck, with a verifier-computed public K endpoint.
 Reduction reduce(IO&,std::size_t,const std::vector<Segment>&,const Hidden&,
  const Factors&onlyP,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,

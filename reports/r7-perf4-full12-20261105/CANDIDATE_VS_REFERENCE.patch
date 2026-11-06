@@ -1,0 +1,1346 @@
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -2,6 +2,13 @@
+ target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+ find_package(Threads REQUIRED)
+ target_sources(paper_r7 PRIVATE single_hyrax.cpp single_commitments.cpp)
++target_sources(paper_r7 PRIVATE static_source_map.cpp)
++target_sources(paper_r7 PRIVATE u_fold_state.cpp)
++add_executable(r7_perf4_u_tests perf4_u_tests.cpp)
++target_link_libraries(r7_perf4_u_tests PRIVATE paper_r7)
++target_link_options(r7_perf4_u_tests PRIVATE "-Wl,--wrap=malloc")
++add_test(NAME r7_perf4_u_state COMMAND r7_perf4_u_tests)
++set_tests_properties(r7_perf4_u_state PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+ add_executable(r7_perf2_k_tests perf2_k_tests.cpp)
+ target_link_libraries(r7_perf2_k_tests PRIVATE paper_r7)
+ add_test(NAME r7_perf2_k COMMAND r7_perf2_k_tests)
+@@ -282,6 +289,14 @@
+ target_link_libraries(r7_perf3_protocol PRIVATE paper_r7)
+ add_executable(r7_perf4_public_layout perf4_public_layout.cpp)
+ target_link_libraries(r7_perf4_public_layout PRIVATE paper_r7)
++add_executable(r7_perf4_ipa_probe perf4_ipa_probe.cpp)
++target_link_libraries(r7_perf4_ipa_probe PRIVATE paper_r7)
++foreach(unit mapping native)
++ add_executable(r7_perf4_${unit}_tests perf4_${unit}_tests.cpp)
++ target_link_libraries(r7_perf4_${unit}_tests PRIVATE paper_r7)
++ add_test(NAME r7_perf4_${unit} COMMAND r7_perf4_${unit}_tests)
++ set_tests_properties(r7_perf4_${unit} PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
++endforeach()
+ add_executable(r7_perf3_u_tests perf3_u_tests.cpp)
+ target_link_libraries(r7_perf3_u_tests PRIVATE paper_r7)
+ add_test(NAME r7_perf3_u_equivalence COMMAND r7_perf3_u_tests)
+--- a/src/paper_r7/classified_commitments.cpp
++++ b/src/paper_r7/classified_commitments.cpp
+@@ -3,6 +3,7 @@
+ #include "unified_input.hpp"
+ #include "public_k.hpp"
+ #include "k_terminal.hpp"
++#include "static_source_map.hpp"
+ #include <algorithm>
+ #include <openssl/evp.h>
+ #include <chrono>
+@@ -45,6 +46,7 @@
+ Fr Commitments::Weights::at(std::size_t i)const{return a_[i&(a_.size()-1)]*b_[i>>split_];}
+ 
+ bool Commitments::usesBaseCoordinates(const Claim&c)const{
++ if(c.static_locator)return false;
+  // Built-in native-terminal and mapped-view callbacks perform exactly one
+  // baseCoordinate lookup for each nonconstant location. Custom test maps do not.
+  auto it=layout_.views.find(c.map_id);return c.map_id.rfind("native-base/",0)==0 || (it!=layout_.views.end() && it->second.mapped);
+@@ -143,6 +145,7 @@
+  return values;
+ }
+ Commitments::Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const model::Trust*trust,model::Secret*modelSecret,const std::vector<model::Trust>*chunks,std::vector<model::Secret>*chunkSecrets,const std::vector<Fr>*single_x):io_(io),layout_(layout),identity_(identity(layout)),session_(io.session()),rng_(rng){
++ if(layout.master_actual){auto text=std::getenv("ZKGPT_PERF4_SOURCE_REFERENCE");need(!text || std::string(text)=="0" || std::string(text)=="1","PERF4 static source mode");static_source_enabled_=!text || std::string(text)!="1";}
+  if(single_x){need(!trust && !modelSecret && !chunks && !chunkSecrets,"single prover-selected model cannot import independent root authority");initializeSingle(std::move(base),prepared,*single_x);return;}
+  auto modelCount=std::count_if(layout.roots.begin(),layout.roots.end(),[](auto&r){return r.model;});need(layout.master_actual?(chunks && chunks->size()==std::size_t(modelCount) && !trust && !modelSecret && (io.prover()?(chunkSecrets && chunkSecrets->size()==chunks->size()):!chunkSecrets)):(!chunks && !chunkSecrets),"classified Full12 independently loaded chunk trust boundary");
+  need(io.prover()?bool(base)&&prepared&&rng:!base&&!prepared&&!rng&&!modelSecret,"classified P/V boundary");Writer binding;binding.text(suite);binding.text(identity_);binding.text(vectorSuite);binding.text(vectorLayout);binding.text(session_);bindPublic(io,"Classified/layout",binding.b);roots_.resize(layout.roots.size());std::set<std::string>usedPrepared;
+@@ -188,8 +191,17 @@
+  Writer end;end.text(identity_);end.number(tail_rows,8);end.number(tail_response_bytes,8);bindPublic(io_,"Classified/base-tails-constrained",end.b);tails_constrained_=true;
+ }
+ void Commitments::rootOpening(std::size_t k,const Query&q,const Hidden*h,const std::string&id){auto started=Clock::now();auto&r=roots_.at(k);if(r.spec.model)r.open(io_,q,h,rng_,id);else openVector(io_,r.pc,q,io_.prover()?&*r.secret:nullptr,h,rng_,id);rootTiming("opening",r.spec.id,started);}
++std::shared_ptr<const StaticBaseMap>Commitments::staticBase(){
++ need(static_source_enabled_,"PERF4 static base disabled");if(!static_base_){static_base_=std::make_shared<const StaticBaseMap>(layout_);++auth_metrics_.static_base_builds;auth_metrics_.static_locator_bytes+=static_base_->bytes();}return static_base_;
++}
+ VectorOracle Commitments::view(const std::string&id){
+  need(sealed_ && !authenticated_,"classified view lifecycle");const auto&v=layout_.views.at(id);VectorOracle out;out.id=id;out.actual=v.actual;out.padded=v.padded;
++ if(static_source_enabled_ && (v.mapped || !v.pieces.empty())){
++  auto&plan=static_sources_[id];if(!plan){plan=std::make_shared<const StaticSourceMap>(layout_,v,*staticBase());++auth_metrics_.static_source_builds;auth_metrics_.static_locator_bytes+=plan->bytes();}else ++auth_metrics_.static_source_hits;
++  if(io_.prover())out.value=[this,plan](std::size_t j){auto l=publicLocation(plan->at(j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
++  const auto map_id=v.id;const auto padded=v.padded;const int hint=!v.mapped && v.pieces.size()<=1?int(v.start.root):-1;
++  out.open=[this,plan,map_id,padded,hint](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,map_id,value,q.point,padded,[plan](std::size_t j){return plan->at(j);}};c.only_root=hint;c.static_locator=true;defer(std::move(c));};return out;
++ }
+  if(io_.prover())out.value=[this,&v](std::size_t j){auto l=publicLocation(locate(layout_,v,j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
+  out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h && encode(h->handle)==encode(q.evaluation),"classified opening hidden identity");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);defer(std::move(c));};return out;
+ }
+@@ -198,13 +210,16 @@
+   if(c.only_root>=0)for(const auto&entry:single_public_coordinates_)if((entry.first>>32)==std::size_t(c.only_root)){c.only_root=-1;break;}}
+  need(sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_,"classified unconstrained tails/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");crypto::validate(c.value.handle,session_,c.value.handle.role);c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
+ }
+-void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
++void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");
++ if(static_source_enabled_){auto base=staticBase();Claim c{id,"native-base/"+id,h,q,padded,[base,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};return {base->at(index(j)),Fr(0),false};}};c.static_locator=true;defer(std::move(c));return;}
++ defer({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
+ Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
+ std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
+  auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
+  return result;
+ }
+ Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;
++ std::cerr<<"PERF4_STATIC_SOURCE {\"base_builds\":"<<m.static_base_builds<<",\"view_builds\":"<<m.static_source_builds<<",\"view_hits\":"<<m.static_source_hits<<",\"owned_plan_bytes\":"<<m.static_locator_bytes<<",\"claim_digest_and_builder_reused\":false}\n";
+  std::cerr<<"PERF3_MAP {\"prepare_bias_serializations\":"<<m.map_bias_serializations<<",\"prepare_bias_encoding_reuses\":"<<m.map_bias_reuses<<"}\n";
+  std::cerr<<"PERF2_K_TOTAL {\"endpoint_calls\":"<<m.endpoint_calls<<",\"fast_coordinates\":"<<m.endpoint_fast_coordinates<<",\"fast_blocks\":"<<m.endpoint_fast_blocks<<",\"dense_coordinates\":"<<m.endpoint_dense_coordinates<<",\"dense_initialized_bytes\":"<<m.endpoint_dense_bytes<<",\"fold_coordinates\":"<<m.endpoint_fold_coordinates<<",\"build_seconds\":"<<m.endpoint_build_seconds<<",\"fold_seconds\":"<<m.endpoint_fold_seconds<<",\"endpoint_seconds\":"<<m.endpoint_seconds<<",\"allocations\":"<<m.endpoint_allocations<<",\"allocated_bytes\":"<<m.endpoint_allocated_bytes<<",\"copy_bytes\":0}\n";
+  std::cerr<<"OPT3A_AUTH {\"builtin_RowMajor_base_coordinate_lookups\":"<<m.rowmajor_coordinate_lookups<<",\"kernel_matched_coordinates\":"<<m.kernel_matched<<",\"partial_visited_coordinates\":"<<m.partial_coordinates<<",\"frozen_kernel_coordinates\":"<<m.frozen_coordinates<<",\"fallback_map_queries\":"<<m.fallback_map_queries<<",\"kernel_and_partial_Fr_multiplications\":"<<m.fr_multiplications<<",\"kernel_and_partial_Fr_additions\":"<<m.fr_additions<<",\"kernel_wall_seconds\":"<<m.kernel_wall<<",\"partial_wall_seconds\":"<<m.partial_wall<<",\"prepare_wall_seconds\":"<<m.map_wall<<",\"kernel_and_partial_cpp_allocations\":"<<m.cpp_allocations<<",\"kernel_and_partial_cpp_allocated_bytes\":"<<m.cpp_allocated_bytes<<"}\n";std::cerr<<"OPT2_AUTH {\"map_calls\":"<<m.map_calls<<",\"map_coordinates\":"<<m.map_coordinates<<",\"map_cpu_seconds\":"<<m.map_cpu<<",\"kernel_calls\":"<<m.kernel_calls<<",\"kernel_coordinates\":"<<m.kernel_coordinates<<",\"kernel_cpu_seconds\":"<<m.kernel_cpu<<",\"weights_precomputations\":"<<m.weights<<",\"weights_terms\":"<<m.weight_terms<<",\"weights_cpu_seconds\":"<<m.weights_cpu<<",\"weight_products\":"<<m.weight_products<<",\"partial_cpu_seconds\":"<<m.partial_cpu<<",\"kernel_peak_bytes\":"<<m.kernel_peak_bytes<<"}\n";}}
+--- a/src/paper_r7/classified_commitments.hpp
++++ b/src/paper_r7/classified_commitments.hpp
+@@ -6,7 +6,8 @@
+ #include "single_hyrax.hpp"
+ #include <unordered_map>
+ namespace zkgpt::r7::oneblock::classified {
+-struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};};
++class StaticBaseMap;class StaticSourceMap;
++struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};bool static_locator=false;};
+ struct Root {
+  RootSpec spec;VectorPC pc;std::optional<VectorSecret>secret;Value value;
+  std::function<void(IO&,const Query&,const Hidden*,Random*,const std::string&)>open;
+@@ -18,6 +19,7 @@
+ };
+ struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
+  std::uint64_t map_bias_serializations=0,map_bias_reuses=0;
++ std::uint64_t static_base_builds=0,static_source_builds=0,static_source_hits=0,static_locator_bytes=0;
+  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
+  std::uint64_t endpoint_calls=0,endpoint_fast_coordinates=0,endpoint_fast_blocks=0,endpoint_dense_coordinates=0,endpoint_dense_bytes=0,endpoint_fold_coordinates=0;
+  std::uint64_t endpoint_allocations=0,endpoint_allocated_bytes=0;
+@@ -58,6 +60,10 @@
+  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
+  std::optional<single::Public>single_pc_;std::optional<single::Secret>single_secret_;std::vector<Fr>single_x_;
+  std::unordered_map<std::uint64_t,std::size_t>single_public_coordinates_;
++ bool static_source_enabled_=false;std::vector<unsigned char>single_public_roots_;
++ std::shared_ptr<const StaticBaseMap>static_base_;
++ std::unordered_map<std::string,std::shared_ptr<const StaticSourceMap>>static_sources_;
++ std::shared_ptr<const StaticBaseMap>staticBase();
+  Located publicLocation(Located)const;
+  void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
+  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
+--- a/src/paper_r7/hyrax_a3.cpp
++++ b/src/paper_r7/hyrax_a3.cpp
+@@ -1,121 +1,121 @@
+-#include "hyrax_a3.hpp"
+-#include "perf4_profile.hpp"
+-#include <algorithm>
+-#include <chrono>
+-#include <map>
+-#include <set>
+-namespace zkgpt::r7::hyrax_a3 {
+-namespace {
+-void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
+-G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
+- need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
+- perf4::Scope phase("IPA/MSM","wideMSM",x.size());
+- auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
+- MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+-}
+-void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
+-Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
+-Fr challenge(IO&io,const std::string&label){auto c=io.coin(label);need(!c.isZero(),"A3 zero verifier challenge");return c;}
+-// Independent generalized Schnorr proofs for the TWO input commitments.
+-// Not a modification of Fig7/8; without this precondition xi+tau cancellation
+-// must not be interpreted as knowledge of the two original openings.
+-void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const DotWitness*w,Random*rng){
+- perf4::Scope guard("IPA/guard",io.prover()?"P":"V",g.size());
+- auto p=parameters(1);std::vector<Fr>d;Fr rv=0,dy=0,ry=0;Writer masks;
+- if(io.prover()){
+-  for(std::size_t i=0;i<g.size();++i){d.push_back(rng->scalar());}
+-  rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
+-  masks.point(wideMSM(g,d)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
+- }
+- auto b=exchange(io,"A3/knowledge/masks",masks.b,false);Reader mr{b};auto D=mr.point(),B=mr.point();mr.end();auto c=challenge(io,"A3/knowledge/c");
+- Writer response;
+- if(io.prover()){for(std::size_t i=0;i<g.size();++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
+- b=exchange(io,"A3/knowledge/responses",response.b,false);Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
+- if(!io.prover()){
+-  need(wideMSM(g,z)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
+-  need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
+- }
+-}
+-// Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
+-void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const std::vector<G1>&bases,const DotWitness*w,Random*rng){
+- perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
+- const auto p=parameters(1);auto U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
+- {perf4::Scope copy("IPA/input-copy",io.prover()?"P":"V",a.size(),bases.size()*sizeof(G1)+a.size()*sizeof(Fr)+(io.prover()?a.size()*sizeof(Fr):0));g=bases;aa=a;if(io.prover())x=w->values;}
+- if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
+- std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
+- while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
+-  if(io.prover()){
+-   std::vector<Fr>xl,xr,al,ar;std::vector<G1>gl,gr;
+-   {perf4::Scope copy("IPA/half-vector-copy","P",width,half*(4*sizeof(Fr)+2*sizeof(G1)));xl.assign(x.begin(),x.begin()+half);xr.assign(x.begin()+half,x.end());al.assign(aa.begin(),aa.begin()+half);ar.assign(aa.begin()+half,aa.end());gl.assign(g.begin(),g.begin()+half);gr.assign(g.begin()+half,g.end());}
+-   rl=rng->scalar();rr=rng->scalar();{perf4::Scope dot("IPA/inner-product","cross",width);left=r1::dot(xl,ar);right=r1::dot(xr,al);}
+-   cross.point(wideMSM(gr,xl)+p.scalar*left+p.hiding*rl);cross.point(wideMSM(gl,xr)+p.scalar*right+p.hiding*rr);
+-  }
+-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);Reader lr{b};auto L=lr.point(),R=lr.point();lr.end();Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);folds.push_back(c);c2=c*c;i2=inv*inv;}U+=L*c2+R*i2;
+-  if(io.prover()){
+-   {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
+-   {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
+-   {perf4::Scope phase("IPA/generator-fold",label,half);for(std::size_t i=0;i<half;++i)g[i]=g[i]*inv+g[i+half]*c;}
+-   x.resize(half);aa.resize(half);g.resize(half);y+=c2*left+i2*right;blind+=c2*rl+i2*rr;
+-  }
+-  width=half;++round;
+- }
+- G1 ghat;Fr ahat;
+- if(io.prover()){ghat=g[0];ahat=aa[0];}
+- else{
+-  // Independent verifier: direct product weights by HIGH bit (half-vector split),
+-  // not the prover's recursive generator fold; one n-base MSM as in A.3 text.
+-  std::vector<Fr>weights(a.size(),Fr(1));for(std::size_t k=0;k<folds.size();++k){Fr inv;Fr::inv(inv,folds[k]);auto bit=folds.size()-1-k;for(std::size_t i=0;i<weights.size();++i)weights[i]*=((i>>bit)&1)?folds[k]:inv;}
+-  ghat=wideMSM(bases,weights);ahat=r1::dot(a,weights);
+- }
+- need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
+- Writer masks;Fr d=0,rd=0,rb=0;
+- if(io.prover()){d=rng->scalar();rd=rng->scalar();rb=rng->scalar();masks.point(ghat*d+p.hiding*rd);masks.point(p.scalar*d+p.hiding*rb);}
+- auto b=exchange(io,"A3/final/delta-beta",masks.b,true);Reader mr{b};auto delta=mr.point(),beta=mr.point();mr.end();auto c=challenge(io,"A3/final/c");Writer response;
+- if(io.prover()){response.scalar(d+c*y);response.scalar(ahat*(c*blind+rb)+rd);}
+- b=exchange(io,"A3/final/z1-z2",response.b,true);Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();
+- if(!io.prover())need((U*c+beta)*ahat+delta==(ghat+p.scalar*ahat)*z1+p.hiding*z2,"A3 Schnorr equation failed");
+-}
+-}
+-Measurement& measurement(){static Measurement m;return m;}
+-std::vector<G1> generators(std::size_t n){
+- dimension(n);auto small=parameters(1);(void)small; // pin exact existing curve/map/encoding
+- static std::map<std::size_t,std::vector<G1>>cache;auto found=cache.find(n);if(found!=cache.end())return found->second;
+- auto g=parameters(std::min<std::size_t>(n,64)).columns;
+- for(std::size_t i=g.size();i<n;++i){G1 point;mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");g.push_back(point);}
+- auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);std::set<Bytes>seen;
+- for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
+- cache.emplace(n,g);return g;
+-}
+-G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());for(auto&v:x)need(v.isValid(),"A3 invalid witness scalar");need(r.isValid(),"A3 invalid vector blind");return wideMSM(g,x)+parameters(1).hiding*r;}
+-void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
+- dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
+- Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+- publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());
+- if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
+- auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+-}
+-void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
+- approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");
+- validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
+- Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
+- publicBinding(io,"A3/R6-ROWMAJOR/statement",binding.b);
+- // No generator bytes are accepted from the prover. The anchor spec is supplied
+- // by the trusted-model verifier, and R1's role-specific derivation is exact.
+- const auto&g=r1::generators(approved).g;
+- if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
+- auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+-}
+-// Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
+-// Interactive controllers call dotProduct / dotProductTrustedR6Basis through
+-// openVector and model::opening. crypto::validate rejects any other layout tag.
+-void opening(IO&io,const PC&pc,const Query&q,const PCSecret*secret,const Hidden*evaluation,Random*rng){
+- validate(pc);validate(q.evaluation,io.session(),q.evaluation.role);need(q.point.size()==r1::log2exact(pc.spec.padded),"A3 PC query dimension");
+- Writer b;b.text(suite);b.text(messageVersion);b.raw(encode(pc));b.raw(encode(q.evaluation));b.number(q.point.size());for(auto&f:q.point)b.scalar(f);publicBinding(io,"A3/PC-statement",b.b);
+- auto rowbits=r1::log2exact(pc.spec.rows);std::vector<Fr>rl(q.point.begin(),q.point.begin()+rowbits),rc(q.point.begin()+rowbits,q.point.end());auto L=r1::weights(rl),a=r1::weights(rc);auto xi=msm(pc.rows,L);DotWitness w;
+- if(io.prover()){
+-  need(secret && evaluation && rng && encode(secret->public_pc)==encode(pc) && encode(evaluation->handle)==encode(q.evaluation) && secret->values.size()==pc.spec.padded && secret->blinds.size()==pc.spec.rows,"A3 PC private identity/shape mismatch");
+-  w.values.assign(pc.spec.columns,Fr(0));w.evaluation=*evaluation;for(std::size_t i=0;i<pc.spec.rows;++i){w.blind+=L[i]*secret->blinds[i];for(std::size_t j=0;j<pc.spec.columns;++j)w.values[j]+=L[i]*secret->values[i+pc.spec.rows*j];}
+- }
+- dotProduct(io,xi,q.evaluation,a,io.prover()?&w:nullptr,rng);
+-}
+-}
++#include "hyrax_a3.hpp"
++#include "perf4_profile.hpp"
++#include <algorithm>
++#include <chrono>
++#include <map>
++#include <set>
++namespace zkgpt::r7::hyrax_a3 {
++namespace {
++void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
++G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
++ need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
++ perf4::Scope phase("IPA/MSM","wideMSM",x.size());
++ auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
++ MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
++}
++void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
++Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
++Fr challenge(IO&io,const std::string&label){auto c=io.coin(label);need(!c.isZero(),"A3 zero verifier challenge");return c;}
++// Independent generalized Schnorr proofs for the TWO input commitments.
++// Not a modification of Fig7/8; without this precondition xi+tau cancellation
++// must not be interpreted as knowledge of the two original openings.
++void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const DotWitness*w,Random*rng){
++ perf4::Scope guard("IPA/guard",io.prover()?"P":"V",g.size());
++ auto p=parameters(1);std::vector<Fr>d;Fr rv=0,dy=0,ry=0;Writer masks;
++ if(io.prover()){
++  for(std::size_t i=0;i<g.size();++i){d.push_back(rng->scalar());}
++  rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
++  masks.point(wideMSM(g,d)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
++ }
++ auto b=exchange(io,"A3/knowledge/masks",masks.b,false);Reader mr{b};auto D=mr.point(),B=mr.point();mr.end();auto c=challenge(io,"A3/knowledge/c");
++ Writer response;
++ if(io.prover()){for(std::size_t i=0;i<g.size();++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
++ b=exchange(io,"A3/knowledge/responses",response.b,false);Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
++ if(!io.prover()){
++  need(wideMSM(g,z)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
++  need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
++ }
++}
++// Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
++void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const std::vector<G1>&bases,const DotWitness*w,Random*rng){
++ perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
++ const auto p=parameters(1);auto U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
++ {perf4::Scope copy("IPA/input-copy",io.prover()?"P":"V",a.size(),bases.size()*sizeof(G1)+a.size()*sizeof(Fr)+(io.prover()?a.size()*sizeof(Fr):0));g=bases;aa=a;if(io.prover())x=w->values;}
++ if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
++ std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
++ while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
++  if(io.prover()){
++   std::vector<Fr>xl,xr,al,ar;std::vector<G1>gl,gr;
++   {perf4::Scope copy("IPA/half-vector-copy","P",width,half*(4*sizeof(Fr)+2*sizeof(G1)));xl.assign(x.begin(),x.begin()+half);xr.assign(x.begin()+half,x.end());al.assign(aa.begin(),aa.begin()+half);ar.assign(aa.begin()+half,aa.end());gl.assign(g.begin(),g.begin()+half);gr.assign(g.begin()+half,g.end());}
++   rl=rng->scalar();rr=rng->scalar();{perf4::Scope dot("IPA/inner-product","cross",width);left=r1::dot(xl,ar);right=r1::dot(xr,al);}
++   cross.point(wideMSM(gr,xl)+p.scalar*left+p.hiding*rl);cross.point(wideMSM(gl,xr)+p.scalar*right+p.hiding*rr);
++  }
++  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);Reader lr{b};auto L=lr.point(),R=lr.point();lr.end();Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);folds.push_back(c);c2=c*c;i2=inv*inv;}U+=L*c2+R*i2;
++  if(io.prover()){
++   {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
++   {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
++   {perf4::Scope phase("IPA/generator-fold",label,half);Fr scalars[2]{inv,c};for(std::size_t i=0;i<half;++i){G1 pair[2]{g[i],g[i+half]};G1::mulVec(g[i],pair,scalars,2);}}
++   x.resize(half);aa.resize(half);g.resize(half);y+=c2*left+i2*right;blind+=c2*rl+i2*rr;
++  }
++  width=half;++round;
++ }
++ G1 ghat;Fr ahat;
++ if(io.prover()){ghat=g[0];ahat=aa[0];}
++ else{
++  // Independent verifier: direct product weights by HIGH bit (half-vector split),
++  // not the prover's recursive generator fold; one n-base MSM as in A.3 text.
++  std::vector<Fr>weights(a.size(),Fr(1));for(std::size_t k=0;k<folds.size();++k){Fr inv;Fr::inv(inv,folds[k]);auto bit=folds.size()-1-k;for(std::size_t i=0;i<weights.size();++i)weights[i]*=((i>>bit)&1)?folds[k]:inv;}
++  ghat=wideMSM(bases,weights);ahat=r1::dot(a,weights);
++ }
++ need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
++ Writer masks;Fr d=0,rd=0,rb=0;
++ if(io.prover()){d=rng->scalar();rd=rng->scalar();rb=rng->scalar();masks.point(ghat*d+p.hiding*rd);masks.point(p.scalar*d+p.hiding*rb);}
++ auto b=exchange(io,"A3/final/delta-beta",masks.b,true);Reader mr{b};auto delta=mr.point(),beta=mr.point();mr.end();auto c=challenge(io,"A3/final/c");Writer response;
++ if(io.prover()){response.scalar(d+c*y);response.scalar(ahat*(c*blind+rb)+rd);}
++ b=exchange(io,"A3/final/z1-z2",response.b,true);Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();
++ if(!io.prover())need((U*c+beta)*ahat+delta==(ghat+p.scalar*ahat)*z1+p.hiding*z2,"A3 Schnorr equation failed");
++}
++}
++Measurement& measurement(){static Measurement m;return m;}
++std::vector<G1> generators(std::size_t n){
++ dimension(n);auto small=parameters(1);(void)small; // pin exact existing curve/map/encoding
++ static std::map<std::size_t,std::vector<G1>>cache;auto found=cache.find(n);if(found!=cache.end())return found->second;
++ auto g=parameters(std::min<std::size_t>(n,64)).columns;
++ for(std::size_t i=g.size();i<n;++i){G1 point;mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");g.push_back(point);}
++ auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);std::set<Bytes>seen;
++ for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
++ cache.emplace(n,g);return g;
++}
++G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());for(auto&v:x)need(v.isValid(),"A3 invalid witness scalar");need(r.isValid(),"A3 invalid vector blind");return wideMSM(g,x)+parameters(1).hiding*r;}
++void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
++ dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
++ Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
++ publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());
++ if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
++ auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
++}
++void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
++ approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");
++ validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
++ Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
++ publicBinding(io,"A3/R6-ROWMAJOR/statement",binding.b);
++ // No generator bytes are accepted from the prover. The anchor spec is supplied
++ // by the trusted-model verifier, and R1's role-specific derivation is exact.
++ const auto&g=r1::generators(approved).g;
++ if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
++ auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
++}
++// Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
++// Interactive controllers call dotProduct / dotProductTrustedR6Basis through
++// openVector and model::opening. crypto::validate rejects any other layout tag.
++void opening(IO&io,const PC&pc,const Query&q,const PCSecret*secret,const Hidden*evaluation,Random*rng){
++ validate(pc);validate(q.evaluation,io.session(),q.evaluation.role);need(q.point.size()==r1::log2exact(pc.spec.padded),"A3 PC query dimension");
++ Writer b;b.text(suite);b.text(messageVersion);b.raw(encode(pc));b.raw(encode(q.evaluation));b.number(q.point.size());for(auto&f:q.point)b.scalar(f);publicBinding(io,"A3/PC-statement",b.b);
++ auto rowbits=r1::log2exact(pc.spec.rows);std::vector<Fr>rl(q.point.begin(),q.point.begin()+rowbits),rc(q.point.begin()+rowbits,q.point.end());auto L=r1::weights(rl),a=r1::weights(rc);auto xi=msm(pc.rows,L);DotWitness w;
++ if(io.prover()){
++  need(secret && evaluation && rng && encode(secret->public_pc)==encode(pc) && encode(evaluation->handle)==encode(q.evaluation) && secret->values.size()==pc.spec.padded && secret->blinds.size()==pc.spec.rows,"A3 PC private identity/shape mismatch");
++  w.values.assign(pc.spec.columns,Fr(0));w.evaluation=*evaluation;for(std::size_t i=0;i<pc.spec.rows;++i){w.blind+=L[i]*secret->blinds[i];for(std::size_t j=0;j<pc.spec.columns;++j)w.values[j]+=L[i]*secret->values[i+pc.spec.rows*j];}
++ }
++ dotProduct(io,xi,q.evaluation,a,io.prover()?&w:nullptr,rng);
++}
++}
+--- a/src/paper_r7/oneblock_lookup.cpp
++++ b/src/paper_r7/oneblock_lookup.cpp
+@@ -1,71 +1,71 @@
+-#include "oneblock_lookup.hpp"
+-#include "perf4_profile.hpp"
+-#include <algorithm>
+-#include <array>
+-#include <memory>
+-namespace zkgpt::r7::oneblock {
+-namespace {
+-void evidence(IO&io,const std::string&id){if(!io.prover())checked(io,id);}
+-Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"lookup entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/handle",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
+-Hidden known(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
+-void linear(IO&io,const std::string&role,const std::vector<Hidden>&h,const std::vector<Fr>&a,Random*rng){need(h.size()==a.size(),"lookup linear shape");Relations r;r.role=role;for(auto&v:h)r.handles.push_back(v.handle);r.linear={a};sigma(io,r,io.prover()?&h:nullptr,rng);}
+-void constant(IO&io,const Hidden&h,const Fr&v,Random*rng,const std::string&role){linear(io,role,{h,known(io,role+"/public",v)},{Fr(1),Fr(-1)},rng);}
+-void shape(const VectorOracle&v){need(v.actual>0 && v.actual<=v.padded && v.padded<=(1u<<24) && !(v.padded&(v.padded-1)) && !v.id.empty() && bool(v.open),"lookup oracle shape/authenticator");}
+-void pairShape(const VectorOracle&a,const VectorOracle&b){shape(a);shape(b);need(a.actual==b.actual && a.padded==b.padded,"lookup source/value dimensions");}
+-std::vector<Fr> point(IO&io,std::size_t n,const std::string&role){std::vector<Fr>r;for(unsigned i=0;i<r1::log2exact(n);++i)r.push_back(io.coin(role+"/"+std::to_string(i)));return r;}
+-Hidden evaluate(IO&io,const VectorOracle&v,const std::vector<Fr>&r,Random*rng,const std::string&role){Fr value=0;if(io.prover()){need(bool(v.value),"lookup oracle missing private values");auto w=r1::weights(r);for(std::size_t i=0;i<v.padded;++i)value+=w[i]*v.value(i);}auto h=exchange(io,role,value,rng);v.open(io,{r,h.handle},io.prover()?&h:nullptr,rng,role+"/open");return h;}
+-Fr publicMLE(const Value&v,std::size_t n,const std::vector<Fr>&r){auto w=r1::weights(r);need(w.size()==n,"lookup public MLE dimension");Fr out=0;for(std::size_t i=0;i<n;++i)out+=v(i)*w[i];return out;}
+-Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
+-std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
+-Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&t){return g*g*a+g*v+c-t;}
+-Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
+-void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
+-}
+-void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
+- perf4::Scope native_scope("Native/Product",role,n);
+- need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
+- std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");auto leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){auto next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);tree.push_back(next);}}
+- // The supplied root replaces the stored top level; only children are read.
+- if(io.prover() && n>1)tree.pop_back();
+- Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
+- for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t j){return w->at(j);};std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
+-  auto end=expressionSumcheck(io,width,carry,f,Expression{3,{{Fr(1),{0,1,2}}}},rng,name+"/sumcheck");need(end.endpoints.size()==3,"lookup Product endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);
+-  if(io.prover())tree.at(d-layer-1).reset();
+- }
+- auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");
+- // A layer is recorded only after the recursive chain reaches an actually
+- // authenticated source leaf. A provisional recurrence is not tree coverage.
+- for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
+- evidence(io,role+"/root");
+-}
+-void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+- perf4::Scope native_scope("Native/Memory",role,a.padded);
+- pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
+- auto readValues=std::make_shared<std::vector<Fr>>(),finalValues=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){readValues->resize(a.padded,Fr(0));finalValues->resize(table.size(),Fr(0));std::vector<std::size_t>counts(table.size(),0);for(std::size_t i=0;i<a.padded;++i){auto j=integer(a.value(i),table.size());need(v.value(i)==table[j],"lookup private memory value mismatch");readValues->at(i)=Fr(counts[j]++);}for(std::size_t j=0;j<table.size();++j)finalValues->at(j)=Fr(counts[j]);}
+- auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();shape(read);shape(final);need(read.actual==a.padded && read.padded==a.padded && final.actual==table.size() && final.padded==table.size(),"lookup counter factory dimensions");
+- auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");std::array<Value,3>leaves;std::array<Hidden,3>roots;for(unsigned kind=0;kind<3;++kind){Fr value=1;auto size=kind==2?table.size():a.padded;if(io.prover()){if(kind==2)leaves[kind]=[&table,final,g,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,tau);};else leaves[kind]=[a,v,read,g,tau,kind](std::size_t i){return fingerprint(a.value(i),v.value(i),read.value(i)+Fr(kind==0?1:0),g,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
+- Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
+- for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g*g*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{aa=evaluate(live,a,q.point,random,name+"/address");vv=evaluate(live,v,q.point,random,name+"/value");c=evaluate(live,read,q.point,random,name+"/read");Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g*g,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
+-  hiddenProduct(io,kind==2?table.size():a.padded,roots[kind],leaves[kind],auth,rng,role+"/product/"+std::to_string(kind));}
+- evidence(io,role+"/multiset");
+-}
+-void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+- perf4::Scope native_scope("Native/Range",role,q.padded);
+- shape(q);need(bits>=1 && bits<=126,"lookup Range bits");Writer statement;statement.text("R7-HIDDEN-RANGE-9BIT-v1");statement.text(q.id);statement.number(bits);statement.number(q.actual,8);statement.number(q.padded,8);bindPublic(io,role+"/statement",statement.b);unsigned count=(bits+8)/9;std::vector<VectorOracle>digits;
+- for(unsigned h=0;h<count;++h){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(q.padded,Fr(0));for(std::size_t i=0;i<q.padded;++i){auto b=r1::encode(q.value(i));for(unsigned bit=bits;bit<256;++bit)need(!(b[bit/8]&(1u<<(bit%8))),"lookup private Range exceeds bitwidth");need(i<q.actual || q.value(i).isZero(),"lookup private Range nonzero padding");unsigned digit=0;for(unsigned j=0;j<std::min(9u,bits-9*h);++j){auto k=9*h+j;digit|=((b[k/8]>>(k%8))&1u)<<j;}values->at(i)=Fr(digit);}}
+-  digits.push_back(factory(io,role+"/digit/"+std::to_string(h),q.actual,q.padded,privateValues(io,values)));shape(digits.back());need(digits.back().actual==q.actual && digits.back().padded==q.padded,"lookup digit factory dimensions");}
+- auto r=point(io,q.padded,role+"/row");std::vector<Hidden>opened{evaluate(io,q,r,rng,role+"/query")};std::vector<Fr>coeff{Fr(-1)};Fr scale=1;for(unsigned h=0;h<count;++h){opened.push_back(evaluate(io,digits[h],r,rng,role+"/digit-evaluation/"+std::to_string(h)));coeff.push_back(scale);scale*=Fr(512);}linear(io,role+"/reconstruction",opened,coeff,rng);evidence(io,role+"/reconstruction");for(unsigned h=0;h<count;++h)evidence(io,role+"/digit/"+std::to_string(h)+"/opening");
+- for(unsigned h=0;h<count;++h){std::vector<Fr>table(std::size_t(1)<<std::min(9u,bits-9*h),Fr(0));for(std::size_t j=0;j<table.size();++j)table[j]=Fr(j);hiddenMemory(io,digits[h],digits[h],table,factory,rng,role+"/memory/"+std::to_string(h),prepared);}tail(io,q,rng,role+"/zero-tail");evidence(io,role+"/zero-tail"); // Includes a verifier-known empty tail when actual==padded.
+-}
+-void hiddenRangeBinding(IO&io,const VectorOracle&source,const VectorOracle&encoded,unsigned bits,bool sign,Random*rng,const std::string&role){pairShape(source,encoded);need(bits>=1 && bits<=126,"lookup binding bitwidth");Writer identity;identity.text(source.id);identity.text(encoded.id);identity.number(bits);identity.number(sign);bindPublic(io,role+"/identity",identity.b);auto r=point(io,source.padded,role+"/point");auto s=evaluate(io,source,r,rng,role+"/source"),q=evaluate(io,encoded,r,rng,role+"/encoded");Fr bias=sign?Fr(1):Fr(0);if(sign)for(unsigned i=1;i<bits;++i)bias*=Fr(2);auto b=known(io,role+"/bias",bias*active(source.actual,r));linear(io,role+"/relation",{q,s,b},{Fr(1),Fr(-1),Fr(-1)},rng);}
+-void hiddenExp(IO&io,const VectorOracle&index,const VectorOracle&value,r1::ExpProfile profile,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+- perf4::Scope native_scope("Native/Exp",role,index.padded);
+- pairShape(index,value);need(profile==r1::ExpProfile::LegacyClampOne || profile==r1::ExpProfile::Unclamped,"lookup Exp profile");Writer statement;statement.text("R7-HIDDEN-EXP-u32-St2^-9-Se2^-20-v1");statement.text(index.id);statement.text(value.id);statement.number(unsigned(profile));auto digest=r1::expTableDigest(profile);statement.raw(Bytes(digest.begin(),digest.end()));bindPublic(io,role+"/statement",statement.b);
+- constexpr std::uint32_t K=8191,Scale=1048576;std::array<VectorOracle,4>helper;const std::array<std::string,4>names{"x","selector","delta","native-E"};for(unsigned k=0;k<4;++k){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(index.padded,Fr(0));for(std::size_t i=0;i<index.padded;++i){if(i>=index.actual){if(k==3)values->at(i)=value.value(i)+Fr(Scale);continue;}auto raw=integer(index.value(i),std::uint64_t(1)<<32);values->at(i)=k==0?Fr(std::min<std::size_t>(raw,K)):k==1?Fr(raw<K?1:0):k==2?Fr(raw<K?K-1-raw:raw-K):value.value(i);}}helper[k]=factory(io,role+"/"+names[k],index.actual,index.padded,privateValues(io,values));shape(helper[k]);need(helper[k].actual==index.actual && helper[k].padded==index.padded,"lookup Exp factory dimensions");}
+- hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
+- for(unsigned kind=0;kind<2;++kind){auto name=role+"/branch/"+std::to_string(kind);auto row=point(io,index.padded,name+"/row");auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t i){return w->at(i);},mask=[actual=index.actual](std::size_t i){return Fr(i<actual?1:0);};std::vector<Value>f;if(io.prover())f={eq,helper[kind==0?0:2].value,helper[1].value,index.value,mask};Expression expr;expr.factor_count=5;
+-  if(kind==0)expr.terms={{Fr(1),{0,1}},{Fr(-1),{0,2,3}},{Fr(-std::int64_t(K)),{0,4}},{Fr(K),{0,2}}};else expr.terms={{Fr(1),{0,1}},{Fr(2),{0,2,3}},{Fr(-1),{0,4,3}},{Fr(K),{0,4}},{Fr(-std::int64_t(2*K-1)),{0,2}}};
+-  auto zero=known(io,name+"/zero",Fr(0));auto end=expressionSumcheck(io,index.padded,zero,f,expr,rng,name+"/sumcheck");need(end.endpoints.size()==5,"lookup Exp branch endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/eq");constant(io,end.endpoints[4],active(index.actual,end.point),rng,name+"/mask");helper[kind==0?0:2].open(io,{end.point,end.endpoints[1].handle},io.prover()?&end.endpoints[1]:nullptr,rng,name+"/helper");helper[1].open(io,{end.point,end.endpoints[2].handle},io.prover()?&end.endpoints[2]:nullptr,rng,name+"/selector");index.open(io,{end.point,end.endpoints[3].handle},io.prover()?&end.endpoints[3]:nullptr,rng,name+"/index");evidence(io,role+"/constraint/"+std::to_string(kind));}
+- auto r=point(io,index.padded,role+"/value-point");auto original=evaluate(io,value,r,rng,role+"/original-E"),native=evaluate(io,helper[3],r,rng,role+"/native-E-evaluation");auto pad=known(io,role+"/padding",Fr(Scale)*(Fr(1)-active(index.actual,r)));linear(io,role+"/value-binding",{native,original,pad},{Fr(1),Fr(-1),Fr(-1)},rng);evidence(io,role+"/value-binding/0");evidence(io,role+"/value-binding/1");hiddenMemory(io,helper[0],helper[3],r1::expTable(profile),factory,rng,role+"/indexed",prepared);
+-}
+-}
++#include "oneblock_lookup.hpp"
++#include "perf4_profile.hpp"
++#include <algorithm>
++#include <array>
++#include <memory>
++namespace zkgpt::r7::oneblock {
++namespace {
++void evidence(IO&io,const std::string&id){if(!io.prover())checked(io,id);}
++Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"lookup entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/handle",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
++Hidden known(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
++void linear(IO&io,const std::string&role,const std::vector<Hidden>&h,const std::vector<Fr>&a,Random*rng){need(h.size()==a.size(),"lookup linear shape");Relations r;r.role=role;for(auto&v:h)r.handles.push_back(v.handle);r.linear={a};sigma(io,r,io.prover()?&h:nullptr,rng);}
++void constant(IO&io,const Hidden&h,const Fr&v,Random*rng,const std::string&role){linear(io,role,{h,known(io,role+"/public",v)},{Fr(1),Fr(-1)},rng);}
++void shape(const VectorOracle&v){need(v.actual>0 && v.actual<=v.padded && v.padded<=(1u<<24) && !(v.padded&(v.padded-1)) && !v.id.empty() && bool(v.open),"lookup oracle shape/authenticator");}
++void pairShape(const VectorOracle&a,const VectorOracle&b){shape(a);shape(b);need(a.actual==b.actual && a.padded==b.padded,"lookup source/value dimensions");}
++std::vector<Fr> point(IO&io,std::size_t n,const std::string&role){std::vector<Fr>r;for(unsigned i=0;i<r1::log2exact(n);++i)r.push_back(io.coin(role+"/"+std::to_string(i)));return r;}
++Hidden evaluate(IO&io,const VectorOracle&v,const std::vector<Fr>&r,Random*rng,const std::string&role){Fr value=0;if(io.prover()){need(bool(v.value),"lookup oracle missing private values");auto w=r1::weights(r);for(std::size_t i=0;i<v.padded;++i)value+=w[i]*v.value(i);}auto h=exchange(io,role,value,rng);v.open(io,{r,h.handle},io.prover()?&h:nullptr,rng,role+"/open");return h;}
++Fr publicMLE(const Value&v,std::size_t n,const std::vector<Fr>&r){auto w=r1::weights(r);need(w.size()==n,"lookup public MLE dimension");Fr out=0;for(std::size_t i=0;i<n;++i)out+=v(i)*w[i];return out;}
++Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
++std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
++Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&g2,const Fr&t){return g2*a+g*v+c-t;}
++Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
++void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
++}
++void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
++ perf4::Scope native_scope("Native/Product",role,n);
++ need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
++ std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");auto leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){auto next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);tree.push_back(next);}}
++ // The supplied root replaces the stored top level; only children are read.
++ if(io.prover() && n>1)tree.pop_back();
++ Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
++ for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t j){return w->at(j);};std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
++  auto end=expressionSumcheck(io,width,carry,f,Expression{3,{{Fr(1),{0,1,2}}}},rng,name+"/sumcheck");need(end.endpoints.size()==3,"lookup Product endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);
++  if(io.prover())tree.at(d-layer-1).reset();
++ }
++ auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");
++ // A layer is recorded only after the recursive chain reaches an actually
++ // authenticated source leaf. A provisional recurrence is not tree coverage.
++ for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
++ evidence(io,role+"/root");
++}
++void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Memory",role,a.padded);
++ pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
++ auto readValues=std::make_shared<std::vector<Fr>>(),finalValues=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){readValues->resize(a.padded,Fr(0));finalValues->resize(table.size(),Fr(0));std::vector<std::size_t>counts(table.size(),0);for(std::size_t i=0;i<a.padded;++i){auto j=integer(a.value(i),table.size());need(v.value(i)==table[j],"lookup private memory value mismatch");readValues->at(i)=Fr(counts[j]++);}for(std::size_t j=0;j<table.size();++j)finalValues->at(j)=Fr(counts[j]);}
++ auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();shape(read);shape(final);need(read.actual==a.padded && read.padded==a.padded && final.actual==table.size() && final.padded==table.size(),"lookup counter factory dimensions");
++ auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}std::array<Value,3>leaves;std::array<Hidden,3>roots;for(unsigned kind=0;kind<3;++kind){Fr value=1;auto size=kind==2?table.size():a.padded;if(io.prover()){if(kind==2)leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};else leaves[kind]=[a,v,read,g,g2,tau,kind](std::size_t i){return fingerprint(a.value(i),v.value(i),read.value(i)+Fr(kind==0?1:0),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
++ Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
++ for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{aa=evaluate(live,a,q.point,random,name+"/address");vv=evaluate(live,v,q.point,random,name+"/value");c=evaluate(live,read,q.point,random,name+"/read");Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g2,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
++  hiddenProduct(io,kind==2?table.size():a.padded,roots[kind],leaves[kind],auth,rng,role+"/product/"+std::to_string(kind));}
++ evidence(io,role+"/multiset");
++}
++void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Range",role,q.padded);
++ shape(q);need(bits>=1 && bits<=126,"lookup Range bits");Writer statement;statement.text("R7-HIDDEN-RANGE-9BIT-v1");statement.text(q.id);statement.number(bits);statement.number(q.actual,8);statement.number(q.padded,8);bindPublic(io,role+"/statement",statement.b);unsigned count=(bits+8)/9;std::vector<VectorOracle>digits;
++ for(unsigned h=0;h<count;++h){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(q.padded,Fr(0));for(std::size_t i=0;i<q.padded;++i){auto b=r1::encode(q.value(i));for(unsigned bit=bits;bit<256;++bit)need(!(b[bit/8]&(1u<<(bit%8))),"lookup private Range exceeds bitwidth");need(i<q.actual || q.value(i).isZero(),"lookup private Range nonzero padding");unsigned digit=0;for(unsigned j=0;j<std::min(9u,bits-9*h);++j){auto k=9*h+j;digit|=((b[k/8]>>(k%8))&1u)<<j;}values->at(i)=Fr(digit);}}
++  digits.push_back(factory(io,role+"/digit/"+std::to_string(h),q.actual,q.padded,privateValues(io,values)));shape(digits.back());need(digits.back().actual==q.actual && digits.back().padded==q.padded,"lookup digit factory dimensions");}
++ auto r=point(io,q.padded,role+"/row");std::vector<Hidden>opened{evaluate(io,q,r,rng,role+"/query")};std::vector<Fr>coeff{Fr(-1)};Fr scale=1;for(unsigned h=0;h<count;++h){opened.push_back(evaluate(io,digits[h],r,rng,role+"/digit-evaluation/"+std::to_string(h)));coeff.push_back(scale);scale*=Fr(512);}linear(io,role+"/reconstruction",opened,coeff,rng);evidence(io,role+"/reconstruction");for(unsigned h=0;h<count;++h)evidence(io,role+"/digit/"+std::to_string(h)+"/opening");
++ for(unsigned h=0;h<count;++h){std::vector<Fr>table(std::size_t(1)<<std::min(9u,bits-9*h),Fr(0));for(std::size_t j=0;j<table.size();++j)table[j]=Fr(j);hiddenMemory(io,digits[h],digits[h],table,factory,rng,role+"/memory/"+std::to_string(h),prepared);}tail(io,q,rng,role+"/zero-tail");evidence(io,role+"/zero-tail"); // Includes a verifier-known empty tail when actual==padded.
++}
++void hiddenRangeBinding(IO&io,const VectorOracle&source,const VectorOracle&encoded,unsigned bits,bool sign,Random*rng,const std::string&role){pairShape(source,encoded);need(bits>=1 && bits<=126,"lookup binding bitwidth");Writer identity;identity.text(source.id);identity.text(encoded.id);identity.number(bits);identity.number(sign);bindPublic(io,role+"/identity",identity.b);auto r=point(io,source.padded,role+"/point");auto s=evaluate(io,source,r,rng,role+"/source"),q=evaluate(io,encoded,r,rng,role+"/encoded");Fr bias=sign?Fr(1):Fr(0);if(sign)for(unsigned i=1;i<bits;++i)bias*=Fr(2);auto b=known(io,role+"/bias",bias*active(source.actual,r));linear(io,role+"/relation",{q,s,b},{Fr(1),Fr(-1),Fr(-1)},rng);}
++void hiddenExp(IO&io,const VectorOracle&index,const VectorOracle&value,r1::ExpProfile profile,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Exp",role,index.padded);
++ pairShape(index,value);need(profile==r1::ExpProfile::LegacyClampOne || profile==r1::ExpProfile::Unclamped,"lookup Exp profile");Writer statement;statement.text("R7-HIDDEN-EXP-u32-St2^-9-Se2^-20-v1");statement.text(index.id);statement.text(value.id);statement.number(unsigned(profile));auto digest=r1::expTableDigest(profile);statement.raw(Bytes(digest.begin(),digest.end()));bindPublic(io,role+"/statement",statement.b);
++ constexpr std::uint32_t K=8191,Scale=1048576;std::array<VectorOracle,4>helper;const std::array<std::string,4>names{"x","selector","delta","native-E"};for(unsigned k=0;k<4;++k){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(index.padded,Fr(0));for(std::size_t i=0;i<index.padded;++i){if(i>=index.actual){if(k==3)values->at(i)=value.value(i)+Fr(Scale);continue;}auto raw=integer(index.value(i),std::uint64_t(1)<<32);values->at(i)=k==0?Fr(std::min<std::size_t>(raw,K)):k==1?Fr(raw<K?1:0):k==2?Fr(raw<K?K-1-raw:raw-K):value.value(i);}}helper[k]=factory(io,role+"/"+names[k],index.actual,index.padded,privateValues(io,values));shape(helper[k]);need(helper[k].actual==index.actual && helper[k].padded==index.padded,"lookup Exp factory dimensions");}
++ hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
++ for(unsigned kind=0;kind<2;++kind){auto name=role+"/branch/"+std::to_string(kind);auto row=point(io,index.padded,name+"/row");auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t i){return w->at(i);},mask=[actual=index.actual](std::size_t i){return Fr(i<actual?1:0);};std::vector<Value>f;if(io.prover())f={eq,helper[kind==0?0:2].value,helper[1].value,index.value,mask};Expression expr;expr.factor_count=5;
++  if(kind==0)expr.terms={{Fr(1),{0,1}},{Fr(-1),{0,2,3}},{Fr(-std::int64_t(K)),{0,4}},{Fr(K),{0,2}}};else expr.terms={{Fr(1),{0,1}},{Fr(2),{0,2,3}},{Fr(-1),{0,4,3}},{Fr(K),{0,4}},{Fr(-std::int64_t(2*K-1)),{0,2}}};
++  auto zero=known(io,name+"/zero",Fr(0));auto end=expressionSumcheck(io,index.padded,zero,f,expr,rng,name+"/sumcheck");need(end.endpoints.size()==5,"lookup Exp branch endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/eq");constant(io,end.endpoints[4],active(index.actual,end.point),rng,name+"/mask");helper[kind==0?0:2].open(io,{end.point,end.endpoints[1].handle},io.prover()?&end.endpoints[1]:nullptr,rng,name+"/helper");helper[1].open(io,{end.point,end.endpoints[2].handle},io.prover()?&end.endpoints[2]:nullptr,rng,name+"/selector");index.open(io,{end.point,end.endpoints[3].handle},io.prover()?&end.endpoints[3]:nullptr,rng,name+"/index");evidence(io,role+"/constraint/"+std::to_string(kind));}
++ auto r=point(io,index.padded,role+"/value-point");auto original=evaluate(io,value,r,rng,role+"/original-E"),native=evaluate(io,helper[3],r,rng,role+"/native-E-evaluation");auto pad=known(io,role+"/padding",Fr(Scale)*(Fr(1)-active(index.actual,r)));linear(io,role+"/value-binding",{native,original,pad},{Fr(1),Fr(-1),Fr(-1)},rng);evidence(io,role+"/value-binding/0");evidence(io,role+"/value-binding/1");hiddenMemory(io,helper[0],helper[3],r1::expTable(profile),factory,rng,role+"/indexed",prepared);
++}
++}
+--- a/src/paper_r7/perf4_ipa_probe.cpp
++++ b/src/paper_r7/perf4_ipa_probe.cpp
+@@ -0,0 +1,19 @@
++#include "hyrax_a3.hpp"
++#include <algorithm>
++#include <chrono>
++#include <iostream>
++using namespace zkgpt::r7;using namespace crypto;
++struct PublicRandom:Random{std::uint64_t count=0;void fill(std::uint8_t*p,std::size_t n)override{while(n){Writer w;w.text("perf4-public-ipa-probe");w.number(count++,8);auto d=r1::hash(w.b);auto size=std::min(n,d.size());std::copy_n(d.data(),size,p);p+=size;n-=size;}}};
++void step(std::vector<G1>&g,const Fr&left,const Fr&right,bool joint){auto half=g.size()/2;Fr scalars[2]{left,right};for(std::size_t j=0;j<half;++j){if(joint){G1 points[2]{g[j],g[j+half]};G1::mulVec(g[j],points,scalars,2);}else g[j]=g[j]*left+g[j+half]*right;}g.resize(half);}
++G1 tree(std::vector<G1>g,const std::vector<Fr>&c,bool joint){for(auto x:c){Fr inv;Fr::inv(inv,x);step(g,inv,x,joint);}return g[0];}
++int main(){try{
++ r1::init();auto g=hyrax_a3::generators(32768);PublicRandom random;std::vector<Fr>c(15);for(auto&x:c)x=random.scalar(true);
++ auto a=g,b=g;std::uint64_t checked=0;for(auto x:c){Fr inv;Fr::inv(inv,x);step(a,inv,x,false);step(b,inv,x,true);need(a==b,"PERF4 IPA joint public generator fold differs at intermediate point");checked+=a.size();}
++ G1 zero;zero.clear();for(auto left:{Fr(0),Fr(1),Fr(-1),Fr(7)})for(auto right:{Fr(0),Fr(1),Fr(-3)})for(unsigned pattern=0;pattern<4;++pattern){G1 first=pattern==0?zero:g[0],second=pattern==1?zero:pattern==2?g[0]:-g[0];std::vector<G1>old{first,second},got=old;step(old,left,right,false);step(got,left,right,true);need(old==got,"PERF4 IPA zero/duplicate/opposite public point mismatch");++checked;}
++ std::vector<double>ratios;
++ for(unsigned sample=0;sample<8;++sample){double times[2]{};for(unsigned side=0;side<2;++side){auto mode=(sample%2)^side;auto start=std::chrono::steady_clock::now();auto point=tree(g,c,mode);times[mode]=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();need(point==a[0],"PERF4 IPA timed fold changed group element");}
++  std::cout<<"IPA_PAIR {\"sample\":"<<sample<<",\"warmup\":"<<(sample==0?"true":"false")<<",\"reference\":"<<times[0]<<",\"joint\":"<<times[1]<<",\"ratio\":"<<times[0]/times[1]<<"}\n";
++  if(sample)ratios.push_back(times[0]/times[1]);
++ }
++ std::sort(ratios.begin(),ratios.end());std::cout<<"IPA_DIAGNOSTIC {\"public_generator_points\":32768,\"point_equalities\":"<<checked<<",\"median_ratio\":"<<ratios[ratios.size()/2]<<",\"minimum_ratio\":"<<ratios.front()<<",\"maximum_ratio\":"<<ratios.back()<<",\"Full12_performance_result\":false}\n";return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- a/src/paper_r7/perf4_mapping_tests.cpp
++++ b/src/paper_r7/perf4_mapping_tests.cpp
+@@ -0,0 +1,57 @@
++#define main retained_perf4_opt3a_main
++#include "opt3a_kernel_tests.cpp"
++#undef main
++
++// Queued built-in view maps must own immutable public mapping metadata.
++// Mutating a live Layout must still be rejected at the authentication barrier;
++// it must not mutate the already queued map through a retained View reference.
++int main(){try{
++ r1::init();
++ for(unsigned mutation=0;mutation<10;++mutation){
++  Layout p;p.native=std::string(64,'a');p.master_actual=12;
++  p.roots={{"C_aux",8,8,true,false},{"C_lookup/queries",8,8,true,false},{"C_lookup/helpers",8,8,false,false}};
++  p.base_runs={{0,6,{0,0}},{6,6,{1,1}}};
++  View a;a.id="perf4/mapped";a.actual=5;a.padded=8;a.mapped=true;a.kind=ObjectKind::MappedChild;a.spans={{4,5,Fr(-2)}};p.views.emplace(a.id,a);
++  View b;b.id="perf4/public";b.actual=8;b.padded=8;b.mapped=true;b.kind=ObjectKind::MappedChild;b.spans={{0,3,Fr(3)},{6,5,Fr(-1)}};p.views.emplace(b.id,b);
++  View h;h.id="perf4/helper";h.actual=5;h.padded=8;h.kind=ObjectKind::ExpHelper;h.start={2,0};h.pieces={{0,3,{2,0}},{3,5,{2,3}}};p.views.emplace(h.id,h);
++  Prepared data;data[h.id]=std::make_shared<std::vector<Fr>>(8,Fr(7));FixedRandom random(41);Tape tape;
++  Commitments c(tape,p,[](std::size_t j){return Fr(j+11);},&data,&random,std::vector<Fr>{Fr(11),Fr(13)});c.constrainBaseTails();
++  bool native=mutation>=4 && mutation<=6;std::size_t indexBump=0;
++  auto id=(mutation==2 || mutation==9)?h.id:mutation>=7?b.id:a.id;auto oracle=c.view(id);std::vector<Fr>point{Fr(mutation>=7?2:0),Fr(mutation>=7?3:1),Fr(-3)};auto weights=r1::weights(point);Fr y=0;
++  const std::vector<std::vector<Fr>>physical{{Fr(11),Fr(13),Fr(13),Fr(14),Fr(15),Fr(16),Fr(0),Fr(0)},{Fr(0),Fr(17),Fr(18),Fr(19),Fr(20),Fr(21),Fr(22),Fr(0)},std::vector<Fr>(8,Fr(7))};
++  if(!native)for(std::size_t j=0;j<8;++j){auto ref=locate(p,p.views.at(id),j);auto want=ref.constant?ref.bias:physical.at(ref.coordinate.root).at(ref.coordinate.index)+ref.bias;need(oracle.value(j)==want,"PERF4 source cache changed independent oracle/padding/public X value");}
++  for(std::size_t j=0;j<8;++j)y+=weights[j]*(native?(j<5?Fr(j+15):Fr(0)):oracle.value(j));
++  auto hidden=exchangeHidden(tape,"perf4/snapshot/value",y,&random);
++  if(native)c.deferBase("perf4/snapshot/native",5,8,[&](std::size_t j){return 4+j+(j==0?indexBump:0);},hidden,point);
++  else oracle.open(tape,{point,hidden.handle},&hidden,&random,"perf4/snapshot/open");
++  auto&claim=Access::claims(c).back();std::vector<Located>before;for(std::size_t j=0;j<8;++j)before.push_back(claim.map(j));
++  for(std::size_t j=0;j<8;++j){auto ref=native?(j>=5?Located{{},Fr(0),true}:Located{baseCoordinate(p,4+j),Fr(0),false}):locate(p,p.views.at(id),j);
++   if(!ref.constant && ref.coordinate.root==0 && ref.coordinate.index<2){ref.bias+=Fr(ref.coordinate.index==0?11:13);ref.constant=true;ref.coordinate={};}
++   need(before[j].coordinate==ref.coordinate && before[j].bias==ref.bias && before[j].constant==ref.constant,"PERF4 source cache differs from independent original locator and Statement X");}
++  if(mutation==3 || mutation==6 || mutation==7 || mutation==9){c.authenticateUnifiedInput({Fr(11),Fr(13)});need(c.authenticated() && Access::metrics(c).map_calls>0,"PERF4 pristine positive authentication failed");continue;}
++  if(mutation==5){indexBump=1;bool rejected=false;try{c.authenticateUnifiedInput({Fr(11),Fr(13)});}catch(const std::exception&e){rejected=std::string(e.what())=="classified source map changed after defer";}need(rejected && !c.authenticated(),"PERF4 static base locator bypassed live index-callback digest validation");continue;}
++  if(mutation==0)p.views.at(id).spans[0].bias=Fr(9);
++  if(mutation==1)p.base_runs[0].start.index=1;
++  if(mutation==2)p.views.at(id).pieces[0].start.index=1;
++  if(mutation==4)p.base_runs[0].start.index=1;
++  if(mutation==8)p.views.at(id).spans[0].bias=Fr(9);
++  for(std::size_t j=0;j<8;++j){auto after=claim.map(j);need(after.coordinate==before[j].coordinate && after.bias==before[j].bias && after.constant==before[j].constant,"PERF4 queued view map retained mutable layout metadata");}
++  auto prefix=tape.prefix();auto messages=tape.data.size();auto calls=Access::metrics(c).map_calls;bool rejected=false;
++  try{c.authenticateUnifiedInput({Fr(11),Fr(13)});}catch(const std::exception&e){rejected=std::string(e.what())=="unified missing/closed/mutated authentication";}
++  need(rejected && !c.authenticated(),"PERF4 cached source map bypassed live layout identity barrier");
++  need(tape.prefix()==prefix && tape.data.size()==messages && Access::metrics(c).map_calls==calls,"PERF4 mutated layout reached transcript or map preparation");
++ }
++ // Coarse-directory bucket boundaries and run cuts deliberately disagree.
++ // Compare every native coordinate, including both4096and8192 boundaries.
++ {
++  Layout p;p.native=std::string(64,'a');p.master_actual=8195;
++  p.roots={{"C_aux",8192,8192,true,false},{"C_lookup/queries",8192,8192,true,false}};
++  p.base_runs={{0,4093,{0,0}},{4093,4096,{1,0}},{8189,6,{0,4093}}};
++  Prepared data;FixedRandom random(29);Tape tape;Commitments c(tape,p,[](std::size_t j){return Fr(j+11);},&data,&random,std::vector<Fr>{Fr(11),Fr(13)});c.constrainBaseTails();
++  std::vector<Fr>point(14,Fr(2));auto weights=r1::weights(point);Fr value=0;for(std::size_t j=0;j<8195;++j)value+=weights[j]*Fr(j==1?13:j+11);
++  auto h=exchangeHidden(tape,"perf4/directory/value",value,&random);c.deferBase("perf4/directory/open",8195,16384,[](std::size_t j){return j;},h,point);auto&claim=Access::claims(c).back();
++  for(std::size_t j=0;j<16384;++j){Located ref=j>=8195?Located{{},Fr(0),true}:Located{baseCoordinate(p,j),Fr(0),false};if(j<2){ref.bias=Fr(j==0?11:13);ref.constant=true;ref.coordinate={};}auto got=claim.map(j);need(got.coordinate==ref.coordinate && got.bias==ref.bias && got.constant==ref.constant,"PERF4 base directory bucket/cut/padding mismatch");}
++  c.authenticateUnifiedInput({Fr(11),Fr(13)});need(c.authenticated(),"PERF4 directory full authentication failed");
++ }
++ std::cout<<"PERF4_IMMUTABLE_SOURCE_SNAPSHOT_AND_MUTATED_LAYOUT_REJECTION_PASS\n";return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- a/src/paper_r7/perf4_native_tests.cpp
++++ b/src/paper_r7/perf4_native_tests.cpp
+@@ -0,0 +1,20 @@
++#define main retained_perf4_lookup_main
++#include "oneblock_lookup_tests.cpp"
++#undef main
++#include <fstream>
++struct NativeFixedRandom:Random {
++ std::uint64_t counter=0;
++ void fill(std::uint8_t*p,std::size_t n)override{while(n){Writer w;w.text("perf4-native-test-only");w.number(counter++,8);auto d=r1::hash(w.b);auto count=std::min(n,d.size());std::copy_n(d.data(),count,p);p+=count;n-=count;}}
++};
++int main(int argc,char**argv){try{
++ r1::init();NativeFixedRandom random;Tape p(true);auto make=factory(random);std::vector<Fr>table{Fr(3),Fr(5),Fr(7),Fr(11)};
++ auto address=make(p,"perf4/native/address",5,8,[](std::size_t j){return Fr(j<5?j%4:0);});
++ auto value=make(p,"perf4/native/value",5,8,[&](std::size_t j){return table[j<5?j%4:0];});
++ hiddenMemory(p,address,value,table,make,&random,"perf4/native/memory");
++ Tape v(false);v.messages=p.messages;auto verify=factory(random);
++ auto va=verify(v,"perf4/native/address",5,8,{}),vv=verify(v,"perf4/native/value",5,8,{});
++ hiddenMemory(v,va,vv,table,verify,nullptr,"perf4/native/memory");need(v.pos==v.messages.size(),"PERF4 native verifier left proof messages");
++ Writer bytes;for(const auto&message:p.messages){bytes.text(message.first);bytes.number(message.second.size(),8);bytes.raw(message.second);}
++ if(argc==2){std::ofstream out(argv[1],std::ios::binary);need(bool(out),"PERF4 native message artifact open");out.write(reinterpret_cast<const char*>(bytes.b.data()),bytes.b.size());need(bool(out),"PERF4 native message artifact write");}
++ std::cout<<"PERF4_NATIVE_MESSAGES {\"sha256\":\""<<hex(r1::hash(bytes.b))<<"\",\"messages\":"<<p.messages.size()<<",\"independent_accept\":true}\n";return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- a/src/paper_r7/perf4_u_tests.cpp
++++ b/src/paper_r7/perf4_u_tests.cpp
+@@ -0,0 +1,69 @@
++#include "u_fold_state.hpp"
++#include <iostream>
++#include <cstdlib>
++using namespace zkgpt::r7;using namespace oneblock;
++namespace ui=zkgpt::r7::oneblock::unified;
++namespace fault {thread_local bool active=false;thread_local std::size_t bytes=0;}
++extern "C" void* __real_malloc(std::size_t);
++extern "C" void* __wrap_malloc(std::size_t n){if(fault::active && n==fault::bytes)return nullptr;return __real_malloc(n);}
++template<class F>void reject(F f,const char*why){bool bad=false;try{f();}catch(const std::exception&){bad=true;}need(bad,why);}
++struct Fixture {
++ std::size_t domain=1024;
++ std::vector<ui::Segment>segments{{0,4},{16,16},{64,1},{128,8},{256,32}};
++ std::vector<std::vector<Fr>>u,k;std::vector<std::size_t>stored{3,13,1,0,29};
++ Fixture(){for(std::size_t z=0;z<segments.size();++z){auto n=segments[z].padded;u.emplace_back(n,Fr(0));k.emplace_back(n,Fr(0));for(std::size_t j=0;j<n;++j){if(j<stored[z])u[z][j]=Fr(int((j*7+z*11)%29)-13);if(z)k[z][j]=Fr(int((j*3+z*5)%19)-9);}}}
++ ui::Inputs inputs(){return [this](std::size_t z){return ui::InputSpan{u[z].data(),stored[z],segments[z].padded};};}
++};
++void exact(){
++ for(unsigned variant=0;variant<4;++variant)for(unsigned threads:{1u,2u,4u}){
++  Fixture f;auto local=f.u,b=f.k;std::vector<Fr>globalU(f.domain,Fr(0)),globalK(f.domain,Fr(0));
++  for(std::size_t k=0;k<f.segments.size();++k)for(std::size_t j=0;j<f.segments[k].padded;++j){globalU[f.segments[k].offset+j]=f.u[k][j];globalK[f.segments[k].offset+j]=f.k[k][j];}
++  auto inputs=f.inputs();ui::FoldedU state(f.domain,f.segments,inputs,"exact",8ull<<20);need(state.enabled(),"PERF4 U fixture budget admission failed");std::vector<Fr>point;
++  for(std::size_t width=f.domain;width>1;width/=2){
++   std::array<Fr,3>evaluations{Fr(0),Fr(0),Fr(0)};
++   for(unsigned x=0;x<3;++x)for(std::size_t j=0;j<width/2;++j)evaluations[x]+=(globalU[2*j]*(Fr(1)-Fr(x))+globalU[2*j+1]*Fr(x))*(globalK[2*j]*(Fr(1)-Fr(x))+globalK[2*j+1]*Fr(x));
++   auto c2=(evaluations[2]-Fr(2)*evaluations[1]+evaluations[0])/Fr(2);std::array<Fr,3>want{evaluations[0],evaluations[1]-evaluations[0]-c2,c2};
++   ui::Factors factors=[&](std::size_t k,const ui::Consume&consume){consume([&,k](std::size_t j){return f.u[k].at(j);},[&,k](std::size_t j){return b[k].at(j);});};
++   ui::UOptions options{threads,3,true,{}};
++   options.observe=[&](std::size_t k,std::size_t first,const Fr*values,std::size_t count){for(std::size_t j=0;j<count;++j)need(values[j]==local[k].at(first+j),"PERF4 cached local contraction differs from dense fold");};
++   ui::UMetrics metrics;auto got=ui::quadraticRoundStreaming(f.domain,f.segments,point,factors,inputs,options,&metrics,&state,"exact");
++   need(got.coefficients==want,"PERF4 cached U global polynomial differs across gaps/selectors/collisions");
++   if(width==2)need(got.input_pair==std::array<Fr,2>{globalU[0],globalU[1]} && got.kernel_pair==std::array<Fr,2>{globalK[0],globalK[1]},"PERF4 cached U global terminal pairs differ");
++   need(metrics.extra_bytes<=8ull<<20 && state.metrics().capacity_peak_bytes<=8ull<<20,"PERF4 U private/tile memory bound");
++   Fr r=variant==0?Fr(0):variant==1?Fr(1):variant==2?Fr(-3):Fr(-7-int(point.size()));state.advance("exact",r,inputs);point.push_back(r);
++   for(auto*group:{&local,&b})for(auto&v:*group)if(v.size()>1){for(std::size_t j=0;j<v.size()/2;++j)v[j]=v[2*j]*(Fr(1)-r)+v[2*j+1]*r;v.resize(v.size()/2);}
++   for(std::size_t j=0;j<width/2;++j){globalU[j]=globalU[2*j]*(Fr(1)-r)+globalU[2*j+1]*r;globalK[j]=globalK[2*j]*(Fr(1)-r)+globalK[2*j+1]*r;}
++  }
++  reject([&]{state.advance("exact",Fr(1),inputs);},"PERF4 U extra advancement accepted");
++ }
++}
++void negatives(){
++ for(unsigned mode=0;mode<6;++mode){Fixture f;auto inputs=f.inputs();ui::FoldedU state(f.domain,f.segments,inputs,"negative",8ull<<20);
++  auto failed=[&]{reject([&]{state.beginRound("negative",{},f.segments);},"PERF4 failed U state reused");};
++  if(mode==0){reject([&]{state.beginRound("foreign",{},f.segments);},"PERF4 U foreign session accepted");failed();continue;}
++  if(mode==1){reject([&]{state.beginRound("negative",{Fr(1)},f.segments);},"PERF4 U wrong prefix accepted");failed();continue;}
++  if(mode==2){auto wrong=f.segments;wrong[1].offset+=16;reject([&]{state.beginRound("negative",{},wrong);},"PERF4 U changed segments accepted");failed();continue;}
++  state.beginRound("negative",{},f.segments);
++  if(mode==3){state.span(0,"negative",{},inputs(0));reject([&]{state.completeRound("negative",{});},"PERF4 U incomplete round accepted");failed();continue;}
++  for(std::size_t k=0;k<f.segments.size();++k)state.span(k,"negative",{},inputs(k));state.completeRound("negative",{});
++  if(mode==4){f.stored[1]--;reject([&]{state.advance("negative",Fr(3),inputs);},"PERF4 U changed original span accepted");}
++  if(mode==5){Fr invalid;std::fill_n(reinterpret_cast<unsigned char*>(&invalid),sizeof(invalid),0xff);need(!invalid.isValid(),"PERF4 invalid field fixture");reject([&]{state.advance("negative",invalid,inputs);},"PERF4 invalid U challenge accepted");}
++  reject([&]{state.beginRound("negative",{},f.segments);},"PERF4 failed U state reused");
++ }
++ Fixture f;ui::FoldedU noRoom(f.domain,f.segments,f.inputs(),"budget",0);need(!noRoom.enabled() && noRoom.metrics().capacity_peak_bytes==0,"PERF4 public budget rejection allocated private U state");
++}
++void streamingAdmissionFailure(){
++ for(unsigned mode=0;mode<2;++mode){Fixture f;auto inputs=f.inputs();ui::FoldedU state(f.domain,f.segments,inputs,"admission",8ull<<20);
++  reject([&]{ui::quadraticRoundStreaming(mode?f.domain:2*f.domain,f.segments,{},ui::Factors{},mode?ui::Inputs{}:inputs,ui::UOptions{},nullptr,&state,"admission");},"PERF4 invalid streaming admission accepted");
++  reject([&]{state.beginRound("admission",{},f.segments);},"PERF4 streaming admission failure left reusable U state");
++ }
++}
++void partialAllocationFailure(){
++ std::vector<ui::Segment>s{{0,4},{1024,1024}};std::vector<std::vector<Fr>>u{{Fr(2),Fr(3),Fr(5),Fr(7)},std::vector<Fr>(1024,Fr(11))};
++ ui::Inputs inputs=[&](std::size_t k){return ui::InputSpan{u[k].data(),u[k].size(),s[k].padded};};ui::FoldedU state(2048,s,inputs,"partial",8ull<<20);
++ state.beginRound("partial",{},s);for(std::size_t k=0;k<s.size();++k)state.span(k,"partial",{},inputs(k));state.completeRound("partial",{});
++ fault::bytes=512*sizeof(Fr);fault::active=true;bool failed=false;try{state.advance("partial",Fr(-3),inputs);}catch(const std::bad_alloc&){failed=true;}fault::active=false;
++ need(failed && state.metrics().roots_materialized>=1,"PERF4 partial-allocation failure did not exercise an advanced first root");
++ reject([&]{state.beginRound("partial",{},s);},"PERF4 partially advanced U reused after allocation failure");reject([&]{state.advance("partial",Fr(1),inputs);},"PERF4 partially advanced U advanced again");
++}
++int main(){try{r1::init();exact();negatives();streamingAdmissionFailure();partialAllocationFailure();std::cout<<"PERF4_U_DENSE_GLOBAL_LOCAL_ALL_COEFFICIENTS_ENDPOINTS_MEMORY_AND_FAILURES_PASS\n";return 0;}catch(const std::exception&e){fault::active=false;std::cerr<<e.what()<<'\n';return 1;}}
+--- a/src/paper_r7/single_commitments.cpp
++++ b/src/paper_r7/single_commitments.cpp
+@@ -13,7 +13,8 @@
+ void Commitments::initializeSingle(Value base,Prepared*prepared,const std::vector<Fr>&x){
+  need(io_.prover()?(bool(base) && prepared && rng_):(!base && !prepared && !rng_),"single classified P/V boundary");
+  single_x_=x;need(baseSize(layout_)>=x.size(),"single native public X prefix bounds");
+- for(std::size_t j=0;j<x.size();++j){auto c=baseCoordinate(layout_,j);auto key=(std::uint64_t(c.root)<<32)|c.index;need(single_public_coordinates_.emplace(key,j).second,"single native X coordinate alias");}
++ single_public_roots_.resize(layout_.roots.size(),0);
++ for(std::size_t j=0;j<x.size();++j){auto c=baseCoordinate(layout_,j);auto key=(std::uint64_t(c.root)<<32)|c.index;need(single_public_coordinates_.emplace(key,j).second,"single native X coordinate alias");single_public_roots_.at(c.root)=1;}
+  auto plan=singlePlan(layout_,x);roots_.resize(layout_.roots.size());std::set<std::string>used;
+  for(std::size_t k=0;k<roots_.size();++k){auto&root=roots_[k];root.spec=layout_.roots[k];if(!io_.prover())continue;
+   // Source partitions retain exact original bytes/coordinates, but have NO
+@@ -41,6 +42,7 @@
+  single_pc_=single::exchange(io_,plan,io_.prover()?&*single_secret_:nullptr);sealed_=true;
+ }
+ Located Commitments::publicLocation(Located l)const{
++ if(static_source_enabled_ && !l.constant && l.coordinate.root<single_public_roots_.size() && !single_public_roots_[l.coordinate.root])return l;
+  if(!l.constant && !single_public_coordinates_.empty()){auto key=(std::uint64_t(l.coordinate.root)<<32)|l.coordinate.index;auto found=single_public_coordinates_.find(key);if(found!=single_public_coordinates_.end()){l.bias+=single_x_.at(found->second);l.constant=true;l.coordinate={};}}
+  return l;
+ }
+--- a/src/paper_r7/static_source_map.cpp
++++ b/src/paper_r7/static_source_map.cpp
+@@ -0,0 +1,35 @@
++#include "static_source_map.hpp"
++#include <algorithm>
++namespace zkgpt::r7::oneblock::classified {
++StaticBaseMap::StaticBaseMap(const Layout&p):size_(p.master_actual),runs_(p.base_runs){
++ need(size_ && size_<=(1u<<28) && p.base.empty(),"PERF4 static compressed base shape");std::size_t covered=0;
++ for(const auto&r:runs_){need(r.begin==covered && r.count && r.count<=size_-covered && r.start.root<p.roots.size(),"PERF4 static base coverage");const auto actual=p.roots[r.start.root].actual;need(actual<=(1ull<<32) && r.start.index<=actual && r.count<=actual-r.start.index,"PERF4 static base physical bounds");covered+=r.count;}
++ need(covered==size_,"PERF4 static base omission");directory_.resize((size_+4095)/4096);std::size_t k=0;
++ for(std::size_t bucket=0;bucket<directory_.size();++bucket){auto at=bucket*4096;while(at>=runs_[k].begin+runs_[k].count)++k;need(k<=UINT32_MAX,"PERF4 static directory index");directory_[bucket]=k;}
++}
++Coordinate StaticBaseMap::at(std::size_t at)const{
++ need(at<size_,"partitioned base bounds");auto k=directory_[at/4096];while(at>=runs_[k].begin+runs_[k].count)++k;const auto&r=runs_[k];return {r.start.root,std::uint32_t(r.start.index+at-r.begin)};
++}
++StaticSourceMap::StaticSourceMap(const Layout&p,const View&v,const StaticBaseMap&base):padded_(v.padded){
++ need(padded_ && v.actual<=padded_,"PERF4 static view shape");std::size_t covered=0;
++ auto append=[&](std::size_t count,Located first){
++  need(count && count<=padded_-covered && first.bias.isValid(),"PERF4 static view coverage/bias");
++  if(!first.constant){need(first.coordinate.root<p.roots.size(),"PERF4 static view root");auto actual=p.roots[first.coordinate.root].actual;need(actual<=(1ull<<32) && first.coordinate.index<=actual && count<=actual-first.coordinate.index,"PERF4 static view physical bounds");}
++  else first.coordinate={};
++  if(!runs_.empty()){auto&last=runs_.back();if(last.first.constant==first.constant && last.first.bias==first.bias && (first.constant || (last.first.coordinate.root==first.coordinate.root && std::uint64_t(last.first.coordinate.index)+last.count==first.coordinate.index))){last.count+=count;covered+=count;return;}}
++  runs_.push_back({covered,count,first});covered+=count;
++ };
++ if(v.mapped){std::size_t consumed=0;for(const auto&span:v.spans){if(consumed==v.actual)break;auto count=std::min(span.count,v.actual-consumed);if(!count)continue;need(span.offset<p.master_actual && count<=p.master_actual-span.offset,"classified trusted map bounds");auto at=span.offset,end=at+count;
++   while(at<end){const auto&runs=base.runs();auto it=std::upper_bound(runs.begin(),runs.end(),at,[](std::size_t j,const Piece&r){return j<r.begin;});need(it!=runs.begin(),"PERF4 static source prefix");--it;auto n=std::min(end-at,it->count-(at-it->begin));append(n,{base.at(at),span.bias,false});at+=n;}consumed+=count;
++  }need(consumed==v.actual,"classified missing source span");if(covered<padded_)append(padded_-covered,{{},Fr(0),true});
++ }else{
++  // Partitioned identity binds Pieces, not the unused legacy View.start.
++  // The caller deliberately keeps piece-less helper callbacks on reference.
++  need(!v.pieces.empty(),"PERF4 static helper requires bound pieces");auto pieces=v.pieces;std::sort(pieces.begin(),pieces.end(),[](const Piece&a,const Piece&b){return a.begin<b.begin;});for(const auto&piece:pieces){need(piece.begin==covered,"PERF4 helper gap/overlap");append(piece.count,{piece.start,Fr(0),false});}
++ }
++ need(covered==padded_,"PERF4 static view omission");
++}
++Located StaticSourceMap::at(std::size_t j)const{
++ need(j<padded_,"classified view query bounds");const Run*r=&runs_[0];if(runs_.size()!=1){auto it=std::upper_bound(runs_.begin(),runs_.end(),j,[](std::size_t at,const Run&run){return at<run.begin;});--it;r=&*it;}auto out=r->first;if(!out.constant)out.coordinate.index+=j-r->begin;return out;
++}
++}
+--- a/src/paper_r7/static_source_map.hpp
++++ b/src/paper_r7/static_source_map.hpp
+@@ -0,0 +1,19 @@
++#pragma once
++#include "classified_layout.hpp"
++namespace zkgpt::r7::oneblock::classified {
++// Owned public metadata only. Neither class retains Layout/View references.
++class StaticBaseMap {
++ std::size_t size_;std::vector<Piece>runs_;std::vector<std::uint32_t>directory_;
++ public:explicit StaticBaseMap(const Layout&);
++ Coordinate at(std::size_t)const;
++ const std::vector<Piece>&runs()const{return runs_;}
++ std::size_t bytes()const{return sizeof(*this)+runs_.capacity()*sizeof(Piece)+directory_.capacity()*sizeof(std::uint32_t);}
++};
++class StaticSourceMap {
++ struct Run {std::size_t begin,count;Located first;};
++ std::size_t padded_;std::vector<Run>runs_;
++ public:StaticSourceMap(const Layout&,const View&,const StaticBaseMap&);
++ Located at(std::size_t)const;
++ std::size_t bytes()const{return sizeof(*this)+runs_.capacity()*sizeof(Run);}
++};
++}
+--- a/src/paper_r7/u_fold_state.cpp
++++ b/src/paper_r7/u_fold_state.cpp
+@@ -0,0 +1,67 @@
++#include "u_fold_state.hpp"
++#include <algorithm>
++#include <chrono>
++#include <cstdlib>
++#include <iostream>
++namespace zkgpt::r7::oneblock::unified {
++namespace {using Clock=std::chrono::steady_clock;constexpr std::uint64_t maximum=16ull<<30;
++bool same(InputSpan a,InputSpan b){return a.data==b.data && a.stored==b.stored && a.padded==b.padded;}
++void shape(InputSpan s,std::size_t padded){need(s.padded==padded && s.stored<=s.padded && (!s.stored || s.data),"PERF4 U original storage shape");}
++}
++struct FoldedU::Impl {
++ struct Root {InputSpan original;std::vector<Fr>values;bool seen=false;};
++ std::size_t n;unsigned bits=0;std::uint64_t cap,used=0;bool enabled=false,failed=false,consuming=false,ready=false;
++ std::string session;std::vector<Segment>segments;std::vector<Root>roots;std::vector<Fr>point;UFoldMetrics m;
++ Impl(std::size_t domain,const std::vector<Segment>&s,const Inputs&input,const std::string&id,std::uint64_t budget):n(domain),cap(budget),session(id){
++  validate(n,s);need(input && !id.empty() && id.size()<=4096 && budget<=maximum,"PERF4 U constructor bounds");for(auto width=n;width>1;width/=2)++bits;
++  std::uint64_t first=0;for(auto segment:s){auto count=std::max<std::size_t>(1,segment.padded/2);first+=count*sizeof(Fr);}
++  const std::uint64_t meta=65536+s.size()*(2*sizeof(Root)+2*sizeof(Segment));
++  if(!bits || first>cap || meta>cap-first)return; // Public admission, before any retained private vector.
++  segments=s;roots.resize(s.size());point.reserve(bits);
++  used=sizeof(FoldedU)+sizeof(*this)+session.capacity()+segments.capacity()*sizeof(Segment)+roots.capacity()*sizeof(Root)+point.capacity()*sizeof(Fr);
++  need(used<=meta && first<=cap-used,"PERF4 U metadata capacity budget");
++  for(std::size_t k=0;k<s.size();++k){auto original=input(k);shape(original,s[k].padded);roots[k].original=original;}
++  enabled=true;m.capacity_peak_bytes=used;
++ }
++ void check(const std::string&id,const std::vector<Fr>*prefix=nullptr)const{need(enabled && !failed && id==session && (!prefix || *prefix==point),"PERF4 U session/prefix/failed state");}
++};
++FoldedU::FoldedU(std::size_t n,const std::vector<Segment>&s,const Inputs&i,const std::string&id,std::uint64_t cap):p_(std::make_unique<Impl>(n,s,i,id,cap)){}
++FoldedU::~FoldedU()=default;
++bool FoldedU::requested(){auto p=std::getenv("ZKGPT_PERF4_U_FOLD");need(!p || std::string(p)=="0" || std::string(p)=="1","PERF4 U mode");return !p || std::string(p)=="1";}
++std::uint64_t FoldedU::environmentBudget(){auto p=std::getenv("ZKGPT_PERF4_U_RAM_BYTES");if(!p)return maximum;std::string text(p);need(!text.empty() && text.find_first_not_of("0123456789")==std::string::npos,"PERF4 U budget syntax");auto cap=std::stoull(text);need(cap<=maximum,"PERF4 U budget cap");return cap;}
++bool FoldedU::enabled()const{return p_->enabled;}std::size_t FoldedU::domain()const{return p_->n;}
++void FoldedU::beginRound(const std::string&id,const std::vector<Fr>&prefix,const std::vector<Segment>&s){try{
++ p_->check(id,&prefix);need(!p_->consuming && !p_->ready && prefix.size()<p_->bits && s.size()==p_->segments.size(),"PERF4 U round order");
++ for(std::size_t k=0;k<s.size();++k)need(s[k].offset==p_->segments[k].offset && s[k].padded==p_->segments[k].padded,"PERF4 U segment drift");
++ for(auto&r:p_->roots){r.seen=false;}
++ p_->consuming=true;
++}catch(...){poison();throw;}}
++InputSpan FoldedU::span(std::size_t k,const std::string&id,const std::vector<Fr>&prefix,InputSpan original){try{
++ p_->check(id,&prefix);need(p_->consuming && k<p_->roots.size(),"PERF4 U read phase/root");auto&r=p_->roots[k];need(!r.seen && same(original,r.original),"PERF4 U repeated read/storage drift");r.seen=true;
++ if(prefix.empty()){return r.original;}
++ need(r.values.size()==std::max<std::size_t>(1,r.original.padded>>std::min<unsigned>(prefix.size(),r1::log2exact(r.original.padded))),"PERF4 U folded local length");
++ return {r.values.data(),r.values.size(),r.values.size()};
++}catch(...){poison();throw;}}
++void FoldedU::completeRound(const std::string&id,const std::vector<Fr>&prefix){try{p_->check(id,&prefix);need(p_->consuming,"PERF4 U completion phase");for(const auto&r:p_->roots)need(r.seen,"PERF4 U incomplete root consumption");p_->consuming=false;p_->ready=true;}catch(...){poison();throw;}}
++void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&original){auto start=Clock::now();auto cpu=crypto::processCPU();
++ auto timing=[&]{p_->m.fold_wall_seconds+=std::chrono::duration<double>(Clock::now()-start).count();p_->m.fold_cpu_seconds+=crypto::processCPU()-cpu;};
++ try{
++  p_->check(id);need(p_->ready && !p_->consuming && p_->point.size()<p_->bits && challenge.isValid() && original,"PERF4 U advancement order/challenge");
++  // Validate ALL descriptors before modifying any root. No callback is retained.
++  for(std::size_t k=0;k<p_->roots.size();++k)need(same(original(k),p_->roots[k].original),"PERF4 U original span changed before advance");
++  for(auto&root:p_->roots){
++   if(p_->point.empty()){
++    const auto n=root.original.padded,count=std::max<std::size_t>(1,n/2);need(count*sizeof(Fr)<=p_->cap-p_->used,"PERF4 U private capacity preflight");std::vector<Fr>next(count);
++    auto bytes=next.capacity()*sizeof(Fr);need(bytes<=p_->cap-p_->used,"PERF4 U unexpected vector capacity");p_->used+=bytes;p_->m.capacity_peak_bytes=std::max(p_->m.capacity_peak_bytes,p_->used);
++    auto read=[&](std::size_t j){return j<root.original.stored?root.original.data[j]:Fr(0);};
++    if(n==1)next[0]=read(0);else{for(std::size_t j=0;j<count;++j){auto left=read(2*j),right=read(2*j+1);next[j]=left+challenge*(right-left);}p_->m.fold_input_coordinates+=n;p_->m.multiplications+=count;p_->m.additions+=n;}
++    p_->m.original_read_coordinates+=root.original.stored;p_->m.fold_write_coordinates+=count;root.values.swap(next);++p_->m.roots_materialized;
++   }else if(root.values.size()>1){auto n=root.values.size();for(std::size_t j=0;j<n/2;++j)root.values[j]=root.values[2*j]+challenge*(root.values[2*j+1]-root.values[2*j]);root.values.resize(n/2);p_->m.cache_fold_read_coordinates+=n;p_->m.fold_input_coordinates+=n;p_->m.fold_write_coordinates+=n/2;p_->m.multiplications+=n/2;p_->m.additions+=n;}
++   // A scalar is kept unchanged; global selector scaling belongs to streaming.
++  }
++  p_->point.push_back(challenge);p_->ready=false;++p_->m.advances;p_->m.live_bytes=0;for(const auto&root:p_->roots)p_->m.live_bytes+=root.values.size()*sizeof(Fr);timing();
++ }catch(...){poison();timing();throw;}
++}
++void FoldedU::poison()noexcept{p_->failed=true;}const UFoldMetrics&FoldedU::metrics()const{return p_->m;}
++void FoldedU::report()const{const auto&m=p_->m;std::cerr<<"PERF4_U_STATE {\"enabled\":"<<(p_->enabled?"true":"false")<<",\"failed\":"<<(p_->failed?"true":"false")<<",\"budget_bytes\":"<<p_->cap<<",\"capacity_peak_bytes\":"<<m.capacity_peak_bytes<<",\"live_bytes\":"<<m.live_bytes<<",\"roots_materialized\":"<<m.roots_materialized<<",\"advances\":"<<m.advances<<",\"original_read_coordinates\":"<<m.original_read_coordinates<<",\"cache_fold_read_coordinates\":"<<m.cache_fold_read_coordinates<<",\"fold_input_coordinates\":"<<m.fold_input_coordinates<<",\"fold_write_coordinates\":"<<m.fold_write_coordinates<<",\"Fr_multiplications\":"<<m.multiplications<<",\"Fr_additions\":"<<m.additions<<",\"fold_wall_seconds\":"<<m.fold_wall_seconds<<",\"fold_cpu_seconds\":"<<m.fold_cpu_seconds<<",\"private_files\":0}\n";}
++}
+--- a/src/paper_r7/u_fold_state.hpp
++++ b/src/paper_r7/u_fold_state.hpp
+@@ -0,0 +1,24 @@
++#pragma once
++#include "unified_input.hpp"
++namespace zkgpt::r7::oneblock::unified {
++struct UFoldMetrics {
++ std::uint64_t capacity_peak_bytes=0,live_bytes=0,roots_materialized=0,advances=0;
++ std::uint64_t original_read_coordinates=0,cache_fold_read_coordinates=0,fold_input_coordinates=0,fold_write_coordinates=0,multiplications=0,additions=0;
++ double fold_wall_seconds=0,fold_cpu_seconds=0;
++};
++// One authentication's private derived state. Original sealed Sources stay
++// unchanged. No callbacks, files or state survive this object; no V access.
++class FoldedU {
++ struct Impl;std::unique_ptr<Impl>p_;
++ public:
++ FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget);
++ ~FoldedU();FoldedU(const FoldedU&)=delete;FoldedU&operator=(const FoldedU&)=delete;
++ static bool requested();static std::uint64_t environmentBudget();
++ bool enabled()const;std::size_t domain()const;
++ void beginRound(const std::string&,const std::vector<Fr>&,const std::vector<Segment>&);
++ InputSpan span(std::size_t,const std::string&,const std::vector<Fr>&,InputSpan original);
++ void completeRound(const std::string&,const std::vector<Fr>&);
++ void advance(const std::string&,const Fr&,const Inputs&original);
++ void poison()noexcept;const UFoldMetrics&metrics()const;void report()const;
++};
++}
+--- a/src/paper_r7/u_streaming.cpp
++++ b/src/paper_r7/u_streaming.cpp
+@@ -1,123 +1,131 @@
+-#include "unified_input.hpp"
+-#include "opt2_metrics.hpp"
+-#include "thread_joiner.hpp"
+-#include <pthread.h>
+-#include <algorithm>
+-#include <chrono>
+-#include <condition_variable>
+-#include <iostream>
+-#include <map>
+-#include <mutex>
+-namespace zkgpt::r7::oneblock::unified {
+-namespace {
+-using Clock=std::chrono::steady_clock;
+-double elapsed(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
+-// Fixed <=4-worker pool for this round only. Workers never touch PublicK or IO.
+-class Workers {
+- unsigned count_;std::array<pthread_t,3>threads_{};unsigned created_=0;std::mutex mutex_;std::condition_variable wake_,done_;
+- struct Context {Workers*self;unsigned id;};std::array<Context,3>contexts_{};
+- bool stop_=false;std::size_t generation_=0,pending_=0,tasks_=0;const void*job_context_=nullptr;void(*job_run_)(const void*,std::size_t)=nullptr;
+- std::array<std::exception_ptr,4>errors_{};
+- void work(unsigned id){try{for(std::size_t j=id;j<tasks_;j+=count_)job_run_(job_context_,j);}catch(...){errors_[id]=std::current_exception();}}
+- public:explicit Workers(unsigned count):count_(count){
+-  pthread_attr_t attr;need(pthread_attr_init(&attr)==0,"OPT3D thread attributes");
+-  if(pthread_attr_setstacksize(&attr,1u<<20)!=0){pthread_attr_destroy(&attr);need(false,"OPT3D bounded thread stack");}
+-  try{for(unsigned id=1;id<count_;++id){contexts_[id-1]={this,id};auto error=pthread_create(&threads_[id-1],&attr,[](void*arg)->void*{auto context=*static_cast<Context*>(arg);context.self->loop(context.id);return nullptr;},&contexts_[id-1]);need(error==0,"OPT3D worker creation");++created_;}pthread_attr_destroy(&attr);}
+-  catch(...){pthread_attr_destroy(&attr);shutdown();throw;}
+- }
+- void loop(unsigned id){std::size_t seen=0;for(;;){std::unique_lock<std::mutex>lock(mutex_);wake_.wait(lock,[&]{return stop_ || generation_!=seen;});if(stop_)return;seen=generation_;lock.unlock();work(id);lock.lock();if(--pending_==0)done_.notify_one();}}
+- void shutdown(){ {std::lock_guard<std::mutex>lock(mutex_);stop_=true;}wake_.notify_all();for(unsigned id=0;id<created_;++id)pthread_join(threads_[id],nullptr);created_=0;}
+- ~Workers(){shutdown();}
+- template<class F>void run(std::size_t count,const F&fn,bool parallel){
+-  if(!parallel || count_==1){for(std::size_t j=0;j<count;++j)fn(j);return;}
+-  // Borrow the caller's live closure until this synchronous join completes.
+-  // No std::function heap allocation/copy for each tile dispatch.
+-  {std::lock_guard<std::mutex>lock(mutex_);job_context_=&fn;job_run_=[](const void*p,std::size_t j){(*static_cast<const F*>(p))(j);};tasks_=count;pending_=count_-1;errors_={};++generation_;}wake_.notify_all();work(0);
+-  {std::unique_lock<std::mutex>lock(mutex_);done_.wait(lock,[&]{return pending_==0;});job_context_=nullptr;job_run_=nullptr;}
+-  for(auto&e:errors_)if(e)std::rethrow_exception(e);
+- }
+-};
+-struct Weights {
+- const std::vector<Fr>&low;std::vector<Fr>high;unsigned split;std::size_t block;
+- Weights(const std::vector<Fr>&p,unsigned d,const std::vector<Fr>&shared):low(shared),split(std::min(d,16u)),block(std::size_t(1)<<d){high=r1::weights({p.begin()+split,p.begin()+d});}
+- Fr at(std::size_t i)const{return low[i&(low.size()-1)]*high[i>>split];}
+- // Contract contiguous low groups before scaling by their common high weight.
+- // No division: exactly valid when challenges are0 or1 as well.
+- template<class Read>Fr dot(std::size_t begin,std::size_t start,std::size_t stop,const Read&read,bool factored,bool striped)const{
+-  Fr result=0;if(block==1)return read(begin);
+-  if(!factored){for(auto i=start;i<stop;++i)result+=at(i)*read(begin+i);return result;}
+-  for(auto i=start;i<stop;){auto h=i>>split;auto end=std::min(stop,(h+1)*low.size());Fr partial=0;
+-   if(striped && end-i>=4){
+-    Fr p0=0,p1=0,p2=0,p3=0;
+-    for(;end-i>=4;i+=4){p0+=low[i&(low.size()-1)]*read(begin+i);p1+=low[(i+1)&(low.size()-1)]*read(begin+i+1);p2+=low[(i+2)&(low.size()-1)]*read(begin+i+2);p3+=low[(i+3)&(low.size()-1)]*read(begin+i+3);}
+-    partial=(p0+p1)+(p2+p3);
+-   }
+-   for(;i<end;++i)partial+=low[i&(low.size()-1)]*read(begin+i);
+-   if(high.size()==1)result+=partial;else result+=high[h]*partial;
+-  }
+-  return result;
+- }
+- std::size_t bytes()const{return high.capacity()*sizeof(Fr);}
+-};
+-Fr fixed(const Segment&s,const std::vector<Fr>&p,unsigned begin){Fr w=1;for(unsigned j=begin;j<p.size();++j)w*=((s.offset>>j)&1)?p[j]:Fr(1)-p[j];return w;}
+-}
+-UOptions UOptions::environment(){UOptions out;auto budget=zkgpt::workerThreadCount();out.threads=budget>=4?4:budget>=2?2:1;if(const auto*v=std::getenv("ZKGPT_U_THREADS")){std::string s(v);need(s=="1" || s=="2" || s=="4","OPT3D thread budget");out.threads=unsigned(s[0]-'0');need(out.threads<=budget,"OPT3D cannot exceed existing worker budget");}if(const auto*v=std::getenv("ZKGPT_PERF3_U_DOT")){std::string s(v);need(s=="0" || s=="1","PERF3 dot mode");out.striped_dot=s=="1";}return out;}
+-Round quadraticRoundStreaming(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics){
+- validate(n,segments);need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4) && options.tile_pairs && options.tile_pairs<=4096,"OPT3D bounded tile/thread options");
+- crypto::AllocationTrace allocation;UMetrics m;Round out;const auto t=unsigned(prefix.size());
+- // Check public allocation sizes BEFORE allocating any new private tile/pool.
+- std::array<bool,33>seen{};std::array<bool,17>splits{};std::size_t planned=segments.size()*192+16384+(2*options.tile_pairs+4)*sizeof(Fr)+(inputs?options.threads-1:0)*((1u<<20)+4096);
+- for(auto s:segments){auto d=std::min(t,r1::log2exact(s.padded)),split=std::min(d,16u);if(!seen[d]){planned+=(std::size_t(1)<<(d-split))*sizeof(Fr);seen[d]=true;}if(!splits[split]){planned+=(std::size_t(1)<<split)*sizeof(Fr);splits[split]=true;}}
+- need(planned<=8ull<<20,"OPT3D extra RAM budget preflight");
+- Workers workers(inputs?options.threads:1);std::vector<Fr>tile(2*options.tile_pairs+4,Fr(0));m.tile_bytes=tile.capacity()*sizeof(Fr);m.thread_bytes=(inputs?options.threads-1:0)*((1u<<20)+4096)+sizeof(Workers)+4*sizeof(Fr)*8;
+- std::map<unsigned,std::vector<Fr>>shared_low;std::map<unsigned,std::unique_ptr<Weights>>weights;std::size_t weight_bytes=0;
+- struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
+- auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;m.product_multiplications+=4;m.product_additions+=6;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;m.product_additions+=4;}};
+- for(std::size_t k=0;k<segments.size();++k){const auto s=segments[k];const auto d=r1::log2exact(s.padded),low=std::min(t,d);auto&owned=weights[low];if(!owned){auto split=std::min(low,16u);auto&shared=shared_low[split];if(shared.empty()){shared=r1::weights({prefix.begin(),prefix.begin()+split});weight_bytes+=shared.capacity()*sizeof(Fr);}owned=std::make_unique<Weights>(prefix,low,shared);weight_bytes+=owned->bytes();}const auto&w=*owned;const auto block=w.block;
+-  InputSpan span;if(inputs){span=inputs(k);need(span.padded==s.padded && span.stored<=span.padded && (!span.stored || span.data),"OPT3D invalid sealed RowMajor span bounds");}
+-  auto root_start=Clock::now();auto root_cpu=crypto::processCPU();auto before=m;unsigned calls=0;
+-  provider(k,[&](const Value&a,const Value&b){need(++calls==1 && a && b,"OPT3D factor oracle invocation");
+-   auto read=[&](std::size_t index)->Fr{return inputs?(index<span.stored?span.data[index]:Fr(0)):a(index);};
+-   const auto length=s.padded>>low;
+-   for(std::size_t first=0;first<length;){auto count=std::min<std::size_t>(length-first,2*options.tile_pairs);
+-    // When only1/2 contractions remain, split their disjoint low-bit ranges.
+-    unsigned shards=(inputs && block>=(1u<<18) && count<options.threads)?options.threads/unsigned(count):1;while(shards>1 && block/shards< w.low.size())shards/=2;
+-    const auto tasks=count*shards;need(tasks<=tile.size(),"OPT3D tile task bound");auto scan=Clock::now();auto scan_cpu=crypto::processCPU();
+-    workers.run(tasks,[&](std::size_t job){auto local=job/shards,shard=job%shards;auto begin=(first+local)*block;
+-     auto lo=block*shard/shards,hi=block*(shard+1)/shards;
+-     // InputSpan's public stored length defines the source's implicit zero
+-     // suffix. Intersect before dot (including block==1), never by inspecting
+-     // witness values. All tiles and folded K queries remain present below.
+-     if(inputs && options.elide_zero_suffix){
+-      hi=begin<span.stored?std::min(hi,span.stored-begin):0;
+-      // The interval establishes index<stored once, so the hot read does not
+-      // repeat the public suffix branch for every scalar or copy via Value.
+-      tile[job]=lo<hi?w.dot(begin,lo,hi,[&](std::size_t index)->const Fr&{return span.data[index];},options.factored,options.striped_dot):Fr(0);
+-     }else tile[job]=w.dot(begin,lo,hi,read,options.factored,options.striped_dot);
+-    },inputs && count*block>=(1u<<18));
+-    m.scan_wall+=elapsed(scan);m.scan_cpu+=crypto::processCPU()-scan_cpu;
+-    if(shards>1)for(std::size_t j=0;j<count;++j){Fr sum=0;for(unsigned z=0;z<shards;++z)sum+=tile[j*shards+z];tile[j]=sum;}
+-    if(shards>1)m.additions+=count*shards;
+-    if(options.observe)options.observe(k,first,tile.data(),count);
+-    auto products=Clock::now();
+-    if(t<d){need(count%2==0,"OPT3D suffix pair tile alignment");for(std::size_t j=0;j<count;j+=2){auto b0=b(first+j),b1=b(first+j+1);product(tile[j],tile[j+1],b0,b1);}}
+-    else{auto scale=fixed(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=scale*tile[0];target.b+=scale*b(0);}
+-    m.product_wall+=elapsed(products);first+=count;
+-   }
+-   m.fused_load_bytes+=length*sizeof(Fr);
+-  });need(calls==1,"OPT3D missing factor oracle");
+-  m.coordinates+=s.padded;m.bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
+-  m.fused_load_bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
+-  // U was already root-local in OPT3-C: no Root-Centric map queries here.
+-  const auto visited=(inputs && options.elide_zero_suffix)?span.stored:s.padded;
+-  m.contracted_coordinates+=visited;m.implicit_zero_coordinates+=s.padded-visited;
+-  if(low){const auto groups=(visited+w.low.size()-1)/w.low.size();m.multiplications+=options.factored?visited+(w.high.size()==1?0:groups):2*visited;m.additions+=visited+(options.factored?groups:0);}
+-  if(options.striped_dot && options.factored && low>=2){const auto groups=visited/w.low.size();m.striped_dot_groups+=groups;m.additions+=3*groups;}
+-  if(crypto::opt2MetricsEnabled())std::cerr<<"R7_ZERO_SUFFIX_ROOT {\"round\":"<<t<<",\"root\":"<<k<<",\"covered_coordinates\":"<<s.padded<<",\"contracted_coordinates\":"<<visited<<",\"implicit_zero_coordinates\":"<<s.padded-visited<<",\"source_payload_read_bytes\":"<<(inputs?span.stored:s.padded)*sizeof(Fr)<<"}\n";
+-  m.extra_bytes=std::max<std::uint64_t>(m.extra_bytes,planned);need(m.extra_bytes<=8ull<<20,"OPT3D extra RAM budget");
+-  if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROOT {\"round\":"<<t<<",\"root\":"<<k<<",\"U_scan_coordinates\":"<<s.padded<<",\"U_bytes_read\":"<<(inputs?span.stored:s.padded)*sizeof(Fr)<<",\"U_address_mapping_calls\":"<<m.mapping_calls-before.mapping_calls<<",\"U_address_mapping_cpu_seconds\":0,\"U_K_fused_load_bytes\":"<<m.fused_load_bytes-before.fused_load_bytes<<",\"U_Fr_multiplications\":"<<m.multiplications-before.multiplications<<",\"U_Fr_additions\":"<<m.additions-before.additions<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu-before.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall-before.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall-before.product_wall<<",\"root_wall_seconds\":"<<elapsed(root_start)<<",\"root_cpu_seconds\":"<<crypto::processCPU()-root_cpu<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<"}\n";
+- }
+- for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
+- m.allocations=allocation.count();m.allocated_bytes=allocation.bytes();if(metrics)*metrics=m;return out;
+-}
+-}
++#include "unified_input.hpp"
++#include "u_fold_state.hpp"
++#include "opt2_metrics.hpp"
++#include "thread_joiner.hpp"
++#include <pthread.h>
++#include <algorithm>
++#include <chrono>
++#include <condition_variable>
++#include <iostream>
++#include <map>
++#include <mutex>
++namespace zkgpt::r7::oneblock::unified {
++namespace {
++using Clock=std::chrono::steady_clock;
++double elapsed(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
++// Fixed <=4-worker pool for this round only. Workers never touch PublicK or IO.
++class Workers {
++ unsigned count_;std::array<pthread_t,3>threads_{};unsigned created_=0;std::mutex mutex_;std::condition_variable wake_,done_;
++ struct Context {Workers*self;unsigned id;};std::array<Context,3>contexts_{};
++ bool stop_=false;std::size_t generation_=0,pending_=0,tasks_=0;const void*job_context_=nullptr;void(*job_run_)(const void*,std::size_t)=nullptr;
++ std::array<std::exception_ptr,4>errors_{};
++ void work(unsigned id){try{for(std::size_t j=id;j<tasks_;j+=count_)job_run_(job_context_,j);}catch(...){errors_[id]=std::current_exception();}}
++ public:explicit Workers(unsigned count):count_(count){
++  pthread_attr_t attr;need(pthread_attr_init(&attr)==0,"OPT3D thread attributes");
++  if(pthread_attr_setstacksize(&attr,1u<<20)!=0){pthread_attr_destroy(&attr);need(false,"OPT3D bounded thread stack");}
++  try{for(unsigned id=1;id<count_;++id){contexts_[id-1]={this,id};auto error=pthread_create(&threads_[id-1],&attr,[](void*arg)->void*{auto context=*static_cast<Context*>(arg);context.self->loop(context.id);return nullptr;},&contexts_[id-1]);need(error==0,"OPT3D worker creation");++created_;}pthread_attr_destroy(&attr);}
++  catch(...){pthread_attr_destroy(&attr);shutdown();throw;}
++ }
++ void loop(unsigned id){std::size_t seen=0;for(;;){std::unique_lock<std::mutex>lock(mutex_);wake_.wait(lock,[&]{return stop_ || generation_!=seen;});if(stop_)return;seen=generation_;lock.unlock();work(id);lock.lock();if(--pending_==0)done_.notify_one();}}
++ void shutdown(){ {std::lock_guard<std::mutex>lock(mutex_);stop_=true;}wake_.notify_all();for(unsigned id=0;id<created_;++id)pthread_join(threads_[id],nullptr);created_=0;}
++ ~Workers(){shutdown();}
++ template<class F>void run(std::size_t count,const F&fn,bool parallel){
++  if(!parallel || count_==1){for(std::size_t j=0;j<count;++j)fn(j);return;}
++  // Borrow the caller's live closure until this synchronous join completes.
++  // No std::function heap allocation/copy for each tile dispatch.
++  {std::lock_guard<std::mutex>lock(mutex_);job_context_=&fn;job_run_=[](const void*p,std::size_t j){(*static_cast<const F*>(p))(j);};tasks_=count;pending_=count_-1;errors_={};++generation_;}wake_.notify_all();work(0);
++  {std::unique_lock<std::mutex>lock(mutex_);done_.wait(lock,[&]{return pending_==0;});job_context_=nullptr;job_run_=nullptr;}
++  for(auto&e:errors_)if(e)std::rethrow_exception(e);
++ }
++};
++struct Weights {
++ const std::vector<Fr>&low;std::vector<Fr>high;unsigned split;std::size_t block;
++ Weights(const std::vector<Fr>&p,unsigned d,const std::vector<Fr>&shared):low(shared),split(std::min(d,16u)),block(std::size_t(1)<<d){high=r1::weights({p.begin()+split,p.begin()+d});}
++ Fr at(std::size_t i)const{return low[i&(low.size()-1)]*high[i>>split];}
++ // Contract contiguous low groups before scaling by their common high weight.
++ // No division: exactly valid when challenges are0 or1 as well.
++ template<class Read>Fr dot(std::size_t begin,std::size_t start,std::size_t stop,const Read&read,bool factored,bool striped)const{
++  Fr result=0;if(block==1)return read(begin);
++  if(!factored){for(auto i=start;i<stop;++i)result+=at(i)*read(begin+i);return result;}
++  for(auto i=start;i<stop;){auto h=i>>split;auto end=std::min(stop,(h+1)*low.size());Fr partial=0;
++   if(striped && end-i>=4){
++    Fr p0=0,p1=0,p2=0,p3=0;
++    for(;end-i>=4;i+=4){p0+=low[i&(low.size()-1)]*read(begin+i);p1+=low[(i+1)&(low.size()-1)]*read(begin+i+1);p2+=low[(i+2)&(low.size()-1)]*read(begin+i+2);p3+=low[(i+3)&(low.size()-1)]*read(begin+i+3);}
++    partial=(p0+p1)+(p2+p3);
++   }
++   for(;i<end;++i)partial+=low[i&(low.size()-1)]*read(begin+i);
++   if(high.size()==1)result+=partial;else result+=high[h]*partial;
++  }
++  return result;
++ }
++ std::size_t bytes()const{return high.capacity()*sizeof(Fr);}
++};
++Fr fixed(const Segment&s,const std::vector<Fr>&p,unsigned begin){Fr w=1;for(unsigned j=begin;j<p.size();++j)w*=((s.offset>>j)&1)?p[j]:Fr(1)-p[j];return w;}
++}
++UOptions UOptions::environment(){UOptions out;auto budget=zkgpt::workerThreadCount();out.threads=budget>=4?4:budget>=2?2:1;if(const auto*v=std::getenv("ZKGPT_U_THREADS")){std::string s(v);need(s=="1" || s=="2" || s=="4","OPT3D thread budget");out.threads=unsigned(s[0]-'0');need(out.threads<=budget,"OPT3D cannot exceed existing worker budget");}if(const auto*v=std::getenv("ZKGPT_PERF3_U_DOT")){std::string s(v);need(s=="0" || s=="1","PERF3 dot mode");out.striped_dot=s=="1";}return out;}
++Round quadraticRoundStreaming(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session){
++ try{
++ if(folded){need(folded->domain()==n && bool(inputs),"PERF4 U domain/storage boundary");folded->beginRound(session,prefix,segments);}
++ const bool cached=folded && !prefix.empty();
++ need(!folded || (!options.elide_zero_suffix && !options.striped_dot),"PERF4 U cannot combine experimental scan/dot modes");
++ validate(n,segments);need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4) && options.tile_pairs && options.tile_pairs<=4096,"OPT3D bounded tile/thread options");
++ crypto::AllocationTrace allocation;UMetrics m;Round out;const auto t=unsigned(prefix.size());
++ // Check public allocation sizes BEFORE allocating any new private tile/pool.
++ std::array<bool,33>seen{};std::array<bool,17>splits{};std::size_t planned=segments.size()*192+16384+(2*options.tile_pairs+4)*sizeof(Fr)+(inputs?options.threads-1:0)*((1u<<20)+4096);
++ if(!cached)for(auto s:segments){auto d=std::min(t,r1::log2exact(s.padded)),split=std::min(d,16u);if(!seen[d]){planned+=(std::size_t(1)<<(d-split))*sizeof(Fr);seen[d]=true;}if(!splits[split]){planned+=(std::size_t(1)<<split)*sizeof(Fr);splits[split]=true;}}
++ need(planned<=8ull<<20,"OPT3D extra RAM budget preflight");
++ Workers workers(inputs && !cached?options.threads:1);std::vector<Fr>tile(2*options.tile_pairs+4,Fr(0));m.tile_bytes=tile.capacity()*sizeof(Fr);m.thread_bytes=(inputs && !cached?options.threads-1:0)*((1u<<20)+4096)+sizeof(Workers)+4*sizeof(Fr)*8;
++ std::map<unsigned,std::vector<Fr>>shared_low;std::map<unsigned,std::unique_ptr<Weights>>weights;std::size_t weight_bytes=0;
++ struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
++ auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;m.product_multiplications+=4;m.product_additions+=6;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;m.product_additions+=4;}};
++ for(std::size_t k=0;k<segments.size();++k){const auto s=segments[k];const auto d=r1::log2exact(s.padded),low=std::min(t,d);Weights*wp=nullptr;if(!cached){auto&owned=weights[low];if(!owned){auto split=std::min(low,16u);auto&shared=shared_low[split];if(shared.empty()){shared=r1::weights({prefix.begin(),prefix.begin()+split});weight_bytes+=shared.capacity()*sizeof(Fr);}owned=std::make_unique<Weights>(prefix,low,shared);weight_bytes+=owned->bytes();}wp=owned.get();}const auto block=std::size_t(1)<<low;
++  InputSpan span;if(inputs){auto original=inputs(k);need(original.padded==s.padded && original.stored<=original.padded && (!original.stored || original.data),"OPT3D invalid sealed RowMajor span bounds");span=folded?folded->span(k,session,prefix,original):original;need(span.padded==(cached?(s.padded>>low):s.padded),"PERF4 U local span dimension");}
++  const auto length=s.padded>>low;
++  auto root_start=Clock::now();auto root_cpu=crypto::processCPU();auto before=m;unsigned calls=0;
++  provider(k,[&](const Value&a,const Value&b){need(++calls==1 && a && b,"OPT3D factor oracle invocation");
++   auto read=[&](std::size_t index)->Fr{return inputs?(index<span.stored?span.data[index]:Fr(0)):a(index);};
++   for(std::size_t first=0;first<length;){auto count=std::min<std::size_t>(length-first,2*options.tile_pairs);
++    // When only1/2 contractions remain, split their disjoint low-bit ranges.
++    unsigned shards=(!cached && inputs && block>=(1u<<18) && count<options.threads)?options.threads/unsigned(count):1;while(shards>1 && block/shards< wp->low.size())shards/=2;
++    const auto tasks=count*shards;need(tasks<=tile.size(),"OPT3D tile task bound");auto scan=Clock::now();auto scan_cpu=crypto::processCPU();
++    workers.run(tasks,[&](std::size_t job){auto local=job/shards,shard=job%shards;auto begin=(first+local)*block;
++     auto lo=block*shard/shards,hi=block*(shard+1)/shards;
++     if(cached){tile[job]=span.data[first+local];return;}
++     // InputSpan's public stored length defines the source's implicit zero
++     // suffix. Intersect before dot (including block==1), never by inspecting
++     // witness values. All tiles and folded K queries remain present below.
++     if(inputs && options.elide_zero_suffix){
++      hi=begin<span.stored?std::min(hi,span.stored-begin):0;
++      // The interval establishes index<stored once, so the hot read does not
++      // repeat the public suffix branch for every scalar or copy via Value.
++      tile[job]=lo<hi?wp->dot(begin,lo,hi,[&](std::size_t index)->const Fr&{return span.data[index];},options.factored,options.striped_dot):Fr(0);
++     }else tile[job]=wp->dot(begin,lo,hi,read,options.factored,options.striped_dot);
++    },!cached && inputs && count*block>=(1u<<18));
++    m.scan_wall+=elapsed(scan);m.scan_cpu+=crypto::processCPU()-scan_cpu;
++    if(shards>1)for(std::size_t j=0;j<count;++j){Fr sum=0;for(unsigned z=0;z<shards;++z)sum+=tile[j*shards+z];tile[j]=sum;}
++    if(shards>1)m.additions+=count*shards;
++    if(options.observe)options.observe(k,first,tile.data(),count);
++    auto products=Clock::now();
++    if(t<d){need(count%2==0,"OPT3D suffix pair tile alignment");for(std::size_t j=0;j<count;j+=2){auto b0=b(first+j),b1=b(first+j+1);product(tile[j],tile[j+1],b0,b1);}}
++    else{auto scale=fixed(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=scale*tile[0];target.b+=scale*b(0);}
++    m.product_wall+=elapsed(products);first+=count;
++   }
++   m.fused_load_bytes+=length*sizeof(Fr);
++  });need(calls==1,"OPT3D missing factor oracle");
++  m.coordinates+=cached?length:s.padded;m.bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
++  m.fused_load_bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
++  // U was already root-local in OPT3-C: no Root-Centric map queries here.
++  const auto visited=cached?length:(inputs && options.elide_zero_suffix)?span.stored:s.padded;
++  m.contracted_coordinates+=visited;m.implicit_zero_coordinates+=cached?0:s.padded-visited;
++  if(low && !cached){const auto groups=(visited+wp->low.size()-1)/wp->low.size();m.multiplications+=options.factored?visited+(wp->high.size()==1?0:groups):2*visited;m.additions+=visited+(options.factored?groups:0);}
++  if(!cached && options.striped_dot && options.factored && low>=2){const auto groups=visited/wp->low.size();m.striped_dot_groups+=groups;m.additions+=3*groups;}
++  if(crypto::opt2MetricsEnabled())std::cerr<<"R7_ZERO_SUFFIX_ROOT {\"round\":"<<t<<",\"root\":"<<k<<",\"covered_coordinates\":"<<s.padded<<",\"contracted_coordinates\":"<<(cached?s.padded:visited)<<",\"implicit_zero_coordinates\":"<<(cached?0:s.padded-visited)<<",\"source_payload_read_bytes\":"<<(inputs?span.stored:s.padded)*sizeof(Fr)<<"}\n";
++  m.extra_bytes=std::max<std::uint64_t>(m.extra_bytes,planned);need(m.extra_bytes<=8ull<<20,"OPT3D extra RAM budget");
++  if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROOT {\"round\":"<<t<<",\"root\":"<<k<<",\"U_scan_coordinates\":"<<(cached?length:s.padded)<<",\"U_bytes_read\":"<<(inputs?span.stored:s.padded)*sizeof(Fr)<<",\"U_address_mapping_calls\":"<<m.mapping_calls-before.mapping_calls<<",\"U_address_mapping_cpu_seconds\":0,\"U_K_fused_load_bytes\":"<<m.fused_load_bytes-before.fused_load_bytes<<",\"U_Fr_multiplications\":"<<m.multiplications-before.multiplications<<",\"U_Fr_additions\":"<<m.additions-before.additions<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu-before.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall-before.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall-before.product_wall<<",\"root_wall_seconds\":"<<elapsed(root_start)<<",\"root_cpu_seconds\":"<<crypto::processCPU()-root_cpu<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<"}\n";
++ }
++ for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
++ if(folded)folded->completeRound(session,prefix);
++ m.allocations=allocation.count();m.allocated_bytes=allocation.bytes();if(metrics)*metrics=m;return out;
++ }catch(...){if(folded)folded->poison();throw;}
++}
++}
+--- a/src/paper_r7/unified_input.cpp
++++ b/src/paper_r7/unified_input.cpp
+@@ -1,98 +1,101 @@
+-#include "unified_input.hpp"
+-#include "public_k.hpp"
+-#include <algorithm>
+-#include <map>
+-#include <chrono>
+-#include <iostream>
+-#include "opt2_metrics.hpp"
+-namespace zkgpt::r7::oneblock::unified {
+-namespace {
+-constexpr std::size_t maxDomain=std::size_t(1)<<32;
+-bool power(std::size_t n){return n && !(n&(n-1));}
+-// The virtual domain is never materialized. Do not apply r1::log2exact's
+-// separate 2^28 allocation bound to its metadata-only round count.
+-unsigned domainBits(std::size_t n){need(power(n) && n<=maxDomain,"unified virtual domain dimension bound");unsigned bits=0;while(n>1){n>>=1;++bits;}return bits;}
+-class SplitWeights {
+- std::vector<Fr>low_,high_;unsigned split_;
+- public:explicit SplitWeights(const std::vector<Fr>&q):split_(q.size()/2){low_=r1::weights({q.begin(),q.begin()+split_});high_=r1::weights({q.begin()+split_,q.end()});}
+- Fr at(std::size_t j)const{return low_[j&(low_.size()-1)]*high_[j>>split_];}
+-};
+-Fr fixedBits(const Segment&s,const std::vector<Fr>&point,unsigned begin){Fr weight=1;for(unsigned j=begin;j<point.size();++j)weight*=((s.offset>>j)&1)?point[j]:Fr(1)-point[j];return weight;}
+-}
+-void validate(std::size_t n,const std::vector<Segment>&segments){
+- need(power(n) && n<=maxDomain && !segments.empty() && segments.size()<=8193,"unified input domain/segment bound");
+- auto sorted=segments;std::sort(sorted.begin(),sorted.end(),[](auto a,auto b){return a.offset<b.offset;});std::size_t end=0;
+- for(auto s:sorted){need(power(s.padded) && s.padded<=n && s.offset<=n-s.padded && s.offset%s.padded==0 && s.offset>=end,"unified unaligned/overlapping/out-of-domain segment");end=s.offset+s.padded;}
+-}
+-Packing pack(const std::vector<Block>&blocks,std::size_t public_padded){
+- need(power(public_padded) && public_padded<=maxDomain && blocks.size()<=8192,"unified public input packing bound");
+- Packing out;out.regions[0]={public_padded,public_padded,public_padded,0};out.segments.push_back({0,public_padded});out.categories.push_back(0);
+- auto align=[](std::size_t at,std::size_t alignment){auto rest=at%alignment;if(!rest)return at;auto gap=alignment-rest;need(at<=maxDomain-gap,"unified alignment overflow");return at+gap;};
+- for(auto b:blocks){need(b.category>=1 && b.category<=3 && power(b.padded) && b.padded<=maxDomain,"unified private category/block bound");auto&r=out.regions[b.category];auto begin=align(r.used,b.padded);need(begin<=maxDomain-b.padded,"unified local region bound");out.segments.push_back({begin,b.padded});out.categories.push_back(b.category);r.used=begin+b.padded;r.alignment=std::max(r.alignment,b.padded);}
+- std::array<std::size_t,4>used{};for(unsigned k=0;k<4;++k)used[k]=out.regions[k].used;auto capacities=independentCapacities(used);std::size_t end=0;
+- for(unsigned k=0;k<4;++k){auto&r=out.regions[k];r.capacity=capacities[k];r.base=r.capacity?align(end,r.alignment):end;need(r.base<=maxDomain-r.capacity,"unified global region bound");end=r.base+r.capacity;}
+- for(std::size_t k=0;k<out.segments.size();++k)out.segments[k].offset+=out.regions[out.categories[k]].base;
+- out.domain=1;while(out.domain<end)out.domain*=2;
+- validate(out.domain,out.segments);return out;
+-}
+-std::array<std::size_t,4>independentCapacities(const std::array<std::size_t,4>&used){std::array<std::size_t,4>out{};for(unsigned k=0;k<4;++k){need(used[k]<=maxDomain,"unified region capacity overflow");if(used[k]){out[k]=1;while(out[k]<used[k])out[k]*=2;}}return out;}
+-void validate(const Packing&p){
+- need(!p.segments.empty() && p.categories.size()==p.segments.size() && p.categories[0]==0,"unified packing categories");std::vector<Block>blocks;for(std::size_t k=1;k<p.segments.size();++k)blocks.push_back({p.categories[k],p.segments[k].padded});auto expected=pack(blocks,p.segments[0].padded);
+- need(p.domain==expected.domain,"unified nonminimal/noncanonical logical domain");
+- for(unsigned k=0;k<4;++k){const auto&a=p.regions[k];const auto&b=expected.regions[k];need(a.used==b.used && a.capacity==b.capacity && a.alignment==b.alignment && a.base==b.base,"unified noncanonical independent region metadata");}
+- for(std::size_t k=0;k<p.segments.size();++k){need(p.segments[k].offset==expected.segments[k].offset,"unified noncanonical segment offset");}
+- validate(p.domain,p.segments);
+-}
+-Bytes descriptor(const Packing&p){validate(p);Writer w;w.text(suite);w.number(p.domain,8);for(const auto&r:p.regions)for(auto n:{r.used,r.capacity,r.alignment,r.base})w.number(n,8);w.number(p.segments.size());for(std::size_t k=0;k<p.segments.size();++k){w.number(p.categories[k]);w.number(p.segments[k].offset,8);w.number(p.segments[k].padded,8);}return w.b;}
+-void writeLayout(std::ostream&out,const Packing&p){validate(p);out<<"{\"suite\":\""<<suite<<"\",\"logical_domain\":"<<p.domain<<",\"logical_rounds\":"<<domainBits(p.domain)<<",\"regions\":[";std::size_t gaps=0,end=0,segment_gap=0;for(unsigned k=0;k<4;++k){if(k)out<<',';const auto&r=p.regions[k];out<<"{\"category\":"<<k<<",\"used\":"<<r.used<<",\"capacity\":"<<r.capacity<<",\"alignment\":"<<r.alignment<<",\"base\":"<<r.base<<'}';gaps+=r.base-end;end=r.base+r.capacity;std::size_t lengths=0;for(std::size_t j=0;j<p.segments.size();++j)if(p.categories[j]==k)lengths+=p.segments[j].padded;segment_gap+=r.used-lengths;}
+- out<<"],\"region_gap_elements\":"<<gaps<<",\"segment_alignment_gap_elements\":"<<segment_gap<<",\"global_tail_elements\":"<<p.domain-end<<",\"segments\":[";for(std::size_t k=0;k<p.segments.size();++k){if(k)out<<',';out<<"{\"source\":"<<k<<",\"category\":"<<p.categories[k]<<",\"offset\":"<<p.segments[k].offset<<",\"padded\":"<<p.segments[k].padded<<'}';}out<<"]}";
+-}
+-Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
+-static Round quadraticRoundImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,bool folded_kernel){
+- validate(n,segments);need(prefix.size()<domainBits(n) && provider,"unified round prefix/provider");const auto t=unsigned(prefix.size());Round out;
+- struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
+- auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;}};
+- for(std::size_t k=0;k<segments.size();++k){auto s=segments[k];auto d=r1::log2exact(s.padded);auto low=std::min<unsigned>(t,d);SplitWeights weights({prefix.begin(),prefix.begin()+low});const auto block=std::size_t(1)<<low;unsigned calls=0;
+-  provider(k,[&](const Value&a,const Value&b){++calls;need(calls==1 && a && b,"unified factor oracle invocation");
+-   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);if(!folded_kernel)v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);if(!folded_kernel)v.b+=w*b(index);}}if(folded_kernel)v.b=b(j);return v;};
+-   if(t<d){for(std::size_t j=0;j<(s.padded>>t)/2;++j){auto left=folded(2*j),right=folded(2*j+1);product(left.a,right.a,left.b,right.b);}}
+-   else{auto v=folded(0);auto w=fixedBits(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=w*v.a;target.b+=w*v.b;}
+-  });need(calls==1,"unified missing factor oracle");
+- }
+- // Large aligned blocks occupy complete suffix pairs; scalar blocks can
+- // collide, so combine both factors first (including X with a zero K block).
+- for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
+- return out;
+-}
+-Round quadraticRound(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,false);}
+-Round quadraticRoundFolded(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,true);}
+-Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
+- const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role,PublicK*state,const Inputs&inputs){
+- auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
+- validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
+- need(io.prover() || !state,"unified verifier cannot use prover K cache");
+- need(io.prover() || !inputs,"OPT3D verifier cannot access sealed U storage");
+- crypto::validate(initial.handle,io.session(),initial.handle.role);
+- Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
+- auto previous=initial;std::vector<Fr>point;Round last;
+- for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);if(io.prover()){
+-  if(state && inputs){UMetrics m;last=quadraticRoundStreaming(n,segments,point,factors,inputs,UOptions::environment(),&m);
+-   if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROUND {\"round\":"<<t<<",\"U_scan_coordinates_including_public_X\":"<<m.coordinates<<",\"U_bytes_read\":"<<m.bytes<<",\"U_K_fused_load_bytes\":"<<m.fused_load_bytes<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall<<",\"U_Fr_multiplications\":"<<m.multiplications<<",\"U_Fr_additions\":"<<m.additions<<",\"coefficient_Fr_multiplications\":"<<m.product_multiplications<<",\"coefficient_Fr_additions\":"<<m.product_additions<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<",\"main_thread_cpp_allocations_including_K_provider\":"<<m.allocations<<",\"main_thread_cpp_allocated_bytes_including_K_provider\":"<<m.allocated_bytes<<"}\n";
+-  }else last=state?quadraticRoundFolded(n,segments,point,factors):quadraticRound(n,segments,point,factors);
+- }
+-  std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
+-  Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
+-  auto r=io.coin(name+"/r");if(state)state->advance(io.session(),r);point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
+-  if(crypto::opt2MetricsEnabled()){std::uint64_t u=0;for(std::size_t k=1;k<segments.size();++k)u+=segments[k].padded;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
+- }
+- Fr input=0,actual_kernel=0;if(io.prover()){
+-  if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}
+-  else{auto r=point.back();input=last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]);actual_kernel=last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]);}
+- }
+- auto expected=state?state->endpoint(io.session(),point):kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
+- auto input_end=exchangeHidden(io,role+"/input-evaluation",input,rng);auto public_kernel=publicHidden(io,role+"/public-kernel",expected);bindPublic(io,role+"/public-kernel",encode(public_kernel.handle));
+- std::vector<Hidden>w{input_end,public_kernel,previous};Relations terminal;terminal.role=role+"/terminal";for(auto&h:w)terminal.handles.push_back(h.handle);terminal.products={{0,1,2}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
+- std::cerr<<"UNIFIED_SUMCHECK {\"domain\":"<<n<<",\"rounds\":"<<point.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"includes_public_kernel_endpoint\":true}\n";
+- return {initial,{input_end,public_kernel},point};
+-}
+-}
++#include "u_fold_state.hpp"
++#include "unified_input.hpp"
++#include "public_k.hpp"
++#include <algorithm>
++#include <map>
++#include <chrono>
++#include <iostream>
++#include "opt2_metrics.hpp"
++namespace zkgpt::r7::oneblock::unified {
++namespace {
++constexpr std::size_t maxDomain=std::size_t(1)<<32;
++bool power(std::size_t n){return n && !(n&(n-1));}
++// The virtual domain is never materialized. Do not apply r1::log2exact's
++// separate 2^28 allocation bound to its metadata-only round count.
++unsigned domainBits(std::size_t n){need(power(n) && n<=maxDomain,"unified virtual domain dimension bound");unsigned bits=0;while(n>1){n>>=1;++bits;}return bits;}
++class SplitWeights {
++ std::vector<Fr>low_,high_;unsigned split_;
++ public:explicit SplitWeights(const std::vector<Fr>&q):split_(q.size()/2){low_=r1::weights({q.begin(),q.begin()+split_});high_=r1::weights({q.begin()+split_,q.end()});}
++ Fr at(std::size_t j)const{return low_[j&(low_.size()-1)]*high_[j>>split_];}
++};
++Fr fixedBits(const Segment&s,const std::vector<Fr>&point,unsigned begin){Fr weight=1;for(unsigned j=begin;j<point.size();++j)weight*=((s.offset>>j)&1)?point[j]:Fr(1)-point[j];return weight;}
++}
++void validate(std::size_t n,const std::vector<Segment>&segments){
++ need(power(n) && n<=maxDomain && !segments.empty() && segments.size()<=8193,"unified input domain/segment bound");
++ auto sorted=segments;std::sort(sorted.begin(),sorted.end(),[](auto a,auto b){return a.offset<b.offset;});std::size_t end=0;
++ for(auto s:sorted){need(power(s.padded) && s.padded<=n && s.offset<=n-s.padded && s.offset%s.padded==0 && s.offset>=end,"unified unaligned/overlapping/out-of-domain segment");end=s.offset+s.padded;}
++}
++Packing pack(const std::vector<Block>&blocks,std::size_t public_padded){
++ need(power(public_padded) && public_padded<=maxDomain && blocks.size()<=8192,"unified public input packing bound");
++ Packing out;out.regions[0]={public_padded,public_padded,public_padded,0};out.segments.push_back({0,public_padded});out.categories.push_back(0);
++ auto align=[](std::size_t at,std::size_t alignment){auto rest=at%alignment;if(!rest)return at;auto gap=alignment-rest;need(at<=maxDomain-gap,"unified alignment overflow");return at+gap;};
++ for(auto b:blocks){need(b.category>=1 && b.category<=3 && power(b.padded) && b.padded<=maxDomain,"unified private category/block bound");auto&r=out.regions[b.category];auto begin=align(r.used,b.padded);need(begin<=maxDomain-b.padded,"unified local region bound");out.segments.push_back({begin,b.padded});out.categories.push_back(b.category);r.used=begin+b.padded;r.alignment=std::max(r.alignment,b.padded);}
++ std::array<std::size_t,4>used{};for(unsigned k=0;k<4;++k)used[k]=out.regions[k].used;auto capacities=independentCapacities(used);std::size_t end=0;
++ for(unsigned k=0;k<4;++k){auto&r=out.regions[k];r.capacity=capacities[k];r.base=r.capacity?align(end,r.alignment):end;need(r.base<=maxDomain-r.capacity,"unified global region bound");end=r.base+r.capacity;}
++ for(std::size_t k=0;k<out.segments.size();++k)out.segments[k].offset+=out.regions[out.categories[k]].base;
++ out.domain=1;while(out.domain<end)out.domain*=2;
++ validate(out.domain,out.segments);return out;
++}
++std::array<std::size_t,4>independentCapacities(const std::array<std::size_t,4>&used){std::array<std::size_t,4>out{};for(unsigned k=0;k<4;++k){need(used[k]<=maxDomain,"unified region capacity overflow");if(used[k]){out[k]=1;while(out[k]<used[k])out[k]*=2;}}return out;}
++void validate(const Packing&p){
++ need(!p.segments.empty() && p.categories.size()==p.segments.size() && p.categories[0]==0,"unified packing categories");std::vector<Block>blocks;for(std::size_t k=1;k<p.segments.size();++k)blocks.push_back({p.categories[k],p.segments[k].padded});auto expected=pack(blocks,p.segments[0].padded);
++ need(p.domain==expected.domain,"unified nonminimal/noncanonical logical domain");
++ for(unsigned k=0;k<4;++k){const auto&a=p.regions[k];const auto&b=expected.regions[k];need(a.used==b.used && a.capacity==b.capacity && a.alignment==b.alignment && a.base==b.base,"unified noncanonical independent region metadata");}
++ for(std::size_t k=0;k<p.segments.size();++k){need(p.segments[k].offset==expected.segments[k].offset,"unified noncanonical segment offset");}
++ validate(p.domain,p.segments);
++}
++Bytes descriptor(const Packing&p){validate(p);Writer w;w.text(suite);w.number(p.domain,8);for(const auto&r:p.regions)for(auto n:{r.used,r.capacity,r.alignment,r.base})w.number(n,8);w.number(p.segments.size());for(std::size_t k=0;k<p.segments.size();++k){w.number(p.categories[k]);w.number(p.segments[k].offset,8);w.number(p.segments[k].padded,8);}return w.b;}
++void writeLayout(std::ostream&out,const Packing&p){validate(p);out<<"{\"suite\":\""<<suite<<"\",\"logical_domain\":"<<p.domain<<",\"logical_rounds\":"<<domainBits(p.domain)<<",\"regions\":[";std::size_t gaps=0,end=0,segment_gap=0;for(unsigned k=0;k<4;++k){if(k)out<<',';const auto&r=p.regions[k];out<<"{\"category\":"<<k<<",\"used\":"<<r.used<<",\"capacity\":"<<r.capacity<<",\"alignment\":"<<r.alignment<<",\"base\":"<<r.base<<'}';gaps+=r.base-end;end=r.base+r.capacity;std::size_t lengths=0;for(std::size_t j=0;j<p.segments.size();++j)if(p.categories[j]==k)lengths+=p.segments[j].padded;segment_gap+=r.used-lengths;}
++ out<<"],\"region_gap_elements\":"<<gaps<<",\"segment_alignment_gap_elements\":"<<segment_gap<<",\"global_tail_elements\":"<<p.domain-end<<",\"segments\":[";for(std::size_t k=0;k<p.segments.size();++k){if(k)out<<',';out<<"{\"source\":"<<k<<",\"category\":"<<p.categories[k]<<",\"offset\":"<<p.segments[k].offset<<",\"padded\":"<<p.segments[k].padded<<'}';}out<<"]}";
++}
++Fr selector(const Segment&s,const std::vector<Fr>&point){need(power(s.padded) && point.size()>=r1::log2exact(s.padded) && point.size()<=32,"unified selector dimensions");return fixedBits(s,point,r1::log2exact(s.padded));}
++static Round quadraticRoundImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,bool folded_kernel){
++ validate(n,segments);need(prefix.size()<domainBits(n) && provider,"unified round prefix/provider");const auto t=unsigned(prefix.size());Round out;
++ struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
++ auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){auto da=a1-a0,db=b1-b0;out.coefficients[0]+=a0*b0;out.coefficients[1]+=a0*db+da*b0;out.coefficients[2]+=da*db;if((n>>t)==2){out.input_pair[0]+=a0;out.input_pair[1]+=a1;out.kernel_pair[0]+=b0;out.kernel_pair[1]+=b1;}};
++ for(std::size_t k=0;k<segments.size();++k){auto s=segments[k];auto d=r1::log2exact(s.padded);auto low=std::min<unsigned>(t,d);SplitWeights weights({prefix.begin(),prefix.begin()+low});const auto block=std::size_t(1)<<low;unsigned calls=0;
++  provider(k,[&](const Value&a,const Value&b){++calls;need(calls==1 && a && b,"unified factor oracle invocation");
++   auto folded=[&](std::size_t j){Pair v;for(std::size_t i=0;i<block;++i){auto index=j*block+i;if(!low){v.a=a(index);if(!folded_kernel)v.b=b(index);}else{auto w=weights.at(i);v.a+=w*a(index);if(!folded_kernel)v.b+=w*b(index);}}if(folded_kernel)v.b=b(j);return v;};
++   if(t<d){for(std::size_t j=0;j<(s.padded>>t)/2;++j){auto left=folded(2*j),right=folded(2*j+1);product(left.a,right.a,left.b,right.b);}}
++   else{auto v=folded(0);auto w=fixedBits(s,prefix,d);auto&target=collapsed[s.offset>>t];target.a+=w*v.a;target.b+=w*v.b;}
++  });need(calls==1,"unified missing factor oracle");
++ }
++ // Large aligned blocks occupy complete suffix pairs; scalar blocks can
++ // collide, so combine both factors first (including X with a zero K block).
++ for(auto it=collapsed.begin();it!=collapsed.end();){auto pair=it->first>>1;Pair left,right;do{if(it->first&1)right=it->second;else left=it->second;++it;}while(it!=collapsed.end() && (it->first>>1)==pair);product(left.a,right.a,left.b,right.b);}
++ return out;
++}
++Round quadraticRound(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,false);}
++Round quadraticRoundFolded(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,true);}
++Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
++ const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role,PublicK*state,const Inputs&inputs){
++ auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
++ validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
++ need(io.prover() || !state,"unified verifier cannot use prover K cache");
++ need(io.prover() || !inputs,"OPT3D verifier cannot access sealed U storage");
++ crypto::validate(initial.handle,io.session(),initial.handle.role);
++ Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
++ auto previous=initial;std::vector<Fr>point;Round last;
++ std::unique_ptr<FoldedU>folded_u;if(io.prover() && state && inputs && FoldedU::requested())folded_u=std::make_unique<FoldedU>(n,segments,inputs,io.session(),FoldedU::environmentBudget());auto retained=folded_u && folded_u->enabled()?folded_u.get():nullptr;
++ for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);if(io.prover()){
++  if(state && inputs){UMetrics m;last=quadraticRoundStreaming(n,segments,point,factors,inputs,UOptions::environment(),&m,retained,io.session());
++   if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROUND {\"round\":"<<t<<",\"U_scan_coordinates_including_public_X\":"<<m.coordinates<<",\"U_bytes_read\":"<<m.bytes<<",\"U_K_fused_load_bytes\":"<<m.fused_load_bytes<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall<<",\"U_Fr_multiplications\":"<<m.multiplications<<",\"U_Fr_additions\":"<<m.additions<<",\"coefficient_Fr_multiplications\":"<<m.product_multiplications<<",\"coefficient_Fr_additions\":"<<m.product_additions<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<",\"main_thread_cpp_allocations_including_K_provider\":"<<m.allocations<<",\"main_thread_cpp_allocated_bytes_including_K_provider\":"<<m.allocated_bytes<<"}\n";
++  }else last=state?quadraticRoundFolded(n,segments,point,factors):quadraticRound(n,segments,point,factors);
++ }
++  std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
++  Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
++  auto r=io.coin(name+"/r");if(state)state->advance(io.session(),r);if(retained)retained->advance(io.session(),r,inputs);point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
++  if(crypto::opt2MetricsEnabled()){std::uint64_t u=0;for(std::size_t k=1;k<segments.size();++k)u+=retained && t?(segments[k].padded>>std::min<unsigned>(t,r1::log2exact(segments[k].padded))):segments[k].padded;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
++ }
++ Fr input=0,actual_kernel=0;if(io.prover()){
++  if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}
++  else{auto r=point.back();input=last.input_pair[0]+r*(last.input_pair[1]-last.input_pair[0]);actual_kernel=last.kernel_pair[0]+r*(last.kernel_pair[1]-last.kernel_pair[0]);}
++ }
++ auto expected=state?state->endpoint(io.session(),point):kernel_at(point);if(io.prover())need(expected==actual_kernel,"unified independently evaluated public kernel mismatch");
++ auto input_end=exchangeHidden(io,role+"/input-evaluation",input,rng);auto public_kernel=publicHidden(io,role+"/public-kernel",expected);bindPublic(io,role+"/public-kernel",encode(public_kernel.handle));
++ std::vector<Hidden>w{input_end,public_kernel,previous};Relations terminal;terminal.role=role+"/terminal";for(auto&h:w)terminal.handles.push_back(h.handle);terminal.products={{0,1,2}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
++ std::cerr<<"UNIFIED_SUMCHECK {\"domain\":"<<n<<",\"rounds\":"<<point.size()<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"includes_public_kernel_endpoint\":true}\n";
++ if(folded_u)folded_u->report();
++ return {initial,{input_end,public_kernel},point};
++}
++}
+--- a/src/paper_r7/unified_input.hpp
++++ b/src/paper_r7/unified_input.hpp
+@@ -4,6 +4,7 @@
+ #include <ostream>
+ namespace zkgpt::r7::oneblock::unified {
+ class PublicK;
++class FoldedU;
+ inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT-v2";
+ struct Block {unsigned category;std::size_t padded;};
+ struct Segment {std::size_t offset,padded;};
+@@ -42,7 +43,7 @@
+  struct UMetrics {std::uint64_t coordinates=0,bytes=0,mapping_calls=0,multiplications=0,additions=0,tile_bytes=0,thread_bytes=0,extra_bytes=0,allocations=0,allocated_bytes=0,fused_load_bytes=0,product_multiplications=0,product_additions=0,striped_dot_groups=0;
+  std::uint64_t contracted_coordinates=0,implicit_zero_coordinates=0;
+  double scan_cpu=0,scan_wall=0,product_wall=0;};
+-Round quadraticRoundStreaming(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics* =nullptr);
++Round quadraticRoundStreaming(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics* =nullptr,FoldedU* =nullptr,const std::string&session={});
+ // One hidden degree-two Sumcheck, with a verifier-computed public K endpoint.
+ Reduction reduce(IO&,std::size_t,const std::vector<Segment>&,const Hidden&,
+  const Factors&onlyP,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,

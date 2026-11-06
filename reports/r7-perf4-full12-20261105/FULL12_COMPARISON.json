@@ -1,0 +1,57 @@
+{
+  "gate_passed": true,
+  "checks": {
+    "prover_ratio": true,
+    "verifier_ratio": true,
+    "P_peak_RSS_ratio": true,
+    "V_peak_RSS_ratio": true,
+    "proof_size": true,
+    "coverage": true
+  },
+  "metrics": {
+    "reference": {
+      "Prover_seconds": 3329.4838016731665,
+      "Verifier_seconds": 844.2776471469551,
+      "Native_Prover_exclusive_seconds": 1107.8968919299998,
+      "U_scan_and_state_fold_seconds": 257.15689,
+      "U_streaming_scan_seconds": 257.15689,
+      "U_retained_state_fold_seconds": 0,
+      "K_build_seconds": 178.028,
+      "U_K_product_seconds": 89.96682908,
+      "K_fold_seconds": 69.3787,
+      "Verifier_claim_mapping_seconds": 172.596,
+      "Prover_claim_mapping_seconds": 174.923,
+      "IPA_generator_fold_seconds": 383.9247376169999,
+      "Proof_bytes": 526435830,
+      "P_peak_RSS_GiB": 49.36506652832031,
+      "V_peak_RSS_GiB": 5.940837860107422
+    },
+    "candidate": {
+      "Prover_seconds": 2937.058657986112,
+      "Verifier_seconds": 828.1285572834313,
+      "Native_Prover_exclusive_seconds": 1072.4072041910003,
+      "U_scan_and_state_fold_seconds": 43.25801785,
+      "U_streaming_scan_seconds": 13.78491785,
+      "U_retained_state_fold_seconds": 29.4731,
+      "K_build_seconds": 179.019,
+      "U_K_product_seconds": 89.80161140999999,
+      "K_fold_seconds": 69.1369,
+      "Verifier_claim_mapping_seconds": 158.723,
+      "Prover_claim_mapping_seconds": 158.424,
+      "IPA_generator_fold_seconds": 269.5555771100002,
+      "Proof_bytes": 526435830,
+      "P_peak_RSS_GiB": 49.36432647705078,
+      "V_peak_RSS_GiB": 5.954704284667969
+    }
+  },
+  "P_reduction_percent": 11.786365907227092,
+  "V_reduction_percent": 1.912770036977296,
+  "single_measurement_only": true,
+  "no_statistical_stability_claim": true,
+  "historical_6107_1126_not_causally_comparable": true,
+  "candidate_source_tree_sha256": "b9a6b7e5d71f8fad17c8fe9ac3b8408b4c5e6f922c63c61f23f8948fe9b04818",
+  "reference_source_tree_sha256": "2be078ab25cf4c06055ca78e43587333bd5e1120788b7a00eea64766cc22b355",
+  "status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

@@ -1,0 +1,8 @@
+configure-candidate {"args": ["cmake", "-S", ".", "-B", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf3-protocol1-native-ipa-20261105", "-DCMAKE_BUILD_TYPE=Release", "-DZKGPT_BUILD_R7_FRAMEWORK=ON", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include", "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"], "exit_code": 0, "wall_seconds": 1.255545673891902}
+build-candidate {"args": ["cmake", "--build", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf3-protocol1-native-ipa-20261105", "-j4"], "exit_code": 2, "wall_seconds": 73.09611634071916}
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf3-protocol1-native-ipa-20261105/runner.py", line 58, in <module>
+    run('build-candidate',['cmake','--build',BUILD,'-j4'],1800,False)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf3-protocol1-native-ipa-20261105/runner.py", line 36, in run
+    assert p.returncode==expected,(name,'STOP_BUILD_OR_TEST',p.returncode)
+AssertionError: ('build-candidate', 'STOP_BUILD_OR_TEST', 2)

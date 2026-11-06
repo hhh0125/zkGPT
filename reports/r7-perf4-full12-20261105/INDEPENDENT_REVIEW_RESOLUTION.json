@@ -1,0 +1,10 @@
+{
+  "reviewer": "/root/review_perf4_admission",
+  "critical": 0,
+  "important": 0,
+  "admission_poison_boundary": "resolved; domain/storage checks inside try/catch",
+  "negative_reuse_assertions": "resolved for four early branches plus two new streaming admission cases",
+  "regression_red": "review-admission-RED.json",
+  "metrics_scope": "legacy source_payload_read_bytes denotes input span storage (original at t0, retained cache later); final U wall = streaming scan wall + PERF4_U_STATE.fold_wall_seconds; original/cache reads and logical coverage reported separately",
+  "final_review": "small-difference re-review passed, no new Critical/Important; Full12 admission still conditional on final exact-source full gates"
+}

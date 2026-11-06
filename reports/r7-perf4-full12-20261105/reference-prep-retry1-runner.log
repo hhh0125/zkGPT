@@ -1,0 +1,8 @@
+reference-configure-retry1 {"args": ["cmake", "-S", ".", "-B", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-reference", "-DCMAKE_BUILD_TYPE=Release", "-DZKGPT_BUILD_R7_FRAMEWORK=ON", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include", "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a"], "exit_code": 0, "wall_seconds": 1.5050369771197438}
+reference-build-retry1 {"args": ["cmake", "--build", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-reference", "-j4"], "exit_code": 2, "wall_seconds": 81.8649850897491}
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_reference_v2.py", line 44, in <module>
+    run('reference-build-retry1',['cmake','--build',BUILD,'-j4'],1800,False)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_reference_v2.py", line 36, in run
+    assert p.returncode==expected,(name,'STOP_BUILD_OR_TEST',p.returncode)
+AssertionError: ('reference-build-retry1', 'STOP_BUILD_OR_TEST', 2)

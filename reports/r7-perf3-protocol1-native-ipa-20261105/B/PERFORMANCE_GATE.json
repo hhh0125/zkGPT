@@ -1,0 +1,27 @@
+{
+  "candidate": "B-striped-independent-U-dot-accumulators",
+  "baseline": "accepted A enabled; PERF1 scan and PERF2 K remain disabled",
+  "optimized_side": "Prover",
+  "fixture": "same 3-root/16-claim mixed FS workload, n=262144 per root",
+  "scope": "whole fresh independent bounded P processes including initialization/layout; parent Protocol1/U scan/reduce recorded separately",
+  "samples": 7,
+  "warmups": 1,
+  "replays_per_side": 1,
+  "paired_ratio_median_min": 1.05,
+  "paired_ratio_min_min": 0.98,
+  "max_ratio_range_relative_to_median": 0.15,
+  "prover_candidate_over_reference_max": 1.1,
+  "rss_candidate_over_reference_max": 1.1,
+  "proof_bytes_must_equal": true,
+  "resource": {
+    "test_address_space_gib": 4,
+    "build_address_space_gib": 12,
+    "test_cpu_seconds": 600,
+    "build_cpu_seconds": 1800,
+    "single_test_wall_seconds": 180,
+    "build_wall_seconds": 1800,
+    "cores": 4
+  },
+  "failure": "STOP_PERFORMANCE, default off, no further performance fixture or candidate",
+  "verifier_candidate_over_reference_max": 1.1
+}

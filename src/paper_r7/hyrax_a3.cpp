@@ -1,4 +1,5 @@
 #include "hyrax_a3.hpp"
+#include "perf4_profile.hpp"
 #include <algorithm>
 #include <chrono>
 #include <map>
@@ -8,6 +9,7 @@ namespace {
 void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
 G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
  need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
+ perf4::Scope phase("IPA/MSM","wideMSM",x.size());
  auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
  MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
 }
@@ -18,6 +20,7 @@ Fr challenge(IO&io,const std::string&label){auto c=io.coin(label);need(!c.isZero
 // Not a modification of Fig7/8; without this precondition xi+tau cancellation
 // must not be interpreted as knowledge of the two original openings.
 void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const DotWitness*w,Random*rng){
+ perf4::Scope guard("IPA/guard",io.prover()?"P":"V",g.size());
  auto p=parameters(1);std::vector<Fr>d;Fr rv=0,dy=0,ry=0;Writer masks;
  if(io.prover()){
   for(std::size_t i=0;i<g.size();++i){d.push_back(rng->scalar());}
@@ -35,19 +38,23 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const 
 }
 // Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
 void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const std::vector<G1>&bases,const DotWitness*w,Random*rng){
- const auto p=parameters(1);auto U=xi+tau.point;auto g=bases;auto aa=a;std::vector<Fr>x;Fr y=0,blind=0;
- if(io.prover()){x=w->values;y=r1::dot(x,a);blind=w->blind+w->evaluation.blind;}
+ perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
+ const auto p=parameters(1);auto U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
+ {perf4::Scope copy("IPA/input-copy",io.prover()?"P":"V",a.size(),bases.size()*sizeof(G1)+a.size()*sizeof(Fr)+(io.prover()?a.size()*sizeof(Fr):0));g=bases;aa=a;if(io.prover())x=w->values;}
+ if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
  std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
  while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
   if(io.prover()){
-   std::vector<Fr>xl(x.begin(),x.begin()+half),xr(x.begin()+half,x.end()),al(aa.begin(),aa.begin()+half),ar(aa.begin()+half,aa.end());
-   std::vector<G1>gl(g.begin(),g.begin()+half),gr(g.begin()+half,g.end());
-   rl=rng->scalar();rr=rng->scalar();left=r1::dot(xl,ar);right=r1::dot(xr,al);
+   std::vector<Fr>xl,xr,al,ar;std::vector<G1>gl,gr;
+   {perf4::Scope copy("IPA/half-vector-copy","P",width,half*(4*sizeof(Fr)+2*sizeof(G1)));xl.assign(x.begin(),x.begin()+half);xr.assign(x.begin()+half,x.end());al.assign(aa.begin(),aa.begin()+half);ar.assign(aa.begin()+half,aa.end());gl.assign(g.begin(),g.begin()+half);gr.assign(g.begin()+half,g.end());}
+   rl=rng->scalar();rr=rng->scalar();{perf4::Scope dot("IPA/inner-product","cross",width);left=r1::dot(xl,ar);right=r1::dot(xr,al);}
    cross.point(wideMSM(gr,xl)+p.scalar*left+p.hiding*rl);cross.point(wideMSM(gl,xr)+p.scalar*right+p.hiding*rr);
   }
-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);Reader lr{b};auto L=lr.point(),R=lr.point();lr.end();auto c=challenge(io,label+"/c");Fr inv;Fr::inv(inv,c);folds.push_back(c);auto c2=c*c,i2=inv*inv;U+=L*c2+R*i2;
+  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);Reader lr{b};auto L=lr.point(),R=lr.point();lr.end();Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);folds.push_back(c);c2=c*c;i2=inv*inv;}U+=L*c2+R*i2;
   if(io.prover()){
-   for(std::size_t i=0;i<half;++i){x[i]=c*x[i]+inv*x[i+half];aa[i]=inv*aa[i]+c*aa[i+half];g[i]=g[i]*inv+g[i+half]*c;}
+   {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
+   {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
+   {perf4::Scope phase("IPA/generator-fold",label,half);Fr scalars[2]{inv,c};for(std::size_t i=0;i<half;++i){G1 pair[2]{g[i],g[i+half]};G1::mulVec(g[i],pair,scalars,2);}}
    x.resize(half);aa.resize(half);g.resize(half);y+=c2*left+i2*right;blind+=c2*rl+i2*rr;
   }
   width=half;++round;

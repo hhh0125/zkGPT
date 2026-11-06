@@ -1,0 +1,9 @@
+# STOP_PERFORMANCE disposition
+
+The enabled scan candidate passed full100/100 regression and generated exactly the same80063-byte bounded proof as baseline; cross-verifiers and three malformed-file checks passed. However first completed1-thread/25%-stored A/B median0.315650s reference vs0.349419s optimized gave paired median speedup0.905599 with wide variation.1-thread/98.714%-stored gave only1.017738 median speedup and pair range0.608240..1.694572. Therefore no reliable whole-round performance acceptance. Scan time/Fr counts improved but that is insufficient.
+
+The orchestration originally evaluated the performance gate only after all planned fixtures. At the first model inspection6 fixture summaries had completed and an additional same-size process had begun. The identified runner/child were stopped immediately; partial logs remain, no larger N/proof/other module was started. This delayed per-fixture evaluation is a harness limitation and is not concealed.
+
+Response: no more performance runs or larger workloads. Retain Source actual allocation (separate payload-memory reduction), set UOptions.elide_zero_suffix=false by default, keep experimental branch behind explicit options for exact tests. Source actual allocation and all K/security checks remain. Explicit experimental tests still set true; production environment does not enable it. Rerun build/complete regression and proof/negative compatibility on final defaults with unique names. P0/P1/P2/P4 remain analyzed only.
+
+Original failed-performance candidate bytes: PERFORMANCE_CANDIDATE_SOURCE.zip and earlier CURRENT_SOURCE.zip, with their source manifest; baseline compiled library preserved. Measured candidate executable was replaced during retained-default rebuild before an executable SHA was captured; exact source/configuration/build logs and raw results are retained, but do not claim an unavailable historical executable hash. Final retained binaries will be SHA-audited and archived.

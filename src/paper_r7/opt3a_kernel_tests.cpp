@@ -15,6 +15,7 @@ struct AuthenticationTestAccess {
  static auto&roots(Commitments&c){return c.roots_;}static auto&claims(Commitments&c){return c.claims_;}
  static Fr prepare(Commitments&c,Auth&a,std::size_t i){return c.prepareClaim(c.claims_[i],a,i);}
  static auto kernel(Commitments&c,std::size_t k,const std::vector<Fr>&l,const Auth&a){return c.kernel(k,l,a);}
+ static Fr endpoint(Commitments&c,std::size_t k,const std::vector<Fr>&l,const Auth&a,const std::vector<Fr>&p){return c.kernelEndpoint(k,l,a,p);}
  static auto dots(Commitments&c,const std::vector<Fr>&l,const Auth&a){return c.partialDot(l,a);}
  static void digest(Commitments&c){for(auto&a:c.claims_)a.map_digest=c.mapDigest(a);}
  static auto&metrics(Commitments&c){return c.auth_metrics_;}

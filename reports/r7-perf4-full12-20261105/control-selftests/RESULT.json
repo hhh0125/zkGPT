@@ -1,0 +1,94 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "case": "rss",
+      "rejected": true,
+      "child_reaped": true,
+      "phase": {
+        "args": [
+          "/CONTROL_TEST_NOT_A_CRYPTO_TARGET/r7_fs_full12_prover",
+          "prove",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/control-selftests/rss/NOT_A_PROOF",
+          "CONTROL_TEST"
+        ],
+        "exit_code": -15,
+        "wall_seconds": 0.20632557850331068,
+        "peak_rss_kib": 58196,
+        "sampled_peak_rss_bytes": 59326464,
+        "sampled_peak_swap_bytes": 0,
+        "user_cpu_seconds": 0.019363,
+        "system_cpu_seconds": 0.042599,
+        "resource_failure": "STOP_RESOURCE final peak RSS budget",
+        "interruption": "RuntimeError('STOP_RESOURCE RSS budget')"
+      }
+    },
+    {
+      "case": "fast-peak",
+      "rejected": true,
+      "child_reaped": true,
+      "phase": {
+        "args": [
+          "/CONTROL_TEST_NOT_A_CRYPTO_TARGET/r7_fs_full12_prover",
+          "prove",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/control-selftests/fast-peak/NOT_A_PROOF",
+          "CONTROL_TEST"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 0.10537262354046106,
+        "peak_rss_kib": 58240,
+        "sampled_peak_rss_bytes": 4730880,
+        "sampled_peak_swap_bytes": 0,
+        "user_cpu_seconds": 0.020626,
+        "system_cpu_seconds": 0.041252,
+        "resource_failure": "STOP_RESOURCE final peak RSS budget",
+        "interruption": null
+      }
+    },
+    {
+      "case": "wall",
+      "rejected": true,
+      "child_reaped": true,
+      "phase": {
+        "args": [
+          "/CONTROL_TEST_NOT_A_CRYPTO_TARGET/r7_fs_full12_prover",
+          "prove",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/control-selftests/wall/NOT_A_PROOF",
+          "CONTROL_TEST"
+        ],
+        "exit_code": -15,
+        "wall_seconds": 1.1104853227734566,
+        "peak_rss_kib": 9996,
+        "sampled_peak_rss_bytes": 9146368,
+        "sampled_peak_swap_bytes": 0,
+        "user_cpu_seconds": 0.022472,
+        "system_cpu_seconds": 0.0,
+        "resource_failure": "STOP_RESOURCE final wall budget",
+        "interruption": "RuntimeError('STOP_RESOURCE P wall budget')"
+      }
+    },
+    {
+      "case": "monitor-error",
+      "rejected": true,
+      "child_reaped": true,
+      "phase": {
+        "args": [
+          "/CONTROL_TEST_NOT_A_CRYPTO_TARGET/r7_fs_full12_prover",
+          "prove",
+          "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/control-selftests/monitor-error/NOT_A_PROOF",
+          "CONTROL_TEST"
+        ],
+        "exit_code": -15,
+        "wall_seconds": 0.1083209477365017,
+        "peak_rss_kib": 10052,
+        "sampled_peak_rss_bytes": 0,
+        "sampled_peak_swap_bytes": 0,
+        "user_cpu_seconds": 0.0,
+        "system_cpu_seconds": 0.007415,
+        "resource_failure": null,
+        "interruption": "RuntimeError('intentional monitor failure')"
+      }
+    }
+  ],
+  "cryptographic_runs": 0
+}

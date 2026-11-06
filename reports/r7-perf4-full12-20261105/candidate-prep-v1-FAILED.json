@@ -1,0 +1,4 @@
+{
+  "error": "('STOP_BUILD_OR_CORRECTNESS', 'candidate-green-all-targets', 2)",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_candidate_green.py\", line 35, in <module>\n    run('candidate-green-all-targets',['cmake','--build',BUILD,'-j4'],wall=1800)\n  File \"/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/prepare_candidate_green.py\", line 29, in run\n    result={'args':[str(x) for x in args],'exit_code':p.returncode,'wall_seconds':time.monotonic()-started,'expected_exit_code':expected};save(name+'.json',result);print(name,json.dumps(result),flush=True);assert p.returncode==expected,('STOP_BUILD_OR_CORRECTNESS',name,p.returncode)\nAssertionError: ('STOP_BUILD_OR_CORRECTNESS', 'candidate-green-all-targets', 2)\n"
+}
