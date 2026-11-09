@@ -15,11 +15,16 @@ struct VectorOracle {
 using VectorFactory=std::function<VectorOracle(IO&,std::string,std::size_t,std::size_t,Value)>;
 struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelation(const std::string&)=0;};
 inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
+struct ProductInputs {const std::vector<Fr>&equality;const std::vector<Fr>&children;};
 namespace detail {
+std::vector<Fr>productPolynomialContiguous(const ProductInputs&);
+void foldProductInputs(const ProductInputs&,const Fr&,std::vector<std::vector<Fr>>&);
 // Pure local arithmetic, no transcript, RNG, handles, or challenge operations.
 std::vector<Fr>expressionPolynomial(const Expression&,std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
+std::vector<Fr>productPolynomial(std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
 }
 Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
+Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr);
 Hidden publicHidden(IO&,const std::string&,const Fr&);
 Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
 void equalHidden(IO&,const Hidden&,const Fr&,Random*,const std::string&);

@@ -56,6 +56,7 @@ class Commitments {
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
  std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
+ std::optional<Fr>categoryKernelEndpoint(const std::vector<Fr>&,const std::vector<Fr>&,const Authentication&,bool require_profitable=true)const;
  Fr kernelEndpoint(std::size_t,const std::vector<Fr>&,const Authentication&,const std::vector<Fr>&)const;
  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
  std::optional<single::Public>single_pc_;std::optional<single::Secret>single_secret_;std::vector<Fr>single_x_;
@@ -66,6 +67,9 @@ class Commitments {
  std::shared_ptr<const StaticBaseMap>staticBase();
  Located publicLocation(Located)const;
  void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
+ void initializeCategory(Value,Prepared*,const std::vector<Fr>&);
+ void authenticateCategoryInput(const std::vector<Fr>&);
+ std::vector<Fr>categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&)const;
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
  Digest mapDigest(const Claim&)const;

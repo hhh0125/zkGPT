@@ -8,7 +8,8 @@ struct KBudget {
 struct KMetrics {
  std::uint64_t initial_builds=0,fallback_rebuild_calls=0,fold_coordinates=0,state_read_coordinates=0;
  std::uint64_t file_read_bytes=0,file_write_bytes=0,ram_peak_bytes=0,file_peak_bytes=0;
- std::uint64_t builder_peak_bytes=0;
+ std::uint64_t builder_peak_bytes=0,ram_compactions=0,ram_released_bytes=0,compaction_copy_bytes=0;
+ double compaction_seconds=0;
  std::uint64_t ram_roots=0,file_roots=0,rebuild_roots=0;
  double initial_build_seconds=0,fold_cpu_seconds=0,fold_wall_seconds=0,io_wall_seconds=0;
 };

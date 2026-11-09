@@ -2,16 +2,25 @@
 #include "oneblock_plan.hpp"
 #include "oneblock_sumcheck.hpp"
 #include <map>
+#include <array>
 namespace zkgpt::r7::oneblock::classified {
 inline constexpr const char*suite="R7-CLASSIFIED-HYRAX-LOOKUP-INTERACTIVE-ROWMAJOR-v4";
 struct Coordinate {std::uint32_t root=0,index=0;bool operator==(const Coordinate&o)const{return root==o.root&&index==o.index;}};
 // registered classifies native base roots for packing and layout identity only.
 // It does not enable full row knowledge registration.
-struct RootSpec {std::string id;std::size_t actual=0,padded=0;bool registered=false,model=false;};
+struct RootSpec {std::string id;std::size_t actual=0,padded=0;bool registered=false,model=false;unsigned category=0;std::size_t category_offset=0;};
 struct Piece {std::size_t begin=0,count=0;Coordinate start;};
 struct View {std::string id;std::size_t actual=0,padded=0;bool mapped=false;std::vector<r1::InputSpan>spans;Coordinate start;ObjectKind kind;std::vector<Piece>pieces;};
-struct Layout {std::string native;std::vector<RootSpec>roots;std::vector<Coordinate>base;std::map<std::string,View>views;std::vector<Piece>base_runs;std::size_t master_actual=0;};
+struct Category {std::size_t actual=0,padded=0,logical_offset=0,physical_offset=0;};
+struct Layout {bool category_mode=false;std::array<Category,5>categories{};std::vector<r1::InputSpan>x_spans;std::string native;std::vector<RootSpec>roots;std::vector<Coordinate>base;std::map<std::string,View>views;std::vector<Piece>base_runs;std::size_t master_actual=0;};
 Layout makePartitionedLayout(const R7Context&,std::size_t);
+Layout makeCategoryLayout(const R7Context&,std::size_t cap=1u<<24);
+// Explicit trusted spans are for adapters/tests. Production derives them from
+// the independently reconstructed native R6 registry via the overload above.
+Layout categoryLayout(const R7Context&,const std::vector<r1::InputSpan>&,std::size_t cap);
+std::string categoryIdentity(const Layout&);
+void writeCategoryLayout(std::ostream&,const Layout&);
+
 std::size_t baseSize(const Layout&);Coordinate baseCoordinate(const Layout&,std::size_t);
 std::string partitionedIdentity(const Layout&);
 void writePartitionedLayout(std::ostream&,const Layout&);

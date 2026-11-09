@@ -29,6 +29,7 @@ Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"class
 // Logical packing/map identity is also pinned inside the existing model bundle.
 // Ordinary matrix wire/version is bound separately; never rewrite model authority.
 std::string identity(const Layout&p){
+ if(p.category_mode)return categoryIdentity(p);
  if(p.master_actual)return partitionedIdentity(p);
  Writer w;w.text(suite);w.text("hyrax-row-major-low-column-bits-v1");w.text(p.native);w.number(p.roots.size());for(auto&r:p.roots){w.text(r.id);w.number(r.actual,8);w.number(r.padded,8);w.number(r.registered);w.number(r.model);}w.number(p.views.size());
  for(auto&[id,v]:p.views){w.text(id);w.number(v.actual,8);w.number(v.padded,8);w.number(v.mapped);w.number(unsigned(v.kind));w.number(v.start.root);w.number(v.start.index);w.number(v.spans.size());for(auto&s:v.spans){w.number(s.offset,8);w.number(s.count,8);w.scalar(s.bias);}}
@@ -37,8 +38,9 @@ std::string identity(const Layout&p){
  if(used)need(EVP_DigestUpdate(ctx.get(),b.data(),used)==1,"classified digest final maps");
  Digest out{};unsigned n=0;need(EVP_DigestFinal_ex(ctx.get(),out.data(),&n)==1 && n==32,"classified digest end");return hex(out);
 }
-void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
+void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=p.category_mode?makeCategoryLayout(c,cap):makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
 void writeLayout(std::ostream&o,const Layout&p){
+ if(p.category_mode){writeCategoryLayout(o,p);return;}
  if(p.master_actual){writePartitionedLayout(o,p);return;}
  o<<"{\"suite\":\""<<suite<<"\",\"identity\":\""<<identity(p)<<"\",\"roots\":[";bool first=true;for(auto&r:p.roots){if(!first)o<<',';first=false;o<<"{\"id\":\""<<r.id<<"\",\"actual\":"<<r.actual<<",\"padded\":"<<r.padded<<",\"columns\":"<<(r.model?4096:vectorShape(r.padded).columns)<<",\"physical_tail\":\"zero\",\"basis\":\""<<(r.model?"approved-R6-row-major":"Hyrax-A3-row-major")<<"\",\"base_root\":"<<(r.registered?"true":"false")<<",\"full_base_registration\":false"<<'}';}
  o<<"],\"base_coordinate_runs\":[";first=true;for(std::size_t i=0;i<p.base.size();){auto begin=i;auto r=p.base[i];while(++i<p.base.size() && p.base[i].root==r.root && p.base[i].index==r.index+i-begin){}if(!first)o<<',';first=false;o<<"{\"original\":"<<begin<<",\"count\":"<<i-begin<<",\"root\":"<<r.root<<",\"local\":"<<r.index<<'}';}

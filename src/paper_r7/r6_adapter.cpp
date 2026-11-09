@@ -49,6 +49,19 @@ R7Context buildR6Context(const std::string&pin,unsigned blocks){
  std::set<std::string> ids;for(auto&o:c.objects){r1::require(ids.insert(o.id).second,"R7 duplicate witness object identity");layout.text("aux/id",o.id);layout.text("aux/parent",o.parent);layout.integer("aux/kind",static_cast<unsigned>(o.kind));layout.integer("aux/actual",o.actual);layout.integer("aux/padded",o.padded);}
  const auto d=layout.digest();c.layout_sha256=r5b::hex(Bytes(d.begin(),d.end()));return c;
 }
+std::vector<r1::InputSpan> nativeXSpans(const R7Context&c){
+ const auto target=executionTarget(c.plan.shape.layer_count);Quiet quiet(std::cout);
+ LLM nn(target.blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();
+ auto p=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);
+ r1::require(p.circuit_id==c.plan.circuit_id && p.master==c.plan.master && p.shape.sequence_length==32 && p.shape.hidden_dimension==768,"category native X public layout mismatch");
+ std::vector<r1::InputSpan>spans;
+ for(const auto&r:nn.getWitnessRegistry().constraints())if(r.name=="r5b_input"){
+  r1::require(spans.empty() && r.count==32768 && r.val0_offset<p.master.actual && r.count<=p.master.actual-r.val0_offset,"category native X registry bounds/alias");
+  spans.push_back({r.val0_offset,r.count,Fr(0)});
+ }
+ r1::require(spans.size()==1,"category native X registry missing/unsupported");
+ return spans;
+}
 R7WitnessStore::R7WitnessStore()=default;
 R7WitnessStore::~R7WitnessStore()=default;
 void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
@@ -71,7 +84,9 @@ void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
  r6::checkParameterFiles(m,"data/gpt2_int");objects_=c.objects;objects_.front().materialized=true;
 }
 const std::vector<Fr>& R7WitnessStore::baseMaster()const{r1::require(execution_ && !execution_->val.empty(),"R7 no witness");return execution_->val[0];}
-std::vector<Fr> R7WitnessStore::publicX()const{const auto&w=baseMaster();r1::require(w.size()>=32768,"R7 X bounds");return {w.begin(),w.begin()+32768};}
+std::vector<Fr> R7WitnessStore::publicX()const{const auto&w=baseMaster();r1::require(network_!=nullptr,"R7 X network");std::vector<Fr>out;
+ for(const auto&r:network_->getWitnessRegistry().constraints())if(r.name=="r5b_input"){r1::require(out.empty() && r.count==32768 && r.val0_offset<w.size() && r.count<=w.size()-r.val0_offset,"R7 X registry bounds/alias");out.assign(w.begin()+r.val0_offset,w.begin()+r.val0_offset+r.count);}
+ r1::require(out.size()==32768,"R7 X registry missing/unsupported");return out;}
 std::vector<Fr> R7WitnessStore::publicY(const R7Context&c)const{const auto&w=baseMaster();std::vector<Fr> y;y.reserve(c.plan.output.size());for(auto i:c.plan.output)y.push_back(w.at(i));return y;}
 bool R7WitnessStore::legacyCommitmentAbsent()const{return execution_ && execution_->cc.w==nullptr && execution_->cc.comm==nullptr && execution_->gens.empty();}
 ::prover& R7WitnessStore::executionForR7(){r1::require(legacyCommitmentAbsent(),"R7 execution unavailable or legacy commitment present");return *execution_;}

@@ -11,10 +11,11 @@ struct UFoldMetrics {
 class FoldedU {
  struct Impl;std::unique_ptr<Impl>p_;
  public:
- FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget);
+ FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget,bool deferred_callbacks=false);
  ~FoldedU();FoldedU(const FoldedU&)=delete;FoldedU&operator=(const FoldedU&)=delete;
  static bool requested();static std::uint64_t environmentBudget();
- bool enabled()const;std::size_t domain()const;
+ bool enabled()const;bool cached()const;
+ void capture(std::size_t,std::size_t,const Fr*,std::size_t);std::size_t domain()const;
  void beginRound(const std::string&,const std::vector<Fr>&,const std::vector<Segment>&);
  InputSpan span(std::size_t,const std::string&,const std::vector<Fr>&,InputSpan original);
  void completeRound(const std::string&,const std::vector<Fr>&);

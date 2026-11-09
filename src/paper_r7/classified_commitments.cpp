@@ -38,7 +38,7 @@ class MapHash {
 Fr fold(std::vector<Fr>&v,const std::vector<Fr>&q){std::size_t n=v.size();need(r1::log2exact(n)==q.size(),"classified public kernel query");for(auto&x:q){for(std::size_t j=0;j<n/2;++j)v[j]=v[2*j]+x*(v[2*j+1]-v[2*j]);n/=2;}return v[0];}
 std::vector<unified::Block>unifiedBlocks(const Layout&p){std::vector<unified::Block>b;for(auto&r:p.roots){unsigned category=r.model?1:(r.id.rfind("C_aux",0)==0?2:3);need(r.model || r.id.rfind("C_aux",0)==0 || r.id.rfind("C_lookup/",0)==0,"unified unknown classified root category");b.push_back({category,r.padded});}return b;}
 }
-std::string unifiedInputIdentity(const Layout&p,const std::vector<Fr>&x){need(!x.empty() && x.size()<=(1u<<24),"unified public X identity bound");auto blocks=unifiedBlocks(p);auto packing=unified::pack(blocks,power2(x.size()));Writer w;w.raw(unified::descriptor(packing));w.text(vectorSuite);w.text(vectorLayout);w.text(identity(p));w.number(x.size(),8);for(auto&v:x){need(v.isValid(),"unified public X identity scalar");w.scalar(v);}w.number(p.roots.size());for(std::size_t k=0;k<p.roots.size();++k){auto&r=p.roots[k];w.text(r.id);w.number(blocks[k].category);w.number(r.actual,8);w.number(r.padded,8);w.number(packing.segments[k+1].offset,8);}return hex(r1::hash(w.b));}
+std::string unifiedInputIdentity(const Layout&p,const std::vector<Fr>&x){if(p.category_mode){Writer w;w.text(single::suite);w.raw(single::descriptor(singlePlan(p,x)));w.number(x.size(),8);for(const auto&v:x){need(v.isValid(),"category public X identity scalar");w.scalar(v);}return hex(r1::hash(w.b));}need(!x.empty() && x.size()<=(1u<<24),"unified public X identity bound");auto blocks=unifiedBlocks(p);auto packing=unified::pack(blocks,power2(x.size()));Writer w;w.raw(unified::descriptor(packing));w.text(vectorSuite);w.text(vectorLayout);w.text(identity(p));w.number(x.size(),8);for(auto&v:x){need(v.isValid(),"unified public X identity scalar");w.scalar(v);}w.number(p.roots.size());for(std::size_t k=0;k<p.roots.size();++k){auto&r=p.roots[k];w.text(r.id);w.number(blocks[k].category);w.number(r.actual,8);w.number(r.padded,8);w.number(packing.segments[k+1].offset,8);}return hex(r1::hash(w.b));}
 // All cached state is owned by one stack-scoped authentication session.
 // Neither a caller callback nor Layout storage is retained in a frozen map.
 Commitments::Weights::Weights(const std::vector<Fr>&q,AuthMetrics*m):split_(q.size()/2){auto t=processCPU();a_=r1::weights({q.begin(),q.begin()+split_});b_=r1::weights({q.begin()+split_,q.end()});if(m){++m->weights;m->weight_terms+=a_.size()+b_.size();m->weights_cpu+=processCPU()-t;}}
@@ -241,6 +241,7 @@ void Commitments::authenticate(){
 }
 void Commitments::authenticateUnifiedInput(const std::vector<Fr>&public_x){
  namespace ui=unified;
+ if(layout_.category_mode){authenticateCategoryInput(public_x);return;}
  need(sealed_ && tails_constrained_ && !authenticated_ && !claims_.empty() && claims_.size()<=8192 && io_.session()==session_ && identity(layout_)==identity_,"unified missing/closed/mutated authentication");
  need(!public_x.empty() && public_x.size()<=(1u<<24),"unified public X bound");
  if(single_pc_)need(public_x==single_x_,"single public X changed after commitment seal");

@@ -1,3 +1,4 @@
+#include "source_mle.hpp"
 #include "oneblock_plan.hpp"
 #include "classified_commitments.hpp"
 #include "oneblock_vectors.hpp"
@@ -83,7 +84,7 @@ class Tracked final:public IO,public EvidenceSink {
  Bytes message(const std::string&label,const Bytes&v={})override{last_=label;if(!prover() || attack_.empty() || changed_)return base_.message(label,v);auto b=v;if(prover() && !changed_){
   if(attack_=="wrong-commitment" && label=="Classified/root/1/PC"){auto pc=decodeVector(b);pc.points[0]+=parameters(1).scalar;b=encodeVector(pc);changed_=true;}
   if(attack_=="wrong-commitment" && label=="SingleHyrax/rows/0"){Reader rows{b};auto n=rows.number();Writer out;out.number(n);for(std::size_t j=0;j<n;++j){auto a=rows.point();if(!j)a+=parameters(1).scalar;out.point(a);}rows.end();b=out.b;changed_=true;}
-  if(attack_=="missing-authentication" && (label=="Classified/all-claims-fixed" || label=="UnifiedInput/all-claims-fixed")){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
+  if(attack_=="missing-authentication" && (label=="Classified/all-claims-fixed" || label=="UnifiedInput/all-claims-fixed" || label=="CategoryInput/all-claims-fixed")){close(1);throw std::runtime_error("Classified deliberate missing authentication");}
   if(attack_=="model-response" && label=="oneblock/model/register/0/responses"){auto x=r1::decodeFr(Bytes(b.begin(),b.begin()+32));auto c=r1::encode(x+Fr(1));std::copy(c.begin(),c.end(),b.begin());changed_=true;}
   if(attack_=="truncated" && label=="oneblock/model/register/0/responses"){b.pop_back();changed_=true;}
   if(attack_=="missing-constraint" && label.find("Oneblock/GKR/")!=std::string::npos){close(1);throw std::runtime_error("Oneblock deliberate missing constraint");}
@@ -98,7 +99,7 @@ class Tracked final:public IO,public EvidenceSink {
 };
 Value masterValue(R7WitnessStore&w){return [&w](std::size_t i){return i<w.baseMaster().size()?w.baseMaster()[i]:Fr(0);};}
 std::pair<std::size_t,Fr>sourceIndex(const r2::ModelQuerySource&s,std::size_t i){for(auto&span:s.spans){if(i<span.count)return {span.offset+i,span.bias};i-=span.count;}throw std::runtime_error("Oneblock native source map overflow");}
-Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){auto w=r1::weights(q);Fr y=0;for(std::size_t i=0;i<v.padded;++i)y+=w[i]*v.value(i);return y;}
+Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){bool stream=true;if(const auto*p=std::getenv("ZKGPT_SOURCE_MLE_STREAM")){std::string text(p);need(text=="0" || text=="1","source MLE mode");stream=text=="1";}SourceMLEMetrics m;auto y=sourceMLE(v.padded,v.value,q,stream,&m);std::cerr<<"SOURCE_MLE {\"streamed\":"<<(stream?"true":"false")<<",\"padded\":"<<v.padded<<",\"weight_peak_bytes\":"<<m.weight_peak_bytes<<",\"values_read\":"<<m.values_read<<",\"Fr_multiplications\":"<<m.multiplications<<",\"Fr_additions\":"<<m.additions<<",\"weights_wall\":"<<m.weights_wall<<",\"dot_wall\":"<<m.dot_wall<<"}\n";return y;}
 }
 int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");
@@ -118,7 +119,11 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #endif
  auto&ctx=plan.context;
 #ifdef R7_CLASSIFIED_V2
+ #ifdef R7_SINGLE_HYRAX
+ auto layout=classified::makeCategoryLayout(ctx);
+#else
  auto layout=classified::makeLayout(ctx);
+#endif
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
 #ifdef R7_SINGLE_HYRAX

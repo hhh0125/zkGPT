@@ -34,6 +34,11 @@
   graph=&witness.executionForR7().C;master=masterValue(witness);
   if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
   prepared=classified::prepareLookup(ctx,master);
+  {std::uint64_t helpers=0,helper_elements=0,layers=0;std::set<const void*>seen;
+   for(const auto&entry:prepared)if(entry.second && seen.insert(entry.second.get()).second){helpers+=entry.second->capacity()*sizeof(Fr);helper_elements+=entry.second->size();}
+   const auto&values=witness.executionForR7().val;for(std::size_t j=1;j<values.size();++j)layers+=values[j].capacity()*sizeof(Fr);
+   std::cerr<<"WITNESS_STORAGE {\"native_master_size\":"<<witness.baseMaster().size()<<",\"native_master_capacity_bytes\":"<<witness.baseMaster().capacity()*sizeof(Fr)<<",\"helper_materialized_elements\":"<<helper_elements<<",\"helper_capacity_bytes\":"<<helpers<<",\"other_native_layer_capacity_bytes\":"<<layers<<",\"snapshot\":\"all-witness-and-helpers-ready\",\"capacity_not_RSS\":true}\n";}
+
   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
   if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);}
  }else{master3::QuietStdout quiet;network.emplace(ctx.plan.shape.layer_count,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
@@ -50,7 +55,11 @@
  auto&pcs=*commitments;
 #ifdef R7_SINGLE_HYRAX
  need(pcs.logicalCommitments()==1,"production single Hyrax identity count");checked(io,"single/commitment");checked(io,"model/frozen-numerical-profile");
- if(isP && attack=="wrong-model-witness"){auto it=std::find_if(pcs.roots().begin(),pcs.roots().end(),[](auto&r){return r.spec.model;});need(it!=pcs.roots().end() && it->sealed_data,"single model mutation target");const_cast<Fr*>(it->sealed_data)[0]+=Fr(1);}
+ if(isP && attack=="wrong-model-witness"){
+  need(!ctx.plan.sources.back().spans.empty(),"single native model mutation target");
+  const auto at=ctx.plan.sources.back().spans.front().offset;
+  witness.executionForR7().val[0].at(at)+=Fr(1);
+ }
 #else
  for(auto&r:layout.roots)checked(io,"classified/root/"+r.id+"/commitment");
  checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
@@ -90,11 +99,24 @@
    "public/X-Y-constants",
 #endif
    all->size(),N,[all](std::size_t j){return all->at(j).first;},publicHidden(io,"Classified/public-expected",expected),point);
- });for(auto id:{"public/X","public/Y","public/constants"})checked(io,id);
+ });
+#ifndef R7_SINGLE_HYRAX
+ checked(io,"public/X");
+#endif
+ for(auto id:{"public/Y","public/constants"})checked(io,id);
  std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;
  // Every later private read is served by sealed classified roots/model W.
  // Terminal maps borrow graph wiring, never these native field arrays.
- if(isP){for(auto&values:witness.executionForR7().val)std::vector<Fr>().swap(values);master={};}
+ if(isP){
+#ifdef R7_SINGLE_HYRAX
+ // val[0] is the original sealed storage borrowed by C_U, source views and
+ // Unified Sumcheck. It stays alive until authentication finishes.
+ for(std::size_t k=1;k<witness.executionForR7().val.size();++k)std::vector<Fr>().swap(witness.executionForR7().val[k]);
+#else
+ for(auto&values:witness.executionForR7().val)std::vector<Fr>().swap(values);
+#endif
+ master={};
+ }
  std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
  for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id));}
  VectorFactory factory=[&](IO&live,std::string id,std::size_t actual,std::size_t padded,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");auto v=pcs.view(id);need(v.actual==actual && v.padded==padded,"classified wrong native view shape");return v;};
@@ -106,7 +128,7 @@
 #ifdef R7_UNIFIED_INPUT1
  timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");
 #ifdef R7_SINGLE_HYRAX
- checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
+ checked(io,"public/X");checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
 #else
  for(auto&r:layout.roots)checked(io,"unified-input/root/"+r.id+"/opening");
 #endif

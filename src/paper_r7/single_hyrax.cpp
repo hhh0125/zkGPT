@@ -15,6 +15,7 @@ namespace {
 constexpr std::size_t rowChunk=256;
 bool power(std::size_t n){return n && !(n&(n-1));}
 std::vector<PhysicalRun>deriveRuns(const Plan&p){
+ if(p.category_mode){need(p.public_cells.empty(),"category X cannot have public holes");std::vector<PhysicalRun>out;std::size_t at=0;for(std::size_t k=0;k<p.segments.size();++k){out.push_back({k,0,p.segments[k].actual,at});at+=p.segments[k].actual;}return out;}
  need(!p.segments.empty(),"single missing sources");std::set<std::size_t>x_indices;std::pair<std::size_t,std::size_t>previous{0,0};
  for(const auto&c:p.public_cells){auto key=std::make_pair(c.source,c.index);need(c.source>0 && c.source<p.segments.size() && c.index<p.segments[c.source].actual && c.x_index<p.segments[0].actual && key>previous && x_indices.insert(c.x_index).second,"single native public coordinate bounds/order/alias");previous=key;}
  need(p.public_cells.empty() || p.public_cells.size()==p.segments[0].actual,"single native public X completeness");
@@ -24,6 +25,7 @@ std::vector<PhysicalRun>deriveRuns(const Plan&p){
  }return runs;
 }
 void validatePlan(const Plan&p){
+ if(p.category_mode){validateCategoryPlan(p);return;}
  need(power(p.domain) && p.domain<=maxDomain && !p.segments.empty() && p.segments.size()<=8193,"single logical domain/segments");
  unified::validate(p.packing);need(p.domain==p.packing.domain && p.segments.size()==p.packing.segments.size(),"single logical packing identity");
  const auto shape=matrixShape(p.physical_values);
@@ -88,7 +90,7 @@ Plan makePlan(const unified::Packing&packing,const std::vector<std::size_t>&actu
  for(std::size_t k=0;k<p.segments.size();++k){auto&s=p.segments[k];s.physical_offset=p.physical_values;s.physical_length=0;for(const auto&run:p.runs)if(run.source==k)s.physical_length+=run.count;p.physical_values+=s.physical_length;}
  static_cast<PhysicalCommitmentLayout&>(p)=matrixShape(p.physical_values);validatePlan(p);return p;
 }
-Bytes descriptor(const Plan&p){validatePlan(p);Writer w;w.text(suite);w.text(layout);w.text(modelScope);w.text(hyrax_a3::suite);w.text("same-A3-column-bases-and-Pedersen-H;no-trusted-W-bases");w.text(p.source_identity);w.raw(unified::descriptor(p.packing));
+Bytes descriptor(const Plan&p){validatePlan(p);Writer w;w.text(suite);w.text(layout);w.text(modelScope);w.text(hyrax_a3::suite);w.text("same-A3-column-bases-and-Pedersen-H;no-trusted-W-bases");w.text(p.source_identity);w.number(p.category_mode);if(p.category_mode)w.text("five-category-tail-only-v1");else w.raw(unified::descriptor(p.packing));
  for(auto n:{p.domain,p.rows,p.columns,p.logical_values,p.physical_values,p.physical_domain})w.number(n,8);
  w.number(p.segments.size());for(const auto&s:p.segments){w.text(s.source_id);for(auto n:{s.offset,s.actual,s.padded,s.physical_offset,s.physical_length})w.number(n,8);w.number(s.is_public);}w.number(p.public_cells.size());for(const auto&c:p.public_cells){w.number(c.source);w.number(c.index,8);w.number(c.x_index,8);}return w.b;
 }
@@ -109,7 +111,7 @@ void mappedQueryTerms(const Plan&p,const std::vector<Fr>&q,const ConsumeTerm&con
  }
 }
 Fr publicContribution(const Plan&p,const std::vector<Fr>&q,const std::vector<Fr>&x){
- validatePlan(p);need(x.size()==p.segments[0].actual,"single verifier public X shape");Basis basis(p,q);Fr value=0;for(std::size_t j=0;j<x.size();++j){need(x[j].isValid(),"single invalid public X");value+=basis.at(j)*x[j];}for(const auto&c:p.public_cells)value+=basis.at(p.segments[c.source].offset+c.index)*x[c.x_index];return value;
+ validatePlan(p);if(p.category_mode)return Fr(0);need(x.size()==p.segments[0].actual,"single verifier public X shape");Basis basis(p,q);Fr value=0;for(std::size_t j=0;j<x.size();++j){need(x[j].isValid(),"single invalid public X");value+=basis.at(j)*x[j];}for(const auto&c:p.public_cells)value+=basis.at(p.segments[c.source].offset+c.index)*x[c.x_index];return value;
 }
 Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers){
  validatePlan(p);need(sources.size()==p.segments.size() && workers>0 && workers<=32,"single source/worker bound");for(auto&v:sources)need(bool(v),"single missing sealed source");
@@ -125,7 +127,7 @@ Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers
 Bytes encode(const Public&p){validatePublic(p);Writer w;auto header=descriptor(p.plan);w.number(header.size());w.raw(header);auto out=std::move(w.b);out.reserve(out.size()+32*p.rows.size());for(std::size_t i=0;i<p.rows.size();i+=rowChunk){auto chunk=rowBytes(p,i,std::min(rowChunk,p.rows.size()-i));out.insert(out.end(),chunk.begin()+4,chunk.end());}return out;}
 Public decode(const Bytes&b,const Plan&expected){auto header=descriptor(expected);Reader r{b};need(r.number()==header.size() && r.raw(header.size())==header,"single untrusted suite/layout/shape");need(b.size()-r.at==expected.rows*32,"single encoded row bytes/EOF");Public p;p.plan=expected;p.rows.reserve(expected.rows);for(std::size_t i=0;i<expected.rows;++i)p.rows.push_back(r.point());r.end();return p;}
 std::string identity(const Public&p){validatePublic(p);Writer w;w.raw(descriptor(p.plan));w.number(rowChunk);for(std::size_t i=0;i<p.rows.size();i+=rowChunk){auto digest=r1::hash(rowBytes(p,i,std::min(rowChunk,p.rows.size()-i)));w.raw(Bytes(digest.begin(),digest.end()));}return hex(r1::hash(w.b));}
-void writeLayout(std::ostream&out,const Public&p){validatePublic(p);out<<"{\"suite\":\""<<suite<<"\",\"layout\":\""<<layout<<"\",\"model_scope\":\""<<modelScope<<"\",\"logical_commitments\":1,\"identity\":\""<<identity(p)<<"\",\"source_layout_identity\":\""<<p.plan.source_identity<<"\",\"rows\":"<<p.plan.rows<<",\"columns\":"<<p.plan.columns<<",\"domain\":"<<p.plan.domain<<",\"logical_values\":"<<p.plan.logical_values<<",\"physical_domain\":"<<p.plan.physical_domain<<",\"physical_values\":"<<p.plan.physical_values<<",\"logical_gap\":"<<p.plan.domain-p.plan.logical_values<<",\"physical_padding\":"<<p.plan.physical_domain-p.plan.physical_values<<",\"fixed_zero_sigma_rows\":0,\"source_segments\":[";
+void writeLayout(std::ostream&out,const Public&p){validatePublic(p);if(p.plan.category_mode){writeCategoryLayout(out,p);return;}out<<"{\"suite\":\""<<suite<<"\",\"layout\":\""<<layout<<"\",\"model_scope\":\""<<modelScope<<"\",\"logical_commitments\":1,\"identity\":\""<<identity(p)<<"\",\"source_layout_identity\":\""<<p.plan.source_identity<<"\",\"rows\":"<<p.plan.rows<<",\"columns\":"<<p.plan.columns<<",\"domain\":"<<p.plan.domain<<",\"logical_values\":"<<p.plan.logical_values<<",\"physical_domain\":"<<p.plan.physical_domain<<",\"physical_values\":"<<p.plan.physical_values<<",\"logical_gap\":"<<p.plan.domain-p.plan.logical_values<<",\"physical_padding\":"<<p.plan.physical_domain-p.plan.physical_values<<",\"fixed_zero_sigma_rows\":0,\"source_segments\":[";
  for(std::size_t k=0;k<p.plan.segments.size();++k){if(k)out<<',';const auto&s=p.plan.segments[k];out<<"{\"storage_index\":"<<k<<",\"source_id\":\""<<s.source_id<<"\",\"offset\":"<<s.offset<<",\"logical_length\":"<<s.padded<<",\"actual\":"<<s.actual<<",\"padded\":"<<s.padded<<",\"physical_offset\":"<<s.physical_offset<<",\"physical_length\":"<<s.physical_length<<",\"public\":"<<(s.is_public?"true":"false")<<",\"witness_source\":\""<<(s.is_public?"verifier-statement":"sealed-native-source")<<"\"}";}
  out<<"],\"private_runs\":[";bool first=true;for(const auto&r:p.plan.runs){if(!first)out<<',';first=false;out<<"{\"source\":"<<r.source<<",\"source_offset\":"<<r.source_offset<<",\"logical_offset\":"<<p.plan.segments[r.source].offset+r.source_offset<<",\"count\":"<<r.count<<",\"physical_offset\":"<<r.physical_offset<<'}';}
  out<<"],\"native_public_cells\":[";first=true;for(const auto&c:p.plan.public_cells){if(!first)out<<',';first=false;out<<"["<<c.source<<','<<c.index<<','<<c.x_index<<"]";}out<<"],\"logical_layout\":";unified::writeLayout(out,p.plan.packing);out<<"}\n";
@@ -137,7 +139,7 @@ Public exchange(IO&io,const Plan&plan,const Secret*s){
  Writer seal;seal.text(suite);seal.text(identity(p));seal.text(io.session());bindPublic(io,"SingleHyrax/sealed",seal.b);return p;
 }
 Fr evaluate(const Secret&s,const std::vector<Fr>&q){
- validatePublic(s.pc);Basis basis(s.pc.plan,q);std::vector<Fr>x(s.pc.plan.segments[0].actual);for(std::size_t j=0;j<x.size();++j)x[j]=s.sources[0](j);Fr result=publicContribution(s.pc.plan,q,x);
+ validatePublic(s.pc);Basis basis(s.pc.plan,q);std::vector<Fr>x;if(!s.pc.plan.category_mode){x.resize(s.pc.plan.segments[0].actual);for(std::size_t j=0;j<x.size();++j)x[j]=s.sources[0](j);}Fr result=s.pc.plan.category_mode?Fr(0):publicContribution(s.pc.plan,q,x);
  for(const auto&run:s.pc.plan.runs){for(std::size_t j=0;j<run.count;++j){result+=basis.at(s.pc.plan.segments[run.source].offset+run.source_offset+j)*s.sources[run.source](run.source_offset+j);}}
  return result;
 }
@@ -145,13 +147,14 @@ void open(IO&io,const Public&p,const Query&q,const std::vector<Fr>&x,const Secre
  validatePublic(p);need(io.prover()?(s && h && rng):(!s && !h && !rng),"single opening P/V boundary");need(!role.empty() && role.size()<=120,"single opening role bound");crypto::validate(q.evaluation,io.session(),q.evaluation.role);
  if(s){validateSecret(*s,p);need(crypto::encode(h->handle)==crypto::encode(q.evaluation),"single hidden opening handle");}
  const auto started=std::chrono::steady_clock::now();auto id=identity(p);Writer binding;binding.text(suite);binding.text(id);binding.text(io.session());binding.text(role);binding.raw(crypto::encode(q.evaluation));for(const auto&v:q.point)binding.scalar(v);binding.number(x.size(),8);bindPublic(io,role+"/binding",binding.b);
- for(std::size_t start=0;start<x.size();start+=65536){Writer chunk;chunk.number(start,8);auto n=std::min<std::size_t>(65536,x.size()-start);chunk.number(n);for(std::size_t j=0;j<n;++j)chunk.scalar(x[start+j]);bindPublic(io,role+"/public-X/"+std::to_string(start),chunk.b);}
- auto pub=publicHidden(io,role+"/public-contribution",publicContribution(p.plan,q.point,x));std::vector<Hidden>evaluations;std::size_t index=0;double preparation=0;
+ for(std::size_t start=0;!p.plan.category_mode && start<x.size();start+=65536){Writer chunk;chunk.number(start,8);auto n=std::min<std::size_t>(65536,x.size()-start);chunk.number(n);for(std::size_t j=0;j<n;++j)chunk.scalar(x[start+j]);bindPublic(io,role+"/public-X/"+std::to_string(start),chunk.b);}
+ std::vector<Hidden>evaluations;std::size_t index=0;double preparation=0;
  mappedQueryTerms(p.plan,q.point,[&](const QueryTerm&t){auto begin=std::chrono::steady_clock::now();auto f=fold(p,t,s);preparation+=std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count();auto name=role+"/term/"+std::to_string(index++);auto y=exchangeHidden(io,name+"/evaluation",s?r1::dot(f.witness.values,t.right):Fr(0),rng);
   if(s){f.witness.evaluation=y;}
   stage2::ScopedIO scoped(io,name);hyrax_a3::dotProduct(scoped,f.commitment,y.handle,t.right,s?&f.witness:nullptr,rng);evaluations.push_back(y);
  });
- evaluations.push_back(pub);auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;
+ if(!p.plan.category_mode){evaluations.push_back(publicHidden(io,role+"/public-contribution",publicContribution(p.plan,q.point,x)));}
+ auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;
  std::vector<Hidden>w{total,expected};Relations equality;equality.role=role+"/logical-consistency";for(auto&v:w)equality.handles.push_back(v.handle);equality.linear={{Fr(1),Fr(-1)}};sigma(io,equality,s?&w:nullptr,rng);
  std::cerr<<"COMPACT_QUERY {\"rank_terms\":"<<index<<",\"logical_domain\":"<<p.plan.domain<<",\"physical_domain\":"<<p.plan.physical_domain<<",\"preparation_seconds\":"<<preparation<<",\"total_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"logical_coefficient_array_bytes\":0}\n";
 }

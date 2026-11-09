@@ -3,8 +3,8 @@
 #include "hyrax_a3.hpp"
 #include <ostream>
 namespace zkgpt::r7::oneblock::single {
-inline constexpr const char*suite="R7-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-HIDDEN-v3";
-inline constexpr const char*layout="compact-private-independent-logical-regions-mapped-query-v3";
+inline constexpr const char*suite="R7-SINGLE-HYRAX-COMPACT-FIVE-CATEGORIES-HIDDEN-v4";
+inline constexpr const char*layout="compact-five-contiguous-categories-committed-X-v4";
 inline constexpr const char*modelScope="PROVER_SELECTED_WEIGHTS_BOUND_IN_C_U-v1";
 inline constexpr std::size_t maxDomain=std::size_t(1)<<32;
 inline constexpr std::size_t maxRows=std::size_t(1)<<16;
@@ -17,19 +17,25 @@ struct PhysicalCommitmentLayout {std::size_t physical_values=0,physical_domain=0
 struct PublicCell {std::size_t source=0,index=0,x_index=0;};
 struct PhysicalRun {std::size_t source=0,source_offset=0,count=0,physical_offset=0;};
 struct Plan:LogicalLayout,PhysicalCommitmentLayout {
- std::string source_identity;
- // Segment0 is verifier-owned public X. Remaining segments are storage only;
- // none has a commitment, basis, blind, identity or independent opening.
+ std::string source_identity;bool category_mode=false;
+ // In category mode every segment (including native X) is committed.
+ // Legacy test/probe plans keep public segment 0. No segment has a separate
+ // commitment, basis, blind or opening identity.
  std::vector<Segment>segments;
  std::vector<PublicCell>public_cells;
  std::vector<PhysicalRun>runs;
 };
 Plan makePlan(const unified::Packing&,const std::vector<std::size_t>&actual,
  const std::string&source_identity,const std::vector<std::string>&source_ids={},const std::vector<PublicCell>&native_public={});
+// Category segments are consecutive and may be unaligned. No storage chunk
+// contributes padding or a protocol identity. Empty categories have no segment.
+Plan makeCategoryPlan(const std::array<std::size_t,5>&actual,const std::string&source_identity);
+void validateCategoryPlan(const Plan&);
 PhysicalCommitmentLayout matrixShape(std::size_t actual);
 unsigned bits(std::size_t);
 Bytes descriptor(const Plan&);
 struct Public {Plan plan;std::vector<G1>rows;};
+void writeCategoryLayout(std::ostream&,const Public&);
 struct Secret {Public pc;std::vector<Fr>blinds;std::vector<Value>sources;};
 // Callbacks borrow immutable sealed source storage, and may be read in parallel.
 // Only one columns-sized scalar buffer per worker is required. No GPU residency.

@@ -76,16 +76,22 @@ Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const H
  crypto::validate(initial.handle,io.session(),initial.handle.role);
  Writer statement;statement.text(suite);statement.number(n,8);statement.number(2);statement.raw(encode(initial.handle));statement.number(segments.size());for(auto s:segments){statement.number(s.offset,8);statement.number(s.padded,8);}bindPublic(io,role+"/statement",statement.b);
  auto previous=initial;std::vector<Fr>point;Round last;
- std::unique_ptr<FoldedU>folded_u;if(io.prover() && state && inputs && FoldedU::requested())folded_u=std::make_unique<FoldedU>(n,segments,inputs,io.session(),FoldedU::environmentBudget());auto retained=folded_u && folded_u->enabled()?folded_u.get():nullptr;
- for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);if(io.prover()){
-  if(state && inputs){UMetrics m;last=quadraticRoundStreaming(n,segments,point,factors,inputs,UOptions::environment(),&m,retained,io.session());
+ bool contiguous_inputs=true;if(io.prover() && inputs)for(std::size_t k=0;k<segments.size();++k){auto s=inputs(k);if(s.stored && !s.data)contiguous_inputs=false;}
+ bool category_cache=true;if(const auto*v=std::getenv("ZKGPT_CATEGORY_U_FOLD")){std::string text(v);need(text=="0" || text=="1","category U cache switch");category_cache=text=="1";}
+ std::uint64_t category_budget=512ull<<20;if(const auto*v=std::getenv("ZKGPT_CATEGORY_U_RAM_BYTES")){std::string text(v);need(!text.empty() && text.find_first_not_of("0123456789")==std::string::npos,"category U budget syntax");category_budget=std::stoull(text);need(category_budget<=512ull<<20,"category U budget cap");}
+ std::unique_ptr<FoldedU>folded_u;
+ if(io.prover() && state && inputs && ((contiguous_inputs && FoldedU::requested()) || (!contiguous_inputs && category_cache))){folded_u=std::make_unique<FoldedU>(n,segments,inputs,io.session(),contiguous_inputs?FoldedU::environmentBudget():category_budget,!contiguous_inputs);}
+ auto retained=folded_u && folded_u->enabled()?folded_u.get():nullptr;
+ for(unsigned t=0;t<domainBits(n);++t){auto round_started=std::chrono::steady_clock::now();auto name=role+"/round/"+std::to_string(t);std::uint64_t round_u_coordinates=0;if(io.prover()){
+  if(state && inputs){UMetrics m;last=quadraticRoundStreaming(n,segments,point,factors,inputs,UOptions::environment(),&m,retained,io.session());round_u_coordinates=m.coordinates;
+   if(crypto::opt2MetricsEnabled())std::cerr<<"U_SCAN_DETAIL "<<scanMetricsJSON(t,m)<<"\n";
    if(crypto::opt2MetricsEnabled())std::cerr<<"OPT3D_U_ROUND {\"round\":"<<t<<",\"U_scan_coordinates_including_public_X\":"<<m.coordinates<<",\"U_bytes_read\":"<<m.bytes<<",\"U_K_fused_load_bytes\":"<<m.fused_load_bytes<<",\"U_scan_cpu_seconds\":"<<m.scan_cpu<<",\"U_scan_wall_seconds\":"<<m.scan_wall<<",\"U_K_product_wall_seconds\":"<<m.product_wall<<",\"U_Fr_multiplications\":"<<m.multiplications<<",\"U_Fr_additions\":"<<m.additions<<",\"coefficient_Fr_multiplications\":"<<m.product_multiplications<<",\"coefficient_Fr_additions\":"<<m.product_additions<<",\"U_TILE_RAM_PEAK_BYTES\":"<<m.tile_bytes<<",\"U_THREAD_LOCAL_BYTES\":"<<m.thread_bytes<<",\"U_TOTAL_EXTRA_RAM_BYTES\":"<<m.extra_bytes<<",\"main_thread_cpp_allocations_including_K_provider\":"<<m.allocations<<",\"main_thread_cpp_allocated_bytes_including_K_provider\":"<<m.allocated_bytes<<"}\n";
   }else last=state?quadraticRoundFolded(n,segments,point,factors):quadraticRound(n,segments,point,factors);
  }
   std::vector<Hidden>h{previous};for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(j),last.coefficients[j],rng));
   Relations recurrence;recurrence.role=name+"/recurrence";for(auto&v:h)recurrence.handles.push_back(v.handle);recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};sigma(io,recurrence,io.prover()?&h:nullptr,rng);
   auto r=io.coin(name+"/r");if(state)state->advance(io.session(),r);if(retained)retained->advance(io.session(),r,inputs);point.push_back(r);previous=combine(io.session(),name+"/derived",{h[1],h[2],h[3]},{Fr(1),r,r*r});bindPublic(io,name+"/derived",encode(previous.handle));
-  if(crypto::opt2MetricsEnabled()){std::uint64_t u=0;for(std::size_t k=1;k<segments.size();++k)u+=retained && t?(segments[k].padded>>std::min<unsigned>(t,r1::log2exact(segments[k].padded))):segments[k].padded;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
+  if(crypto::opt2MetricsEnabled()){auto u=round_u_coordinates;std::cerr<<"OPT3C_ROUND {\"round\":"<<t<<",\"private_U_scan_coordinates\":"<<(io.prover()?u:0)<<",\"sumcheck_round_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-round_started).count()<<"}\n";}
  }
  Fr input=0,actual_kernel=0;if(io.prover()){
   if(n==1){factors(0,[&](const Value&a,const Value&b){input=a(0);actual_kernel=b(0);});}

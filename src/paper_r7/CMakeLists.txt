@@ -319,3 +319,85 @@ foreach(scope oneblock full12)
   endif()
  endforeach()
 endforeach()
+
+add_executable(r7_perf5_product_probe perf5_product_probe.cpp)
+target_link_libraries(r7_perf5_product_probe PRIVATE paper_r7)
+add_executable(r7_perf5_product_tests perf5_product_tests.cpp)
+target_link_libraries(r7_perf5_product_tests PRIVATE paper_r7)
+add_test(NAME r7_perf5_product_equivalence COMMAND r7_perf5_product_tests)
+add_executable(r7_perf5_product_fs_probe perf5_product_fs_probe.cpp)
+target_link_libraries(r7_perf5_product_fs_probe PRIVATE paper_r7)
+add_executable(r7_perf5_profile_tests perf5_profile_tests.cpp)
+target_link_libraries(r7_perf5_profile_tests PRIVATE paper_r7)
+add_test(NAME r7_perf5_profile_hierarchy COMMAND r7_perf5_profile_tests)
+add_executable(r7_perf6_messages_tests perf6_messages_tests.cpp)
+target_link_libraries(r7_perf6_messages_tests PRIVATE paper_r7)
+add_test(NAME r7_perf6_messages COMMAND r7_perf6_messages_tests)
+
+add_executable(r7_perf6_product_inputs_tests perf6_product_inputs_tests.cpp)
+target_link_libraries(r7_perf6_product_inputs_tests PRIVATE paper_r7)
+add_test(NAME r7_perf6_product_inputs COMMAND r7_perf6_product_inputs_tests)
+
+add_executable(r7_perf6_native_probe perf6_native_probe.cpp)
+target_link_libraries(r7_perf6_native_probe PRIVATE paper_r7)
+foreach(kind surrogate native)
+ add_executable(r7_perf6_exact_${kind} perf6_exact_trace.cpp)
+ target_link_libraries(r7_perf6_exact_${kind} PRIVATE paper_r7)
+endforeach()
+target_compile_definitions(r7_perf6_exact_native PRIVATE PERF6_TRACE_NATIVE=1)
+
+add_executable(r7_category_layout_tests category_layout_tests.cpp)
+target_link_libraries(r7_category_layout_tests PRIVATE paper_r7)
+add_test(NAME r7_category_layout COMMAND r7_category_layout_tests)
+set_tests_properties(r7_category_layout PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} TIMEOUT 180)
+
+target_sources(paper_r7 PRIVATE category_plan.cpp category_layout.cpp)
+
+add_executable(r7_category_crypto_tests category_crypto_tests.cpp)
+target_link_libraries(r7_category_crypto_tests PRIVATE paper_r7)
+add_test(NAME r7_category_crypto COMMAND r7_category_crypto_tests)
+set_tests_properties(r7_category_crypto PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} TIMEOUT 180)
+
+target_sources(paper_r7 PRIVATE category_commitments.cpp category_auth.cpp)
+
+add_executable(r7_category_census category_census.cpp)
+target_link_libraries(r7_category_census PRIVATE paper_r7)
+
+add_executable(r7_category_mle_fold_tests category_mle_fold_tests.cpp)
+target_link_libraries(r7_category_mle_fold_tests PRIVATE paper_r7)
+add_test(NAME r7_category_mle_fold COMMAND r7_category_mle_fold_tests)
+set_tests_properties(r7_category_mle_fold PROPERTIES TIMEOUT 240 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+
+add_executable(r7_category_cache_tests category_cache_tests.cpp)
+target_link_libraries(r7_category_cache_tests PRIVATE paper_r7)
+add_test(NAME r7_category_cache COMMAND r7_category_cache_tests)
+set_tests_properties(r7_category_cache PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+
+add_executable(r7_category_k_cache_tests category_k_cache_tests.cpp)
+target_link_libraries(r7_category_k_cache_tests PRIVATE paper_r7)
+add_test(NAME r7_category_k_cache COMMAND r7_category_k_cache_tests)
+set_tests_properties(r7_category_k_cache PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(r7_source_mle_bench source_mle_bench.cpp)
+target_link_libraries(r7_source_mle_bench PRIVATE paper_r7)
+
+add_executable(r7_source_mle_tests source_mle_tests.cpp)
+target_link_libraries(r7_source_mle_tests PRIVATE paper_r7)
+add_test(NAME r7_source_mle COMMAND r7_source_mle_tests)
+set_tests_properties(r7_source_mle PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+target_sources(paper_r7 PRIVATE source_mle.cpp)
+
+add_executable(r7_u_measurement_tests u_measurement_tests.cpp)
+target_link_libraries(r7_u_measurement_tests PRIVATE paper_r7)
+add_test(NAME r7_u_measurement COMMAND r7_u_measurement_tests)
+set_tests_properties(r7_u_measurement PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+
+add_executable(r7_category_k_endpoint_tests category_k_endpoint_tests.cpp)
+target_link_libraries(r7_category_k_endpoint_tests PRIVATE paper_r7)
+add_test(NAME r7_category_k_endpoint COMMAND r7_category_k_endpoint_tests)
+set_tests_properties(r7_category_k_endpoint PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")
+
+add_executable(r7_carry_terminal_tests carry_terminal_tests.cpp)
+target_link_libraries(r7_carry_terminal_tests PRIVATE paper_r7)
+add_test(NAME r7_carry_terminal COMMAND r7_carry_terminal_tests)

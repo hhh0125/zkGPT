@@ -1,4 +1,5 @@
 #include "sigma.hpp"
+#include "perf6_options.hpp"
 #include <set>
 namespace zkgpt::r7::crypto {
 void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
@@ -13,15 +14,17 @@ void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  bindPublic(io,s.role+"/statement",statement.b);
  if(io.prover()){need(w && rng && w->size()==s.handles.size(),"R7 Sigma witness shape");for(std::size_t i=0;i<w->size();++i)need(encode(w->at(i).handle)==encode(s.handles[i]),"R7 Sigma full handle substitution");}
  std::vector<std::array<Fr,2>> masks;std::vector<std::array<Fr,5>> mulmasks;Writer first;
+ if(perf6::messages){masks.reserve(io.prover()?s.handles.size():0);mulmasks.reserve(io.prover()?s.products.size():0);}
  if(io.prover()){
   for(std::size_t i=0;i<s.handles.size();++i){masks.push_back({rng->scalar(),rng->scalar()});first.point(scalarCommit(masks.back()[0],masks.back()[1]));}
   for(auto&p:s.products){std::array<Fr,5>b;for(auto&x:b)x=rng->scalar();mulmasks.push_back(b);first.point(scalarCommit(b[0],b[1]));first.point(scalarCommit(b[2],b[3]));auto pp=parameters(1);first.point(s.handles[p[0]].point*b[2]+pp.hiding*b[4]);}
  }
  auto bytes=io.message(s.role+"/first-masks",first.b);Reader read{bytes};std::vector<G1>A;std::vector<std::array<G1,3>>M;
+ if(perf6::messages){A.reserve(s.handles.size());M.reserve(s.products.size());}
  for(std::size_t i=0;i<s.handles.size();++i)A.push_back(read.point());
  for(std::size_t i=0;i<s.products.size();++i)M.push_back({read.point(),read.point(),read.point()});
  read.end();
- std::vector<Fr>weights;for(std::size_t i=0;i<s.linear.size();++i)weights.push_back(io.coin(s.role+"/rho/"+std::to_string(i)));
+ std::vector<Fr>weights;if(perf6::messages)weights.reserve(s.linear.size());for(std::size_t i=0;i<s.linear.size();++i)weights.push_back(io.coin(s.role+"/rho/"+std::to_string(i)));
  G1 residual;residual.clear();Fr blind=0;
  for(std::size_t i=0;i<s.linear.size();++i)for(std::size_t j=0;j<s.handles.size();++j){auto a=weights[i]*s.linear[i][j];residual+=s.handles[j].point*a;if(io.prover())blind+=w->at(j).blind*a;}
  Fr mask=0;Writer compressed;if(io.prover()){mask=rng->scalar();compressed.point(parameters(1).hiding*mask);}

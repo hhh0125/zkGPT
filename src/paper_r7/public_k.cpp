@@ -51,7 +51,7 @@ struct File {
 KBudget KBudget::environment(){return {limit("ZKGPT_K_RAM_BYTES",512ull<<20,2ull<<30),limit("ZKGPT_K_FILE_BYTES",4ull<<30,8ull<<30)};}
 struct PublicK::Impl {
  struct Root {std::vector<Fr>ram;std::unique_ptr<File>file;std::size_t size=0,builds=0;bool touched=false;};
- std::vector<Segment>segments;Build build;KBudget budget;std::string session;std::vector<Fr>point;std::vector<Root>roots;unsigned bits=0;bool ended=false,failed=false;
+ std::vector<Segment>segments;Build build;KBudget budget;std::string session;std::vector<Fr>point;std::vector<Root>roots;unsigned bits=0;bool ended=false,failed=false,compact=true;
  KMetrics metrics;std::uint64_t ram_bytes=0,file_bytes=0;bool files_allowed=false;
  // One scratch window shared by all roots; public K only. File checksum
  // metadata is separately bounded by file budget / chunk size.
@@ -61,6 +61,7 @@ struct PublicK::Impl {
   std::size_t end=0;for(auto segment:segments){need(segment.padded && !(segment.padded&(segment.padded-1)) && segment.padded<=r1::kMaxVector && segment.offset<=(std::size_t(1)<<32)-segment.padded,"public K physical root bound");end=std::max(end,segment.offset+segment.padded);}
   if(!domain){domain=1;while(domain<end)domain*=2;}validate(domain,segments);while(domain>1){++bits;domain/=2;}
   struct statvfs fs{};files_allowed=budget.file && ::statvfs(".",&fs)==0 && fs.f_bavail*std::uint64_t(fs.f_frsize)>budget.file+(1ull<<30) && memoryRoom(budget.ram+dirtyWindow+(64ull<<20));
+  if(const auto*v=std::getenv("ZKGPT_K_COMPACT")){std::string text(v);need(text=="0" || text=="1","K compaction switch");compact=text=="1";}
   peak();
  }
  void check(const std::string&id)const{need(id==session,"public K foreign authentication session");}
@@ -97,6 +98,11 @@ struct PublicK::Impl {
     for(std::size_t start=0;start<old;start+=2*chunk){auto count=std::min(2*chunk,old-start);f.read(start/chunk,scratch.data());if(count>chunk)f.read(start/chunk+1,scratch.data()+chunk);for(std::size_t j=0;j<count/2;++j)scratch[j]=scratch[2*j]+r*(scratch[2*j+1]-scratch[2*j]);f.write(start/(2*chunk),scratch.data(),count/2);if(((start+2*chunk)/2*sizeof(Fr))%dirtyWindow==0)f.evict();}
     f.count=old/2;f.checksums.resize((f.count+chunk-1)/chunk);need(::ftruncate(f.fd,off_t(f.count*sizeof(Fr)))==0,"public K truncate folded state");file_bytes-=(old/2)*sizeof(Fr);f.evict();
    }root.size=old/2;
+   if(compact && !root.file && root.ram.capacity()>root.ram.size()){
+    auto begin=Clock::now();auto old_bytes=root.ram.capacity()*sizeof(Fr);std::vector<Fr>smaller(root.ram.begin(),root.ram.end());
+    auto new_bytes=smaller.capacity()*sizeof(Fr);need(new_bytes<=old_bytes,"K compaction capacity grew");peak(new_bytes);
+    root.ram.swap(smaller);ram_bytes-=old_bytes-new_bytes;++metrics.ram_compactions;metrics.ram_released_bytes+=old_bytes-new_bytes;metrics.compaction_copy_bytes+=new_bytes;metrics.compaction_seconds+=seconds(begin);
+   }
   }point.push_back(r);metrics.fold_cpu_seconds+=crypto::processCPU()-cpu;metrics.fold_wall_seconds+=seconds(started);peak();
  }
 };
@@ -106,5 +112,5 @@ void PublicK::withRoot(std::size_t k,const std::string&id,const std::function<vo
 void PublicK::advance(const std::string&id,const Fr&r){p_->check(id);need(!p_->ended && !p_->failed && r.isValid() && p_->point.size()<p_->bits,"public K challenge/phase bound");try{p_->advance(r);}catch(...){p_->failed=true;throw;}}
 Fr PublicK::endpoint(const std::string&id,const std::vector<Fr>&point){p_->check(id);need(!p_->ended && !p_->failed && point==p_->point && point.size()==p_->bits,"public K endpoint state order/terminal dimension");p_->ended=true;Fr out=0;for(std::size_t k=0;k<p_->segments.size();++k)p_->with(k,[&](const Value&v){out+=selector(p_->segments[k],point)*v(0);});return out;}
 const KMetrics&PublicK::metrics()const{return p_->metrics;}
-void PublicK::report()const{auto&m=p_->metrics;std::cerr<<"OPT3C_K {\"K_initial_builds\":"<<m.initial_builds<<",\"fallback_rebuild_calls\":"<<m.fallback_rebuild_calls<<",\"K_fold_coordinates\":"<<m.fold_coordinates<<",\"K_state_read_coordinates\":"<<m.state_read_coordinates<<",\"K_initial_build_seconds\":"<<m.initial_build_seconds<<",\"K_fold_cpu_seconds\":"<<m.fold_cpu_seconds<<",\"K_fold_wall_seconds\":"<<m.fold_wall_seconds<<",\"K_file_read_bytes\":"<<m.file_read_bytes<<",\"K_file_write_bytes\":"<<m.file_write_bytes<<",\"K_RAM_peak_bytes\":"<<m.ram_peak_bytes<<",\"K_builder_peak_bytes\":"<<m.builder_peak_bytes<<",\"K_dirty_write_window_bytes\":"<<dirtyWindow<<",\"K_file_peak_bytes\":"<<m.file_peak_bytes<<",\"K_io_wall_seconds\":"<<m.io_wall_seconds<<",\"RAM_root_admissions\":"<<m.ram_roots<<",\"file_root_admissions\":"<<m.file_roots<<",\"rebuild_root_visits\":"<<m.rebuild_roots<<",\"RAM_limit\":"<<p_->budget.ram<<",\"file_limit\":"<<p_->budget.file<<",\"files_allowed\":"<<(p_->files_allowed?"true":"false")<<",\"file_page_cache_cost_is_zero\":false}\n";}
+void PublicK::report()const{auto&m=p_->metrics;std::cerr<<"OPT3C_K {\"K_initial_builds\":"<<m.initial_builds<<",\"fallback_rebuild_calls\":"<<m.fallback_rebuild_calls<<",\"K_fold_coordinates\":"<<m.fold_coordinates<<",\"K_state_read_coordinates\":"<<m.state_read_coordinates<<",\"K_initial_build_seconds\":"<<m.initial_build_seconds<<",\"K_fold_cpu_seconds\":"<<m.fold_cpu_seconds<<",\"K_fold_wall_seconds\":"<<m.fold_wall_seconds<<",\"K_file_read_bytes\":"<<m.file_read_bytes<<",\"K_file_write_bytes\":"<<m.file_write_bytes<<",\"K_RAM_peak_bytes\":"<<m.ram_peak_bytes<<",\"K_builder_peak_bytes\":"<<m.builder_peak_bytes<<",\"K_dirty_write_window_bytes\":"<<dirtyWindow<<",\"K_file_peak_bytes\":"<<m.file_peak_bytes<<",\"K_io_wall_seconds\":"<<m.io_wall_seconds<<",\"ram_compactions\":"<<m.ram_compactions<<",\"ram_released_bytes\":"<<m.ram_released_bytes<<",\"compaction_copy_bytes\":"<<m.compaction_copy_bytes<<",\"compaction_seconds_in_fold_wall\":"<<m.compaction_seconds<<",\"RAM_root_admissions\":"<<m.ram_roots<<",\"file_root_admissions\":"<<m.file_roots<<",\"rebuild_root_visits\":"<<m.rebuild_roots<<",\"RAM_limit\":"<<p_->budget.ram<<",\"file_limit\":"<<p_->budget.file<<",\"files_allowed\":"<<(p_->files_allowed?"true":"false")<<",\"file_page_cache_cost_is_zero\":false}\n";}
 }

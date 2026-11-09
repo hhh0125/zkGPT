@@ -1,5 +1,7 @@
 #include "oneblock_lookup.hpp"
 #include "perf4_profile.hpp"
+#include "perf5_profile.hpp"
+#include "perf6_options.hpp"
 #include <algorithm>
 #include <array>
 #include <memory>
@@ -22,21 +24,30 @@ Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prove
 void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
 }
 void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
+ const auto*b2=std::getenv("ZKGPT_PERF6_B2");
+ perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
+ bool contiguous=false;if(io.prover()){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
  perf4::Scope native_scope("Native/Product",role,n);
+ perf5::Product product_profile(role,n,io.prover());perf5::Scope product_total(perf5::Total);
  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
- std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");auto leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){auto next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);tree.push_back(next);}}
+ std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");std::shared_ptr<std::vector<Fr>>leaf;{perf5::Scope t(perf5::TreeAllocInit);leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));}{perf5::Scope t(perf5::TreeLeaf);for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);}tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){std::shared_ptr<std::vector<Fr>>next;{perf5::Scope t(perf5::TreeAllocInit);next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));}{perf5::Scope t(perf5::TreeParent);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);}tree.push_back(next);}}
  // The supplied root replaces the stored top level; only children are read.
  if(io.prover() && n>1)tree.pop_back();
+ const auto*weights_reference=std::getenv("ZKGPT_PERF5_WEIGHTS_REFERENCE");
+ const bool materialize_weights=io.prover() || !(weights_reference && std::string(weights_reference)=="0");
  Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
- for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t j){return w->at(j);};std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
-  auto end=expressionSumcheck(io,width,carry,f,Expression{3,{{Fr(1),{0,1,2}}}},rng,name+"/sumcheck");need(end.endpoints.size()==3,"lookup Product endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);
-  if(io.prover())tree.at(d-layer-1).reset();
+ for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);std::shared_ptr<std::vector<Fr>>w;Value eq;if(materialize_weights){perf5::Scope t(perf5::Weights);perf5::weights(width);w=std::make_shared<std::vector<Fr>>(r1::weights(row));eq=[w](std::size_t j){return w->at(j);};}std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
+  Reduction end;
+  if(contiguous){ProductInputs inputs{*w,*tree.at(d-layer-1)};end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&inputs);}
+  else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck");
+  need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
+  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context)need(tree.at(d-layer-1).use_count()==1,"PERF5 TreeFree requires final tree owner");tree.at(d-layer-1).reset();}
  }
- auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");
+ {perf5::Scope t(perf5::LeafAuthentication);auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");}
  // A layer is recorded only after the recursive chain reaches an actually
  // authenticated source leaf. A provisional recurrence is not tree coverage.
- for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
- evidence(io,role+"/root");
+ {perf5::Scope t(perf5::Coverage);for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
+ evidence(io,role+"/root");}
 }
 void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
  perf4::Scope native_scope("Native/Memory",role,a.padded);

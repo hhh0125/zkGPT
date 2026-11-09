@@ -1,4 +1,5 @@
 #include "crypto.hpp"
+#include "perf6_options.hpp"
 #include <sys/random.h>
 #include <cerrno>
 #include <algorithm>
@@ -19,7 +20,15 @@ void spec(Writer&w,const PCSpec&s){w.text(s.suite);w.text(s.role);w.text(s.layou
 }
 void Writer::number(std::uint64_t x,unsigned n){for(unsigned i=0;i<n;++i)b.push_back(std::uint8_t(x>>(8*i)));}
 void Writer::raw(const Bytes&x){need(x.size()<=4*1024*1024 && b.size()<=4*1024*1024-x.size(),"R7 crypto wire bound");b.insert(b.end(),x.begin(),x.end());}
-void Writer::text(const std::string&s){need(s.size()<=256,"R7 crypto string bound");number(s.size());raw(Bytes(s.begin(),s.end()));}
+void Writer::text(const std::string&s){
+ need(s.size()<=256,"R7 crypto string bound");
+ if(!perf6::messages){number(s.size());raw(Bytes(s.begin(),s.end()));return;}
+ // Same four-byte little-endian length and payload, one destination growth.
+ // Avoid the temporary Bytes and its copy in high-frequency Sigma statements.
+ const auto at=b.size();need(at<=4*1024*1024-4-s.size(),"R7 crypto wire bound");
+ b.resize(at+4+s.size());for(unsigned i=0;i<4;++i)b[at+i]=std::uint8_t(s.size()>>(8*i));
+ std::copy(s.begin(),s.end(),b.begin()+at+4);
+}
 void Writer::scalar(const Fr&f){need(f.isValid(),"R7 invalid scalar");need(b.size()<=4*1024*1024-32,"R7 crypto wire bound");auto at=b.size();b.resize(at+32);need(f.serialize(b.data()+at,32)==32,"Fr encoding");}
 void Writer::point(const G1&p){group(p);raw(r1::encode(p));}
 Bytes Reader::raw(std::size_t n){need(at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");Bytes out(b.begin()+at,b.begin()+at+n);at+=n;return out;}
