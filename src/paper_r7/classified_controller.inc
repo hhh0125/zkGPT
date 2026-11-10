@@ -71,7 +71,7 @@
 #endif
  timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
 #ifdef R7_SINGLE_HYRAX
- checked(io,"single/compact-mapping-and-virtual-zero");
+ checked(io,"single/direct-logical-domain");
 #else
  for(auto&r:layout.roots)if(r.registered)checked(io,"classified/root/"+r.id+"/physical-zero-tail");
 #endif

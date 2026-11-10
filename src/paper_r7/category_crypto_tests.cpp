@@ -51,7 +51,7 @@ void run(Tape&io,const Layout&l,SessionRandom*rng,unsigned attack=0){
   }
   auto h=exchangeHidden(io,std::string("source/")+id,y,rng);v.open(io,{q,h.handle},io.prover()?&h:nullptr,rng,std::string("source/")+id+"/opening");
  }
- pcs.authenticateUnifiedInput(x);need(pcs.authenticated(),"category authentication mandatory");
+ const auto calls=hyrax_a3::measurement().dot_product_calls;pcs.authenticateUnifiedInput(x);need(pcs.authenticated(),"category authentication mandatory");need(hyrax_a3::measurement().dot_product_calls-calls==1,"category opening must enter real A3 dotProduct exactly once");
 }
 }
 int main(){try{

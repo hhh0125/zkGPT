@@ -133,7 +133,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  plan.required.push_back({"model/frozen-numerical-profile","NUMERICAL_PROFILE",ctx.plan.circuit_id,0,0});
  plan.required.push_back({"model/weights-bound-in-C_U","MODEL_WITNESS_BINDING",single::modelScope,ctx.plan.sources.back().spec.actual,0});
  plan.required.push_back({"single/commitment","SINGLE_HYRAX_COMMITMENT",classified::identity(layout),ctx.plan.master.actual,0});
- plan.required.push_back({"single/compact-mapping-and-virtual-zero","SINGLE_HYRAX_COMPACT_EMBEDDING",classified::identity(layout),ctx.plan.master.actual,0});
+ plan.required.push_back({"single/direct-logical-domain","SINGLE_HYRAX_DIRECT_LOGICAL_DOMAIN",classified::identity(layout),ctx.plan.master.actual,0});
 #else
  for(auto&r:layout.roots){plan.required.push_back({"classified/root/"+r.id+"/commitment","CLASSIFIED_COMMITMENT",r.id,r.padded,0});if(r.registered)plan.required.push_back({"classified/root/"+r.id+"/physical-zero-tail",r.model?"CLASSIFIED_TRUSTED_ANCHOR_TAIL":"CLASSIFIED_ZERO_TAIL",r.id,r.padded,0});}
 #endif

@@ -33,7 +33,7 @@ int main(){try{r1::init();std::mt19937 random(20261108);std::size_t rounds=0;
   std::vector<Fr>q(single::bits(plan.domain));for(auto&r:q)r=trial%4?Fr(int(random()%19)-9):Fr(random()%2);
   std::vector<Fr>coeff(plan.physical_domain,Fr(0));single::mappedQueryTerms(plan,q,[&](const single::QueryTerm&t){for(std::size_t x=0;x<t.left.size();++x)for(std::size_t y=0;y<t.right.size();++y)coeff[(t.first_row+x)*plan.columns+y]+=t.left[x]*t.right[y];});
   Fr mapped=0;for(std::size_t j=0;j<physical.size();++j)mapped+=physical[j]*coeff[j];need(mapped==denseMLE(u,q),"physical mapped MLE != independent dense global MLE");
-  for(std::size_t j=plan.physical_values;j<coeff.size();++j)need(coeff[j].isZero(),"physical matrix tail coefficient");
+  for(std::size_t j=0;j<coeff.size();++j){Fr chi=1;for(std::size_t z=0;z<q.size();++z)chi*=((j>>z)&1)?q[z]:Fr(1)-q[z];need(coeff[j]==chi,"direct logical coefficient including zero positions");}
   auto original=tu,local=tu,localK=tk;auto du=u,dk=k;std::vector<Fr>prefix;
   std::uint64_t read_count=0;ui::Inputs inputs=[&](std::size_t z){ui::InputSpan s;s.stored=s.padded=original[z].size();s.storage_identity=&original[z];s.read=[&,z](std::size_t j){++read_count;return original[z].at(j);};return s;};
   ui::PublicK state(segments,[&](std::size_t z){return tk.at(z);},{trial%2?128u:0u,0},"dense",plan.domain);

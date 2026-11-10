@@ -3,8 +3,8 @@
 #include "hyrax_a3.hpp"
 #include <ostream>
 namespace zkgpt::r7::oneblock::single {
-inline constexpr const char*suite="R7-SINGLE-HYRAX-COMPACT-FIVE-CATEGORIES-HIDDEN-v4";
-inline constexpr const char*layout="compact-five-contiguous-categories-committed-X-v4";
+inline constexpr const char*suite="R7-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-HIDDEN-v5";
+inline constexpr const char*layout="direct-logical-five-categories-committed-X-v5";
 inline constexpr const char*modelScope="PROVER_SELECTED_WEIGHTS_BOUND_IN_C_U-v1";
 inline constexpr std::size_t maxDomain=std::size_t(1)<<32;
 inline constexpr std::size_t maxRows=std::size_t(1)<<16;
@@ -13,6 +13,7 @@ struct Segment {
  bool is_public=false;std::string source_id;
 };
 struct LogicalLayout {std::size_t domain=0,logical_values=0;unified::Packing packing;};
+// physical_values counts populated source cells; zero cells still occupy domain positions.
 struct PhysicalCommitmentLayout {std::size_t physical_values=0,physical_domain=0,rows=0,columns=0;};
 struct PublicCell {std::size_t source=0,index=0,x_index=0;};
 struct PhysicalRun {std::size_t source=0,source_offset=0,count=0,physical_offset=0;};
@@ -45,8 +46,8 @@ std::string identity(const Public&);
 void writeLayout(std::ostream&,const Public&);
 // One header and bounded row chunks belong to ONE commitment identity.
 Public exchange(IO&,const Plan&,const Secret*onlyP);
-// Exact rank-one decomposition of the logical query after compact embedding.
-// At most four terms/run; no coefficient array over the logical domain.
+// One rank-one logical MLE query over the identical commitment coordinates.
+// Row/column weights only; no domain-sized coefficient array.
 struct QueryTerm {std::size_t first_row=0;std::vector<Fr>left,right;};
 using ConsumeTerm=std::function<void(const QueryTerm&)>;
 void mappedQueryTerms(const Plan&,const std::vector<Fr>&logical_point,const ConsumeTerm&);

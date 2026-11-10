@@ -29,13 +29,13 @@ std::vector<Value>sources(const sh::Plan&p,const std::shared_ptr<std::vector<Fr>
 // Independent bit-by-bit reference, never the production split weights.
 Fr chi(std::size_t j,const std::vector<Fr>&q){Fr f=1;for(unsigned b=0;b<q.size();++b)f*=((j>>b)&1)?q[b]:Fr(1)-q[b];return f;}
 void shapeTests(){
- auto p=fixture();need(p.domain==32 && p.rows==4 && p.columns==4 && p.logical_values==14 && p.physical_values==11 && p.physical_domain==16,"compact private actual data must exclude X and logical gaps");
+ auto p=fixture();need(p.domain==32 && p.rows==4 && p.columns==8 && p.logical_values==14 && p.physical_values==11 && p.physical_domain==32,"direct domain retains logical gaps and public positions");
  struct Case{unsigned bits;std::size_t rows,columns;};
  for(auto c:{Case{10,32,32},Case{11,32,64},Case{12,64,64},Case{24,4096,4096},Case{26,8192,8192},Case{30,32768,32768},Case{32,65536,65536}}){
   auto shape=sh::matrixShape(std::size_t(1)<<c.bits);need(shape.rows==c.rows && shape.columns==c.columns && shape.rows*shape.columns==shape.physical_domain,"uncapped balanced matrix metadata");
  }
  auto big=sh::makePlan(unified::pack({{1,std::size_t(1)<<28}},4),{3,std::size_t(1)<<28},std::string(64,'b'));
- need(big.domain==(std::size_t(1)<<29) && big.rows==16384 && big.columns==16384,"compact physical domain must use uncapped balanced metadata");
+ need(big.domain==(std::size_t(1)<<29) && big.rows==16384 && big.columns==32768,"direct logical domain uses balanced metadata");
  rejects([&]{sh::makePlan(unified::pack({{1,8}},4),{5,8},std::string(64,'b'));});
  auto changed=p;changed.rows++;rejects([&]{sh::descriptor(changed);});
  changed=p;changed.segments[1].offset=0;rejects([&]{sh::descriptor(changed);});
@@ -46,7 +46,7 @@ void shapeTests(){
  rejects([]{sh::matrixShape(0);});rejects([]{sh::matrixShape((std::size_t(1)<<32)+1);});
  // A sparse private witness must not allocate 2^32 coefficient weights.
  auto sparse=sh::makePlan(unified::pack({{1,std::size_t(1)<<30},{3,std::size_t(1)<<30}},1),{1,1,1},std::string(64,'b'));
- std::size_t count=0;sh::mappedQueryTerms(sparse,std::vector<Fr>(32,Fr(2)),[&](const sh::QueryTerm&t){++count;need(t.left.size()==1 && t.right.size()==2,"sparse metadata query bound");});need(count==2,"sparse mapped term");
+ std::size_t count=0;sh::mappedQueryTerms(sparse,std::vector<Fr>(32,Fr(2)),[&](const sh::QueryTerm&t){++count;need(t.first_row==0 && t.left.size()==65536 && t.right.size()==65536,"sparse metadata query bound");});need(count==1,"single sparse direct term");
 }
 void coefficientTests(){
  std::mt19937 random(20261104);
@@ -56,25 +56,26 @@ void coefficientTests(){
   auto p=sh::makePlan(unified::pack(blocks,4),actual,std::string(64,'b'));
   std::vector<Fr>q(sh::bits(p.domain));for(auto&v:q)v=trial%3?Fr(2+random()%13):Fr(random()%2);
   std::vector<Fr>coefficients(p.physical_domain,Fr(0)),expected(p.physical_domain,Fr(0));
-  std::vector<Fr>physical(p.physical_domain,Fr(99));Fr expected_value=0;
-  std::size_t cursor=0;for(std::size_t k=1;k<p.segments.size();++k){auto s=p.segments[k];need(s.physical_offset==cursor,"mapping lost/repeated source element");for(std::size_t j=0;j<s.actual;++j){expected[cursor]=chi(s.offset+j,q);physical[cursor]=Fr(cursor+1);expected_value+=expected[cursor]*physical[cursor];++cursor;}}
+  std::vector<Fr>physical(p.physical_domain,Fr(0));Fr expected_value=0;
+  for(std::size_t j=0;j<p.domain;++j)expected[j]=chi(j,q);
+  for(std::size_t k=1;k<p.segments.size();++k){auto segment=p.segments[k];need(segment.physical_offset==segment.offset,"direct source address mismatch");for(std::size_t j=0;j<segment.actual;++j){auto at=segment.offset+j;physical[at]=Fr(at+1);expected_value+=expected[at]*physical[at];}}
   std::size_t terms=0;sh::mappedQueryTerms(p,q,[&](const sh::QueryTerm&t){++terms;for(std::size_t i=0;i<t.left.size();++i)for(std::size_t j=0;j<t.right.size();++j)coefficients[(t.first_row+i)*p.columns+j]+=t.left[i]*t.right[j];});
-  need(terms<=4*blocks.size() && coefficients==expected,"mapped coefficient/source boundary/carry differs from independent logical basis");
-  need(r1::dot(physical,coefficients)==expected_value,"malicious physical padding affected logical evaluation");
-  for(std::size_t j=cursor;j<p.physical_domain;++j)need(coefficients[j].isZero(),"physical padding query must be zero");
+  need(terms==1 && coefficients==expected,"direct coefficients differ from independent logical basis");
+  need(r1::dot(physical,coefficients)==expected_value,"direct zero-filled logical evaluation mismatch");
+  need(p.physical_domain==p.domain,"direct physical domain mismatch");
  }
  // Native X is a public coordinate inside a source, not extra private data.
  // Noncontiguous public cells split source runs; all holes remain exact.
  auto p=sh::makePlan(unified::pack({{1,8},{2,4}},4),{3,7,4},std::string(64,'b'),{},{{1,0,0},{1,3,1},{2,2,2}});
- need(p.physical_values==8 && p.physical_domain==8,"native public X copies must not be privately committed");
+ need(p.physical_values==8 && p.physical_domain==p.domain,"native public X copies must not be privately committed");
  std::vector<Fr>q(sh::bits(p.domain),Fr(2)),x{Fr(5),Fr(7),Fr(11)};Fr reference=0;
  for(std::size_t j=0;j<x.size();++j)reference+=chi(j,q)*x[j];
  for(const auto&c:p.public_cells)reference+=chi(p.segments[c.source].offset+c.index,q)*x[c.x_index];
  need(sh::publicContribution(p,q,x)==reference,"native public X contribution at original logical addresses");
  std::vector<Fr>coeff(p.physical_domain,Fr(0)),expected(p.physical_domain,Fr(0));
  sh::mappedQueryTerms(p,q,[&](const sh::QueryTerm&t){for(std::size_t i=0;i<t.left.size();++i)for(std::size_t j=0;j<t.right.size();++j)coeff[(t.first_row+i)*p.columns+j]+=t.left[i]*t.right[j];});
- for(const auto&run:p.runs)for(std::size_t j=0;j<run.count;++j)expected[run.physical_offset+j]=chi(p.segments[run.source].offset+run.source_offset+j,q);
- need(coeff==expected,"native public holes corrupt compact query mapping");
+ for(std::size_t j=0;j<p.domain;++j)expected[j]=chi(j,q);
+ need(coeff==expected,"native public holes change direct query coefficients");
 }
 void openings(){
  auto plan=fixture();auto values=std::make_shared<std::vector<Fr>>(dense(plan));SessionRandom rng;
@@ -86,7 +87,7 @@ void openings(){
  std::vector<std::vector<Fr>>queries{{Fr(0),Fr(0),Fr(0),Fr(0),Fr(0)},{Fr(1),Fr(1),Fr(1),Fr(1),Fr(1)},{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11)}};
  for(auto q:queries)need(sh::evaluate(secret,q)==r1::mle(*values,q),"mapped MLE differs from independent dense reference");
  Tape p(true);auto pc=sh::exchange(p,plan,&secret);
- for(std::size_t k=0;k<queries.size();++k){auto h=sh::evaluateAndOpen(p,pc,queries[k],x,&secret,&rng,"unit/open/"+std::to_string(k));need(h.value==r1::mle(*values,queries[k]),"single hidden evaluation incorrect");}
+ for(std::size_t k=0;k<queries.size();++k){auto before=hyrax_a3::measurement().dot_product_calls;auto h=sh::evaluateAndOpen(p,pc,queries[k],x,&secret,&rng,"unit/open/"+std::to_string(k));need(h.value==r1::mle(*values,queries[k]),"single hidden evaluation incorrect");need(hyrax_a3::measurement().dot_product_calls-before==1,"one real A3 function entry per opening");}
  auto replay=[&](Tape&v,const std::vector<Fr>&public_x){auto c=sh::exchange(v,plan,nullptr);for(std::size_t k=0;k<queries.size();++k)sh::evaluateAndOpen(v,c,queries[k],public_x,nullptr,nullptr,"unit/open/"+std::to_string(k));need(v.at==v.data.size(),"single unconsumed proof frames");};
  Tape v(false);v.data=p.data;replay(v,x);
  for(unsigned attack=0;attack<7;++attack){Tape bad(false);bad.data=p.data;bool hit=false;
@@ -134,4 +135,4 @@ void wireBoundaries(){
  Tape v2(false);v2.data=p2.data;auto h=exchangeHidden(v2,"wide/evaluation",Fr(0),nullptr);hyrax_a3::dotProduct(v2,C,h.handle,a,nullptr,nullptr);need(v2.at==v2.data.size(),"wide A3 EOF");
 }
 }
-int main(){try{r1::init();shapeTests();coefficientTests();openings();wireBoundaries();std::cout<<"SINGLE_HYRAX_COMPACT_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"SINGLE_HYRAX_FAILED "<<e.what()<<'\n';return 1;}}
+int main(){try{r1::init();shapeTests();coefficientTests();openings();wireBoundaries();std::cout<<"SINGLE_HYRAX_DIRECT_LOGICAL_TESTED\n";return 0;}catch(const std::exception&e){std::cerr<<"SINGLE_HYRAX_FAILED "<<e.what()<<'\n';return 1;}}

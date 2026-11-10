@@ -88,6 +88,7 @@ std::vector<G1> generators(std::size_t n){
 }
 G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());for(auto&v:x)need(v.isValid(),"A3 invalid witness scalar");need(r.isValid(),"A3 invalid vector blind");return wideMSM(g,x)+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
+ ++measurement().dot_product_calls;
  dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());

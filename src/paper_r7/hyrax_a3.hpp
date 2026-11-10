@@ -11,7 +11,7 @@ inline constexpr std::size_t maxDot=65536;
 inline constexpr const char* trustedR6Suite="R7-MCL-BN254-HYRAX-A3-TRUSTED-R6-ROWMAJOR-BASIS-v2";
 inline constexpr std::size_t maxTrustedR6Dot=4096;
 struct DotWitness {std::vector<Fr>values;Fr blind=0;Hidden evaluation;};
-struct Measurement {std::uint64_t guard_payload_bytes=0,core_payload_bytes=0,public_payload_bytes=0;double guard_seconds=0,core_seconds=0;};
+struct Measurement {std::uint64_t dot_product_calls=0;std::uint64_t guard_payload_bytes=0,core_payload_bytes=0,public_payload_bytes=0;double guard_seconds=0,core_seconds=0;};
 Measurement& measurement();
 std::vector<G1> generators(std::size_t);
 G1 vectorCommit(const std::vector<Fr>&,const Fr&);
