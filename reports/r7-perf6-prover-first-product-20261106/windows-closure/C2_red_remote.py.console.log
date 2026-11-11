@@ -1,0 +1,9 @@
+ests.cpp:(.text.startup+0xb95): undefined reference to `zkgpt::r7::oneblock::detail::foldProductInputs(zkgpt::r7::oneblock::ProductInputs const&, mcl::FpT<mcl::bn::local::FrTag, 256ul> const&, std::vector<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > >, std::allocator<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > > > >&)'
+/usr/bin/ld: perf6_product_inputs_tests.cpp:(.text.startup+0xdae): undefined reference to `zkgpt::r7::oneblock::detail::productPolynomialContiguous(zkgpt::r7::oneblock::ProductInputs const&)'
+/usr/bin/ld: perf6_product_inputs_tests.cpp:(.text.startup+0xe1e): undefined reference to `zkgpt::r7::oneblock::detail::foldProductInputs(zkgpt::r7::oneblock::ProductInputs const&, mcl::FpT<mcl::bn::local::FrTag, 256ul> const&, std::vector<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > >, std::allocator<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > > > >&)'
+collect2: error: ld returned 1 exit status
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_perf6_product_inputs_tests.dir/build.make:108: src/paper_r7/r7_perf6_product_inputs_tests] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7402: src/paper_r7/CMakeFiles/r7_perf6_product_inputs_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7409: src/paper_r7/CMakeFiles/r7_perf6_product_inputs_tests.dir/rule] Error 2
+gmake: *** [Makefile:2584: r7_perf6_product_inputs_tests] Error 2
+

@@ -1,0 +1,16 @@
+# R7 category layout audit
+Status: Release build, 112 CTest, independent Oneblock and Full12 passed. Not production approval.
+Original X coordinates are reconstructed from R6 WitnessRegistry r5b_input in independently generated public graphs. Both frozen targets require one 32768-entry input span, native circuit/master identity, no X/W overlap. Current offset 0 is a checked result, not a mode-wide assumption.
+Original master coordinates partition exactly into X, W, Query or Aux. W follows original logical W span order; query references overlapping W or X use the same original coordinate. Helpers retain distinct object identity and every materialized local padded value, even when nonzero.
+Category actual values concatenate storage chunks without gaps. Category padded length is nextPow2(total actual), empty categories omitted. Categories concatenate without block alignment; final domain is nextPow2(sum category padded). Physical rows compact all actual values including X. Only category/global zeros and physical matrix tail are implicit.
+Computational dyadic tiles cover the actual category cells, aligned in global logical coordinates, at most 2^20 elements each. They are internal Sumcheck execution views, not independent category/chunk PCs or claims. No full val0/U/category-K copy is built. Callback spans borrow original native/helper storage; val0 remains live through authentication. Existing retained-U is disabled for noncontiguous callbacks; this may regress scan time and must be measured.
+Let phi map source-local j to its unique logical category coordinate, and b_j be its public bias (or a constant location). Each deferred claim h_i has obligation:
+ y_i = sum_j beta(r_i,j)*(U[phi_i(j)] + b_ij).
+For X, r_X is sampled after C_U and Statement X/map/suite are bound; y_X=sum_j beta(r_X,j)*Statement.X[j] has a public zero-blind handle. Its map is independently reconstructed original R6 X, and it is unconditionally added at the authentication barrier.
+After all declarations/maps/handles/points are bound, nonzero FS rho_i yield:
+ sum_i rho_i*(y_i - sum_j beta(r_i,j)*b_ij) = sum_z U[z]*K[z],
+ K[z]=sum_i rho_i*sum_{j:phi_i(j)=z}beta(r_i,j).
+One hidden degree-two Unified Sumcheck reduces this equation; V independently computes K at the terminal point. The same C_U authenticates U at that point through mapped Compact Opening and inherited Hyrax A.3. There is no public-X subtraction/contribution in this category opening, and X is included exactly once in K/U.
+Successful authentication is set only after the C_U opening and final mandatory-X acknowledgment; verifier coverage public/X is marked only afterward. Y/constants/native GKR/range/exp/memory/product obligations remain. FS single suites and category descriptors versioned v4; old production proofs are rejected.
+Model scope remains PROVER_SELECTED_WEIGHTS_BOUND_IN_C_U-v1. Inherited Hyrax/Sigma cryptographic design is not newly proven. production_gate=BLOCKED_CRYPTOGRAPHIC_DESIGN; may_enter_stage2=false.
+Read-only independent reviewer found no critical architecture issue; wrong-model-witness and missing-authentication attack hooks corrected. Fallback consumed-map digest regression reproduced and corrected; exact consumed locations are now hashed in the K-building pass.

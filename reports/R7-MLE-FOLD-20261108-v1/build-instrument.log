@@ -1,0 +1,34 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 19%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 57%] Built target paper_r2
+[ 61%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 61%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 61%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_commitments.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_fold_state.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/unified_input.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/public_k.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_streaming.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp:98:7: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+   98 |       if(!inputs)return a(index);if(index>=span.stored)return Fr(0);
+      |       ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp:98:34: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   98 |       if(!inputs)return a(index);if(index>=span.stored)return Fr(0);
+      |                                  ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp: In function ‘zkgpt::r7::oneblock::unified::Round zkgpt::r7::oneblock::unified::quadraticRoundStreaming(std::size_t, const std::vector<Segment>&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const Factors&, const Inputs&, UOptions, UMetrics*, FoldedU*, const std::string&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp:143:2: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+  143 |  if(metrics)*metrics=m;return out;
+      |  ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_streaming.cpp:143:24: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  143 |  if(metrics)*metrics=m;return out;
+      |                        ^~~~~~
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/category_plan.cpp.o
+[ 66%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/category_layout.cpp.o
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:597: src/paper_r7/CMakeFiles/paper_r7.dir/u_streaming.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/Makefile2:3686: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7689: src/paper_r7/CMakeFiles/r7_category_mle_fold_tests.dir/rule] Error 2
+gmake: *** [Makefile:2675: r7_category_mle_fold_tests] Error 2

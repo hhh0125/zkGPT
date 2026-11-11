@@ -1,0 +1,23 @@
+[  3%] Built target mcl
+[  3%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 57%] Built target gpt_lib
+[ 65%] Built target paper_r2
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/r6_adapter.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_model.cpp.o
+[ 69%] Linking CXX static library libpaper_r7.a
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_oneblock_vectors_tests.dir/oneblock_vectors_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_vectors_tests.cpp: In function ‘void {anonymous}::rowMajorPhysical()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_vectors_tests.cpp:89:13: error: ‘struct zkgpt::r7::oneblock::VectorPC’ has no member named ‘layout’
+   89 |   need(s.pc.layout==r1::Layout::RowMajor,"physical layout must be explicit RowMajor");need(s.values->data()==address,"row-major copied owned slab");
+      |             ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_vectors_tests.cpp:95:25: error: ‘struct zkgpt::r7::oneblock::VectorPC’ has no member named ‘layout’
+   95 |   auto wrong=s.pc;wrong.layout=r1::Layout::ColumnMajor;bool rejected=false;try{encodeVector(wrong);}catch(...){rejected=true;}need(rejected,"new descriptor accepted old layout");
+      |                         ^~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_oneblock_vectors_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_oneblock_vectors_tests.dir/oneblock_vectors_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:4567: src/paper_r7/CMakeFiles/r7_oneblock_vectors_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:4574: src/paper_r7/CMakeFiles/r7_oneblock_vectors_tests.dir/rule] Error 2
+gmake: *** [Makefile:1648: r7_oneblock_vectors_tests] Error 2

@@ -1,0 +1,28 @@
+{
+  "link": [
+    "/usr/bin/c++",
+    "-pthread",
+    "-O3",
+    "-DNDEBUG",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/read-regression.o",
+    "-o",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/read-regression-RED",
+    "-Wl,-rpath,/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-mle-fold-20261108-v1/lib",
+    "libpaper_r7.a",
+    "../paper_r2/libpaper_r2.a",
+    "../libgpt_lib.a",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+    "-lz",
+    "../paper_r1/libpaper_r1.a",
+    "../../lib/libmclbn256.so.1.74",
+    "../../lib/libmcl.so.1.74",
+    "-lpthread",
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so"
+  ],
+  "flags": {
+    "CXX_DEFINES": "-DMCLBN_NO_AUTOLINK -DMCL_NO_AUTOLINK -DMCL_USE_LLVM=1",
+    "CXX_INCLUDES": "-I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7 -I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r2 -I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include -I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include -I/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1 -isystem /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src",
+    "CXX_FLAGS": " -pthread -O3 -DNDEBUG -std=gnu++17"
+  },
+  "expected_RED": true
+}

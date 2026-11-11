@@ -1,0 +1,51 @@
+CMake Deprecation Warning at 3rd/mcl/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Configuring done (1.0s)
+-- Generating done (0.4s)
+-- Build files have been written to: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-category-x-20261106-v1
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 18%] Built target paper_r1
+[ 45%] Built target gpt_lib
+[ 54%] Built target paper_r2
+[ 54%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/r6_adapter.cpp.o
+[ 54%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/research.cpp.o
+[ 54%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_layout.cpp.o
+[ 54%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/streaming_master.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_bridge.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/master_registration.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/global_bridge.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_plan.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_layout.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/lookup_prepare.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_vectors.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_bindings.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_public.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_commitments.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp: In function ‘void zkgpt::r7::oneblock::single::open(zkgpt::r7::crypto::IO&, const Public&, const zkgpt::r7::crypto::Query&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const Secret*, const zkgpt::r7::crypto::Hidden*, zkgpt::r7::crypto::Random*, const std::string&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp:156:2: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+  156 |  if(!p.plan.category_mode)evaluations.push_back(publicHidden(io,role+"/public-contribution",publicContribution(p.plan,q.point,x)));auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;
+      |  ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/single_hyrax.cpp:156:132: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  156 |  if(!p.plan.category_mode)evaluations.push_back(publicHidden(io,role+"/public-contribution",publicContribution(p.plan,q.point,x)));auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;
+      |                                                                                                                                    ^~~~
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/static_source_map.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/full12_model.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/category_plan.cpp.o
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:513: src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/Makefile2:3680: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7572: src/paper_r7/CMakeFiles/r7_category_layout_tests.dir/rule] Error 2
+gmake: *** [Makefile:2636: r7_category_layout_tests] Error 2

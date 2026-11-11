@@ -1,0 +1,252 @@
+{
+  "U_state": {
+    "enabled": true,
+    "failed": false,
+    "budget_bytes": 536870912,
+    "capacity_peak_bytes": 357244992,
+    "live_bytes": 33728,
+    "roots_materialized": 1054,
+    "advances": 30,
+    "original_read_coordinates": 0,
+    "cache_fold_read_coordinates": 22317192,
+    "fold_input_coordinates": 22317192,
+    "fold_write_coordinates": 22318246,
+    "Fr_multiplications": 11158596,
+    "Fr_additions": 22317192,
+    "fold_wall_seconds": 0.553304,
+    "fold_cpu_seconds": 0.553311,
+    "deferred_callback_mode": true,
+    "checkpoint_round": 6,
+    "private_files": 0
+  },
+  "U_original_coordinates": 4999522416,
+  "U_cache_scan_coordinates": 11170271,
+  "U_original_scalar_payload_bytes": 159984717312,
+  "U_cache_scan_payload_bytes": 357448672,
+  "U_cache_fold_coordinates": 22317192,
+  "U_round_count": 30,
+  "U_OPT3D_round_count": 30,
+  "U_first_cache_scan_round": 7,
+  "K": {
+    "K_initial_builds": 2709,
+    "fallback_rebuild_calls": 1655,
+    "K_fold_coordinates": 2059232268,
+    "K_state_read_coordinates": 1428446655,
+    "K_initial_build_seconds": 248.211,
+    "K_fold_cpu_seconds": 81.0828,
+    "K_fold_wall_seconds": 92.9025,
+    "K_file_read_bytes": 36371296896,
+    "K_file_write_bytes": 18185471072,
+    "K_RAM_peak_bytes": 573034176,
+    "K_builder_peak_bytes": 33554432,
+    "K_dirty_write_window_bytes": 16777216,
+    "K_file_peak_bytes": 4294967296,
+    "K_io_wall_seconds": 43.6362,
+    "ram_compactions": 1094,
+    "ram_released_bytes": 1528821856,
+    "compaction_copy_bytes": 825227360,
+    "compaction_seconds_in_fold_wall": 0.200344,
+    "RAM_root_admissions": 61,
+    "file_root_admissions": 993,
+    "rebuild_root_visits": 1655,
+    "RAM_limit": 536870912,
+    "file_limit": 4294967296,
+    "files_allowed": true,
+    "file_page_cache_cost_is_zero": false
+  },
+  "K_endpoint": {
+    "P": [],
+    "V": [
+      {
+        "admitted": true,
+        "basis": "POWER_STRIDE_CARRY_BORROW-v2",
+        "eligible_coordinates": 2416862592,
+        "map_coordinates": 2461708448,
+        "fast_coordinates": 2416862592,
+        "enumerated_coordinates": 44845856,
+        "blocks": 45146,
+        "additional_endpoint_weight_table_peak_bytes": 2097152,
+        "K_dense_array_bytes": 0,
+        "wall_seconds": 4.80494
+      }
+    ]
+  },
+  "comparison": [
+    {
+      "metric": "P total",
+      "baseline_measured": 3733.0320984181017,
+      "current_measured": 3624.432880821638,
+      "unit": "seconds",
+      "difference_calculated": -108.59921759646386,
+      "reduction_percent_calculated": 2.909142346846777
+    },
+    {
+      "metric": "P Protocol1",
+      "baseline_measured": 1334.72,
+      "current_measured": 1212.66,
+      "unit": "seconds",
+      "difference_calculated": -122.05999999999995,
+      "reduction_percent_calculated": 9.144989211220327
+    },
+    {
+      "metric": "P Native GKR",
+      "baseline_measured": 236.01,
+      "current_measured": 211.84,
+      "unit": "seconds",
+      "difference_calculated": -24.169999999999987,
+      "reduction_percent_calculated": 10.241091479174607
+    },
+    {
+      "metric": "P Native other",
+      "baseline_measured": 1314.83,
+      "current_measured": 1414.81,
+      "unit": "seconds",
+      "difference_calculated": 99.98000000000002,
+      "reduction_percent_calculated": -7.604024854924213
+    },
+    {
+      "metric": "P Native combined",
+      "baseline_measured": 1550.84,
+      "current_measured": 1626.6499999999999,
+      "unit": "seconds",
+      "difference_calculated": 75.80999999999995,
+      "reduction_percent_calculated": -4.888318588635833
+    },
+    {
+      "metric": "V total",
+      "baseline_measured": 906.9170294553041,
+      "current_measured": 810.4904784169048,
+      "unit": "seconds",
+      "difference_calculated": -96.42655103839934,
+      "reduction_percent_calculated": 10.632345397275568
+    },
+    {
+      "metric": "V Protocol1",
+      "baseline_measured": 325.433,
+      "current_measured": 216.243,
+      "unit": "seconds",
+      "difference_calculated": -109.19,
+      "reduction_percent_calculated": 33.5522211945316
+    },
+    {
+      "metric": "V Native GKR",
+      "baseline_measured": 60.1904,
+      "current_measured": 53.7627,
+      "unit": "seconds",
+      "difference_calculated": -6.427699999999994,
+      "reduction_percent_calculated": 10.678945479677813
+    },
+    {
+      "metric": "V Native other",
+      "baseline_measured": 369.554,
+      "current_measured": 388.253,
+      "unit": "seconds",
+      "difference_calculated": 18.699000000000012,
+      "reduction_percent_calculated": -5.05988299409559
+    },
+    {
+      "metric": "V Native combined",
+      "baseline_measured": 429.7444,
+      "current_measured": 442.0157,
+      "unit": "seconds",
+      "difference_calculated": 12.271299999999997,
+      "reduction_percent_calculated": -2.8554880528984197
+    },
+    {
+      "metric": "P+V total",
+      "baseline_measured": 4639.949127873406,
+      "current_measured": 4434.923359238543,
+      "unit": "seconds",
+      "difference_calculated": -205.0257686348632,
+      "reduction_percent_calculated": 4.418707252698504
+    },
+    {
+      "metric": "Proof size",
+      "baseline_measured": 238413515,
+      "current_measured": 238413520,
+      "unit": "bytes",
+      "difference_calculated": 5,
+      "reduction_percent_calculated": -2.097196545254576e-06
+    },
+    {
+      "metric": "U original coordinates",
+      "baseline_measured": 21426524640,
+      "current_measured": 4999522416,
+      "unit": "coordinates",
+      "difference_calculated": -16427002224,
+      "reduction_percent_calculated": 76.66666666666667
+    },
+    {
+      "metric": "K_initial_builds",
+      "baseline_measured": 3277,
+      "current_measured": 2709,
+      "unit": "count",
+      "difference_calculated": -568,
+      "reduction_percent_calculated": 17.33292645712542
+    },
+    {
+      "metric": "K_initial_build_seconds",
+      "baseline_measured": 255.439,
+      "current_measured": 248.211,
+      "unit": "seconds",
+      "difference_calculated": -7.22799999999998,
+      "reduction_percent_calculated": 2.8296383872470456
+    },
+    {
+      "metric": "fallback_rebuild_calls",
+      "baseline_measured": 2223,
+      "current_measured": 1655,
+      "unit": "count",
+      "difference_calculated": -568,
+      "reduction_percent_calculated": 25.5510571300045
+    },
+    {
+      "metric": "K_fold_wall_seconds",
+      "baseline_measured": 98.98,
+      "current_measured": 92.9025,
+      "unit": "seconds",
+      "difference_calculated": -6.077500000000001,
+      "reduction_percent_calculated": 6.140129319054354
+    },
+    {
+      "metric": "RAM_root_admissions",
+      "baseline_measured": 21,
+      "current_measured": 61,
+      "unit": "count",
+      "difference_calculated": 40,
+      "reduction_percent_calculated": -190.47619047619045
+    },
+    {
+      "metric": "file_root_admissions",
+      "baseline_measured": 1013,
+      "current_measured": 993,
+      "unit": "count",
+      "difference_calculated": -20,
+      "reduction_percent_calculated": 1.9743336623889436
+    },
+    {
+      "metric": "rebuild_root_visits",
+      "baseline_measured": 2243,
+      "current_measured": 1655,
+      "unit": "count",
+      "difference_calculated": -588,
+      "reduction_percent_calculated": 26.214890771288452
+    },
+    {
+      "metric": "K_RAM_peak_bytes",
+      "baseline_measured": 573059008,
+      "current_measured": 573034176,
+      "unit": "bytes",
+      "difference_calculated": -24832,
+      "reduction_percent_calculated": 0.00433323613333725
+    },
+    {
+      "metric": "K_file_peak_bytes",
+      "baseline_measured": 4294967296,
+      "current_measured": 4294967296,
+      "unit": "bytes",
+      "difference_calculated": 0,
+      "reduction_percent_calculated": 0.0
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 21%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 56%] Built target paper_r2
+[ 56%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_bindings.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_public.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_lookup.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_commitments.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/static_source_map.cpp.o
+[ 60%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_fold_state.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/unified_input.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/public_k.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_streaming.cpp.o
+[ 65%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fs_io.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 69%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/full12_model.cpp.o
+[ 69%] Linking CXX static library libpaper_r7.a
+[ 95%] Built target paper_r7
+[ 95%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/perf5_product_probe.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf5_product_probe.cpp:3:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf4_native_tests.cpp:1: warning: "main" redefined
+    1 | #define main retained_perf4_lookup_main
+      | 
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf5_product_probe.cpp:2: note: this is the location of the previous definition
+    2 | #define main retained_perf5_native_main
+      | 
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf5_product_probe.cpp:7:5: error: redefinition of ‘int main(int, char**)’
+    7 | int main(int argc,char**argv){try{
+      |     ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf4_native_tests.cpp:9:5: note: ‘int main(int, char**)’ previously defined here
+    9 | int main(int argc,char**argv){try{
+      |     ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf5_product_probe.cpp:25:69: error: redefinition of ‘const char _ZTSZ4mainEUlmE_ []’
+   25 |  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+      |                                                                     ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf5_product_probe.cpp:25:69: note: ‘const char _ZTSZ4mainEUlmE_ [14]’ previously defined here
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/build.make:79: src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/perf5_product_probe.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7202: src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7209: src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/rule] Error 2
+gmake: *** [Makefile:2519: r7_perf5_product_probe] Error 2

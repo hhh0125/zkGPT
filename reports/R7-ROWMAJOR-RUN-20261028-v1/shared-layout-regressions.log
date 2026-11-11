@@ -1,0 +1,49 @@
+Internal ctest changing into directory: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+Test project /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release
+      Start 34: r1_memory
+ 1/10 Test #34: r1_memory ........................   Passed    0.23 sec
+      Start 35: r1_range
+ 2/10 Test #35: r1_range .........................   Passed    1.20 sec
+      Start 41: r1_exp
+ 3/10 Test #41: r1_exp ...........................   Passed    0.96 sec
+      Start 47: r2_lookup_batch
+ 4/10 Test #47: r2_lookup_batch ..................   Passed    1.22 sec
+      Start 48: r2_lookup_independent
+ 5/10 Test #48: r2_lookup_independent ............   Passed    5.04 sec
+      Start 51: r2_exp_profile
+ 6/10 Test #51: r2_exp_profile ...................   Passed    1.25 sec
+      Start 58: r2_model_queries
+ 7/10 Test #58: r2_model_queries .................   Passed    8.28 sec
+      Start 67: r6_trust_metadata
+ 8/10 Test #67: r6_trust_metadata ................   Passed    4.46 sec
+      Start 69: r6_actual_schema
+ 9/10 Test #69: r6_actual_schema .................   Passed    4.77 sec
+      Start 70: r6_rowmajor_equivalence
+10/10 Test #70: r6_rowmajor_equivalence ..........   Passed    2.85 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =  30.27 sec
+	Command being timed: "ctest --test-dir build/release --output-on-failure -R ^(r1_memory|r1_range|r1_exp|r2_lookup_batch|r2_lookup_independent|r2_exp_profile|r6_trust_metadata|r6_actual_schema|r6_rowmajor_equivalence|r2_model_queries)$"
+	User time (seconds): 38.56
+	System time (seconds): 4.95
+	Percent of CPU this job got: 142%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:30.43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1569484
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1232110
+	Voluntary context switches: 149
+	Involuntary context switches: 190
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 3656
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

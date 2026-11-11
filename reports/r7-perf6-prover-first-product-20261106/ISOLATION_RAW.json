@@ -1,0 +1,3438 @@
+[
+  {
+    "sample": 0,
+    "arm": "R0",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00811156,
+      "file_io_seconds": 0.000409055,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.850409755,
+      "exclusive_wall": 4.850409755,
+      "inclusive_cpu": 4.849100992,
+      "exclusive_cpu": 4.849100992,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.85353888,
+      "peak_rss_kib": 270836,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.850239489,
+        "exclusive_wall": 0.015869554,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.646621284,
+        "exclusive_wall": 0.646621284,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.007838507,
+        "exclusive_wall": 0.007838507,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.51703521,
+        "exclusive_wall": 1.51703521,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.09315299,
+        "exclusive_wall": 0.09315299,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.6304e-05,
+        "exclusive_wall": 1.6304e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.282085698,
+        "exclusive_wall": 0.282085698,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.044671892,
+        "exclusive_wall": 0.044671892,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.007246617,
+        "exclusive_wall": 0.007246617,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.235688287,
+        "exclusive_wall": 2.235688287,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.3146e-05,
+        "exclusive_wall": 1.3146e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.42236328125,
+        1.3466796875,
+        3.80712890625
+      ],
+      "stat": [
+        "cpu  3047088124 1160476 263751008 64834382712 7683275 0 15587545 0 0 0",
+        "cpu0 25737589 15241 2649552 437920487 75494 0 12753615 0 0 0",
+        "cpu1 29963571 10678 2728604 439858166 75292 0 1270698 0 0 0",
+        "cpu2 30923068 13255 2725521 439378263 85670 0 260686 0 0 0",
+        "cpu3 31515888 5184 2676911 438946654 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.46875,
+        1.3408203125,
+        3.7919921875
+      ],
+      "stat": [
+        "cpu  3047088615 1160476 263751048 64834452489 7683276 0 15587550 0 0 0",
+        "cpu0 25738050 15241 2649577 437920489 75494 0 12753615 0 0 0",
+        "cpu1 29963571 10678 2728606 439858649 75292 0 1270702 0 0 0",
+        "cpu2 30923072 13255 2725521 439378746 85670 0 260686 0 0 0",
+        "cpu3 31515888 5184 2676911 438947141 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 994.748",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.8603444416075945,
+    "cpu_seconds": 4.858433,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 31
+  },
+  {
+    "sample": 0,
+    "arm": "R1",
+    "reference": "0",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00637385,
+      "file_io_seconds": 0.00026425,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.263850975,
+      "exclusive_wall": 4.263850975,
+      "inclusive_cpu": 4.263145388,
+      "exclusive_cpu": 4.263145388,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.266838971,
+      "peak_rss_kib": 271012,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.263682606,
+        "exclusive_wall": 0.012950557,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.492012127,
+        "exclusive_wall": 0.492012127,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.006688165,
+        "exclusive_wall": 0.006688165,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.165436728,
+        "exclusive_wall": 1.165436728,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.071324985,
+        "exclusive_wall": 0.071324985,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 7.249e-06,
+        "exclusive_wall": 7.249e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.23651184,
+        "exclusive_wall": 0.23651184,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.037374335,
+        "exclusive_wall": 0.037374335,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.006073338,
+        "exclusive_wall": 0.006073338,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.235291061,
+        "exclusive_wall": 2.235291061,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2221e-05,
+        "exclusive_wall": 1.2221e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.46875,
+        1.3408203125,
+        3.7919921875
+      ],
+      "stat": [
+        "cpu  3047088616 1160476 263751048 64834452912 7683276 0 15587550 0 0 0",
+        "cpu0 25738050 15241 2649577 437920492 75494 0 12753615 0 0 0",
+        "cpu1 29963572 10678 2728606 439858651 75292 0 1270702 0 0 0",
+        "cpu2 30923072 13255 2725521 439378748 85670 0 260686 0 0 0",
+        "cpu3 31515888 5184 2676911 438947144 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 1100.000",
+        "cpu MHz\t\t: 1500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.46875,
+        1.3408203125,
+        3.7919921875
+      ],
+      "stat": [
+        "cpu  3047089213 1160476 263751105 64834513863 7683276 0 15587554 0 0 0",
+        "cpu0 25738050 15241 2649577 437920915 75494 0 12753618 0 0 0",
+        "cpu1 29963572 10678 2728606 439859078 75292 0 1270702 0 0 0",
+        "cpu2 30923479 13255 2725541 439378749 85670 0 260686 0 0 0",
+        "cpu3 31515888 5184 2676911 438947572 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.004",
+        "cpu MHz\t\t: 800.297",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.272488607093692,
+    "cpu_seconds": 4.270701000000001,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 17
+  },
+  {
+    "sample": 0,
+    "arm": "R2",
+    "reference": "1",
+    "profile": false,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00528164,
+      "file_io_seconds": 0.000212068,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 3.99424,
+      "exclusive_wall": 3.99424,
+      "inclusive_cpu": 3.99286,
+      "exclusive_cpu": 3.99286,
+      "allocations": 299625,
+      "allocated_bytes": 556446970,
+      "exclusive_allocations": 299625,
+      "exclusive_allocated_bytes": 556446970,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 3.996549214,
+      "peak_rss_kib": 270672,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": null,
+    "before": {
+      "load": [
+        0.46875,
+        1.3408203125,
+        3.7919921875
+      ],
+      "stat": [
+        "cpu  3047089221 1160476 263751106 64834514277 7683276 0 15587554 0 0 0",
+        "cpu0 25738050 15241 2649577 437920918 75494 0 12753618 0 0 0",
+        "cpu1 29963572 10678 2728607 439859080 75292 0 1270702 0 0 0",
+        "cpu2 30923479 13255 2725541 439378752 85670 0 260686 0 0 0",
+        "cpu3 31515888 5184 2676911 438947575 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.019",
+        "cpu MHz\t\t: 800.097",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.671875,
+        1.36865234375,
+        3.78759765625
+      ],
+      "stat": [
+        "cpu  3047090090 1160476 263751201 64834571374 7683276 0 15587556 0 0 0",
+        "cpu0 25738050 15241 2649577 437921312 75494 0 12753619 0 0 0",
+        "cpu1 29963573 10678 2728608 439859481 75292 0 1270702 0 0 0",
+        "cpu2 30923860 13255 2725560 439378756 85670 0 260686 0 0 0",
+        "cpu3 31515889 5184 2676911 438947977 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.222",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.000649225898087,
+    "cpu_seconds": 3.9979830000000005,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 34
+  },
+  {
+    "sample": 0,
+    "arm": "R3",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00592845,
+      "file_io_seconds": 0.000246662,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.170863369,
+      "exclusive_wall": 4.170863369,
+      "inclusive_cpu": 4.170502103,
+      "exclusive_cpu": 4.170502103,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.173851437,
+      "peak_rss_kib": 270756,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.170688458,
+        "exclusive_wall": 0.013303737,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.491634863,
+        "exclusive_wall": 0.491634863,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.006255693,
+        "exclusive_wall": 0.006255693,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.091641677,
+        "exclusive_wall": 1.091641677,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.067159082,
+        "exclusive_wall": 0.067159082,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 6.777e-06,
+        "exclusive_wall": 6.777e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.221927354,
+        "exclusive_wall": 0.221927354,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.034980705,
+        "exclusive_wall": 0.034980705,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.005684245,
+        "exclusive_wall": 0.005684245,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.238081639,
+        "exclusive_wall": 2.238081639,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2686e-05,
+        "exclusive_wall": 1.2686e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.671875,
+        1.36865234375,
+        3.78759765625
+      ],
+      "stat": [
+        "cpu  3047090091 1160476 263751202 64834571864 7683276 0 15587556 0 0 0",
+        "cpu0 25738050 15241 2649577 437921315 75494 0 12753619 0 0 0",
+        "cpu1 29963574 10678 2728608 439859484 75292 0 1270702 0 0 0",
+        "cpu2 30923860 13255 2725560 439378759 85670 0 260686 0 0 0",
+        "cpu3 31515889 5184 2676911 438947981 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.239",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.6982421875,
+        1.3623046875,
+        3.7724609375
+      ],
+      "stat": [
+        "cpu  3047090520 1160476 263751229 64834632001 7683276 0 15587558 0 0 0",
+        "cpu0 25738050 15241 2649577 437921733 75494 0 12753620 0 0 0",
+        "cpu1 29963575 10678 2728609 439859902 75292 0 1270702 0 0 0",
+        "cpu2 30923863 13255 2725560 439379176 85670 0 260686 0 0 0",
+        "cpu3 31516289 5184 2676928 438947984 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.238",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.17994090821594,
+    "cpu_seconds": 4.1782410000000025,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 14
+  },
+  {
+    "sample": 1,
+    "arm": "R3",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00678634,
+      "file_io_seconds": 0.000303666,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.381536896,
+      "exclusive_wall": 4.381536896,
+      "inclusive_cpu": 4.380093122,
+      "exclusive_cpu": 4.380093122,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.384536856,
+      "peak_rss_kib": 270744,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.381365211,
+        "exclusive_wall": 0.01338704,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.495898837,
+        "exclusive_wall": 0.495898837,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.007101893,
+        "exclusive_wall": 0.007101893,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.245326801,
+        "exclusive_wall": 1.245326801,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.076533449,
+        "exclusive_wall": 0.076533449,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.3214e-05,
+        "exclusive_wall": 1.3214e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.252476944,
+        "exclusive_wall": 0.252476944,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.039790005,
+        "exclusive_wall": 0.039790005,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.006455773,
+        "exclusive_wall": 0.006455773,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.244368856,
+        "exclusive_wall": 2.244368856,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2399e-05,
+        "exclusive_wall": 1.2399e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.6982421875,
+        1.3623046875,
+        3.7724609375
+      ],
+      "stat": [
+        "cpu  3047090521 1160476 263751230 64834632453 7683276 0 15587558 0 0 0",
+        "cpu0 25738050 15241 2649577 437921736 75494 0 12753620 0 0 0",
+        "cpu1 29963576 10678 2728609 439859904 75292 0 1270702 0 0 0",
+        "cpu2 30923863 13255 2725560 439379179 85670 0 260686 0 0 0",
+        "cpu3 31516289 5184 2676928 438947987 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.179",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.72265625,
+        1.35595703125,
+        3.75732421875
+      ],
+      "stat": [
+        "cpu  3047091032 1160476 263751272 64834695526 7683276 0 15587559 0 0 0",
+        "cpu0 25738472 15241 2649593 437921739 75494 0 12753620 0 0 0",
+        "cpu1 29963576 10678 2728610 439860339 75292 0 1270703 0 0 0",
+        "cpu2 30923868 13255 2725561 439379616 85670 0 260686 0 0 0",
+        "cpu3 31516290 5184 2676928 438948427 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.141",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.3913738541305065,
+    "cpu_seconds": 4.388591999999999,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 24
+  },
+  {
+    "sample": 1,
+    "arm": "R2",
+    "reference": "1",
+    "profile": false,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00804966,
+      "file_io_seconds": 0.000336921,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.76072,
+      "exclusive_wall": 4.76072,
+      "inclusive_cpu": 4.76049,
+      "exclusive_cpu": 4.76049,
+      "allocations": 299625,
+      "allocated_bytes": 556446970,
+      "exclusive_allocations": 299625,
+      "exclusive_allocated_bytes": 556446970,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.763736845,
+      "peak_rss_kib": 270632,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": null,
+    "before": {
+      "load": [
+        0.72265625,
+        1.35595703125,
+        3.75732421875
+      ],
+      "stat": [
+        "cpu  3047091032 1160476 263751273 64834695995 7683276 0 15587559 0 0 0",
+        "cpu0 25738472 15241 2649593 437921742 75494 0 12753620 0 0 0",
+        "cpu1 29963577 10678 2728610 439860341 75292 0 1270703 0 0 0",
+        "cpu2 30923868 13255 2725561 439379619 85670 0 260686 0 0 0",
+        "cpu3 31516290 5184 2676928 438948431 81290 0 81000 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 799.999",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.7451171875,
+        1.349609375,
+        3.7421875
+      ],
+      "stat": [
+        "cpu  3047091506 1160476 263751312 64834764306 7683276 0 15587562 0 0 0",
+        "cpu0 25738472 15241 2649593 437922216 75494 0 12753621 0 0 0",
+        "cpu1 29964030 10678 2728635 439860341 75292 0 1270703 0 0 0",
+        "cpu2 30923873 13255 2725563 439380089 85670 0 260686 0 0 0",
+        "cpu3 31516291 5184 2676929 438948906 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.187",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.771116932854056,
+    "cpu_seconds": 4.769580000000003,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 13
+  },
+  {
+    "sample": 1,
+    "arm": "R1",
+    "reference": "0",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00530715,
+      "file_io_seconds": 0.000223133,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.101494885,
+      "exclusive_wall": 4.101494885,
+      "inclusive_cpu": 4.100333595,
+      "exclusive_cpu": 4.100333595,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.104246919,
+      "peak_rss_kib": 270800,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.101315738,
+        "exclusive_wall": 0.013354821,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.493456818,
+        "exclusive_wall": 0.493456818,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005077591,
+        "exclusive_wall": 0.005077591,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 0.981348858,
+        "exclusive_wall": 0.981348858,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.060085406,
+        "exclusive_wall": 0.060085406,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.0293e-05,
+        "exclusive_wall": 1.0293e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.180513071,
+        "exclusive_wall": 0.180513071,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.028371999,
+        "exclusive_wall": 0.028371999,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.004589806,
+        "exclusive_wall": 0.004589806,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.334494826,
+        "exclusive_wall": 2.334494826,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2249e-05,
+        "exclusive_wall": 1.2249e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.7451171875,
+        1.349609375,
+        3.7421875
+      ],
+      "stat": [
+        "cpu  3047091507 1160476 263751312 64834764757 7683276 0 15587562 0 0 0",
+        "cpu0 25738472 15241 2649593 437922219 75494 0 12753621 0 0 0",
+        "cpu1 29964030 10678 2728635 439860345 75292 0 1270703 0 0 0",
+        "cpu2 30923874 13255 2725563 439380091 85670 0 260686 0 0 0",
+        "cpu3 31516291 5184 2676929 438948909 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.845703125,
+        1.36083984375,
+        3.732421875
+      ],
+      "stat": [
+        "cpu  3047092086 1160476 263751409 64834823409 7683276 0 15587564 0 0 0",
+        "cpu0 25738866 15241 2649611 437922220 75494 0 12753621 0 0 0",
+        "cpu1 29964030 10678 2728635 439860748 75292 0 1270704 0 0 0",
+        "cpu2 30923874 13255 2725564 439380502 85670 0 260686 0 0 0",
+        "cpu3 31516291 5184 2676929 438949321 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.023",
+        "cpu MHz\t\t: 800.223",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.1115861386060715,
+    "cpu_seconds": 4.109007,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 27
+  },
+  {
+    "sample": 1,
+    "arm": "R0",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00559938,
+      "file_io_seconds": 0.000223433,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.078780289,
+      "exclusive_wall": 4.078780289,
+      "inclusive_cpu": 4.078584857,
+      "exclusive_cpu": 4.078584857,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.081752315,
+      "peak_rss_kib": 270804,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.07861294,
+        "exclusive_wall": 0.013350274,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.49196732,
+        "exclusive_wall": 0.49196732,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005831422,
+        "exclusive_wall": 0.005831422,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.02315744,
+        "exclusive_wall": 1.02315744,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.062801398,
+        "exclusive_wall": 0.062801398,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 6.556e-06,
+        "exclusive_wall": 6.556e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.205425084,
+        "exclusive_wall": 0.205425084,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.032689843,
+        "exclusive_wall": 0.032689843,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.00529246,
+        "exclusive_wall": 0.00529246,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.238079317,
+        "exclusive_wall": 2.238079317,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.1826e-05,
+        "exclusive_wall": 1.1826e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.845703125,
+        1.36083984375,
+        3.732421875
+      ],
+      "stat": [
+        "cpu  3047092088 1160476 263751409 64834823916 7683276 0 15587564 0 0 0",
+        "cpu0 25738866 15241 2649611 437922224 75494 0 12753621 0 0 0",
+        "cpu1 29964030 10678 2728635 439860751 75292 0 1270704 0 0 0",
+        "cpu2 30923875 13255 2725565 439380504 85670 0 260686 0 0 0",
+        "cpu3 31516291 5184 2676929 438949324 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 799.999",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.8583984375,
+        1.3544921875,
+        3.71728515625
+      ],
+      "stat": [
+        "cpu  3047092508 1160476 263751440 64834882453 7683276 0 15587565 0 0 0",
+        "cpu0 25738866 15241 2649611 437922630 75494 0 12753622 0 0 0",
+        "cpu1 29964031 10678 2728636 439861159 75292 0 1270704 0 0 0",
+        "cpu2 30923876 13255 2725566 439380912 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438949326 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.142",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.087858943268657,
+    "cpu_seconds": 4.086352000000003,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 11
+  },
+  {
+    "sample": 2,
+    "arm": "R0",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00746639,
+      "file_io_seconds": 0.000294653,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.544187265,
+      "exclusive_wall": 4.544187265,
+      "inclusive_cpu": 4.542877217,
+      "exclusive_cpu": 4.542877217,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.547157786,
+      "peak_rss_kib": 270700,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.544013125,
+        "exclusive_wall": 0.013886851,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.512994303,
+        "exclusive_wall": 0.512994303,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.00751985,
+        "exclusive_wall": 0.00751985,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.376741479,
+        "exclusive_wall": 1.376741479,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.084629134,
+        "exclusive_wall": 0.084629134,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.0145e-05,
+        "exclusive_wall": 1.0145e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.266404727,
+        "exclusive_wall": 0.266404727,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.042243671,
+        "exclusive_wall": 0.042243671,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.006953168,
+        "exclusive_wall": 0.006953168,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.232617626,
+        "exclusive_wall": 2.232617626,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2171e-05,
+        "exclusive_wall": 1.2171e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.8583984375,
+        1.3544921875,
+        3.71728515625
+      ],
+      "stat": [
+        "cpu  3047092510 1160476 263751440 64834883014 7683276 0 15587565 0 0 0",
+        "cpu0 25738866 15241 2649611 437922634 75494 0 12753622 0 0 0",
+        "cpu1 29964031 10678 2728636 439861163 75292 0 1270704 0 0 0",
+        "cpu2 30923876 13255 2725566 439380914 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438949329 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.8583984375,
+        1.3544921875,
+        3.71728515625
+      ],
+      "stat": [
+        "cpu  3047092970 1160476 263751478 64834948212 7683276 0 15587569 0 0 0",
+        "cpu0 25738866 15241 2649611 437923086 75494 0 12753624 0 0 0",
+        "cpu1 29964031 10678 2728636 439861619 75292 0 1270704 0 0 0",
+        "cpu2 30924311 13255 2725588 439380915 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438949786 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.553792502731085,
+    "cpu_seconds": 4.551156,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 30
+  },
+  {
+    "sample": 2,
+    "arm": "R1",
+    "reference": "0",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00556549,
+      "file_io_seconds": 0.000212741,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.002154191,
+      "exclusive_wall": 4.002154191,
+      "inclusive_cpu": 4.000791929,
+      "exclusive_cpu": 4.000791929,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.004890675,
+      "peak_rss_kib": 270780,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.001983945,
+        "exclusive_wall": 0.013257089,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.492447882,
+        "exclusive_wall": 0.492447882,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005034806,
+        "exclusive_wall": 0.005034806,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 0.978325435,
+        "exclusive_wall": 0.978325435,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.060364761,
+        "exclusive_wall": 0.060364761,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 7.605e-06,
+        "exclusive_wall": 7.605e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.18186165,
+        "exclusive_wall": 0.18186165,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.028709554,
+        "exclusive_wall": 0.028709554,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.004610961,
+        "exclusive_wall": 0.004610961,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.237351121,
+        "exclusive_wall": 2.237351121,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.3081e-05,
+        "exclusive_wall": 1.3081e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.8583984375,
+        1.3544921875,
+        3.71728515625
+      ],
+      "stat": [
+        "cpu  3047092972 1160476 263751479 64834948800 7683276 0 15587569 0 0 0",
+        "cpu0 25738866 15241 2649611 437923090 75494 0 12753624 0 0 0",
+        "cpu1 29964032 10678 2728636 439861622 75292 0 1270704 0 0 0",
+        "cpu2 30924311 13255 2725588 439380919 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438949790 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 799.999",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.8701171875,
+        1.34814453125,
+        3.70263671875
+      ],
+      "stat": [
+        "cpu  3047094042 1160476 263751578 64835005487 7683276 0 15587571 0 0 0",
+        "cpu0 25738866 15241 2649611 437923482 75494 0 12753624 0 0 0",
+        "cpu1 29964033 10678 2728637 439862022 75292 0 1270704 0 0 0",
+        "cpu2 30924688 13255 2725612 439380920 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438950192 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.207",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.010824611410499,
+    "cpu_seconds": 4.008146000000007,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 33
+  },
+  {
+    "sample": 2,
+    "arm": "R2",
+    "reference": "1",
+    "profile": false,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00524942,
+      "file_io_seconds": 0.000211193,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.013,
+      "exclusive_wall": 4.013,
+      "inclusive_cpu": 4.01139,
+      "exclusive_cpu": 4.01139,
+      "allocations": 299625,
+      "allocated_bytes": 556446970,
+      "exclusive_allocations": 299625,
+      "exclusive_allocated_bytes": 556446970,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.015026442,
+      "peak_rss_kib": 270940,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": null,
+    "before": {
+      "load": [
+        0.8701171875,
+        1.34814453125,
+        3.70263671875
+      ],
+      "stat": [
+        "cpu  3047094047 1160476 263751579 64835006003 7683276 0 15587571 0 0 0",
+        "cpu0 25738866 15241 2649611 437923485 75494 0 12753624 0 0 0",
+        "cpu1 29964034 10678 2728637 439862024 75292 0 1270704 0 0 0",
+        "cpu2 30924688 13255 2725612 439380924 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438950195 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.199",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.9609375,
+        1.359375,
+        3.693359375
+      ],
+      "stat": [
+        "cpu  3047094496 1160476 263751616 64835063776 7683276 0 15587572 0 0 0",
+        "cpu0 25738866 15241 2649611 437923886 75494 0 12753624 0 0 0",
+        "cpu1 29964035 10678 2728638 439862427 75292 0 1270704 0 0 0",
+        "cpu2 30925070 13255 2725632 439380926 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438950600 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.013",
+        "cpu MHz\t\t: 800.262",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.0192190716043115,
+    "cpu_seconds": 4.016293999999997,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 35
+  },
+  {
+    "sample": 2,
+    "arm": "R3",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00520556,
+      "file_io_seconds": 0.000211134,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 3.986013992,
+      "exclusive_wall": 3.986013992,
+      "inclusive_cpu": 3.985404045,
+      "exclusive_cpu": 3.985404045,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 3.988799784,
+      "peak_rss_kib": 270748,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 3.985842306,
+        "exclusive_wall": 0.013349441,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.490332654,
+        "exclusive_wall": 0.490332654,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005045532,
+        "exclusive_wall": 0.005045532,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 0.974711321,
+        "exclusive_wall": 0.974711321,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.059950136,
+        "exclusive_wall": 0.059950136,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.0591e-05,
+        "exclusive_wall": 1.0591e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.179222188,
+        "exclusive_wall": 0.179222188,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.0282146,
+        "exclusive_wall": 0.0282146,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.004573259,
+        "exclusive_wall": 0.004573259,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.230419281,
+        "exclusive_wall": 2.230419281,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.3303e-05,
+        "exclusive_wall": 1.3303e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.9609375,
+        1.359375,
+        3.693359375
+      ],
+      "stat": [
+        "cpu  3047094498 1160476 263751616 64835064367 7683276 0 15587572 0 0 0",
+        "cpu0 25738866 15241 2649611 437923890 75494 0 12753624 0 0 0",
+        "cpu1 29964036 10678 2728638 439862429 75292 0 1270704 0 0 0",
+        "cpu2 30925070 13255 2725632 439380931 85670 0 260686 0 0 0",
+        "cpu3 31516682 5184 2676946 438950604 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.96435546875,
+        1.35302734375,
+        3.6787109375
+      ],
+      "stat": [
+        "cpu  3047094906 1160476 263751673 64835121542 7683276 0 15587572 0 0 0",
+        "cpu0 25738866 15241 2649611 437924287 75494 0 12753624 0 0 0",
+        "cpu1 29964036 10678 2728640 439862829 75292 0 1270704 0 0 0",
+        "cpu2 30925070 13255 2725632 439381331 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438950605 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 3.9941576067358255,
+    "cpu_seconds": 3.992183999999999,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 14
+  },
+  {
+    "sample": 3,
+    "arm": "R3",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00695813,
+      "file_io_seconds": 0.0003082,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.415000366,
+      "exclusive_wall": 4.415000366,
+      "inclusive_cpu": 4.413998936,
+      "exclusive_cpu": 4.413998936,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.417983792,
+      "peak_rss_kib": 270812,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.414832594,
+        "exclusive_wall": 0.01337728,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.496633439,
+        "exclusive_wall": 0.496633439,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.007133174,
+        "exclusive_wall": 0.007133174,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.286236555,
+        "exclusive_wall": 1.286236555,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.078873283,
+        "exclusive_wall": 0.078873283,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 1.2301e-05,
+        "exclusive_wall": 1.2301e-05,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.251295551,
+        "exclusive_wall": 0.251295551,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.039876358,
+        "exclusive_wall": 0.039876358,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.006455789,
+        "exclusive_wall": 0.006455789,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.234927274,
+        "exclusive_wall": 2.234927274,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.159e-05,
+        "exclusive_wall": 1.159e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        0.96435546875,
+        1.35302734375,
+        3.6787109375
+      ],
+      "stat": [
+        "cpu  3047094907 1160476 263751673 64835122069 7683276 0 15587572 0 0 0",
+        "cpu0 25738866 15241 2649611 437924290 75494 0 12753624 0 0 0",
+        "cpu1 29964036 10678 2728640 439862832 75292 0 1270704 0 0 0",
+        "cpu2 30925070 13255 2725632 439381334 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438950609 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        0.96728515625,
+        1.3466796875,
+        3.6640625
+      ],
+      "stat": [
+        "cpu  3047095354 1160476 263751706 64835185442 7683276 0 15587574 0 0 0",
+        "cpu0 25739288 15241 2649631 437924291 75494 0 12753624 0 0 0",
+        "cpu1 29964036 10678 2728640 439863273 75292 0 1270705 0 0 0",
+        "cpu2 30925070 13255 2725632 439381778 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951052 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.425448094494641,
+    "cpu_seconds": 4.423121999999999,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 26
+  },
+  {
+    "sample": 3,
+    "arm": "R2",
+    "reference": "1",
+    "profile": false,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.0063386,
+      "file_io_seconds": 0.000258582,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.23114,
+      "exclusive_wall": 4.23114,
+      "inclusive_cpu": 4.23101,
+      "exclusive_cpu": 4.23101,
+      "allocations": 299625,
+      "allocated_bytes": 556446970,
+      "exclusive_allocations": 299625,
+      "exclusive_allocated_bytes": 556446970,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.234173266,
+      "peak_rss_kib": 270900,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": null,
+    "before": {
+      "load": [
+        0.96728515625,
+        1.3466796875,
+        3.6640625
+      ],
+      "stat": [
+        "cpu  3047095356 1160476 263751707 64835185984 7683276 0 15587574 0 0 0",
+        "cpu0 25739288 15241 2649631 437924295 75494 0 12753624 0 0 0",
+        "cpu1 29964036 10678 2728640 439863277 75292 0 1270705 0 0 0",
+        "cpu2 30925070 13255 2725632 439381781 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951056 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        1.13037109375,
+        1.37451171875,
+        3.66015625
+      ],
+      "stat": [
+        "cpu  3047095903 1160476 263751770 64835246907 7683276 0 15587575 0 0 0",
+        "cpu0 25739290 15241 2649631 437924715 75494 0 12753624 0 0 0",
+        "cpu1 29964442 10678 2728658 439863280 75292 0 1270705 0 0 0",
+        "cpu2 30925070 13255 2725632 439382209 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951483 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.241018843837082,
+    "cpu_seconds": 4.239573000000004,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 19
+  },
+  {
+    "sample": 3,
+    "arm": "R1",
+    "reference": "0",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.00556874,
+      "file_io_seconds": 0.000216499,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.063054808,
+      "exclusive_wall": 4.063054808,
+      "inclusive_cpu": 4.062153913,
+      "exclusive_cpu": 4.062153913,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.066080772,
+      "peak_rss_kib": 270692,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.062878701,
+        "exclusive_wall": 0.013290739,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.491720058,
+        "exclusive_wall": 0.491720058,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005693044,
+        "exclusive_wall": 0.005693044,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.014744633,
+        "exclusive_wall": 1.014744633,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.062457873,
+        "exclusive_wall": 0.062457873,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 6.992e-06,
+        "exclusive_wall": 6.992e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.203809977,
+        "exclusive_wall": 0.203809977,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.032345595,
+        "exclusive_wall": 0.032345595,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.005167235,
+        "exclusive_wall": 0.005167235,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.233630146,
+        "exclusive_wall": 2.233630146,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.2409e-05,
+        "exclusive_wall": 1.2409e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        1.13037109375,
+        1.37451171875,
+        3.66015625
+      ],
+      "stat": [
+        "cpu  3047095904 1160476 263751770 64835247501 7683276 0 15587575 0 0 0",
+        "cpu0 25739290 15241 2649631 437924719 75494 0 12753624 0 0 0",
+        "cpu1 29964442 10678 2728658 439863285 75292 0 1270705 0 0 0",
+        "cpu2 30925070 13255 2725632 439382213 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951488 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        1.13037109375,
+        1.37451171875,
+        3.66015625
+      ],
+      "stat": [
+        "cpu  3047096316 1160476 263751810 64835306101 7683276 0 15587578 0 0 0",
+        "cpu0 25739290 15241 2649631 437925127 75494 0 12753626 0 0 0",
+        "cpu1 29964442 10678 2728658 439863695 75292 0 1270705 0 0 0",
+        "cpu2 30925462 13255 2725647 439382216 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951898 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.072863196954131,
+    "cpu_seconds": 4.070624999999999,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 20
+  },
+  {
+    "sample": 3,
+    "arm": "R0",
+    "reference": "1",
+    "profile": true,
+    "identity": {
+      "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "proof_bytes": 1092107,
+      "perf_counter_probe": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+      },
+      "perf_counters": "NOT_MEASURED"
+    },
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-ONEBLOCK-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "9a8e159bb237bad5fd773939ddffe07493d71797f0e9cd9041ee7816cb9cbb30",
+      "complete": true,
+      "proof_bytes": 1092107,
+      "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+      "transcript_digest": "d45477b02c39b8b939cb3edeeb7ec7319f0598fddcbe84741ab9d984023e9bde",
+      "challenge_digest": "004e98f33204c50f832316e58f5d5a8585d535910fd85500517fbc6f20043732",
+      "challenges": 922,
+      "prover_messages": 2926,
+      "events": 3850,
+      "field_rejections": 5220,
+      "hash_seconds": 0.0056423,
+      "file_io_seconds": 0.000229304,
+      "file_syscalls": 18,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 1248,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "Product": {
+      "kind": "Native/Product",
+      "role": "perf5/product",
+      "size": 8388608,
+      "inclusive_wall": 4.101302549,
+      "exclusive_wall": 4.101302549,
+      "inclusive_cpu": 4.100957806,
+      "exclusive_cpu": 4.100957806,
+      "allocations": 299647,
+      "allocated_bytes": 556452974,
+      "exclusive_allocations": 299647,
+      "exclusive_allocated_bytes": 556452974,
+      "analytical_copy_bytes": 0
+    },
+    "whole": {
+      "n": 8388608,
+      "prover": false,
+      "wall_seconds": 4.104270848,
+      "peak_rss_kib": 270872,
+      "public_structured_fingerprint_surrogate": true
+    },
+    "regions": {
+      "total": {
+        "calls": 1,
+        "inclusive_wall": 4.101136454,
+        "exclusive_wall": 0.013364488,
+        "allocations": 299625,
+        "allocated_bytes": 556446970,
+        "exclusive_allocations": 1006,
+        "exclusive_allocated_bytes": 66704
+      },
+      "tree_alloc_init": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_leaf_callback": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_parent": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "tree_free": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "weights": {
+        "calls": 23,
+        "inclusive_wall": 0.510520482,
+        "exclusive_wall": 0.510520482,
+        "allocations": 69,
+        "allocated_bytes": 268436712,
+        "exclusive_allocations": 69,
+        "exclusive_allocated_bytes": 268436712
+      },
+      "expression_init": {
+        "calls": 23,
+        "inclusive_wall": 0.005846375,
+        "exclusive_wall": 0.005846375,
+        "allocations": 1219,
+        "allocated_bytes": 82162,
+        "exclusive_allocations": 1219,
+        "exclusive_allocated_bytes": 82162
+      },
+      "polynomial_callback_arithmetic_reduction": {
+        "calls": 0,
+        "inclusive_wall": 0,
+        "exclusive_wall": 0,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "messages_and_recurrence_verification": {
+        "calls": 253,
+        "inclusive_wall": 1.028562641,
+        "exclusive_wall": 1.028562641,
+        "allocations": 202824,
+        "allocated_bytes": 14243825,
+        "exclusive_allocations": 202824,
+        "exclusive_allocated_bytes": 14243825
+      },
+      "challenge_and_derived": {
+        "calls": 253,
+        "inclusive_wall": 0.063402836,
+        "exclusive_wall": 0.063402836,
+        "allocations": 43526,
+        "allocated_bytes": 2131954,
+        "exclusive_allocations": 43526,
+        "exclusive_allocated_bytes": 2131954
+      },
+      "fold_callback_arithmetic": {
+        "calls": 253,
+        "inclusive_wall": 6.848e-06,
+        "exclusive_wall": 6.848e-06,
+        "allocations": 0,
+        "allocated_bytes": 0,
+        "exclusive_allocations": 0,
+        "exclusive_allocated_bytes": 0
+      },
+      "endpoint_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.210544779,
+        "exclusive_wall": 0.210544779,
+        "allocations": 37303,
+        "allocated_bytes": 2415872,
+        "exclusive_allocations": 37303,
+        "exclusive_allocated_bytes": 2415872
+      },
+      "equality_authentication": {
+        "calls": 23,
+        "inclusive_wall": 0.03252143,
+        "exclusive_wall": 0.03252143,
+        "allocations": 10060,
+        "allocated_bytes": 480995,
+        "exclusive_allocations": 10060,
+        "exclusive_allocated_bytes": 480995
+      },
+      "carry_and_binding": {
+        "calls": 23,
+        "inclusive_wall": 0.005317982,
+        "exclusive_wall": 0.005317982,
+        "allocations": 3266,
+        "allocated_bytes": 133771,
+        "exclusive_allocations": 3266,
+        "exclusive_allocated_bytes": 133771
+      },
+      "leaf_authentication": {
+        "calls": 1,
+        "inclusive_wall": 2.231037097,
+        "exclusive_wall": 2.231037097,
+        "allocations": 304,
+        "allocated_bytes": 268453693,
+        "exclusive_allocations": 304,
+        "exclusive_allocated_bytes": 268453693
+      },
+      "coverage": {
+        "calls": 1,
+        "inclusive_wall": 1.1496e-05,
+        "exclusive_wall": 1.1496e-05,
+        "allocations": 48,
+        "allocated_bytes": 1282,
+        "exclusive_allocations": 48,
+        "exclusive_allocated_bytes": 1282
+      }
+    },
+    "before": {
+      "load": [
+        1.11962890625,
+        1.3681640625,
+        3.6455078125
+      ],
+      "stat": [
+        "cpu  3047096318 1160476 263751811 64835306648 7683276 0 15587578 0 0 0",
+        "cpu0 25739290 15241 2649631 437925130 75494 0 12753626 0 0 0",
+        "cpu1 29964442 10678 2728658 439863698 75292 0 1270705 0 0 0",
+        "cpu2 30925462 13255 2725647 439382220 85670 0 260686 0 0 0",
+        "cpu3 31517064 5184 2676964 438951902 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000",
+        "cpu MHz\t\t: 800.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "after": {
+      "load": [
+        1.11962890625,
+        1.3681640625,
+        3.6455078125
+      ],
+      "stat": [
+        "cpu  3047096745 1160476 263751846 64835365533 7683277 0 15587579 0 0 0",
+        "cpu0 25739290 15241 2649632 437925538 75494 0 12753626 0 0 0",
+        "cpu1 29964442 10678 2728658 439864110 75292 0 1270705 0 0 0",
+        "cpu2 30925462 13255 2725647 439382632 85670 0 260686 0 0 0",
+        "cpu3 31517454 5184 2676984 438951903 81290 0 81001 0 0 0"
+      ],
+      "cpuinfo_mhz_snapshot": [
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 800.000",
+        "cpu MHz\t\t: 3500.000"
+      ],
+      "effective_execution_frequency": "NOT_MEASURED; cpuinfo snapshots are not task effective frequency"
+    },
+    "process_wall": 4.112793360836804,
+    "cpu_seconds": 4.111097000000002,
+    "voluntary_context_switches": 1,
+    "involuntary_context_switches": 12
+  }
+]

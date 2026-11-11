@@ -1,0 +1,167 @@
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:6:17: error: ‘G1’ was not declared in this scope
+    6 | static decltype(G1::isValidOrderFast) prior=nullptr;
+      |                 ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:6:17: note: suggested alternatives:
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn256.hpp:10,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+   58 | typedef mcl::EcT<Fp, Fr> G1;
+      |                          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:6:17: error: ‘G1’ has not been declared
+    6 | static decltype(G1::isValidOrderFast) prior=nullptr;
+      |                 ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:6:45: error: cannot convert ‘std::nullptr_t’ to ‘int’ in initialization
+    6 | static decltype(G1::isValidOrderFast) prior=nullptr;
+      |                                             ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:30: error: ‘G1’ does not name a type
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                              ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In function ‘bool countOrder(const int&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:65: error: ‘prior’ cannot be used as a function
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                                                            ~~~~~^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:69: error: ‘G1’ was not declared in this scope
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                                                                     ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:69: note: suggested alternatives:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+   58 | typedef mcl::EcT<Fp, Fr> G1;
+      |                          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:74: error: ‘G1’ is not a class, namespace, or enumeration
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                                                                          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:89: error: ‘q’ was not declared in this scope
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                                                                                         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:7:93: error: ‘G1’ is not a class, namespace, or enumeration
+    7 | static bool countOrder(const G1&p){++calls;if(prior)return prior(p);G1 q;G1::mulGeneric(q,p,G1::order_);return q.isZero();}
+      |                                                                                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:16: error: ‘r1’ has not been declared
+    9 | int main(){try{r1::init();auto H=crypto::parameters(1).hiding;std::vector<G1>points;for(unsigned i=0;i<1024;++i)points.push_back(H*Fr(i+1));
+      |                ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:75: error: ‘G1’ was not declared in this scope
+    9 | int main(){try{r1::init();auto H=crypto::parameters(1).hiding;std::vector<G1>points;for(unsigned i=0;i<1024;++i)points.push_back(H*Fr(i+1));
+      |                                                                           ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:75: note: suggested alternatives:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+   58 | typedef mcl::EcT<Fp, Fr> G1;
+      |                          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:58:26: note:   ‘mcl::bn::G1’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:77: error: template argument 1 is invalid
+    9 | int main(){try{r1::init();auto H=crypto::parameters(1).hiding;std::vector<G1>points;for(unsigned i=0;i<1024;++i)points.push_back(H*Fr(i+1));
+      |                                                                             ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:77: error: template argument 2 is invalid
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:120: error: request for member ‘push_back’ in ‘points’, which is of non-class type ‘int’
+    9 | int main(){try{r1::init();auto H=crypto::parameters(1).hiding;std::vector<G1>points;for(unsigned i=0;i<1024;++i)points.push_back(H*Fr(i+1));
+      |                                                                                                                        ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:132: error: ‘Fr’ was not declared in this scope
+    9 | int main(){try{r1::init();auto H=crypto::parameters(1).hiding;std::vector<G1>points;for(unsigned i=0;i<1024;++i)points.push_back(H*Fr(i+1));
+      |                                                                                                                                    ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:9:132: note: suggested alternatives:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:54:53: note:   ‘mcl::bn::Fr’
+   54 | typedef mcl::FpT<local::FrTag, MCL_MAX_FR_BIT_SIZE> Fr;
+      |                                                     ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:54:53: note:   ‘mcl::bn::Fr’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:54:53: note:   ‘mcl::bn::Fr’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:10:14: error: ‘Bytes’ was not declared in this scope
+   10 |  std::vector<Bytes>encoded;
+      |              ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:10:14: note: suggested alternatives:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:11:7: note:   ‘zkgpt::r1::Bytes’
+   11 | using Bytes = std::vector<std::uint8_t>;
+      |       ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r1/core.hpp:11:7: note:   ‘zkgpt::r1::Bytes’
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:10:19: error: template argument 1 is invalid
+   10 |  std::vector<Bytes>encoded;
+      |                   ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:10:19: error: template argument 2 is invalid
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:11:42: error: ‘begin’ was not declared in this scope; did you mean ‘std::begin’?
+   11 |  timeIt("R7-Writer-point",[&]{for(auto&p:points){crypto::Writer w;w.point(p);encoded.push_back(w.b);}});
+      |                                          ^~~~~~
+      |                                          std::begin
+In file included from /usr/include/c++/12/unordered_map:48,
+                 from /usr/include/c++/12/functional:61,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/cybozu/hash.hpp:48,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp.hpp:28,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/fp_tower.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/bn.hpp:11:
+/usr/include/c++/12/bits/range_access.h:114:37: note: ‘std::begin’ declared here
+  114 |   template<typename _Tp> const _Tp* begin(const valarray<_Tp>&) noexcept;
+      |                                     ^~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:11:42: error: ‘end’ was not declared in this scope; did you mean ‘std::end’?
+   11 |  timeIt("R7-Writer-point",[&]{for(auto&p:points){crypto::Writer w;w.point(p);encoded.push_back(w.b);}});
+      |                                          ^~~~~~
+      |                                          std::end
+/usr/include/c++/12/bits/range_access.h:116:37: note: ‘std::end’ declared here
+  116 |   template<typename _Tp> const _Tp* end(const valarray<_Tp>&) noexcept;
+      |                                     ^~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:11:86: error: request for member ‘push_back’ in ‘encoded’, which is of non-class type ‘int’
+   11 |  timeIt("R7-Writer-point",[&]{for(auto&p:points){crypto::Writer w;w.point(p);encoded.push_back(w.b);}});
+      |                                                                                      ^~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:12:60: error: request for member ‘size’ in ‘points’, which is of non-class type ‘int’
+   12 |  timeIt("R1-encode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::encode(points[i])==encoded[i],"encoder bytes differ");});
+      |                                                            ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:12:84: error: ‘r1’ has not been declared
+   12 |  timeIt("R1-encode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::encode(points[i])==encoded[i],"encoder bytes differ");});
+      |                                                                                    ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:12:101: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   12 |  timeIt("R1-encode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::encode(points[i])==encoded[i],"encoder bytes differ");});
+      |                                                                                                     ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:12:114: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   12 |  timeIt("R1-encode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::encode(points[i])==encoded[i],"encoder bytes differ");});
+      |                                                                                                                  ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:13:60: error: request for member ‘size’ in ‘points’, which is of non-class type ‘int’
+   13 |  timeIt("R7-Reader-point",[&]{for(std::size_t i=0;i<points.size();++i){crypto::Reader r{encoded[i]};crypto::need(r.point()==points[i],"R7 decoder differs");r.end();}});
+      |                                                            ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:13:96: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   13 |  timeIt("R7-Reader-point",[&]{for(std::size_t i=0;i<points.size();++i){crypto::Reader r{encoded[i]};crypto::need(r.point()==points[i],"R7 decoder differs");r.end();}});
+      |                                                                                                ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:13:131: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   13 |  timeIt("R7-Reader-point",[&]{for(std::size_t i=0;i<points.size();++i){crypto::Reader r{encoded[i]};crypto::need(r.point()==points[i],"R7 decoder differs");r.end();}});
+      |                                                                                                                                   ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:14:60: error: request for member ‘size’ in ‘points’, which is of non-class type ‘int’
+   14 |  timeIt("R1-decode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::decodeG1(encoded[i])==points[i],"R1 decoder differs");});
+      |                                                            ^~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:14:84: error: ‘r1’ has not been declared
+   14 |  timeIt("R1-decode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::decodeG1(encoded[i])==points[i],"R1 decoder differs");});
+      |                                                                                    ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:14:104: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   14 |  timeIt("R1-decode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::decodeG1(encoded[i])==points[i],"R1 decoder differs");});
+      |                                                                                                        ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:14:116: error: invalid types ‘int[std::size_t {aka long unsigned int}]’ for array subscript
+   14 |  timeIt("R1-decode-point",[&]{for(std::size_t i=0;i<points.size();++i)crypto::need(r1::decodeG1(encoded[i])==points[i],"R1 decoder differs");});
+      |                                                                                                                    ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:15:8: error: ‘G1’ is not a class, namespace, or enumeration
+   15 |  prior=G1::isValidOrderFast;G1::isValidOrderFast=countOrder;
+      |        ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:15:29: error: ‘G1’ is not a class, namespace, or enumeration
+   15 |  prior=G1::isValidOrderFast;G1::isValidOrderFast=countOrder;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:16:41: error: invalid types ‘int[int]’ for array subscript
+   16 |  calls=0;crypto::Writer w;w.point(points[0]);auto writer=calls;
+      |                                         ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:18:10: error: ‘r1’ has not been declared
+   18 |  calls=0;r1::encode(points[0]);auto enc=calls;
+      |          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:18:27: error: invalid types ‘int[int]’ for array subscript
+   18 |  calls=0;r1::encode(points[0]);auto enc=calls;
+      |                           ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:19:10: error: ‘r1’ has not been declared
+   19 |  calls=0;r1::decodeG1(w.b);auto dec=calls;
+      |          ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-HYRAX-PERF-20261104-v1/codec-followup/codec_diagnostic.cpp:20:2: error: ‘G1’ is not a class, namespace, or enumeration
+   20 |  G1::isValidOrderFast=prior;
+      |  ^~

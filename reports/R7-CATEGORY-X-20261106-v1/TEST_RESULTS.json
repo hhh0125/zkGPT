@@ -1,0 +1,64 @@
+{
+  "tests": [
+    {
+      "test": "Release 全量构建",
+      "status": "PASS",
+      "log": "build-final.log"
+    },
+    {
+      "test": "完整 CTest 112/112",
+      "status": "PASS",
+      "log": "ctest.log"
+    },
+    {
+      "test": "五类/空类、120 组独立 MLE、跨两个 2^24 Chunk",
+      "status": "PASS",
+      "log": "layout-GREEN.log"
+    },
+    {
+      "test": "原始 X 提交前/后修改及双方一致修改公开 X：真实 Sigma 拒绝",
+      "status": "PASS",
+      "log": "crypto-GREEN-2.log"
+    },
+    {
+      "test": "Claim 省略、绑定/Handle/承诺篡改、X 错位及重复",
+      "status": "PASS",
+      "log": "crypto-GREEN-2.log"
+    },
+    {
+      "test": "Prover 自选 r_X、替换零盲 X Handle",
+      "status": "PASS",
+      "log": "X-binding.log"
+    },
+    {
+      "test": "K 正/负/零 stride、重复坐标、2^20 边界六例",
+      "status": "PASS",
+      "log": "kernel-probe.log"
+    },
+    {
+      "test": "新版 Oneblock 独立 V 拒绝旧布局 Proof，保留旧 Context/Statement",
+      "status": "PASS",
+      "log": "old-layout-rejection.log"
+    },
+    {
+      "test": "Oneblock 独立 P/V 与全部关系覆盖",
+      "status": "PASS",
+      "log": "oneblock-v1/RESULT.json"
+    },
+    {
+      "test": "Full12 独立 P/V 与全部关系覆盖",
+      "status": "PASS",
+      "log": "full12-v1/RESULT.json"
+    },
+    {
+      "test": "严格同 PERF6、仅切换布局的完整 A/B",
+      "status": "NOT_RUN",
+      "log": "使用已归档历史实测基线，不能作纯布局因果归因"
+    },
+    {
+      "test": "Oneblock/Full12 恶意模型权重及缺失认证 CLI 全流程重跑",
+      "status": "NOT_RUN",
+      "log": "已完成有界真实认证攻击和原有 CTest；钩子源码已修复"
+    }
+  ]
+}

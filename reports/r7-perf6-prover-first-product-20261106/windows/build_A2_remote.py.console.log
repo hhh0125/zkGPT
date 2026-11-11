@@ -1,0 +1,69 @@
+configure 0 1.721372328698635 ng CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Deprecation Warning at 3rd/mcl/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- The ASM compiler identification is GNU
+-- Found assembler: /usr/bin/cc
+-- Found GMP: /usr/include/x86_64-linux-gnu (found version "6.2.1")
+-- Found Python3: /usr/local/bin/python3.10 (found version "3.10.5") found components: Interpreter
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2") found components: Crypto
+-- Configuring done (1.3s)
+-- Generating done (0.3s)
+-- Build files have been written to: /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf6-prover-first-product-20261106
+
+all-targets 0 231.38787700980902 
+[ 97%] Linking CXX executable r7_fs_legacy45_oneblock_verifier
+[ 97%] Built target r7_fs_legacy45_oneblock_prover
+[ 98%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_product_probe.dir/perf5_product_probe.cpp.o
+[ 98%] Built target r7_fs_legacy45_oneblock_verifier
+[ 98%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_product_tests.dir/perf5_product_tests.cpp.o
+[ 98%] Linking CXX executable r7_fs_legacy45_full12_prover
+[ 98%] Built target r7_fs_legacy45_full12_prover
+[ 98%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_product_fs_probe.dir/perf5_product_fs_probe.cpp.o
+[ 98%] Linking CXX executable r7_perf5_product_tests
+[ 98%] Linking CXX executable r7_perf5_product_fs_probe
+[ 98%] Built target r7_perf5_product_tests
+[ 98%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_profile_tests.dir/perf5_profile_tests.cpp.o
+[ 98%] Built target r7_perf5_product_fs_probe
+[ 98%] Linking CXX executable r7_perf5_product_probe
+[ 98%] Built target r7_perf5_product_probe
+[ 99%] Linking CXX executable r7_perf5_profile_tests
+[ 99%] Built target r7_perf5_profile_tests
+[100%] Linking CXX executable r7_fs_legacy45_full12_verifier
+[100%] Built target r7_fs_legacy45_full12_verifier
+
+ctest 0 70.14749673940241  r7_full12_fs_framing
+ 99/108 Test #102: r7_full12_fs_framing ......................   Passed    0.00 sec
+        Start 103: r7_perf3_mapping_equivalence
+100/108 Test #103: r7_perf3_mapping_equivalence ..............   Passed    0.05 sec
+        Start 104: r7_perf4_mapping
+101/108 Test #104: r7_perf4_mapping ..........................   Passed    0.64 sec
+        Start 105: r7_perf4_native
+102/108 Test #105: r7_perf4_native ...........................   Passed    0.33 sec
+        Start 106: r7_perf3_u_equivalence
+103/108 Test  #81: r7_opt3d_streaming ........................   Passed   22.30 sec
+        Start 107: r7_perf5_product_equivalence
+104/108 Test #107: r7_perf5_product_equivalence ..............   Passed    0.02 sec
+        Start 108: r7_perf5_profile_hierarchy
+105/108 Test #108: r7_perf5_profile_hierarchy ................   Passed    0.00 sec
+106/108 Test  #92: r7_classified_layout ......................   Passed   10.97 sec
+107/108 Test #106: r7_perf3_u_equivalence ....................   Passed    6.71 sec
+108/108 Test  #68: r6_finite_threeblock ......................   Passed   52.80 sec
+
+100% tests passed, 0 tests failed out of 108
+
+Total Test time (real) =  70.07 sec
+
+GREEN: Verifier candidate environment reads = 0

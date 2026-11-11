@@ -1,0 +1,9 @@
+START configure 5
+DONE configure {"command": ["cmake", "-S", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work", "-B", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/FULL12-ONCE-20261110T020825Z", "-DCMAKE_BUILD_TYPE=Release", "-DZKGPT_BUILD_R7_FRAMEWORK=ON", "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include", "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"], "exit_code": 0, "wall_seconds": 1.8595811109989882, "peak_rss_kib": 202684, "user_cpu_seconds": 1.275198, "system_cpu_seconds": 0.550673}
+START build 147
+DONE build {"command": ["cmake", "--build", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/FULL12-ONCE-20261110T020825Z", "--target", "r7_fs_full12_prover", "r7_fs_full12_verifier", "-j4"], "exit_code": 0, "wall_seconds": 98.40010097250342, "peak_rss_kib": 430916, "user_cpu_seconds": 281.859655, "system_cpu_seconds": 14.786096}
+START P 940
+DONE P {"command": ["/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/FULL12-ONCE-20261110T020825Z/src/paper_r7/r7_fs_full12_prover", "prove", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/FULL12-ONCE-20261110T020825Z/full12.fsproof", "zkGPT/R7/five-category-committed-X/full12/20261110/once/v4"], "exit_code": 0, "wall_seconds": 3624.432880821638, "peak_rss_kib": 29984168, "user_cpu_seconds": 4350.856644, "system_cpu_seconds": 171.945956}
+START V 12893
+DONE V {"command": ["/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/FULL12-ONCE-20261110T020825Z/src/paper_r7/r7_fs_full12_verifier", "verify", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/FULL12-ONCE-20261110T020825Z/full12.fsproof", "zkGPT/R7/five-category-committed-X/full12/20261110/once/v4"], "exit_code": 0, "wall_seconds": 810.4904784169048, "peak_rss_kib": 6130920, "user_cpu_seconds": 861.932202, "system_cpu_seconds": 16.272832}
+FULL12_COMPLETE

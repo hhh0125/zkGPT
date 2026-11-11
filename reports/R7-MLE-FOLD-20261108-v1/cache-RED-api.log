@@ -1,0 +1,38 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 18%] Built target paper_r1
+[ 45%] Built target gpt_lib
+[ 54%] Built target paper_r2
+[ 95%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/category_cache_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp:11:60: error: no matching function for call to ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(int, std::vector<zkgpt::r7::oneblock::unified::Segment>&, zkgpt::r7::oneblock::unified::Inputs&, const char [9], long long unsigned int, bool)’
+   11 |   ui::FoldedU cache(8192,s,inputs,"callback",80ull<<10,true);need(cache.enabled(),"bounded callback cache not admitted");
+      |                                                            ^
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp:1:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note: candidate: ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(std::size_t, const std::vector<zkgpt::r7::oneblock::unified::Segment>&, const zkgpt::r7::oneblock::unified::Inputs&, const std::string&, uint64_t)’
+   14 |  FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget);
+      |  ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note:   candidate expects 5 arguments, 6 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp:16:19: error: ‘class zkgpt::r7::oneblock::unified::FoldedU’ has no member named ‘cached’
+   16 |    bool was=cache.cached();ui::UMetrics m;auto got=ui::quadraticRoundStreaming(8192,s,prefix,f,inputs,options,&m,&cache,"callback");
+      |                   ^~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp:26:56: error: no matching function for call to ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(int, std::vector<zkgpt::r7::oneblock::unified::Segment>&, zkgpt::r7::oneblock::unified::Inputs&, const char [6], long long unsigned int, bool)’
+   26 |  ui::FoldedU drift(8192,s,inputs,"drift",80ull<<10,true);drift.beginRound("drift",{},s);auto changed=inputs(0);changed.storage_identity=&v[1];rejects([&]{drift.span(0,"drift",{},changed);});rejects([&]{drift.beginRound("drift",{},s);});
+      |                                                        ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note: candidate: ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(std::size_t, const std::vector<zkgpt::r7::oneblock::unified::Segment>&, const zkgpt::r7::oneblock::unified::Inputs&, const std::string&, uint64_t)’
+   14 |  FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget);
+      |  ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note:   candidate expects 5 arguments, 6 provided
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_cache_tests.cpp:27:174: error: no matching function for call to ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(int, std::vector<zkgpt::r7::oneblock::unified::Segment>&, zkgpt::r7::oneblock::unified::Inputs&, const char [10], long long unsigned int, bool)’
+   27 |  ui::Inputs anonymous=[&](std::size_t k){auto out=inputs(k);out.storage_identity=nullptr;return out;};rejects([&]{ui::FoldedU bad(8192,s,anonymous,"anonymous",80ull<<10,true);});
+      |                                                                                                                                                                              ^
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note: candidate: ‘zkgpt::r7::oneblock::unified::FoldedU::FoldedU(std::size_t, const std::vector<zkgpt::r7::oneblock::unified::Segment>&, const zkgpt::r7::oneblock::unified::Inputs&, const std::string&, uint64_t)’
+   14 |  FoldedU(std::size_t,const std::vector<Segment>&,const Inputs&,const std::string&,std::uint64_t budget);
+      |  ^~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/u_fold_state.hpp:14:2: note:   candidate expects 5 arguments, 6 provided
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/category_cache_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7722: src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7729: src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/rule] Error 2
+gmake: *** [Makefile:2688: r7_category_cache_tests] Error 2

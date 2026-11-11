@@ -1,0 +1,17 @@
+all-targets 2 2.475032174959779 ifier
+[ 98%] Built target r7_perf5_product_fs_probe
+[ 99%] Built target r7_perf5_profile_tests
+[ 99%] Built target r7_perf6_messages_tests
+[ 99%] Building CXX object src/paper_r7/CMakeFiles/r7_perf6_native_probe.dir/perf6_native_probe.cpp.o
+[100%] Built target r7_perf6_product_inputs_tests
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf6_native_probe.cpp: In function ‘void {anonymous}::executeNative(zkgpt::r7::crypto::IO&, std::size_t, zkgpt::r7::crypto::Random*, const std::string&, const std::string&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf6_native_probe.cpp:38:17: error: ‘readFile’ is not a member of ‘zkgpt::r7::crypto::r1’
+   38 |   auto seed=r1::readFile(seedPath);need(seed.size()==32,"PERF6 native synthetic input seed length");base=std::make_shared<std::vector<Fr>>(2*n+1,Fr(0));base->at(0)=Fr(1);
+      |                 ^~~~~~~~
+gmake[2]: *** [src/paper_r7/CMakeFiles/r7_perf6_native_probe.dir/build.make:79: src/paper_r7/CMakeFiles/r7_perf6_native_probe.dir/perf6_native_probe.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:7442: src/paper_r7/CMakeFiles/r7_perf6_native_probe.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2
+
+Traceback (most recent call last):
+  File "<stdin>", line 16, in <module>
+AssertionError: ('STOP_BUILD_OR_CORRECTNESS', 'all-targets')

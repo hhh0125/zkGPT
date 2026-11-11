@@ -1,0 +1,11 @@
+# B2 message allocation optimization
+
+Before implementation, test-only sampled malloc stacks on n=2^23 reproduced exactly 482,003 C++ new allocations in 253 Prover Messages/Recurrence regions. Instrumented region time was 1.695045 s. All-process instrumented malloc-only elapsed was 0.014923 s (684,172 calls, 1,510,771,701 allocated bytes including trees/buffers). This is not whole allocator cost, includes instrumentation, and is not a formal timing sample. No allocator-speedup claim is based on those numbers.
+
+Sampled stacks identify Writer::text from Handle encoding, Sigma statement generation, FS event headers and test-only FixedRandom::fill. The latter uses Writer for every hash block and is absent from production SessionRandom. Thus the headline count is not purely production message object cost. Raw stacks and symbolized sites are in ALLOCATION_SOURCE.json.
+
+B2 removes temporary Bytes in Product-scoped Writer::text and writes the same four-byte little-endian length/payload after one vector resize. Sigma masks, multiplication masks, parsed points and linear weights reserve their already-validated exact bounds. No random draw, Sigma relation, response, handle validation, equation, label or message is removed. It retains statement length/wire bounds and normal rejection behavior. A thread-local stack guard scopes the experiment to hiddenProduct and restores state on normal/exceptional exit. Default is OFF; getenv is read once per Product, never once per Writer call.
+
+The RED test observed five allocations for a 128-byte string; B2 requires one, independently verifies literal canonical bytes, empty and consecutive text, max-string/wire rejection and guard restoration. Initial missing-target and namespace-typo build failures were corrected before the meaningful RED run; all logs are retained. These setup failures are not counted as a behavioral RED test.
+
+B2_ALLOCATION_RESULT.json separately compares A2 versus A2+B2 in the same binary with identical proof bytes and actual message allocation counts. B2 formal acceptance compares the explicitly named cumulative A2+B2 bundle with the original generic baseline, using the same frozen PERF6 thresholds. This does not imply A2 alone passed, or attribute all bundle gains to B2. Failed bundles stay default OFF.

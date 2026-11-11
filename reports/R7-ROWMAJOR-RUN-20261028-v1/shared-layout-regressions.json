@@ -1,0 +1,20 @@
+{
+  "name": "shared-layout-regressions",
+  "command": [
+    "ctest",
+    "--test-dir",
+    "build/release",
+    "--output-on-failure",
+    "-R",
+    "^(r1_memory|r1_range|r1_exp|r2_lookup_batch|r2_lookup_independent|r2_exp_profile|r6_trust_metadata|r6_actual_schema|r6_rowmajor_equivalence|r2_model_queries)$"
+  ],
+  "exit_code": 0,
+  "expected": 0,
+  "seconds": 30.467715513892472,
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

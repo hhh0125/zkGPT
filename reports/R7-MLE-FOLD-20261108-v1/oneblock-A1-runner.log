@@ -1,0 +1,10 @@
+RUN P ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/bin-A/r7_fs_oneblock_prover', 'prove', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/ab/oneblock-A1/oneblock-v1/oneblock.fsproof', 'zkGPT/R7/five-category-committed-X/oneblock/20261106/v4']
+DONE P {"command": ["/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/bin-A/r7_fs_oneblock_prover", "prove", "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/ab/oneblock-A1/oneblock-v1/oneblock.fsproof", "zkGPT/R7/five-category-committed-X/oneblock/20261106/v4"], "exit_code": -2, "wall_seconds": 524.9937955979258, "peak_rss_kib": 3292660, "user_cpu_seconds": 590.567356, "system_cpu_seconds": 6.566658}
+Traceback (most recent call last):
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/run_ab.py", line 16, in <module>
+    v.execute(scope)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/baseline_validation_driver.py", line 59, in execute
+    p=run(stage,'P',[BIN/('r7_fs_'+scope+'_prover'),'prove',proof,context],statement)
+  File "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/baseline_validation_driver.py", line 32, in run
+    assert (p.returncode==0 if expected==0 else p.returncode!=0),(name,out)
+AssertionError: ('P', {'command': ['/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/bin-A/r7_fs_oneblock_prover', 'prove', '/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-MLE-FOLD-20261108-v1/ab/oneblock-A1/oneblock-v1/oneblock.fsproof', 'zkGPT/R7/five-category-committed-X/oneblock/20261106/v4'], 'exit_code': -2, 'wall_seconds': 524.9937955979258, 'peak_rss_kib': 3292660, 'user_cpu_seconds': 590.567356, 'system_cpu_seconds': 6.566658})

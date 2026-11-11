@@ -1,0 +1,463 @@
+{
+  "results": {
+    "oneblock": {
+      "baseline_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/oneblock",
+      "old": {
+        "P": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_oneblock_prover",
+            "prove",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/oneblock/oneblock.fsproof",
+            "zkGPT/R7/compact-independent/oneblock/20261104/v3"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 1050.8613468352705,
+          "peak_rss_kib": 5035488,
+          "user_cpu_seconds": 1195.691431,
+          "system_cpu_seconds": 22.347577
+        },
+        "V": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-single-compact-20261104-v1/src/paper_r7/r7_fs_oneblock_verifier",
+            "verify",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-SINGLE-COMPACT-20261104-v1/oneblock/oneblock.fsproof",
+            "zkGPT/R7/compact-independent/oneblock/20261104/v3"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 334.24914530385286,
+          "peak_rss_kib": 1198756,
+          "user_cpu_seconds": 339.871675,
+          "system_cpu_seconds": 2.755705
+        },
+        "proof_bytes": 149315129,
+        "proof_sha256": "80141c1f09e6ac8e6efa259673125859256b554d3f3f5523dfd109fafd867268"
+      },
+      "new": {
+        "P": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-category-x-20261106-v1/src/paper_r7/r7_fs_oneblock_prover",
+            "prove",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CATEGORY-X-20261106-v1/oneblock-v1/oneblock.fsproof",
+            "zkGPT/R7/five-category-committed-X/oneblock/20261106/v4"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 578.4092453783378,
+          "peak_rss_kib": 3325004,
+          "user_cpu_seconds": 694.821863,
+          "system_cpu_seconds": 18.215419
+        },
+        "V": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-category-x-20261106-v1/src/paper_r7/r7_fs_oneblock_verifier",
+            "verify",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CATEGORY-X-20261106-v1/oneblock-v1/oneblock.fsproof",
+            "zkGPT/R7/five-category-committed-X/oneblock/20261106/v4"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 239.78989266138524,
+          "peak_rss_kib": 644808,
+          "user_cpu_seconds": 240.432826,
+          "system_cpu_seconds": 6.2453199999999995
+        },
+        "proof_bytes": 143266980,
+        "proof_sha256": "63303d9c86248849544571719f74ee77d06ed34c874675885893bba8cdba7eba"
+      },
+      "metrics": {
+        "P": {
+          "old": {
+            "Commit Seal": 51.6335,
+            "Source Handles": 5.72235,
+            "Claim Preparation": 30.4046,
+            "U Scan wall sum": 56.070260000000026,
+            "K Initial Build": 10.9004,
+            "K Fold wall": 19.0855,
+            "Unified Sumcheck": 117.905,
+            "Single Hyrax Opening": 48.2568,
+            "A3 Knowledge": 4.2387,
+            "A3 Inner Product": 30.6463,
+            "K RAM peak bytes": 672928504,
+            "K Builder peak bytes": 536870912,
+            "K File peak bytes": 2147483648
+          },
+          "new": {
+            "Commit Seal": 28.4838,
+            "Source Handles": 4.34128,
+            "Claim Preparation": 16.6014,
+            "U Scan wall sum": 47.153949999999995,
+            "K Initial Build": 8.75533,
+            "K Fold wall": 10.7548,
+            "Unified Sumcheck": 83.5366,
+            "Single Hyrax Opening": 17.7342,
+            "A3 Knowledge": 1.48059,
+            "A3 Inner Product": 7.88887,
+            "K RAM peak bytes": 571059696,
+            "K Builder peak bytes": 33554432,
+            "K File peak bytes": 1597440000
+          }
+        },
+        "V": {
+          "old": {
+            "Commit Seal": 4.75919,
+            "Source Handles": 2.48974,
+            "Claim Preparation": 29.9954,
+            "U Scan wall sum": null,
+            "K Initial Build": null,
+            "K Fold wall": null,
+            "Unified Sumcheck": 12.2357,
+            "Single Hyrax Opening": 6.62404,
+            "A3 Knowledge": 1.63497,
+            "A3 Inner Product": 1.79245,
+            "K RAM peak bytes": null,
+            "K Builder peak bytes": null,
+            "K File peak bytes": null
+          },
+          "new": {
+            "Commit Seal": 2.07409,
+            "Source Handles": 1.36972,
+            "Claim Preparation": 16.8637,
+            "U Scan wall sum": null,
+            "K Initial Build": null,
+            "K Fold wall": null,
+            "Unified Sumcheck": 11.8838,
+            "Single Hyrax Opening": 4.30854,
+            "A3 Knowledge": 0.834843,
+            "A3 Inner Product": 0.938974,
+            "K RAM peak bytes": null,
+            "K Builder peak bytes": null,
+            "K File peak bytes": null
+          }
+        }
+      },
+      "layout": {
+        "blocks": 1,
+        "native_master_actual": 16642424,
+        "native_X_spans": [
+          {
+            "offset": 0,
+            "count": 32768
+          }
+        ],
+        "old": {
+          "root_count": 6,
+          "sum_root_padded": 71303296,
+          "source_map_owned_payload_bytes": 133141792,
+          "logical_domain": 134217728,
+          "logical_values": 66729832,
+          "physical_values": 66664296,
+          "physical_domain": 67108864,
+          "rows": 8192,
+          "columns": 8192,
+          "commitment_count": 1,
+          "category_capacities": [
+            32768,
+            16777216,
+            128,
+            67108864
+          ]
+        },
+        "new": {
+          "category_count": 5,
+          "storage_chunks": 7,
+          "source_map_owned_payload_bytes": 10776,
+          "logical_domain": 134217728,
+          "logical_values": 66697064,
+          "physical_values": 66697064,
+          "physical_domain": 67108864,
+          "rows": 8192,
+          "columns": 8192,
+          "commitment_count": 1,
+          "categories": [
+            {
+              "category": "X",
+              "actual": 32768,
+              "padded": 32768,
+              "logical_offset": 0,
+              "physical_offset": 0,
+              "physical_length": 32768
+            },
+            {
+              "category": "W",
+              "actual": 13645824,
+              "padded": 16777216,
+              "logical_offset": 32768,
+              "physical_offset": 32768,
+              "physical_length": 13645824
+            },
+            {
+              "category": "Aux",
+              "actual": 120,
+              "padded": 128,
+              "logical_offset": 16809984,
+              "physical_offset": 13678592,
+              "physical_length": 120
+            },
+            {
+              "category": "Query",
+              "actual": 2963712,
+              "padded": 4194304,
+              "logical_offset": 16810112,
+              "physical_offset": 13678712,
+              "physical_length": 2963712
+            },
+            {
+              "category": "Helper",
+              "actual": 50054640,
+              "padded": 67108864,
+              "logical_offset": 21004416,
+              "physical_offset": 16642424,
+              "physical_length": 50054640
+            }
+          ]
+        },
+        "mapping_coverage": "PASS",
+        "status": "PUBLIC_LAYOUT_CENSUS_NO_PROOF"
+      },
+      "coverage": {
+        "old_count": 5346,
+        "new_count": 5346,
+        "removed": [],
+        "added": [],
+        "changed_family": []
+      },
+      "public_X_evidence": {
+        "id": "public/X",
+        "through_frame": 413003,
+        "last_checked_message": "coin/CategoryInput/all-claims-authenticated/ack"
+      }
+    },
+    "full12": {
+      "baseline_path": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/full12-candidate",
+      "old": {
+        "P": {
+          "args": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-candidate/src/paper_r7/r7_fs_full12_prover",
+            "prove",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/full12-candidate/full12.fsproof",
+            "zkGPT/R7/perf4/full12/20261105/v3"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 2937.058657986112,
+          "peak_rss_kib": 51762248,
+          "sampled_peak_rss_bytes": 52874510336,
+          "sampled_peak_swap_bytes": 0,
+          "user_cpu_seconds": 3554.58303,
+          "system_cpu_seconds": 135.008011,
+          "resource_failure": null,
+          "interruption": null
+        },
+        "V": {
+          "args": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-candidate/src/paper_r7/r7_fs_full12_verifier",
+            "verify",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/full12-candidate/full12.fsproof",
+            "zkGPT/R7/perf4/full12/20261105/v3"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 828.1285572834313,
+          "peak_rss_kib": 6243960,
+          "sampled_peak_rss_bytes": 6393815040,
+          "sampled_peak_swap_bytes": 0,
+          "user_cpu_seconds": 856.708877,
+          "system_cpu_seconds": 20.587118,
+          "resource_failure": null,
+          "interruption": null
+        },
+        "proof_bytes": 526435830,
+        "proof_sha256": "ff26f77c9dc445d889cab4a2427d531c299e993ef0eb7c0c23f6cf6c0bcd0a72"
+      },
+      "new": {
+        "P": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-category-x-20261106-v1/src/paper_r7/r7_fs_full12_prover",
+            "prove",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CATEGORY-X-20261106-v1/full12-v1/full12.fsproof",
+            "zkGPT/R7/five-category-committed-X/full12/20261106/v4"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 3733.0320984181017,
+          "peak_rss_kib": 37782168,
+          "user_cpu_seconds": 5058.480982,
+          "system_cpu_seconds": 259.147603
+        },
+        "V": {
+          "command": [
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-category-x-20261106-v1/src/paper_r7/r7_fs_full12_verifier",
+            "verify",
+            "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-CATEGORY-X-20261106-v1/full12-v1/full12.fsproof",
+            "zkGPT/R7/five-category-committed-X/full12/20261106/v4"
+          ],
+          "exit_code": 0,
+          "wall_seconds": 906.9170294553041,
+          "peak_rss_kib": 6131424,
+          "user_cpu_seconds": 941.214177,
+          "system_cpu_seconds": 41.262317
+        },
+        "proof_bytes": 238413515,
+        "proof_sha256": "5c5cecfbd273319704a8f8b5be3c7e5dc6b4ec128551cd701aeb334857a3151e"
+      },
+      "metrics": {
+        "P": {
+          "old": {
+            "Commit Seal": 255.703,
+            "Source Handles": 53.803,
+            "Claim Preparation": 158.424,
+            "U Scan wall sum": 13.78491785,
+            "K Initial Build": 179.019,
+            "K Fold wall": 69.1369,
+            "Unified Sumcheck": 398.919,
+            "Single Hyrax Opening": 433.521,
+            "A3 Knowledge": 54.8308,
+            "A3 Inner Product": 328.213,
+            "K RAM peak bytes": 1010259296,
+            "K Builder peak bytes": 536870912,
+            "K File peak bytes": 4294967296
+          },
+          "new": {
+            "Commit Seal": 300.359,
+            "Source Handles": 64.1256,
+            "Claim Preparation": 180.974,
+            "U Scan wall sum": 536.0176299999999,
+            "K Initial Build": 255.439,
+            "K Fold wall": 98.98,
+            "Unified Sumcheck": 1030.17,
+            "Single Hyrax Opening": 112.057,
+            "A3 Knowledge": 5.15962,
+            "A3 Inner Product": 30.5014,
+            "K RAM peak bytes": 573059008,
+            "K Builder peak bytes": 33554432,
+            "K File peak bytes": 4294967296
+          }
+        },
+        "V": {
+          "old": {
+            "Commit Seal": 7.36469,
+            "Source Handles": 17.5328,
+            "Claim Preparation": 158.723,
+            "U Scan wall sum": null,
+            "K Initial Build": null,
+            "K Fold wall": null,
+            "Unified Sumcheck": 89.8004,
+            "Single Hyrax Opening": 73.5452,
+            "A3 Knowledge": 31.3699,
+            "A3 Inner Product": 32.7602,
+            "K RAM peak bytes": null,
+            "K Builder peak bytes": null,
+            "K File peak bytes": null
+          },
+          "new": {
+            "Commit Seal": 8.15903,
+            "Source Handles": 20.0211,
+            "Claim Preparation": 181.495,
+            "U Scan wall sum": null,
+            "K Initial Build": null,
+            "K Fold wall": null,
+            "Unified Sumcheck": 116.853,
+            "Single Hyrax Opening": 15.7462,
+            "A3 Knowledge": 2.8815,
+            "A3 Inner Product": 2.99801,
+            "K RAM peak bytes": null,
+            "K Builder peak bytes": null,
+            "K File peak bytes": null
+          }
+        }
+      },
+      "layout": {
+        "blocks": 12,
+        "native_master_actual": 199348640,
+        "native_X_spans": [
+          {
+            "offset": 0,
+            "count": 32768
+          }
+        ],
+        "old": {
+          "root_count": 45,
+          "sum_root_padded": 723519488,
+          "source_map_owned_payload_bytes": 41976,
+          "logical_domain": 2147483648,
+          "logical_values": 714250256,
+          "physical_values": 714184720,
+          "physical_domain": 1073741824,
+          "rows": 32768,
+          "columns": 32768,
+          "commitment_count": 1,
+          "category_capacities": [
+            32768,
+            268435456,
+            2048,
+            1073741824
+          ]
+        },
+        "new": {
+          "category_count": 5,
+          "storage_chunks": 46,
+          "source_map_owned_payload_bytes": 42696,
+          "logical_domain": 1073741824,
+          "logical_values": 714217488,
+          "physical_values": 714217488,
+          "physical_domain": 1073741824,
+          "rows": 32768,
+          "columns": 32768,
+          "commitment_count": 1,
+          "categories": [
+            {
+              "category": "X",
+              "actual": 32768,
+              "padded": 32768,
+              "logical_offset": 0,
+              "physical_offset": 0,
+              "physical_length": 32768
+            },
+            {
+              "category": "W",
+              "actual": 163749888,
+              "padded": 268435456,
+              "logical_offset": 32768,
+              "physical_offset": 32768,
+              "physical_length": 163749888
+            },
+            {
+              "category": "Aux",
+              "actual": 1440,
+              "padded": 2048,
+              "logical_offset": 268468224,
+              "physical_offset": 163782656,
+              "physical_length": 1440
+            },
+            {
+              "category": "Query",
+              "actual": 35564544,
+              "padded": 67108864,
+              "logical_offset": 268470272,
+              "physical_offset": 163784096,
+              "physical_length": 35564544
+            },
+            {
+              "category": "Helper",
+              "actual": 514868848,
+              "padded": 536870912,
+              "logical_offset": 335579136,
+              "physical_offset": 199348640,
+              "physical_length": 514868848
+            }
+          ]
+        },
+        "mapping_coverage": "PASS",
+        "status": "PUBLIC_LAYOUT_CENSUS_NO_PROOF"
+      },
+      "coverage": {
+        "old_count": 8011,
+        "new_count": 8011,
+        "removed": [],
+        "added": [],
+        "changed_family": []
+      },
+      "public_X_evidence": {
+        "id": "public/X",
+        "through_frame": 660477,
+        "last_checked_message": "coin/CategoryInput/all-claims-authenticated/ack"
+      }
+    }
+  },
+  "limitation": "Latest available full Oneblock baseline: 2026-11-04. Adopted full Full12 PERF4 baseline: 2026-11-05. Retained PERF6 overlay and historical load/configuration confound strict attribution. Layout-only same-PERF6 A/B NOT_RUN. Timers overlap and are not additive."
+}

@@ -1,0 +1,20 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 18%] Built target paper_r1
+[ 45%] Built target gpt_lib
+[ 54%] Built target paper_r2
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_fold_state.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_streaming.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/unified_input.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/unified_input.cpp: In function ‘zkgpt::r7::oneblock::Reduction zkgpt::r7::oneblock::unified::reduce(zkgpt::r7::crypto::IO&, std::size_t, const std::vector<Segment>&, const zkgpt::r7::crypto::Hidden&, const Factors&, const std::function<mcl::FpT<mcl::bn::local::FrTag, 256>(const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&)>&, zkgpt::r7::crypto::Random*, const std::string&, PublicK*, const Inputs&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/unified_input.cpp:83:2: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+   83 |  if(io.prover() && state && inputs && ((contiguous_inputs && FoldedU::requested()) || (!contiguous_inputs && category_cache)))folded_u=std::make_unique<FoldedU>(n,segments,inputs,io.session(),contiguous_inputs?FoldedU::environmentBudget():category_budget,!contiguous_inputs);auto retained=folded_u && folded_u->enabled()?folded_u.get():nullptr;
+      |  ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/unified_input.cpp:83:276: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   83 |  if(io.prover() && state && inputs && ((contiguous_inputs && FoldedU::requested()) || (!contiguous_inputs && category_cache)))folded_u=std::make_unique<FoldedU>(n,segments,inputs,io.session(),contiguous_inputs?FoldedU::environmentBudget():category_budget,!contiguous_inputs);auto retained=folded_u && folded_u->enabled()?folded_u.get():nullptr;
+      |                                                                                                                                                                                                                                                                                    ^~~~
+cc1plus: all warnings being treated as errors
+gmake[3]: *** [src/paper_r7/CMakeFiles/paper_r7.dir/build.make:569: src/paper_r7/CMakeFiles/paper_r7.dir/unified_input.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:3689: src/paper_r7/CMakeFiles/paper_r7.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7729: src/paper_r7/CMakeFiles/r7_category_cache_tests.dir/rule] Error 2
+gmake: *** [Makefile:2688: r7_category_cache_tests] Error 2

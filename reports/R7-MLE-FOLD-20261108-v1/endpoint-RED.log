@@ -1,0 +1,24 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 57%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_category_k_endpoint_tests.dir/category_k_endpoint_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_k_endpoint_tests.cpp: In static member function ‘static void zkgpt::r7::oneblock::classified::AuthenticationTestAccess::endpoints(zkgpt::r7::oneblock::classified::Commitments&, zkgpt::r7::oneblock::classified::Layout&)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_k_endpoint_tests.cpp:28:20: error: ‘class zkgpt::r7::oneblock::classified::Commitments’ has no member named ‘categoryKernelEndpoint’; did you mean ‘categoryKernel’?
+   28 |    auto direct=pcs.categoryKernelEndpoint(q,rho,auth,false);need(direct && *direct==reference,"direct global K endpoint != independent source/global bit products");
+      |                    ^~~~~~~~~~~~~~~~~~~~~~
+      |                    categoryKernel
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_k_endpoint_tests.cpp:32:15: error: ‘class zkgpt::r7::oneblock::classified::Commitments’ has no member named ‘categoryKernelEndpoint’; did you mean ‘categoryKernel’?
+   32 |    direct=pcs.categoryKernelEndpoint(q,rho,auth,false);need(direct && *direct==reference,"fallback K endpoint differs");
+      |               ^~~~~~~~~~~~~~~~~~~~~~
+      |               categoryKernel
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_k_endpoint_tests.cpp:33:82: error: ‘class zkgpt::r7::oneblock::classified::Commitments’ has no member named ‘categoryKernelEndpoint’; did you mean ‘categoryKernel’?
+   33 |    auto&location=maps[0]->at(0);location.bias+=Fr(1);bool rejected=false;try{pcs.categoryKernelEndpoint(q,rho,auth,false);}catch(const std::exception&e){rejected=std::string(e.what()).find("source map changed")!=std::string::npos;}need(rejected,"endpoint fallback ignored mutated map");
+      |                                                                                  ^~~~~~~~~~~~~~~~~~~~~~
+      |                                                                                  categoryKernel
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_category_k_endpoint_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_category_k_endpoint_tests.dir/category_k_endpoint_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7922: src/paper_r7/CMakeFiles/r7_category_k_endpoint_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7929: src/paper_r7/CMakeFiles/r7_category_k_endpoint_tests.dir/rule] Error 2
+gmake: *** [Makefile:2753: r7_category_k_endpoint_tests] Error 2

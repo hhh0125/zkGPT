@@ -1,0 +1,5 @@
+
+add_executable(r7_category_cache_tests category_cache_tests.cpp)
+target_link_libraries(r7_category_cache_tests PRIVATE paper_r7)
+add_test(NAME r7_category_cache COMMAND r7_category_cache_tests)
+set_tests_properties(r7_category_cache PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ENVIRONMENT "ZKGPT_THREADS=4;MALLOC_ARENA_MAX=2")

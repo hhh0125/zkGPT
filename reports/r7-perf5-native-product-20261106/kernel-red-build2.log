@@ -1,0 +1,35 @@
+[  4%] Built target mcl
+[  9%] Built target mclbn256
+[ 22%] Built target paper_r1
+[ 50%] Built target gpt_lib
+[ 54%] Built target paper_r2
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_sumcheck.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_layout.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/classified_commitments.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/lookup_prepare.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_vectors.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_lookup.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_gkr.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_bindings.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_public.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_commitments.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/static_source_map.cpp.o
+[ 63%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_fold_state.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/unified_input.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/public_k.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/u_streaming.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/fs_io.cpp.o
+[ 68%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/partitioned_layout.cpp.o
+[ 72%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/full12_model.cpp.o
+[ 72%] Linking CXX static library libpaper_r7.a
+[ 95%] Built target paper_r7
+[ 95%] Building CXX object src/paper_r7/CMakeFiles/r7_perf5_product_tests.dir/perf5_product_tests.cpp.o
+[100%] Linking CXX executable r7_perf5_product_tests
+/usr/bin/ld: CMakeFiles/r7_perf5_product_tests.dir/perf5_product_tests.cpp.o: in function `main':
+perf5_product_tests.cpp:(.text.startup+0x601): undefined reference to `zkgpt::r7::oneblock::detail::productPolynomial(unsigned long, std::vector<std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)>, std::allocator<std::function<mcl::FpT<mcl::bn::local::FrTag, 256ul> (unsigned long)> > > const&, std::vector<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > >, std::allocator<std::vector<mcl::FpT<mcl::bn::local::FrTag, 256ul>, std::allocator<mcl::FpT<mcl::bn::local::FrTag, 256ul> > > > > const&, bool)'
+collect2: error: ld returned 1 exit status
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_perf5_product_tests.dir/build.make:108: src/paper_r7/r7_perf5_product_tests] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7242: src/paper_r7/CMakeFiles/r7_perf5_product_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7249: src/paper_r7/CMakeFiles/r7_perf5_product_tests.dir/rule] Error 2
+gmake: *** [Makefile:2532: r7_perf5_product_tests] Error 2

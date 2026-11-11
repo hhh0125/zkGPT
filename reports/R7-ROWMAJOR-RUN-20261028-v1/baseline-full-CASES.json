@@ -1,0 +1,410 @@
+[
+  {
+    "case": "full-P",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_prover",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 0,
+    "seconds": 1783.8202785979956,
+    "passed": true,
+    "log": "full-P.log",
+    "fs": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "session": "033510e6874427a01b0a922bf2a5323e784aa608029e39eca6188c85181629df",
+      "complete": true,
+      "proof_bytes": 675459862,
+      "proof_sha256": "aabe53c9a00c73f61e7007135e92e5f6e67222d4fe04b465526c00fe4c6b754b",
+      "transcript_digest": "b86ac1e55bd0820bd4c04fa187090eadc26ddc1c82a952239d312718e63fa82c",
+      "challenge_digest": "190851d08dd9773d17578314ce7696a288d5a0322f83275939f4070a966a1745",
+      "challenges": 99168,
+      "prover_messages": 316307,
+      "events": 415477,
+      "field_rejections": 584144,
+      "hash_seconds": 4.27823,
+      "file_io_seconds": 1.27578,
+      "file_syscalls": 2701,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 2626363,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "metrics": {
+      "status": "FS_PROOF_CREATED_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "required_count": 5351,
+      "coverage_sha256": "b3e38e0a5ffa5a297ac9752e7fa8dc41736742aa1922de43d5df8e3c5e990794",
+      "layout_id": "ed7c606074752c33dafbbf1b1e726860a1e6a231df7e19abf53917126dd9bc6b",
+      "root_count": 6,
+      "claims": 936,
+      "registered_rows": 8193,
+      "registration_response_bytes": 532819744,
+      "GKR_rounds": 627,
+      "seconds": 1782.82,
+      "wire_bytes": 675459862,
+      "P_wire_bytes": 675459862,
+      "frames": 415477,
+      "peak_rss_kib": 4381264,
+      "MSM_calls": 531884,
+      "MSM_terms": 72166749,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "frozen-witness-and-prechallenge-lookup",
+          "seconds": 51.2492,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0,
+          "rss_end_kib": 3324648,
+          "cumulative_peak_rss_kib": 3324648
+        },
+        {
+          "name": "all-classified-roots-prechallenge-seal",
+          "seconds": 158.52,
+          "P_wire_bytes": 2390252,
+          "MSM_calls": 53249,
+          "rss_end_kib": 4380968,
+          "cumulative_peak_rss_kib": 4380968
+        },
+        {
+          "name": "complete-classified-base-knowledge-and-tail",
+          "seconds": 447.66,
+          "P_wire_bytes": 533465482,
+          "MSM_calls": 20481,
+          "rss_end_kib": 4380968,
+          "cumulative_peak_rss_kib": 4380968
+        },
+        {
+          "name": "classified-public-X-Y-constants",
+          "seconds": 0.276604,
+          "P_wire_bytes": 2627388,
+          "MSM_calls": 1,
+          "rss_end_kib": 4380980,
+          "cumulative_peak_rss_kib": 4380980
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 46.5333,
+          "P_wire_bytes": 2032192,
+          "MSM_calls": 7843,
+          "rss_end_kib": 4381044,
+          "cumulative_peak_rss_kib": 4381264
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 663.588,
+          "P_wire_bytes": 129934204,
+          "MSM_calls": 448576,
+          "rss_end_kib": 3828196,
+          "cumulative_peak_rss_kib": 4381264
+        },
+        {
+          "name": "all-source-original-handles",
+          "seconds": 7.21531,
+          "P_wire_bytes": 18145,
+          "MSM_calls": 16,
+          "rss_end_kib": 3828196,
+          "cumulative_peak_rss_kib": 4381264
+        },
+        {
+          "name": "mandatory-classified-authentication-barrier",
+          "seconds": 390.708,
+          "P_wire_bytes": 2844237,
+          "MSM_calls": 1718,
+          "rss_end_kib": 3828232,
+          "cumulative_peak_rss_kib": 4381264
+        }
+      ]
+    },
+    "rejection": null,
+    "process_id": 1488582,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 600076,
+      "frozen-witness-and-prechallenge-lookup": 3323680,
+      "all-classified-roots-prechallenge-seal": 4380968,
+      "complete-classified-base-knowledge-and-tail": 4380968,
+      "classified-public-X-Y-constants": 4380980,
+      "all-native-GKR": 4381044,
+      "native-Range-Exp-Lasso-Memory-Product": 3828196,
+      "all-source-original-handles": 3828196,
+      "mandatory-classified-authentication-barrier": 4352508
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-V",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 0,
+    "seconds": 780.2646230282262,
+    "passed": true,
+    "log": "full-V.log",
+    "fs": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "session": "033510e6874427a01b0a922bf2a5323e784aa608029e39eca6188c85181629df",
+      "complete": true,
+      "proof_bytes": 675459862,
+      "proof_sha256": "aabe53c9a00c73f61e7007135e92e5f6e67222d4fe04b465526c00fe4c6b754b",
+      "transcript_digest": "b86ac1e55bd0820bd4c04fa187090eadc26ddc1c82a952239d312718e63fa82c",
+      "challenge_digest": "190851d08dd9773d17578314ce7696a288d5a0322f83275939f4070a966a1745",
+      "challenges": 99168,
+      "prover_messages": 316307,
+      "events": 415477,
+      "field_rejections": 584144,
+      "hash_seconds": 2.88008,
+      "file_io_seconds": 0.367072,
+      "file_syscalls": 10308,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 2626363,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "metrics": {
+      "status": "FS_NIZK_CANDIDATE_VERIFIED",
+      "suite": "R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1",
+      "required_count": 5351,
+      "coverage_sha256": "b3e38e0a5ffa5a297ac9752e7fa8dc41736742aa1922de43d5df8e3c5e990794",
+      "layout_id": "ed7c606074752c33dafbbf1b1e726860a1e6a231df7e19abf53917126dd9bc6b",
+      "root_count": 6,
+      "claims": 936,
+      "registered_rows": 8193,
+      "registration_response_bytes": 532819744,
+      "GKR_rounds": 627,
+      "seconds": 779.732,
+      "wire_bytes": 675459862,
+      "P_wire_bytes": 675459862,
+      "frames": 415477,
+      "peak_rss_kib": 1176160,
+      "MSM_calls": 197070,
+      "MSM_terms": 17069455,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false,
+      "phases": [
+        {
+          "name": "frozen-witness-and-prechallenge-lookup",
+          "seconds": 2.59876,
+          "P_wire_bytes": 0,
+          "MSM_calls": 0,
+          "rss_end_kib": 608116,
+          "cumulative_peak_rss_kib": 608116
+        },
+        {
+          "name": "all-classified-roots-prechallenge-seal",
+          "seconds": 17.7326,
+          "P_wire_bytes": 2390252,
+          "MSM_calls": 0,
+          "rss_end_kib": 608116,
+          "cumulative_peak_rss_kib": 608116
+        },
+        {
+          "name": "complete-classified-base-knowledge-and-tail",
+          "seconds": 316.068,
+          "P_wire_bytes": 533465482,
+          "MSM_calls": 20481,
+          "rss_end_kib": 608116,
+          "cumulative_peak_rss_kib": 608116
+        },
+        {
+          "name": "classified-public-X-Y-constants",
+          "seconds": 0.326949,
+          "P_wire_bytes": 2627388,
+          "MSM_calls": 1,
+          "rss_end_kib": 608252,
+          "cumulative_peak_rss_kib": 608252
+        },
+        {
+          "name": "all-native-GKR",
+          "seconds": 9.47079,
+          "P_wire_bytes": 2032192,
+          "MSM_calls": 2953,
+          "rss_end_kib": 597072,
+          "cumulative_peak_rss_kib": 736240
+        },
+        {
+          "name": "native-Range-Exp-Lasso-Memory-Product",
+          "seconds": 248.559,
+          "P_wire_bytes": 129934204,
+          "MSM_calls": 172989,
+          "rss_end_kib": 648784,
+          "cumulative_peak_rss_kib": 736240
+        },
+        {
+          "name": "all-source-original-handles",
+          "seconds": 3.82605,
+          "P_wire_bytes": 18145,
+          "MSM_calls": 0,
+          "rss_end_kib": 649008,
+          "cumulative_peak_rss_kib": 736240
+        },
+        {
+          "name": "mandatory-classified-authentication-barrier",
+          "seconds": 153.75,
+          "P_wire_bytes": 2844237,
+          "MSM_calls": 646,
+          "rss_end_kib": 651868,
+          "cumulative_peak_rss_kib": 1176160
+        }
+      ]
+    },
+    "rejection": null,
+    "process_id": 1522540,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 600032,
+      "frozen-witness-and-prechallenge-lookup": 608116,
+      "all-classified-roots-prechallenge-seal": 608116,
+      "complete-classified-base-knowledge-and-tail": 608252,
+      "classified-public-X-Y-constants": 608252,
+      "all-native-GKR": 736240,
+      "native-Range-Exp-Lasso-Memory-Product": 691368,
+      "all-source-original-handles": 649008,
+      "mandatory-classified-authentication-barrier": 1176160
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-wrong-context",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028-other"
+    ],
+    "exit_code": 2,
+    "seconds": 12.609366287011653,
+    "passed": true,
+    "log": "full-wrong-context.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch",
+    "process_id": 1536010,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 619608
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-wrong-X",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 16.180758270900697,
+    "passed": true,
+    "log": "full-wrong-X.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS external statement/context/parameter identity mismatch",
+    "process_id": 1536145,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 600224
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-wrong-model-identity",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/full.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 10.390147658064961,
+    "passed": true,
+    "log": "full-wrong-model-identity.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE Oneblock invalid frozen public statement",
+    "process_id": 1536575,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 484756
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-swapped-commitment-identities",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/swapped-commitment-identities.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 26.050668004900217,
+    "passed": true,
+    "log": "full-swapped-commitment-identities.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE classified wrong commitment identity/shape",
+    "process_id": 1536678,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 618324,
+      "frozen-witness-and-prechallenge-lookup": 627056,
+      "all-classified-roots-prechallenge-seal": 627056
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-tampered-proof-message",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/swapped-commitment-identities.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 19.673583989031613,
+    "passed": true,
+    "log": "full-tampered-proof-message.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE noncanonical G1",
+    "process_id": 1537241,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 619640,
+      "frozen-witness-and-prechallenge-lookup": 628436,
+      "all-classified-roots-prechallenge-seal": 628436
+    },
+    "rss_sample_interval_seconds": 0.05
+  },
+  {
+    "case": "full-appended-data",
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/src/paper_r7/r7_fs_oneblock_verifier",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-FS-RUN-20261028T080308Z/attack-temp.fsproof",
+      "zkGPT/R7/FS/test-request-20261028"
+    ],
+    "exit_code": 2,
+    "seconds": 677.365340272896,
+    "passed": true,
+    "log": "full-appended-data.log",
+    "fs": null,
+    "metrics": null,
+    "rejection": "REJECT_OR_INCOMPLETE FS appended buffered data rejected",
+    "process_id": 1537789,
+    "sampled_phase_peak_rss_kib": {
+      "startup": 600292,
+      "frozen-witness-and-prechallenge-lookup": 608236,
+      "all-classified-roots-prechallenge-seal": 608236,
+      "complete-classified-base-knowledge-and-tail": 608492,
+      "classified-public-X-Y-constants": 608492,
+      "all-native-GKR": 736548,
+      "native-Range-Exp-Lasso-Memory-Product": 691452,
+      "all-source-original-handles": 649244,
+      "mandatory-classified-authentication-barrier": 1176212
+    },
+    "rss_sample_interval_seconds": 0.05
+  }
+]

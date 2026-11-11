@@ -1,0 +1,63 @@
+{
+  "identity": {
+    "binary_sha256": "bed2087d2b95a2966807130d25070082941b1791bb2c57fec989f443ce164261",
+    "proof_sha256": "c467e7e211d6243d0be51dbeb7c12d71e2d4264c6fe8b9e8b0e8c085418f6425",
+    "proof_bytes": 1092107,
+    "perf_counter_probe": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "WARNING: perf not found for kernel 5.15.0-191\n\n  You may need to install the following packages for this specific kernel:\n    linux-tools-5.15.0-191-generic\n    linux-cloud-tools-5.15.0-191-generic\n\n  You may also want to install one of the following packages to keep up to date:\n    linux-tools-generic\n    linux-cloud-tools-generic\n"
+    },
+    "perf_counters": "NOT_MEASURED"
+  },
+  "same_proof_FS_metadata": true,
+  "compared_metadata_fields": [
+    "proof_sha256",
+    "proof_bytes",
+    "session",
+    "transcript_digest",
+    "challenge_digest",
+    "challenges",
+    "events",
+    "prover_messages",
+    "complete",
+    "field_rejections"
+  ],
+  "summary": {
+    "R0": {
+      "Product_median": 4.322744907,
+      "whole_median": 4.325714316999999,
+      "range": [
+        4.078780289,
+        4.850409755
+      ]
+    },
+    "R1": {
+      "Product_median": 4.082274846500001,
+      "whole_median": 4.0851638455,
+      "range": [
+        4.002154191,
+        4.263850975
+      ]
+    },
+    "R2": {
+      "Product_median": 4.12207,
+      "whole_median": 4.1245998539999995,
+      "range": [
+        3.99424,
+        4.76072
+      ]
+    },
+    "R3": {
+      "Product_median": 4.2762001325,
+      "whole_median": 4.2791941465,
+      "range": [
+        3.986013992,
+        4.415000366
+      ]
+    }
+  },
+  "classification": "MEASUREMENT_VARIABILITY_SUPPORTED",
+  "historical_root_cause": "UNRESOLVED; same binary and identical Proof have variation; no attribution to unmeasured effective CPU frequency/counters",
+  "analysis_failure_correction": "Initial assertion compared hash_seconds/file_io_seconds as identity. Raw results retained; corrected analysis compares only protocol identity fields. No new experiment or dropped sample."
+}

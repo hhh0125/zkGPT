@@ -1,0 +1,27 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 18%] Built target paper_r1
+[ 45%] Built target gpt_lib
+[ 54%] Built target paper_r2
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/single_hyrax.cpp.o
+[ 59%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/category_layout.cpp.o
+[ 59%] Linking CXX static library libpaper_r7.a
+[ 95%] Built target paper_r7
+[ 95%] Building CXX object src/paper_r7/CMakeFiles/r7_category_layout_tests.dir/category_layout_tests.cpp.o
+[100%] Linking CXX executable r7_category_layout_tests
+[100%] Built target r7_category_layout_tests
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 19%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 57%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_category_crypto_tests.dir/category_crypto_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_crypto_tests.cpp: In function ‘void {anonymous}::run(Tape&, const zkgpt::r7::oneblock::classified::Layout&, zkgpt::r7::oneblock::SessionRandom*, unsigned int)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/category_crypto_tests.cpp:33:6: error: ‘evaluateOracle’ was not declared in this scope
+   33 |    y=evaluateOracle(v,q);
+      |      ^~~~~~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_category_crypto_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_category_crypto_tests.dir/category_crypto_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7602: src/paper_r7/CMakeFiles/r7_category_crypto_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7609: src/paper_r7/CMakeFiles/r7_category_crypto_tests.dir/rule] Error 2
+gmake: *** [Makefile:2649: r7_category_crypto_tests] Error 2

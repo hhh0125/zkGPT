@@ -1,0 +1,53 @@
+﻿scope,process,name,wall_seconds,cpu_seconds,parent_phase,time_scope,measurement_kind,measurement_source
+full12,P,claim_map_preparation,358.118,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,prepareClaim loop
+full12,P,unified_sumcheck,1373.97,1908.46,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_SUMCHECK
+full12,P,opening_envelope,654.009,653.729,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_OPENING
+full12,P,authentication_layout_aggregation_cleanup_residual,4.993000000000109,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIFFERENCE,phase - prepareClaim - sumcheck - opening
+full12,P,compact_mapped_opening,650.406,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY
+full12,P,compact_fold_preparation,63.682,NOT_MEASURED,compact_mapped_opening,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY.preparation_seconds
+full12,P,opening_envelope_minus_compact,3.6030000000000655,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_OPENING - COMPACT_QUERY
+full12,P,protocol1_minus_compact,1740.6840000000002,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,nested_inclusive_or_derived,DIFFERENCE,PHASE - COMPACT_QUERY
+full12,P,sumcheck_rounds_sum,1373.9623000000001,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3C_ROUND
+full12,P,sumcheck_terminal_and_setup,0.007699999999886131,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_SUMCHECK - sum(round)
+full12,P,U_scan_workers_joined,652.3055,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3D_U_ROUND
+full12,P,U_K_products,200.38718061,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3D_U_ROUND
+full12,P,K_initial_and_fallback_build,355.983,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+full12,P,K_folding_including_file_IO,129.443,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+full12,P,K_io_overlaps_fold_and_provider,55.3904,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+full12,P,sumcheck_unattributed_excluding_K_IO_overlap,35.851319389999986,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,subtract disjoint scan/product/build/fold only; remaining includes initial-file writes/read checksums/dispatch/setup
+full12,V,claim_map_preparation,293.653,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,prepareClaim loop
+full12,V,unified_sumcheck,105.312,105.067,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_SUMCHECK
+full12,V,opening_envelope,79.4493,79.411,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_OPENING
+full12,V,authentication_layout_aggregation_cleanup_residual,6.6626999999999725,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIFFERENCE,phase - prepareClaim - sumcheck - opening
+full12,V,compact_mapped_opening,76.1037,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY
+full12,V,compact_fold_preparation,0.468176,NOT_MEASURED,compact_mapped_opening,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY.preparation_seconds
+full12,V,opening_envelope_minus_compact,3.3455999999999904,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_OPENING - COMPACT_QUERY
+full12,V,protocol1_minus_compact,408.9733,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,nested_inclusive_or_derived,DIFFERENCE,PHASE - COMPACT_QUERY
+full12,V,sumcheck_rounds_sum,0.22371918,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3C_ROUND
+full12,V,sumcheck_terminal_and_setup,105.08828082,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_SUMCHECK - sum(round)
+oneblock,P,claim_map_preparation,30.4046,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,prepareClaim loop
+oneblock,P,unified_sumcheck,117.905,160.976,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_SUMCHECK
+oneblock,P,opening_envelope,50.5974,50.594,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_OPENING
+oneblock,P,authentication_layout_aggregation_cleanup_residual,1.8090000000000082,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIFFERENCE,phase - prepareClaim - sumcheck - opening
+oneblock,P,compact_mapped_opening,48.2568,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY
+oneblock,P,compact_fold_preparation,11.3924,NOT_MEASURED,compact_mapped_opening,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY.preparation_seconds
+oneblock,P,opening_envelope_minus_compact,2.340600000000002,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_OPENING - COMPACT_QUERY
+oneblock,P,protocol1_minus_compact,152.4592,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,nested_inclusive_or_derived,DIFFERENCE,PHASE - COMPACT_QUERY
+oneblock,P,sumcheck_rounds_sum,117.89363,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3C_ROUND
+oneblock,P,sumcheck_terminal_and_setup,0.011369999999999436,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_SUMCHECK - sum(round)
+oneblock,P,U_scan_workers_joined,56.07026,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3D_U_ROUND
+oneblock,P,U_K_products,25.063969992,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3D_U_ROUND
+oneblock,P,K_initial_and_fallback_build,10.9004,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+oneblock,P,K_folding_including_file_IO,19.0855,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+oneblock,P,K_io_overlaps_fold_and_provider,11.9627,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIRECT,OPT3C_K
+oneblock,P,sumcheck_unattributed_excluding_K_IO_overlap,6.784870008000002,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,subtract disjoint scan/product/build/fold only; remaining includes initial-file writes/read checksums/dispatch/setup
+oneblock,V,claim_map_preparation,29.9954,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,prepareClaim loop
+oneblock,V,unified_sumcheck,12.2357,12.2327,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_SUMCHECK
+oneblock,V,opening_envelope,8.04913,8.04754,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIRECT,UNIFIED_OPENING
+oneblock,V,authentication_layout_aggregation_cleanup_residual,1.6998700000000007,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,disjoint_top_partition,DIFFERENCE,phase - prepareClaim - sumcheck - opening
+oneblock,V,compact_mapped_opening,6.62404,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY
+oneblock,V,compact_fold_preparation,0.206503,NOT_MEASURED,compact_mapped_opening,nested_inclusive_or_derived,DIRECT,COMPACT_QUERY.preparation_seconds
+oneblock,V,opening_envelope_minus_compact,1.42509,NOT_MEASURED,opening_envelope,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_OPENING - COMPACT_QUERY
+oneblock,V,protocol1_minus_compact,45.35606,NOT_MEASURED,protocol1-unified-input-sumcheck-and-opening,nested_inclusive_or_derived,DIFFERENCE,PHASE - COMPACT_QUERY
+oneblock,V,sumcheck_rounds_sum,0.12810064,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,SUM_DISJOINT,OPT3C_ROUND
+oneblock,V,sumcheck_terminal_and_setup,12.10759936,NOT_MEASURED,unified_sumcheck,nested_inclusive_or_derived,DIFFERENCE,UNIFIED_SUMCHECK - sum(round)

@@ -1,0 +1,15 @@
+[  4%] Built target mcl
+[  8%] Built target mclbn256
+[ 26%] Built target paper_r1
+[ 52%] Built target gpt_lib
+[ 60%] Built target paper_r2
+[ 95%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_perf6_messages_tests.dir/perf6_messages_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf6_messages_tests.cpp: In function ‘int main()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/perf6_messages_tests.cpp:6:2: error: ‘r1’ has not been declared
+    6 |  r1::init();const std::string label(128,'x');crypto::Writer writer;
+      |  ^~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_perf6_messages_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_perf6_messages_tests.dir/perf6_messages_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7362: src/paper_r7/CMakeFiles/r7_perf6_messages_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7369: src/paper_r7/CMakeFiles/r7_perf6_messages_tests.dir/rule] Error 2
+gmake: *** [Makefile:2571: r7_perf6_messages_tests] Error 2
