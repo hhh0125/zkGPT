@@ -1,0 +1,38 @@
+{
+  "environment": {
+    "ZKGPT_THREADS": "4",
+    "ZKGPT_U_THREADS": "4",
+    "ZKGPT_SINGLE_COMMIT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2",
+    "ZKGPT_OPT2_METRICS": "1",
+    "ZKGPT_K_COMPACT": "1",
+    "ZKGPT_CATEGORY_K_ENDPOINT": "1",
+    "ZKGPT_SOURCE_MLE_STREAM": "1",
+    "ZKGPT_U_PROFILE_READ": "0"
+  },
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "memory_kib": {
+    "MemAvailable": 396865388,
+    "SwapFree": 3141128
+  },
+  "cgroup": {
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-211093.scope/memory.current": 10045812736,
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-211093.scope/memory.peak": null
+  },
+  "load": [
+    21.31103515625,
+    26.82421875,
+    25.322265625
+  ],
+  "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+  "binary_sha256": {
+    "prover": "c8ae9f19d12ba16b189bffc1a0db30b3a3aff0898c83ea96ebb4f814d6b58dc8",
+    "verifier": "f45dfbb3e23791a2c0e86fb3e19b9e4af6aefa83f263a115a448c33f6037610f"
+  },
+  "metadata_correction": "Normalized to actual executed run() environment; mode label R8/R9 is not the old runtime mode value."
+}

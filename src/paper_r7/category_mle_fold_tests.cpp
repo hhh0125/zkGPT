@@ -37,7 +37,7 @@ int main(){try{r1::init();std::mt19937 random(20261108);std::size_t rounds=0;
   auto original=tu,local=tu,localK=tk;auto du=u,dk=k;std::vector<Fr>prefix;
   std::uint64_t read_count=0;ui::Inputs inputs=[&](std::size_t z){ui::InputSpan s;s.stored=s.padded=original[z].size();s.storage_identity=&original[z];s.read=[&,z](std::size_t j){++read_count;return original[z].at(j);};return s;};
   ui::PublicK state(segments,[&](std::size_t z){return tk.at(z);},{trial%2?128u:0u,0},"dense",plan.domain);
-  ui::FoldedU cache(plan.domain,segments,inputs,"dense",128ull<<10,true);
+  ui::FoldedU cache(plan.domain,segments,inputs,"dense");
   while(du.size()>1){
    std::array<Fr,3>eval{Fr(0),Fr(0),Fr(0)};for(unsigned x=0;x<3;++x)for(std::size_t j=0;j<du.size()/2;++j)eval[x]+=((Fr(1)-Fr(x))*du[2*j]+Fr(x)*du[2*j+1])*((Fr(1)-Fr(x))*dk[2*j]+Fr(x)*dk[2*j+1]);
    Fr c2=(eval[2]-Fr(2)*eval[1]+eval[0])/Fr(2);std::array<Fr,3>want{eval[0],eval[1]-eval[0]-c2,c2};

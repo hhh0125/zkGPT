@@ -12,7 +12,7 @@ int main(){try{r1::init();const std::size_t n=1u<<20;std::vector<Fr>v(n,Fr(1));
   need(m.storage_chunks_touched==1 && m.storage_identity_complete,"actual source chunk descriptor not counted");if(!profile)need(m.profile_refills==0 && m.timed_read_elements==0,"disabled profiler counters");
  }
  {std::vector<Fr>small(64,Fr(1));ui::Inputs input=[&](std::size_t){ui::InputSpan x;x.stored=x.padded=64;x.storage_identity=&small;x.read=[&](std::size_t j){return small.at(j);};return x;};
- ui::FoldedU state(64,{{0,64}},input,"classification",128ull<<10,true);std::vector<Fr>point;ui::Factors f=[&](std::size_t,const ui::Consume&consume){consume([&](std::size_t j){return small[j];},[](std::size_t){return Fr(0);});};
+ ui::FoldedU state(64,{{0,64}},input,"classification");std::vector<Fr>point;ui::Factors f=[&](std::size_t,const ui::Consume&consume){consume([&](std::size_t j){return small[j];},[](std::size_t){return Fr(0);});};
  for(unsigned depth=0;depth<2;++depth){ui::UMetrics m;ui::quadraticRoundStreaming(64,{{0,64}},point,f,input,ui::UOptions{},&m,&state,"classification");need(m.original_read_elements==(depth?0:64) && m.retained_read_elements==(depth?32:0) && m.storage_chunks_touched==(depth?0:1),"original source vs retained state counters");state.advance("classification",Fr(3),input);point.push_back(Fr(3));}
  }
  std::cout<<"U_MEASUREMENT_SOURCE_STATE_BUFFER_PHYSICAL_UNKNOWN_AND_PROFILE_READS_PASS\n";return 0;
