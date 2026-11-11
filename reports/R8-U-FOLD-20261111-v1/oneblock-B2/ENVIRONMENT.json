@@ -1,0 +1,42 @@
+{
+  "environment": {
+    "ZKGPT_THREADS": "4",
+    "ZKGPT_U_THREADS": "4",
+    "ZKGPT_SINGLE_COMMIT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2",
+    "ZKGPT_OPT2_METRICS": "1",
+    "ZKGPT_PERF4_U_FOLD": "1",
+    "ZKGPT_CATEGORY_U_FOLD": "1",
+    "ZKGPT_K_COMPACT": "1",
+    "ZKGPT_CATEGORY_K_ENDPOINT": "1",
+    "ZKGPT_SOURCE_MLE_STREAM": "1",
+    "ZKGPT_CATEGORY_U_RAM_BYTES": "536870912",
+    "ZKGPT_CATEGORY_U_IMMEDIATE_RAM_BYTES": "17179869184",
+    "ZKGPT_U_PROFILE_READ": "0",
+    "ZKGPT_CATEGORY_U_FOLD_MODE": "immediate"
+  },
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "memory_kib": {
+    "MemAvailable": 449303396,
+    "SwapFree": 3243188
+  },
+  "cgroup": {
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-211093.scope/memory.current": 7123873792,
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-211093.scope/memory.peak": null
+  },
+  "load": [
+    7.3271484375,
+    7.74609375,
+    8.10107421875
+  ],
+  "statement_sha256": "46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d",
+  "binary_sha256": {
+    "prover": "db1b642f61bf765154cc2a5cd7bc05508c9fbae292f7fe3746532ae9930dd877",
+    "verifier": "26abb4935bbfec6cdd3785b6bd5a94bed5307856384b2f385b5de016043bba5a"
+  }
+}
