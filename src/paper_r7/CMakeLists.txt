@@ -402,3 +402,8 @@ add_executable(r7_carry_terminal_tests carry_terminal_tests.cpp)
 target_link_libraries(r7_carry_terminal_tests PRIVATE paper_r7)
 add_test(NAME r7_carry_terminal COMMAND r7_carry_terminal_tests)
 
+add_executable(r7_product_weight_tests product_weight_tests.cpp)
+target_link_libraries(r7_product_weight_tests PRIVATE paper_r7)
+add_test(NAME r7_product_weights COMMAND r7_product_weight_tests)
+set_tests_properties(r7_product_weights PROPERTIES TIMEOUT 120 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+

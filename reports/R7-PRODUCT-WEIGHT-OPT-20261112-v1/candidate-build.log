@@ -1,0 +1,62 @@
+[  4%] Built target mcl
+[  4%] Built target mclbn256
+[ 23%] Built target paper_r1
+[ 47%] Built target gpt_lib
+[ 57%] Built target paper_r2
+[ 57%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_sumcheck.cpp.o
+[ 57%] Building CXX object src/paper_r7/CMakeFiles/paper_r7.dir/oneblock_lookup.cpp.o
+[ 57%] Linking CXX static library libpaper_r7.a
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_product_weight_tests.dir/product_weight_tests.cpp.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_tests.cpp:23:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc: In function ‘void zkgpt::r7::reference_oneblock::hiddenRange(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, unsigned int, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:69:164: error: call of overloaded ‘hiddenMemory(zkgpt::r7::crypto::IO&, __gnu_cxx::__alloc_traits<std::allocator<zkgpt::r7::oneblock::VectorOracle>, zkgpt::r7::oneblock::VectorOracle>::value_type&, __gnu_cxx::__alloc_traits<std::allocator<zkgpt::r7::oneblock::VectorOracle>, zkgpt::r7::oneblock::VectorOracle>::value_type&, std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*&, std::__cxx11::basic_string<char>, bool&)’ is ambiguous
+   69 |  for(unsigned h=0;h<count;++h){std::vector<Fr>table(std::size_t(1)<<std::min(9u,bits-9*h),Fr(0));for(std::size_t j=0;j<table.size();++j)table[j]=Fr(j);hiddenMemory(io,digits[h],digits[h],table,factory,rng,role+"/memory/"+std::to_string(h),prepared);}tail(io,q,rng,role+"/zero-tail");evidence(io,role+"/zero-tail"); // Includes a verifier-known empty tail when actual==padded.
+      |                                                                                                                                                        ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:52:6: note: candidate: ‘void zkgpt::r7::reference_oneblock::hiddenMemory(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, const zkgpt::r7::oneblock::VectorOracle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   52 | void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+      |      ^~~~~~~~~~~~
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup_tests.cpp:1,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_tests.cpp:3:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup.hpp:9:6: note: candidate: ‘void zkgpt::r7::oneblock::hiddenMemory(zkgpt::r7::crypto::IO&, const VectorOracle&, const VectorOracle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+    9 | void hiddenMemory(IO&,const VectorOracle&address,const VectorOracle&value,const std::vector<Fr>&table,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+      |      ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc: In function ‘void zkgpt::r7::reference_oneblock::hiddenExp(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, const zkgpt::r7::oneblock::VectorOracle&, zkgpt::r1::ExpProfile, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:76:13: error: call of overloaded ‘hiddenRange(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, int, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*&, std::__cxx11::basic_string<char>, bool&)’ is ambiguous
+   76 |  hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
+      |  ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:63:6: note: candidate: ‘void zkgpt::r7::reference_oneblock::hiddenRange(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, unsigned int, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   63 | void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+      |      ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup.hpp:13:6: note: candidate: ‘void zkgpt::r7::oneblock::hiddenRange(zkgpt::r7::crypto::IO&, const VectorOracle&, unsigned int, const VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   13 | void hiddenRange(IO&,const VectorOracle&,unsigned bits,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+      |      ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:76:100: error: call of overloaded ‘hiddenRange(zkgpt::r7::crypto::IO&, std::array<zkgpt::r7::oneblock::VectorOracle, 4>::value_type&, std::array<unsigned int, 3>::value_type&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*&, std::__cxx11::basic_string<char>, bool&)’ is ambiguous
+   76 |  hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
+      |                                                                                         ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:63:6: note: candidate: ‘void zkgpt::r7::reference_oneblock::hiddenRange(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, unsigned int, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   63 | void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+      |      ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup.hpp:13:6: note: candidate: ‘void zkgpt::r7::oneblock::hiddenRange(zkgpt::r7::crypto::IO&, const VectorOracle&, unsigned int, const VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   13 | void hiddenRange(IO&,const VectorOracle&,unsigned bits,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+      |      ^~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:80:417: error: call of overloaded ‘hiddenMemory(zkgpt::r7::crypto::IO&, std::array<zkgpt::r7::oneblock::VectorOracle, 4>::value_type&, std::array<zkgpt::r7::oneblock::VectorOracle, 4>::value_type&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*&, std::__cxx11::basic_string<char>, bool&)’ is ambiguous
+   80 |  auto r=point(io,index.padded,role+"/value-point");auto original=evaluate(io,value,r,rng,role+"/original-E"),native=evaluate(io,helper[3],r,rng,role+"/native-E-evaluation");auto pad=known(io,role+"/padding",Fr(Scale)*(Fr(1)-active(index.actual,r)));linear(io,role+"/value-binding",{native,original,pad},{Fr(1),Fr(-1),Fr(-1)},rng);evidence(io,role+"/value-binding/0");evidence(io,role+"/value-binding/1");hiddenMemory(io,helper[0],helper[3],r1::expTable(profile),factory,rng,role+"/indexed",prepared);
+      |                                                                                                                                                                                                                                                                                                                                                                                                                     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:52:6: note: candidate: ‘void zkgpt::r7::reference_oneblock::hiddenMemory(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, const zkgpt::r7::oneblock::VectorOracle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   52 | void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+      |      ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup.hpp:9:6: note: candidate: ‘void zkgpt::r7::oneblock::hiddenMemory(zkgpt::r7::crypto::IO&, const VectorOracle&, const VectorOracle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+    9 | void hiddenMemory(IO&,const VectorOracle&address,const VectorOracle&value,const std::vector<Fr>&table,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+      |      ^~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_tests.cpp: In lambda function:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_tests.cpp:91:60: error: too few arguments to function ‘void zkgpt::r7::reference_oneblock::hiddenMemory(zkgpt::r7::crypto::IO&, const zkgpt::r7::oneblock::VectorOracle&, const zkgpt::r7::oneblock::VectorOracle&, const std::vector<mcl::FpT<mcl::bn::local::FrTag, 256> >&, const zkgpt::r7::oneblock::VectorFactory&, zkgpt::r7::crypto::Random*, const std::string&, bool)’
+   91 |    if(reference)zkgpt::r7::reference_oneblock::hiddenMemory(io,a,v,table,make,io.prover()?&rng:nullptr,"exact/memory");
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_weight_reference.inc:52:6: note: declared here
+   52 | void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+      |      ^~~~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_product_weight_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_product_weight_tests.dir/product_weight_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:8002: src/paper_r7/CMakeFiles/r7_product_weight_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:8009: src/paper_r7/CMakeFiles/r7_product_weight_tests.dir/rule] Error 2
+gmake: *** [Makefile:2779: r7_product_weight_tests] Error 2

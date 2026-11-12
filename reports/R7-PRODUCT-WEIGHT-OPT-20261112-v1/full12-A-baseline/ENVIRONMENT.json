@@ -1,0 +1,39 @@
+{
+  "environment": {
+    "ZKGPT_THREADS": "4",
+    "ZKGPT_U_THREADS": "4",
+    "ZKGPT_SINGLE_COMMIT_THREADS": "4",
+    "MALLOC_ARENA_MAX": "2",
+    "ZKGPT_OPT2_METRICS": "1",
+    "ZKGPT_K_COMPACT": "1",
+    "ZKGPT_CATEGORY_K_ENDPOINT": "1",
+    "ZKGPT_SOURCE_MLE_STREAM": "1",
+    "ZKGPT_U_PROFILE_READ": "0",
+    "ZKGPT_PERF4_PROFILE": "1",
+    "ZKGPT_PERF5_PROFILE": "1"
+  },
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "memory_kib": {
+    "MemAvailable": 281804960,
+    "SwapFree": 792652
+  },
+  "cgroup": {
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-221456.scope/memory.current": 354578432,
+    "/sys/fs/cgroup/user.slice/user-1013.slice/session-221456.scope/memory.peak": null
+  },
+  "load": [
+    63.3837890625,
+    60.921875,
+    51.60205078125
+  ],
+  "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+  "binary_sha256": {
+    "prover": "1d76e6aec5a806ad15b17a9e74bbe344f22e638a88b404bfa7a62595753b2bcb",
+    "verifier": "bb07f5efdd424869e9a51d3c944235e03e8c01584f29db00b1213311f17b3da2"
+  }
+}
