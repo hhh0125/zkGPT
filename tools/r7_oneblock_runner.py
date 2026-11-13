@@ -3,7 +3,7 @@ from pathlib import Path
 import os,sys,json,hashlib,subprocess,time,resource,traceback
 from r7_process import run_process_group
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-stage=ROOT/sys.argv[1];assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-ONEBLOCK-RUN-')
+stage=ROOT/sys.argv[1];assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-ONEBLOCK'} and stage.name.startswith('R7-ONEBLOCK-RUN-')
 identity=json.loads((stage/'SYNC_IDENTITY.json').read_text());events=[]
 env=os.environ.copy();env.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
 def limits():
@@ -16,7 +16,7 @@ def run(label,args,timeout=180,limited=True):
 def preservation():
  source={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')}
  frozen={}
- for d in ['reports/R6A','reports/R6B-OPT2-20261021','data']:
+ for d in ['reports/R6-BASELINE/R6A','reports/R6B/R6B-OPT2-20261021','data']:
   for p in (ROOT/d).rglob('*'):
    if p.is_file():s=p.stat();frozen[str(p.relative_to(ROOT))]=[s.st_size,s.st_mtime_ns,s.st_ino]
  return dict(source_sha256=source,frozen_file_metadata=frozen)
@@ -55,6 +55,6 @@ finally:
  for n in ['r7_complete_prover','r7_complete_verifier']:
   p=ROOT/'build/release/src/paper_r7'/n
   if p.exists():(stage/(n+'-ldd.log')).write_text(subprocess.run(['ldd',str(p)],capture_output=True,text=True).stdout)
- result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
+ result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
  (stage/'RESULT.json').write_text(json.dumps(result,indent=2));print('RESULT',result['status'],flush=True)
 sys.exit(0 if result['status']!='FAILED' else 1)

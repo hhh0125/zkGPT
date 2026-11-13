@@ -2,7 +2,7 @@
 from pathlib import Path
 import json,statistics,hashlib,struct
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1';OLD=ROOT/'reports/R7-FS-RUN-20261028T080308Z'
+STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1';OLD=ROOT/'reports/R7-FS/R7-FS-RUN-20261028T080308Z'
 new=json.loads((STAGE/'full-CASES.json').read_text());old=json.loads((OLD/'CASES.json').read_text())
 new_layout=json.loads((STAGE/'full-row-V-LAYOUT.json').read_text());old_layout=json.loads((OLD/'full-V-LAYOUT.json').read_text())
 logical={}
@@ -48,7 +48,7 @@ for role,(a,b) in pairs.items():
 def root_lines(path):
  return [json.loads(x.split(' ',1)[1]) for x in path.read_text().splitlines() if x.startswith('OPT1_ROOT ')]
 roots={r:dict(column_major=root_lines(OLD/('full-'+r+'.log')),row_major=root_lines(STAGE/('full-row-'+r+'.log'))) for r in ['P','V']}
-offline_old=json.loads((ROOT/'reports/R6A/preprocess-oneblock-R6-v1.json').read_text());offline_new=json.loads((STAGE/'ANCHOR_PREPROCESSING.json').read_text())
+offline_old=json.loads((ROOT/'reports/R6-BASELINE/R6A/preprocess-oneblock-R6-v1.json').read_text());offline_new=json.loads((STAGE/'ANCHOR_PREPROCESSING.json').read_text())
 owned={layout:[] for layout in ['column','row']}
 for layout in owned:
  for repeat in range(3):

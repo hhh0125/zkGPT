@@ -275,7 +275,7 @@ add_executable(r7_full12_component_verifier full12_runtime_probe.cpp)
 target_compile_definitions(r7_full12_component_verifier PRIVATE R7_FULL12_PROBE_VERIFIER=1)
 target_link_libraries(r7_full12_component_verifier PRIVATE paper_r7)
 # Enabled only after the real candidate Oneblock P/V and16 independent
-# malicious-Proof cases passed (reports/R7-PROTOCOL1-UNIFIED-20261030-v1).
+# malicious-Proof cases passed (reports/R7-PROTOCOL1/R7-PROTOCOL1-UNIFIED-20261030-v1).
 # Explicit legacy/probe/reference targets keep their historical protocol.
 foreach(entry r7_complete_prover r7_complete_verifier r7_fs_oneblock_prover r7_fs_oneblock_verifier r7_fs_full12_prover r7_fs_full12_verifier)
  target_compile_definitions(${entry} PRIVATE R7_UNIFIED_INPUT1=1)
@@ -407,3 +407,11 @@ target_link_libraries(r7_product_weight_tests PRIVATE paper_r7)
 add_test(NAME r7_product_weights COMMAND r7_product_weight_tests)
 set_tests_properties(r7_product_weights PROPERTIES TIMEOUT 120 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+
+add_executable(r7_product_leaf_tests product_leaf_tests.cpp)
+target_link_libraries(r7_product_leaf_tests PRIVATE paper_r7)
+add_test(NAME r7_product_leaves COMMAND r7_product_leaf_tests)
+set_tests_properties(r7_product_leaves PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(r7_product_leaf_probe product_leaf_probe.cpp)
+target_link_libraries(r7_product_leaf_probe PRIVATE paper_r7)

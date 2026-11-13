@@ -4,7 +4,7 @@ import os,sys,json,time,subprocess,hashlib,struct,shutil
 from r7_process import start_interactive_child
 from classified_test_policy import validate_options,selected_attacks,completed_status,retain_stream,finish_prover
 validate_options(sys.argv[2:])
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-CLASSIFIED-RUN-')
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-CLASSIFIED'} and stage.name.startswith('R7-CLASSIFIED-RUN-')
 BIN=ROOT/'build/release/src/paper_r7';out=stage/('full-sessions' if '--full' in sys.argv else 'small-sessions');out.mkdir();cases=[]
 def env():
  e=os.environ.copy()

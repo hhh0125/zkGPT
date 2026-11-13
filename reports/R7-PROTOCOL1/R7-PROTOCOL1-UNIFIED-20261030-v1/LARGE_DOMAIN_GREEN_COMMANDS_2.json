@@ -1,0 +1,31 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/protocol1-unified-release",
+      "-j4"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 5.965088646858931
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_unified_input_tests",
+      "large-domain"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1.0003594802692533
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/protocol1-unified-release",
+      "--output-on-failure",
+      "-j1"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 166.84365345491096
+  }
+]

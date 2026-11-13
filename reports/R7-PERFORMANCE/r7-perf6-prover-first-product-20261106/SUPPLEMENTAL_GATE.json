@@ -1,0 +1,29 @@
+{
+  "frozen_before_any_supplemental_sample": true,
+  "candidate": "A2+B2+C2",
+  "reference": "generic baseline",
+  "weights": {
+    "2": 4,
+    "4": 2,
+    "16": 4,
+    "32": 3,
+    "64": 3,
+    "256": 1,
+    "1024": 66,
+    "2048": 14,
+    "8192": 1,
+    "131072": 28
+  },
+  "pairs_per_size": 3,
+  "order": "AB BA AB; fresh P/V processes",
+  "stage_seconds": 600,
+  "per_process_seconds": 180,
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "RLIMIT_AS_bytes": 12884901888,
+  "purpose": "cover remaining 126-call size distribution; descriptive only, cannot override formal PERF6 gates or establish actual Full12 speedup"
+}

@@ -1,0 +1,4490 @@
+[
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-0-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.388706671074033,
+    "cpu_seconds": 8.386322,
+    "peak_rss_kib": 313828,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-0-A-P.log",
+    "load_after": [
+      32.291015625,
+      34.67431640625,
+      33.57763671875
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.281884032,
+          "exclusive_wall": 0.019724605,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.133988863,
+          "exclusive_wall": 0.133988863,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 0.946071567,
+          "exclusive_wall": 0.946071567,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.126861271,
+          "exclusive_wall": 0.126861271,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.016670246,
+          "exclusive_wall": 0.016670246,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.282480471,
+          "exclusive_wall": 0.282480471,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005633316,
+          "exclusive_wall": 0.005633316,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.663065002,
+          "exclusive_wall": 1.663065002,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.731153625,
+          "exclusive_wall": 1.731153625,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.06559228,
+          "exclusive_wall": 0.06559228,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.631976383,
+          "exclusive_wall": 0.631976383,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.322242662,
+          "exclusive_wall": 0.322242662,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.052872955,
+          "exclusive_wall": 0.052872955,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.004969436,
+          "exclusive_wall": 0.004969436,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.278574081,
+          "exclusive_wall": 1.278574081,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 7.269e-06,
+          "exclusive_wall": 7.269e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-0-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 3.1408889396116138,
+    "cpu_seconds": 3.139669,
+    "peak_rss_kib": 139824,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-0-A-V.log",
+    "load_after": [
+      34.83056640625,
+      35.16162109375,
+      33.7412109375
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 3.129357553,
+          "exclusive_wall": 0.010358155,
+          "allocations": 277708,
+          "allocated_bytes": 286522585,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.29692097,
+          "exclusive_wall": 0.29692097,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.006875506,
+          "exclusive_wall": 0.006875506,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.173965717,
+          "exclusive_wall": 1.173965717,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.071754789,
+          "exclusive_wall": 0.071754789,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 1.1237e-05,
+          "exclusive_wall": 1.1237e-05,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.240742,
+          "exclusive_wall": 0.240742,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.038153103,
+          "exclusive_wall": 0.038153103,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.006259067,
+          "exclusive_wall": 0.006259067,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.28430006,
+          "exclusive_wall": 1.28430006,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.6949e-05,
+          "exclusive_wall": 1.6949e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-1-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.42244968842715,
+    "cpu_seconds": 8.419815,
+    "peak_rss_kib": 314100,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-1-B-P.log",
+    "load_after": [
+      34.54833984375,
+      35.08984375,
+      33.732421875
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.347159968,
+          "exclusive_wall": 0.020483519,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.128359142,
+          "exclusive_wall": 0.128359142,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 0.822533448,
+          "exclusive_wall": 0.822533448,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.115835394,
+          "exclusive_wall": 0.115835394,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.019350168,
+          "exclusive_wall": 0.019350168,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.282592391,
+          "exclusive_wall": 0.282592391,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005549562,
+          "exclusive_wall": 0.005549562,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.745336164,
+          "exclusive_wall": 1.745336164,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.756273711,
+          "exclusive_wall": 1.756273711,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.063958749,
+          "exclusive_wall": 0.063958749,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.720343751,
+          "exclusive_wall": 0.720343751,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.329763886,
+          "exclusive_wall": 0.329763886,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.055502123,
+          "exclusive_wall": 0.055502123,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.00517625,
+          "exclusive_wall": 0.00517625,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.276096318,
+          "exclusive_wall": 1.276096318,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 5.392e-06,
+          "exclusive_wall": 5.392e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680,
+        "vector_payload_bytes": 134217696
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-1-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.626373639330268,
+    "cpu_seconds": 2.625277,
+    "peak_rss_kib": 139868,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-1-B-V.log",
+    "load_after": [
+      34.54833984375,
+      35.08984375,
+      33.732421875
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 2.615331931,
+          "exclusive_wall": 0.000382401,
+          "allocations": 277642,
+          "allocated_bytes": 152303657,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005454992,
+          "exclusive_wall": 0.005454992,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.041694329,
+          "exclusive_wall": 1.041694329,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.063403973,
+          "exclusive_wall": 0.063403973,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 7.046e-06,
+          "exclusive_wall": 7.046e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.196973126,
+          "exclusive_wall": 0.196973126,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.031067047,
+          "exclusive_wall": 0.031067047,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005098485,
+          "exclusive_wall": 0.005098485,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.271233894,
+          "exclusive_wall": 1.271233894,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.6638e-05,
+          "exclusive_wall": 1.6638e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-2-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.516321985051036,
+    "cpu_seconds": 8.513059,
+    "peak_rss_kib": 313964,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-2-B-P.log",
+    "load_after": [
+      34.31005859375,
+      35.0205078125,
+      33.7236328125
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.53824913,
+          "exclusive_wall": 0.019819598,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.122123178,
+          "exclusive_wall": 0.122123178,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 0.851211743,
+          "exclusive_wall": 0.851211743,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.122427508,
+          "exclusive_wall": 0.122427508,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.017955997,
+          "exclusive_wall": 0.017955997,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.318976064,
+          "exclusive_wall": 0.318976064,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005708449,
+          "exclusive_wall": 0.005708449,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.830345836,
+          "exclusive_wall": 1.830345836,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.83650557,
+          "exclusive_wall": 1.83650557,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.06588889,
+          "exclusive_wall": 0.06588889,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.686754336,
+          "exclusive_wall": 0.686754336,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.340594118,
+          "exclusive_wall": 0.340594118,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.055662759,
+          "exclusive_wall": 0.055662759,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005282195,
+          "exclusive_wall": 0.005282195,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.25898637,
+          "exclusive_wall": 1.25898637,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 6.519e-06,
+          "exclusive_wall": 6.519e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680,
+        "vector_payload_bytes": 134217696
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-2-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.7559070764109492,
+    "cpu_seconds": 2.7543290000000002,
+    "peak_rss_kib": 139816,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-2-B-V.log",
+    "load_after": [
+      35.16650390625,
+      35.1865234375,
+      33.78466796875
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 2.744715456,
+          "exclusive_wall": 0.000381524,
+          "allocations": 277642,
+          "allocated_bytes": 152303657,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005551611,
+          "exclusive_wall": 0.005551611,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.051442664,
+          "exclusive_wall": 1.051442664,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.064155814,
+          "exclusive_wall": 0.064155814,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 6.87e-06,
+          "exclusive_wall": 6.87e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.199331147,
+          "exclusive_wall": 0.199331147,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.032009156,
+          "exclusive_wall": 0.032009156,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005209729,
+          "exclusive_wall": 0.005209729,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.386608128,
+          "exclusive_wall": 1.386608128,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.8813e-05,
+          "exclusive_wall": 1.8813e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-3-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.517190271057189,
+    "cpu_seconds": 8.513727999999999,
+    "peak_rss_kib": 313840,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-3-A-P.log",
+    "load_after": [
+      37.4755859375,
+      35.6650390625,
+      33.947265625
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.456860116,
+          "exclusive_wall": 0.01686966,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.122861331,
+          "exclusive_wall": 0.122861331,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 0.853791406,
+          "exclusive_wall": 0.853791406,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.112287203,
+          "exclusive_wall": 0.112287203,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.019404751,
+          "exclusive_wall": 0.019404751,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.314822933,
+          "exclusive_wall": 0.314822933,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005710484,
+          "exclusive_wall": 0.005710484,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.780710397,
+          "exclusive_wall": 1.780710397,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.831041433,
+          "exclusive_wall": 1.831041433,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.065813782,
+          "exclusive_wall": 0.065813782,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.645220589,
+          "exclusive_wall": 0.645220589,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.331233782,
+          "exclusive_wall": 0.331233782,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.054876849,
+          "exclusive_wall": 0.054876849,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005189684,
+          "exclusive_wall": 0.005189684,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.297018396,
+          "exclusive_wall": 1.297018396,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 7.436e-06,
+          "exclusive_wall": 7.436e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-3-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.9393815398216248,
+    "cpu_seconds": 2.9380979999999997,
+    "peak_rss_kib": 139716,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-3-A-V.log",
+    "load_after": [
+      37.1171875,
+      35.62060546875,
+      33.94189453125
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 2.92831796,
+          "exclusive_wall": 0.007149441,
+          "allocations": 277708,
+          "allocated_bytes": 286522585,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.284071321,
+          "exclusive_wall": 0.284071321,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005355313,
+          "exclusive_wall": 0.005355313,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.031843606,
+          "exclusive_wall": 1.031843606,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.063027947,
+          "exclusive_wall": 0.063027947,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 8.264e-06,
+          "exclusive_wall": 8.264e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.194567034,
+          "exclusive_wall": 0.194567034,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.029971628,
+          "exclusive_wall": 0.029971628,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.004913647,
+          "exclusive_wall": 0.004913647,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.307393897,
+          "exclusive_wall": 1.307393897,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.5862e-05,
+          "exclusive_wall": 1.5862e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-4-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.449058780446649,
+    "cpu_seconds": 8.445515,
+    "peak_rss_kib": 313868,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-4-A-P.log",
+    "load_after": [
+      39.27001953125,
+      36.091796875,
+      34.103515625
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.427725432,
+          "exclusive_wall": 0.015434388,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.12208934,
+          "exclusive_wall": 0.12208934,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 0.835948201,
+          "exclusive_wall": 0.835948201,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.116213185,
+          "exclusive_wall": 0.116213185,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.016719509,
+          "exclusive_wall": 0.016719509,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.305736904,
+          "exclusive_wall": 0.305736904,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.006073211,
+          "exclusive_wall": 0.006073211,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.77023862,
+          "exclusive_wall": 1.77023862,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.856637651,
+          "exclusive_wall": 1.856637651,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.067132738,
+          "exclusive_wall": 0.067132738,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.631895202,
+          "exclusive_wall": 0.631895202,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.3531818,
+          "exclusive_wall": 0.3531818,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.057914579,
+          "exclusive_wall": 0.057914579,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005515249,
+          "exclusive_wall": 0.005515249,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.266987564,
+          "exclusive_wall": 1.266987564,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 7.291e-06,
+          "exclusive_wall": 7.291e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-4-A.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.871955154463649,
+    "cpu_seconds": 2.870175,
+    "peak_rss_kib": 139720,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-4-A-V.log",
+    "load_after": [
+      38.767578125,
+      36.0400390625,
+      34.09716796875
+    ],
+    "n": 4194304,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 2.862156031,
+          "exclusive_wall": 0.00755935,
+          "allocations": 277708,
+          "allocated_bytes": 286522585,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.2735073,
+          "exclusive_wall": 0.2735073,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005656982,
+          "exclusive_wall": 0.005656982,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.026486766,
+          "exclusive_wall": 1.026486766,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.062703468,
+          "exclusive_wall": 0.062703468,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 7.548e-06,
+          "exclusive_wall": 7.548e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.198616489,
+          "exclusive_wall": 0.198616489,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.031898388,
+          "exclusive_wall": 0.031898388,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005234755,
+          "exclusive_wall": 0.005234755,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.250468147,
+          "exclusive_wall": 1.250468147,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.6838e-05,
+          "exclusive_wall": 1.6838e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-5-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.311532210558653,
+    "cpu_seconds": 8.308324,
+    "peak_rss_kib": 313956,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-5-B-P.log",
+    "load_after": [
+      37.88037109375,
+      35.939453125,
+      34.0849609375
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 7.326630429,
+          "exclusive_wall": 0.016371449,
+          "allocations": 596230,
+          "allocated_bytes": 767065475,
+          "exclusive_allocations": 1112,
+          "exclusive_allocated_bytes": 67543
+        },
+        "tree_alloc_init": {
+          "calls": 23,
+          "inclusive_wall": 0.114461106,
+          "exclusive_wall": 0.114461106,
+          "allocations": 46,
+          "allocated_bytes": 268436344,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 268436344
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.009419057,
+          "exclusive_wall": 1.009419057,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 22,
+          "inclusive_wall": 0.119827277,
+          "exclusive_wall": 0.119827277,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 22,
+          "inclusive_wall": 0.012292277,
+          "exclusive_wall": 0.012292277,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 22,
+          "inclusive_wall": 0.272613232,
+          "exclusive_wall": 0.272613232,
+          "allocations": 66,
+          "allocated_bytes": 134218928,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 134218928
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005266272,
+          "exclusive_wall": 0.005266272,
+          "allocations": 1298,
+          "allocated_bytes": 83762,
+          "exclusive_allocations": 1298,
+          "exclusive_allocated_bytes": 83762
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 231,
+          "inclusive_wall": 1.660232349,
+          "exclusive_wall": 1.660232349,
+          "allocations": 231,
+          "allocated_bytes": 29568,
+          "exclusive_allocations": 231,
+          "exclusive_allocated_bytes": 29568
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.733859242,
+          "exclusive_wall": 1.733859242,
+          "allocations": 442304,
+          "allocated_bytes": 21812778,
+          "exclusive_allocations": 442304,
+          "exclusive_allocated_bytes": 21812778
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.063070046,
+          "exclusive_wall": 0.063070046,
+          "allocations": 39354,
+          "allocated_bytes": 1940804,
+          "exclusive_allocations": 39354,
+          "exclusive_allocated_bytes": 1940804
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 0.611802965,
+          "exclusive_wall": 0.611802965,
+          "allocations": 63,
+          "allocated_bytes": 201326496,
+          "exclusive_allocations": 63,
+          "exclusive_allocated_bytes": 201326496
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.328617587,
+          "exclusive_wall": 0.328617587,
+          "allocations": 88436,
+          "allocated_bytes": 4003349,
+          "exclusive_allocations": 88436,
+          "exclusive_allocated_bytes": 4003349
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.053300564,
+          "exclusive_wall": 0.053300564,
+          "allocations": 18571,
+          "allocated_bytes": 738744,
+          "exclusive_allocations": 18571,
+          "exclusive_allocated_bytes": 738744
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005015184,
+          "exclusive_wall": 0.005015184,
+          "allocations": 3787,
+          "allocated_bytes": 148733,
+          "exclusive_allocations": 3787,
+          "exclusive_allocated_bytes": 148733
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.320475274,
+          "exclusive_wall": 1.320475274,
+          "allocations": 939,
+          "allocated_bytes": 134257713,
+          "exclusive_allocations": 939,
+          "exclusive_allocated_bytes": 134257713
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 6.548e-06,
+          "exclusive_wall": 6.548e-06,
+          "allocations": 23,
+          "allocated_bytes": 713,
+          "exclusive_allocations": 23,
+          "exclusive_allocated_bytes": 713
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 22,
+        "elements": 4194303,
+        "field_multiplications": 8388562,
+        "analytical_written_bytes": 402651680,
+        "vector_payload_bytes": 134217696
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-5-B.fsproof",
+      "4194304"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.747325570322573,
+    "cpu_seconds": 2.7455730000000003,
+    "peak_rss_kib": 140056,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-4194304-5-B-V.log",
+    "load_after": [
+      37.88037109375,
+      35.939453125,
+      34.0849609375
+    ],
+    "n": 4194304,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 4194304,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 2.737471458,
+          "exclusive_wall": 0.000376845999999,
+          "allocations": 277642,
+          "allocated_bytes": 152303657,
+          "exclusive_allocations": 952,
+          "exclusive_allocated_bytes": 62311
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 22,
+          "inclusive_wall": 0.005882205,
+          "exclusive_wall": 0.005882205,
+          "allocations": 1166,
+          "allocated_bytes": 78578,
+          "exclusive_allocations": 1166,
+          "exclusive_allocated_bytes": 78578
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 231,
+          "inclusive_wall": 1.108454166,
+          "exclusive_wall": 1.108454166,
+          "allocations": 187383,
+          "allocated_bytes": 13094482,
+          "exclusive_allocations": 187383,
+          "exclusive_allocated_bytes": 13094482
+        },
+        "challenge_and_derived": {
+          "calls": 231,
+          "inclusive_wall": 0.067646379,
+          "exclusive_wall": 0.067646379,
+          "allocations": 37968,
+          "allocated_bytes": 1881836,
+          "exclusive_allocations": 37968,
+          "exclusive_allocated_bytes": 1881836
+        },
+        "fold_callback_arithmetic": {
+          "calls": 231,
+          "inclusive_wall": 8.12e-06,
+          "exclusive_wall": 8.12e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.207537831,
+          "exclusive_wall": 0.207537831,
+          "allocations": 36139,
+          "allocated_bytes": 2329536,
+          "exclusive_allocations": 36139,
+          "exclusive_allocated_bytes": 2329536
+        },
+        "equality_authentication": {
+          "calls": 22,
+          "inclusive_wall": 0.032725955,
+          "exclusive_wall": 0.032725955,
+          "allocations": 9769,
+          "allocated_bytes": 465511,
+          "exclusive_allocations": 9769,
+          "exclusive_allocated_bytes": 465511
+        },
+        "carry_and_binding": {
+          "calls": 22,
+          "inclusive_wall": 0.005443517,
+          "exclusive_wall": 0.005443517,
+          "allocations": 3655,
+          "allocated_bytes": 144407,
+          "exclusive_allocations": 3655,
+          "exclusive_allocated_bytes": 144407
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 1.30938176,
+          "exclusive_wall": 1.30938176,
+          "allocations": 564,
+          "allocated_bytes": 134245768,
+          "exclusive_allocations": 564,
+          "exclusive_allocated_bytes": 134245768
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.4679e-05,
+          "exclusive_wall": 1.4679e-05,
+          "allocations": 46,
+          "allocated_bytes": 1228,
+          "exclusive_allocations": 46,
+          "exclusive_allocated_bytes": 1228
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-0-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 14.132965231314301,
+    "cpu_seconds": 14.128760999999999,
+    "peak_rss_kib": 608848,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-0-A-P.log",
+    "load_after": [
+      39.28125,
+      36.31005859375,
+      34.234375
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 12.113567207,
+          "exclusive_wall": 0.032832071,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.210397581,
+          "exclusive_wall": 0.210397581,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.648644909,
+          "exclusive_wall": 1.648644909,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.2245404,
+          "exclusive_wall": 0.2245404,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.019848031,
+          "exclusive_wall": 0.019848031,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.566820152,
+          "exclusive_wall": 0.566820152,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005704483,
+          "exclusive_wall": 0.005704483,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.31094068,
+          "exclusive_wall": 3.31094068,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.912107799,
+          "exclusive_wall": 1.912107799,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.068993055,
+          "exclusive_wall": 0.068993055,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.207583425,
+          "exclusive_wall": 1.207583425,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.350350362,
+          "exclusive_wall": 0.350350362,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.055534752,
+          "exclusive_wall": 0.055534752,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005351423,
+          "exclusive_wall": 0.005351423,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.493910532,
+          "exclusive_wall": 2.493910532,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 7.552e-06,
+          "exclusive_wall": 7.552e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-0-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 4.698557364754379,
+    "cpu_seconds": 4.696855,
+    "peak_rss_kib": 270700,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-0-A-V.log",
+    "load_after": [
+      38.77783203125,
+      36.2548828125,
+      34.2275390625
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 4.687964869,
+          "exclusive_wall": 0.016703584,
+          "allocations": 302027,
+          "allocated_bytes": 556523457,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.571076842,
+          "exclusive_wall": 0.571076842,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.006118557,
+          "exclusive_wall": 0.006118557,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.152474316,
+          "exclusive_wall": 1.152474316,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.070761555,
+          "exclusive_wall": 0.070761555,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 7.723e-06,
+          "exclusive_wall": 7.723e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.215183052,
+          "exclusive_wall": 0.215183052,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.034073762,
+          "exclusive_wall": 0.034073762,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.00570814,
+          "exclusive_wall": 0.00570814,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.615839629,
+          "exclusive_wall": 2.615839629,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.7709e-05,
+          "exclusive_wall": 1.7709e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-1-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 14.286165592260659,
+    "cpu_seconds": 14.281127,
+    "peak_rss_kib": 609056,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-1-B-P.log",
+    "load_after": [
+      37.57763671875,
+      36.111328125,
+      34.21240234375
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 12.382552301,
+          "exclusive_wall": 0.037717431,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.239235927,
+          "exclusive_wall": 0.239235927,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.671197977,
+          "exclusive_wall": 1.671197977,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.238997832,
+          "exclusive_wall": 0.238997832,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.028025053,
+          "exclusive_wall": 0.028025053,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.564302623,
+          "exclusive_wall": 0.564302623,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005585255,
+          "exclusive_wall": 0.005585255,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.35852373,
+          "exclusive_wall": 3.35852373,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.891891845,
+          "exclusive_wall": 1.891891845,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.06826308,
+          "exclusive_wall": 0.06826308,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.279291013,
+          "exclusive_wall": 1.279291013,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.333753861,
+          "exclusive_wall": 0.333753861,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.054237602,
+          "exclusive_wall": 0.054237602,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005176478,
+          "exclusive_wall": 0.005176478,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.606345851,
+          "exclusive_wall": 2.606345851,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 6.743e-06,
+          "exclusive_wall": 6.743e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800,
+        "vector_payload_bytes": 268435424
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-1-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 3.9596312632784247,
+    "cpu_seconds": 3.957382,
+    "peak_rss_kib": 270836,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-1-B-V.log",
+    "load_after": [
+      37.2109375,
+      36.0595703125,
+      34.20556640625
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 3.948923252,
+          "exclusive_wall": 0.000369309999999,
+          "allocations": 301958,
+          "allocated_bytes": 288086745,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005490222,
+          "exclusive_wall": 0.005490222,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.100094691,
+          "exclusive_wall": 1.100094691,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.068043215,
+          "exclusive_wall": 0.068043215,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 7.662e-06,
+          "exclusive_wall": 7.662e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.20250054,
+          "exclusive_wall": 0.20250054,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.031645885,
+          "exclusive_wall": 0.031645885,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005323186,
+          "exclusive_wall": 0.005323186,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.535429952,
+          "exclusive_wall": 2.535429952,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.8589e-05,
+          "exclusive_wall": 1.8589e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-2-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 14.507768428884447,
+    "cpu_seconds": 14.504043,
+    "peak_rss_kib": 608956,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-2-B-P.log",
+    "load_after": [
+      36.27734375,
+      35.90869140625,
+      34.18505859375
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 12.570830409,
+          "exclusive_wall": 0.040000964,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.259070964,
+          "exclusive_wall": 0.259070964,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.701105754,
+          "exclusive_wall": 1.701105754,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.24173562,
+          "exclusive_wall": 0.24173562,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.035824343,
+          "exclusive_wall": 0.035824343,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.581990017,
+          "exclusive_wall": 0.581990017,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005739273,
+          "exclusive_wall": 0.005739273,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.397212678,
+          "exclusive_wall": 3.397212678,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.919007248,
+          "exclusive_wall": 1.919007248,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.069544923,
+          "exclusive_wall": 0.069544923,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.281921173,
+          "exclusive_wall": 1.281921173,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.345757549,
+          "exclusive_wall": 0.345757549,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.059650483,
+          "exclusive_wall": 0.059650483,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005412475,
+          "exclusive_wall": 0.005412475,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.62685079,
+          "exclusive_wall": 2.62685079,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 6.155e-06,
+          "exclusive_wall": 6.155e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800,
+        "vector_payload_bytes": 268435424
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-2-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 4.088374059647322,
+    "cpu_seconds": 4.086644000000001,
+    "peak_rss_kib": 270752,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-2-B-V.log",
+    "load_after": [
+      36.27734375,
+      35.90869140625,
+      34.18505859375
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 4.078097363,
+          "exclusive_wall": 0.000354218,
+          "allocations": 301958,
+          "allocated_bytes": 288086745,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005574236,
+          "exclusive_wall": 0.005574236,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.12250186,
+          "exclusive_wall": 1.12250186,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.069111055,
+          "exclusive_wall": 0.069111055,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.1616e-05,
+          "exclusive_wall": 1.1616e-05,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.204346986,
+          "exclusive_wall": 0.204346986,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.032086547,
+          "exclusive_wall": 0.032086547,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005393017,
+          "exclusive_wall": 0.005393017,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.638697891,
+          "exclusive_wall": 2.638697891,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 1.9937e-05,
+          "exclusive_wall": 1.9937e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-3-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 14.869305785745382,
+    "cpu_seconds": 14.861991,
+    "peak_rss_kib": 608828,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-3-A-P.log",
+    "load_after": [
+      35.62451171875,
+      35.78173828125,
+      34.1708984375
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 12.909587198,
+          "exclusive_wall": 0.045489934,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.277693553,
+          "exclusive_wall": 0.277693553,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.715080737,
+          "exclusive_wall": 1.715080737,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.234064974,
+          "exclusive_wall": 0.234064974,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.040451563,
+          "exclusive_wall": 0.040451563,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.647109753,
+          "exclusive_wall": 0.647109753,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005846861,
+          "exclusive_wall": 0.005846861,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.453450934,
+          "exclusive_wall": 3.453450934,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.984639946,
+          "exclusive_wall": 1.984639946,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.071685801,
+          "exclusive_wall": 0.071685801,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.336490537,
+          "exclusive_wall": 1.336490537,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.350384865,
+          "exclusive_wall": 0.350384865,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.056517063,
+          "exclusive_wall": 0.056517063,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005479371,
+          "exclusive_wall": 0.005479371,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.685191976,
+          "exclusive_wall": 2.685191976,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 9.33e-06,
+          "exclusive_wall": 9.33e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-3-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 4.870583109557629,
+    "cpu_seconds": 4.867879,
+    "peak_rss_kib": 270904,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-3-A-V.log",
+    "load_after": [
+      35.494140625,
+      35.751953125,
+      34.169921875
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 4.857885271,
+          "exclusive_wall": 0.026216762,
+          "allocations": 302027,
+          "allocated_bytes": 556523457,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.644297448,
+          "exclusive_wall": 0.644297448,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005975418,
+          "exclusive_wall": 0.005975418,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.150552551,
+          "exclusive_wall": 1.150552551,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.070606843,
+          "exclusive_wall": 0.070606843,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 9.044e-06,
+          "exclusive_wall": 9.044e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.210907898,
+          "exclusive_wall": 0.210907898,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.033661072,
+          "exclusive_wall": 0.033661072,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005665471,
+          "exclusive_wall": 0.005665471,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.70996915,
+          "exclusive_wall": 2.70996915,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 2.3614e-05,
+          "exclusive_wall": 2.3614e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-4-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 15.24016523361206,
+    "cpu_seconds": 15.23348,
+    "peak_rss_kib": 609060,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-4-A-P.log",
+    "load_after": [
+      35.08837890625,
+      35.64892578125,
+      34.16162109375
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 13.198979701,
+          "exclusive_wall": 0.057841047,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.368902587,
+          "exclusive_wall": 0.368902587,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.736083685,
+          "exclusive_wall": 1.736083685,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.27454253,
+          "exclusive_wall": 0.27454253,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.051908944,
+          "exclusive_wall": 0.051908944,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.640692027,
+          "exclusive_wall": 0.640692027,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005945826,
+          "exclusive_wall": 0.005945826,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.436315333,
+          "exclusive_wall": 3.436315333,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.947428336,
+          "exclusive_wall": 1.947428336,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.070704354,
+          "exclusive_wall": 0.070704354,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.485944997,
+          "exclusive_wall": 1.485944997,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.357113688,
+          "exclusive_wall": 0.357113688,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.057742548,
+          "exclusive_wall": 0.057742548,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005593285,
+          "exclusive_wall": 0.005593285,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.702212556,
+          "exclusive_wall": 2.702212556,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 7.958e-06,
+          "exclusive_wall": 7.958e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/baseline-bin/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-4-A.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 5.022489066235721,
+    "cpu_seconds": 5.020059,
+    "peak_rss_kib": 270856,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-4-A-V.log",
+    "load_after": [
+      35.0810546875,
+      35.6376953125,
+      34.16650390625
+    ],
+    "n": 8388608,
+    "label": "A",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 5.009343302,
+          "exclusive_wall": 0.026061405,
+          "allocations": 302027,
+          "allocated_bytes": 556523457,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.674101314,
+          "exclusive_wall": 0.674101314,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005974026,
+          "exclusive_wall": 0.005974026,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.156792538,
+          "exclusive_wall": 1.156792538,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.070851068,
+          "exclusive_wall": 0.070851068,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 9.037e-06,
+          "exclusive_wall": 9.037e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.208769838,
+          "exclusive_wall": 0.208769838,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.033095333,
+          "exclusive_wall": 0.033095333,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005594257,
+          "exclusive_wall": 0.005594257,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.828072844,
+          "exclusive_wall": 2.828072844,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 2.1642e-05,
+          "exclusive_wall": 2.1642e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "prove",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-5-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 15.243349082767963,
+    "cpu_seconds": 15.237757,
+    "peak_rss_kib": 608852,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-5-B-P.log",
+    "load_after": [
+      34.5458984375,
+      35.4912109375,
+      34.14208984375
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "P",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": true,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 13.167271572,
+          "exclusive_wall": 0.056622688,
+          "allocations": 647703,
+          "allocated_bytes": 1507755461,
+          "exclusive_allocations": 1196,
+          "exclusive_allocated_bytes": 73094
+        },
+        "tree_alloc_init": {
+          "calls": 24,
+          "inclusive_wall": 0.347630213,
+          "exclusive_wall": 0.347630213,
+          "allocations": 48,
+          "allocated_bytes": 536871840,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 536871840
+        },
+        "tree_leaf_callback": {
+          "calls": 1,
+          "inclusive_wall": 1.751466781,
+          "exclusive_wall": 1.751466781,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 23,
+          "inclusive_wall": 0.258896998,
+          "exclusive_wall": 0.258896998,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 23,
+          "inclusive_wall": 0.050245046,
+          "exclusive_wall": 0.050245046,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 23,
+          "inclusive_wall": 0.644891134,
+          "exclusive_wall": 0.644891134,
+          "allocations": 69,
+          "allocated_bytes": 268436712,
+          "exclusive_allocations": 69,
+          "exclusive_allocated_bytes": 268436712
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005821744,
+          "exclusive_wall": 0.005821744,
+          "allocations": 1357,
+          "allocated_bytes": 87583,
+          "exclusive_allocations": 1357,
+          "exclusive_allocated_bytes": 87583
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 253,
+          "inclusive_wall": 3.447755879,
+          "exclusive_wall": 3.447755879,
+          "allocations": 253,
+          "allocated_bytes": 32384,
+          "exclusive_allocations": 253,
+          "exclusive_allocated_bytes": 32384
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.962423281,
+          "exclusive_wall": 1.962423281,
+          "allocations": 481483,
+          "allocated_bytes": 23769485,
+          "exclusive_allocations": 481483,
+          "exclusive_allocated_bytes": 23769485
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.070870347,
+          "exclusive_wall": 0.070870347,
+          "allocations": 45746,
+          "allocated_bytes": 2222561,
+          "exclusive_allocations": 45746,
+          "exclusive_allocated_bytes": 2222561
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 1.45551676,
+          "exclusive_wall": 1.45551676,
+          "allocations": 66,
+          "allocated_bytes": 402653088,
+          "exclusive_allocations": 66,
+          "exclusive_allocated_bytes": 402653088
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.354572225,
+          "exclusive_wall": 0.354572225,
+          "allocations": 92384,
+          "allocated_bytes": 4182411,
+          "exclusive_allocations": 92384,
+          "exclusive_allocated_bytes": 4182411
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.057454316,
+          "exclusive_wall": 0.057454316,
+          "allocations": 19221,
+          "allocated_bytes": 765874,
+          "exclusive_allocations": 19221,
+          "exclusive_allocated_bytes": 765874
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005565785,
+          "exclusive_wall": 0.005565785,
+          "allocations": 5003,
+          "allocated_bytes": 187481,
+          "exclusive_allocations": 5003,
+          "exclusive_allocated_bytes": 187481
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.697528968,
+          "exclusive_wall": 2.697528968,
+          "allocations": 853,
+          "allocated_bytes": 268472204,
+          "exclusive_allocations": 853,
+          "exclusive_allocated_bytes": 268472204
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 9.407e-06,
+          "exclusive_wall": 9.407e-06,
+          "allocations": 24,
+          "allocated_bytes": 744,
+          "exclusive_allocations": 24,
+          "exclusive_allocated_bytes": 744
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 23,
+        "elements": 8388607,
+        "field_multiplications": 16777168,
+        "analytical_written_bytes": 805304800,
+        "vector_payload_bytes": 268435424
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  },
+  {
+    "command": [
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-weight-20261112-v1/src/paper_r7/r7_perf5_product_fs_probe",
+      "verify",
+      "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-5-B.fsproof",
+      "8388608"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 4.443240090273321,
+    "cpu_seconds": 4.437958,
+    "peak_rss_kib": 270756,
+    "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1/product-8388608-5-B-V.log",
+    "load_after": [
+      34.501953125,
+      35.46630859375,
+      34.14111328125
+    ],
+    "n": 8388608,
+    "label": "B",
+    "role": "V",
+    "product": {
+      "role": "perf5/product",
+      "n": 8388608,
+      "prover": false,
+      "regions": {
+        "total": {
+          "calls": 1,
+          "inclusive_wall": 4.426911506,
+          "exclusive_wall": 0.000384991999999,
+          "allocations": 301958,
+          "allocated_bytes": 288086745,
+          "exclusive_allocations": 1029,
+          "exclusive_allocated_bytes": 67670
+        },
+        "tree_alloc_init": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_leaf_callback": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_parent": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "tree_free": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "expression_init": {
+          "calls": 23,
+          "inclusive_wall": 0.005724114,
+          "exclusive_wall": 0.005724114,
+          "allocations": 1219,
+          "allocated_bytes": 82162,
+          "exclusive_allocations": 1219,
+          "exclusive_allocated_bytes": 82162
+        },
+        "polynomial_callback_arithmetic_reduction": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "messages_and_recurrence_verification": {
+          "calls": 253,
+          "inclusive_wall": 1.151919784,
+          "exclusive_wall": 1.151919784,
+          "allocations": 202304,
+          "allocated_bytes": 14220660,
+          "exclusive_allocations": 202304,
+          "exclusive_allocated_bytes": 14220660
+        },
+        "challenge_and_derived": {
+          "calls": 253,
+          "inclusive_wall": 0.07081424,
+          "exclusive_wall": 0.07081424,
+          "allocations": 44228,
+          "allocated_bytes": 2157947,
+          "exclusive_allocations": 44228,
+          "exclusive_allocated_bytes": 2157947
+        },
+        "fold_callback_arithmetic": {
+          "calls": 253,
+          "inclusive_wall": 7.577e-06,
+          "exclusive_wall": 7.577e-06,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        },
+        "endpoint_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.209419928,
+          "exclusive_wall": 0.209419928,
+          "allocations": 37719,
+          "allocated_bytes": 2432571,
+          "exclusive_allocations": 37719,
+          "exclusive_allocated_bytes": 2432571
+        },
+        "equality_authentication": {
+          "calls": 23,
+          "inclusive_wall": 0.033266752,
+          "exclusive_wall": 0.033266752,
+          "allocations": 10060,
+          "allocated_bytes": 481070,
+          "exclusive_allocations": 10060,
+          "exclusive_allocated_bytes": 481070
+        },
+        "carry_and_binding": {
+          "calls": 23,
+          "inclusive_wall": 0.005573268,
+          "exclusive_wall": 0.005573268,
+          "allocations": 4865,
+          "allocated_bytes": 182957,
+          "exclusive_allocations": 4865,
+          "exclusive_allocated_bytes": 182957
+        },
+        "leaf_authentication": {
+          "calls": 1,
+          "inclusive_wall": 2.94978064,
+          "exclusive_wall": 2.94978064,
+          "allocations": 486,
+          "allocated_bytes": 268460426,
+          "exclusive_allocations": 486,
+          "exclusive_allocated_bytes": 268460426
+        },
+        "coverage": {
+          "calls": 1,
+          "inclusive_wall": 2.0211e-05,
+          "exclusive_wall": 2.0211e-05,
+          "allocations": 48,
+          "allocated_bytes": 1282,
+          "exclusive_allocations": 48,
+          "exclusive_allocated_bytes": 1282
+        },
+        "leaf_evaluate_weights": {
+          "calls": 0,
+          "inclusive_wall": 0,
+          "exclusive_wall": 0,
+          "allocations": 0,
+          "allocated_bytes": 0,
+          "exclusive_allocations": 0,
+          "exclusive_allocated_bytes": 0
+        }
+      },
+      "weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "analytical_written_bytes": 0,
+        "vector_payload_bytes": 0
+      },
+      "leaf_evaluate_weights": {
+        "calls": 0,
+        "elements": 0,
+        "field_multiplications": 0,
+        "vector_payload_bytes": 0
+      }
+    },
+    "public_fingerprint_surrogate": true
+  }
+]

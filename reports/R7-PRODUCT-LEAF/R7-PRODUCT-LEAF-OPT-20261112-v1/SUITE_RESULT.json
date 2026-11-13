@@ -1,0 +1,20 @@
+{
+  "all_target_build": true,
+  "ctest_passed": 120,
+  "ctest_total": 121,
+  "ctest_success": false,
+  "known_existing_failure": "r7_zero_suffix_storage: R7 source allocation still materializes padded witness suffix",
+  "baseline_and_candidate_reproduction": {
+    "isolated-candidate": {
+      "binary_sha256": "e9244a215b6f2cb9c1ca5c59af8e3082fb76dbc1d7f631076eb5a4c86b7dd3ce",
+      "exit_code": 1,
+      "same_allocation_budget_failure": true
+    },
+    "retained-release": {
+      "binary_sha256": "434dbd3dcebb3d3e197d4cd82c465880334b403b41161dae957f78e49001b7aa",
+      "exit_code": 1,
+      "same_allocation_budget_failure": true
+    }
+  },
+  "ruling": "retain failure and continue scoped Product validation; no changes to unrelated storage/parallel/U code"
+}

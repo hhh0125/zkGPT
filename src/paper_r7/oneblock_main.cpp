@@ -168,7 +168,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  std::string mode=argv[1],attack=isP && argc==3?argv[2]:"";need(mode=="setup" || mode=="run","Oneblock unknown mode");
  [[maybe_unused]] const char*successStatus="ONEBLOCK_CLASSIFIED_INTERACTIVE_ACCEPT";
 #endif
- if(mode=="setup"){need(isP && argc==2,"Oneblock only P creates public test claim");R7WitnessStore w;{master3::QuietStdout quiet;w.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");}auto s=makeStatement(ctx,w.publicX(),w.publicY(ctx));auto b=R7Wire::encodeStatement(s);output(fd("R7_ONEBLOCK_STATEMENT_OUT_FD"),std::string(b.begin(),b.end()));std::cerr<<"PUBLIC_X_Y_CLAIM_CREATED_NO_PRIVATE_WITNESS_EXPORT\n";return 0;}
+ if(mode=="setup"){need(isP && argc==2,"Oneblock only P creates public test claim");R7WitnessStore w;{master3::QuietStdout quiet;w.generateR6(ctx,"reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");}auto s=makeStatement(ctx,w.publicX(),w.publicY(ctx));auto b=R7Wire::encodeStatement(s);output(fd("R7_ONEBLOCK_STATEMENT_OUT_FD"),std::string(b.begin(),b.end()));std::cerr<<"PUBLIC_X_Y_CLAIM_CREATED_NO_PRIVATE_WITNESS_EXPORT\n";return 0;}
  auto statement_bytes=publicStatement(fd("R7_ONEBLOCK_STATEMENT_FD"));auto s=R7Wire::decodeStatement(statement_bytes);need(validateStatement(s,ctx).code==Code::Ok,"Oneblock invalid frozen public statement");
  // Each process independently owns the public statement. Test harness mutates
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
@@ -240,7 +240,7 @@ instance.raw(statement_bytes);
  auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
  R7WitnessStore witness;std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;Value master;master3::Secret masterSecret;master3::Master pc;
- timed("frozen-witness-and-master-commitment",[&]{if(isP){{master3::QuietStdout quiet;witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");}graph=&witness.executionForR7().C;
+ timed("frozen-witness-and-master-commitment",[&]{if(isP){{master3::QuietStdout quiet;witness.generateR6(ctx,"reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");}graph=&witness.executionForR7().C;
   if(attack=="wrong-internal" || attack=="wrong-weight"){auto layout=master3::trustedLayout(ctx);auto it=std::find_if(layout.regions.begin(),layout.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=layout.regions.end(),"Oneblock attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
   master=masterValue(witness);masterSecret=master3::commitMaster(master3::makeSpec(master3::trustedLayout(ctx),ctx.plan.master.padded),master);pc=masterSecret.public_pc;
  }else{master3::QuietStdout quiet;network.emplace(1,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}

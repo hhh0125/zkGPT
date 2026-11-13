@@ -18,7 +18,7 @@ int main(int argc,char**argv){try{
  std::cerr<<"FULL12_WITNESS_BEGIN blocks=12 master_expected=199348640 no_legacy_commitment=true\n";
  {master3::QuietStdout quiet;w.generateR6(c,t.manifest_path);}
  crypto::need(w.baseMaster().size()==199348640 && w.legacyCommitmentAbsent(),"Full12 master/no-legacy requirement");
- const std::string ref="reports/R6-FULL12-P0AB-20261021/D-EXECUTION-20261022/";
+ const std::string ref="reports/R6-FULL12/R6-FULL12-P0AB-20261021/D-EXECUTION-20261022/";
  publicReference(w.publicX(),ref+"FULL12_PUBLIC_X_SIGNED64_LE.bin");publicReference(w.publicY(c),ref+"FULL12_FINAL_BLOCK_Y_SIGNED64_LE.bin");
  auto root=std::filesystem::canonical(std::filesystem::current_path());auto dest=std::filesystem::weakly_canonical(std::filesystem::absolute(argv[1]));auto rel=dest.lexically_relative(root);
  crypto::need(!rel.empty() && *rel.begin()!=".." && rel.generic_string().rfind("build/private-full12/",0)==0 && !std::filesystem::exists(dest),"new private fixed-workspace directory required");

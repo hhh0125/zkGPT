@@ -4,7 +4,7 @@ import subprocess,sys,tarfile,hashlib,json
 ROOT=Path(__file__).resolve().parents[1]
 CONFIG=ROOT.parent/'4090_sub2api_ssh_config'
 REMOTE='/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work'
-STAGE='reports/R7-ROWMAJOR-RUN-20261028-v1'
+STAGE='reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1'
 LOCAL=ROOT/STAGE
 LOCAL.mkdir(parents=True,exist_ok=True)
 def ssh(command):return subprocess.run(['ssh','-F',str(CONFIG),'-o','BatchMode=yes','4090_sub2api',command],check=True)

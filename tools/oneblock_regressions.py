@@ -3,7 +3,7 @@ New report children only; no historical evidence or source is modified.
 """
 from pathlib import Path
 import os,sys,json,subprocess,time,shutil
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith(('R7-ONEBLOCK-RUN-','R7-CLASSIFIED-RUN-'))
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-ONEBLOCK', ROOT/'reports'/'R7-CLASSIFIED'} and stage.name.startswith(('R7-ONEBLOCK-RUN-','R7-CLASSIFIED-RUN-'))
 events=[];BIN='build/release/src/paper_r7/';env=os.environ.copy()
 for k in list(env):
  if k.startswith(('R7_','ZKGPT_')):env.pop(k)

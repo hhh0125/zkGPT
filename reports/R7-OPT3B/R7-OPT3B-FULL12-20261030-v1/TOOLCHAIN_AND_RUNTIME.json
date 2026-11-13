@@ -1,0 +1,89 @@
+{
+  "tools": [
+    {
+      "binary": "r7_fs_full12_prover",
+      "ldd": "\tlinux-vdso.so.1 (0x00007ffc639ee000)\n\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007f6490222000)\n\tlibmcl.so.1 => /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib/libmcl.so.1 (0x00007f649019c000)\n\tlibcrypto.so.3 => /lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007f648fd58000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f648fb2c000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f648fa45000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f648fa23000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f648f7fa000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007f649059e000)\n"
+    },
+    {
+      "binary": "r7_fs_full12_verifier",
+      "ldd": "\tlinux-vdso.so.1 (0x00007ffe4c329000)\n\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007f29e2eb1000)\n\tlibmcl.so.1 => /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib/libmcl.so.1 (0x00007f29e2e2b000)\n\tlibcrypto.so.3 => /lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007f29e29e7000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f29e27bb000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f29e26d4000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f29e26b2000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f29e2489000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007f29e3224000)\n"
+    },
+    {
+      "binary": "r7_full12_statement",
+      "ldd": "\tlinux-vdso.so.1 (0x00007fff18ff1000)\n\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007fcf1bd7c000)\n\tlibmcl.so.1 => /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib/libmcl.so.1 (0x00007fcf1bcf6000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007fcf1baca000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fcf1b9e3000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fcf1b9c3000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fcf1b798000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007fcf1c019000)\n"
+    },
+    {
+      "binary": "r7_opt3b_mapping_tests",
+      "ldd": "\tlinux-vdso.so.1 (0x00007ffd67964000)\n\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007efd3977b000)\n\tlibmcl.so.1 => /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib/libmcl.so.1 (0x00007efd396f5000)\n\tlibcrypto.so.3 => /lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007efd392b1000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007efd39085000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007efd38f9e000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007efd38f7c000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007efd38d53000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007efd39ac5000)\n"
+    },
+    {
+      "command": [
+        "c++",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "c++ (Ubuntu 12.3.0-1ubuntu1~22.04.3) 12.3.0\nCopyright (C) 2022 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "cmake",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "cmake version 3.31.4\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "exit_code": 0,
+      "stdout": "Linux super 5.15.0-191-generic #201-Ubuntu SMP Fri Aug 7 18:39:04 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "lscpu"
+      ],
+      "exit_code": 0,
+      "stdout": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  144\nOn-line CPU(s) list:                     0-143\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      36\nSocket(s):                               2\nStepping:                                6\nCPU max MHz:                             3500.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4200.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 invpcid_single intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect wbnoinvd dtherm ida arat pln pts avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid fsrm md_clear pconfig flush_l1d arch_capabilities\nVirtualization:                          VT-x\nL1d cache:                               3.4 MiB (72 instances)\nL1i cache:                               2.3 MiB (72 instances)\nL2 cache:                                90 MiB (72 instances)\nL3 cache:                                108 MiB (2 instances)\nNUMA node(s):                            2\nNUMA node0 CPU(s):                       0-35,72-107\nNUMA node1 CPU(s):                       36-71,108-143\nVulnerability Gather data sampling:      Mitigation; Microcode\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "stderr": ""
+    }
+  ],
+  "runtime_dependencies": {
+    "/lib/x86_64-linux-gnu/libz.so.1": {
+      "sha256": "64c206f0146cc58bbddc4f22054436f4ff278f5a554aa3ce6921ddf7e9133370",
+      "bytes": 108936
+    },
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/lib/libmcl.so.1": {
+      "sha256": "ea9ed55e77d5bce50f03354c84a00cae477d1b6b42dd46938410b055958d70b0",
+      "bytes": 593928
+    },
+    "/lib/x86_64-linux-gnu/libcrypto.so.3": {
+      "sha256": "7cc817ff1841b59516d684f357bc0c3fc2cc52c3fa9b4ffb8ce8bdc215f02915",
+      "bytes": 4455728
+    },
+    "/lib/x86_64-linux-gnu/libstdc++.so.6": {
+      "sha256": "ff0825e113603c3866680d5d52216bc6d8eedf3a59f52a0aef67ff01994db128",
+      "bytes": 2260296
+    },
+    "/lib/x86_64-linux-gnu/libm.so.6": {
+      "sha256": "3dd5511ae94785c9f921429b0f2b2f7aabb461b6f0e6de6dfdbef15f24bdfee6",
+      "bytes": 940560
+    },
+    "/lib/x86_64-linux-gnu/libgcc_s.so.1": {
+      "sha256": "fc9d43b2f6c20e53b009238f767c5b949d202389e20de9e202ea684b4ba3729a",
+      "bytes": 125488
+    },
+    "/lib/x86_64-linux-gnu/libc.so.6": {
+      "sha256": "b2cf6c33b74d2f22543b7a469a75b538911e690f769d0b238843a49465b83793",
+      "bytes": 2220400
+    },
+    "/lib64/ld-linux-x86-64.so.2": {
+      "sha256": "41daf7836f7fce21a40ca63a00c5caf21b05a35a76ccc075d86f1716212cdf01",
+      "bytes": 240936
+    }
+  }
+}

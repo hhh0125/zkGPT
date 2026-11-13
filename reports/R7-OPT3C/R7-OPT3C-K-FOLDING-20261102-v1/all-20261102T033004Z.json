@@ -1,0 +1,23 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/opt3c-k-folding-release",
+      "-j4"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/all-20261102T033004Z-0.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "build/opt3c-k-folding-release",
+      "--output-on-failure",
+      "-j1"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/all-20261102T033004Z-1.log"
+  }
+]

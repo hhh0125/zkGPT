@@ -1,7 +1,7 @@
 """Actual separate-process FS P/V and reproducible public-artifact attacks."""
 from pathlib import Path
 import os,sys,json,subprocess,time,hashlib,struct,shutil
-ROOT=Path.cwd();STAGE=Path(sys.argv[1]);assert STAGE.parent==ROOT/'reports' and STAGE.name.startswith('R7-FS-RUN-')
+ROOT=Path.cwd();STAGE=Path(sys.argv[1]);assert STAGE.parent in {ROOT/'reports', ROOT/'reports'/'R7-FS'} and STAGE.name.startswith('R7-FS-RUN-')
 BIN=ROOT/'build/release/src/paper_r7';SUITE=b'R7-CLASSIFIED-HYRAX-LOOKUP-FS-NIZK-CANDIDATE-v1';CONTEXT='zkGPT/R7/FS/test-request-20261028'
 cases=[]
 def sha(p):
@@ -108,11 +108,11 @@ def full():
  available=int(next(l.split()[1] for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:')))*1024
  assert available>=16<<30 and shutil.disk_usage(ROOT).free>=12<<30
  (STAGE/'RESOURCE_PREFLIGHT.json').write_text(json.dumps(dict(MemAvailable_bytes=available,free_disk_bytes=shutil.disk_usage(ROOT).free,CPUs=sorted(os.sched_getaffinity(0)),address_space_limit_per_process=8<<30,schedule='serial independent P then V'),indent=2))
- statement=STAGE/'PUBLIC_STATEMENT.bin';shutil.copyfile(ROOT/'reports/R7-CLASSIFIED-RUN-20261027T131024Z/PUBLIC_STATEMENT.bin',statement)
+ statement=STAGE/'PUBLIC_STATEMENT.bin';shutil.copyfile(ROOT/'reports/R7-CLASSIFIED/R7-CLASSIFIED-RUN-20261027T131024Z/PUBLIC_STATEMENT.bin',statement)
  proof=STAGE/'full.fsproof'
  p=run('full-P',[BIN/'r7_fs_oneblock_prover','prove',proof,CONTEXT],statement=statement,timeout=7200)
  v=run('full-V',[BIN/'r7_fs_oneblock_verifier','verify',proof,CONTEXT],statement=statement,timeout=7200);parity(p,v,proof)
- coverage=json.loads((STAGE/'full-V-COVERAGE.json').read_text());baseline=json.loads((ROOT/'reports/R7-CLASSIFIED-RUN-20261027T131024Z/full-sessions/correct-full-COVERAGE.json').read_text())
+ coverage=json.loads((STAGE/'full-V-COVERAGE.json').read_text());baseline=json.loads((ROOT/'reports/R7-CLASSIFIED/R7-CLASSIFIED-RUN-20261027T131024Z/full-sessions/correct-full-COVERAGE.json').read_text())
  assert coverage['required_count']==coverage['verified_count']==len(coverage['required'])==baseline['required_count'] and all(c['status']=='VERIFIED' for c in coverage['required'])
  assert coverage['native_plan_sha256']==baseline['native_plan_sha256'] and {x['id'] for x in coverage['required']}=={x['id'] for x in baseline['required']}
  assert v['metrics']['root_count']==6 and v['metrics']['claims']==936 and v['metrics']['GKR_rounds']==627 and v['metrics']['registered_rows']==8193

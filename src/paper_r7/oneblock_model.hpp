@@ -14,7 +14,7 @@ struct Trust {
  r5b::Anchor anchor;r5b::ModelManifest manifest;r2::ModelQueryPlan plan;
  std::vector<neuralNetwork::ParameterRegion> regions;
 };
-Trust loadTrust(const std::string&anchor_path=r6::oneblockAnchorPath,const std::string&manifest_path="reports/R6A/oneblock-model-manifest-v1.txt");
+Trust loadTrust(const std::string&anchor_path=r6::oneblockAnchorPath,const std::string&manifest_path="reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");
 std::string trustIdentity(const Trust&);
 struct Public {
  std::string version=model::suite,session,trust_id;
@@ -29,7 +29,7 @@ void validate(const Trust&,const Public&,const std::string&session);
 // Values are private actual-length W in the original logical one-dimensional
 // layout. Public rows are computed as C_anchor + H*rho, never by legacy PC.
 Secret rerandomize(const Trust&,const std::string&session,std::vector<Fr>values,Random&);
-Secret prepare(const Trust&,const std::string&session,Random&,const std::string&manifest_path="reports/R6A/oneblock-model-manifest-v1.txt");
+Secret prepare(const Trust&,const std::string&session,Random&,const std::string&manifest_path="reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");
 // Each 64-row chunk sends masks before a fresh nonzero verifier challenge.
 // This proves only C_new-C_anchor=H*rho. Master/local-W links are separate.
 Public registerModel(IO&,const Trust&,const Secret*,Random*);

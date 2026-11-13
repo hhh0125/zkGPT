@@ -1,7 +1,7 @@
 """Verify and restore-read the public evidence archive on Windows."""
 from pathlib import Path,PurePosixPath
 import hashlib,json,tarfile,gzip,shutil
-ROOT=Path(__file__).resolve().parents[1];STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1'
+ROOT=Path(__file__).resolve().parents[1];STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1'
 receipt=json.loads((STAGE/'EVIDENCE_CONTAINER.json').read_text())
 archive=STAGE/'evidence.tar.gz'
 def digest(p):

@@ -6,9 +6,9 @@ class EngineeringTests(unittest.TestCase):
  @unittest.skipUnless(sys.platform=='linux','real Linux metadata symlink test')
  def test_last_sync_metadata_symlink_rejected(self):
   with tempfile.TemporaryDirectory() as d:
-   directory=Path(d).resolve();root=directory/'workspace';(root/'reports').mkdir(parents=True)
+   directory=Path(d).resolve();root=directory/'workspace';(root/'reports/R7-HYRAX-A3').mkdir(parents=True)
    outside=directory/'protected-source';outside.write_text('preserve')
-   (root/'reports/HYRAX_A3_LAST_SYNC.json').symlink_to(outside)
+   (root/'reports/R7-HYRAX-A3/HYRAX_A3_LAST_SYNC.json').symlink_to(outside)
    with self.assertRaises(ValueError):sync_state_target(root).write_text('overwrite')
    self.assertEqual(outside.read_text(),'preserve')
  def test_sync_cannot_write_r6(self):

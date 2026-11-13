@@ -1,0 +1,87 @@
+{
+  "status": "PASS_MAPPING_AND_REGRESSIONS",
+  "baseline": "Current successful OPT3A + NoFullBase uncommitted391source-file Windows tree; not GitHEAD",
+  "source_files": 394,
+  "source_manifest": "FINAL_SOURCE_SHA.json",
+  "incremental_files": [
+    "src/paper_r7/CMakeLists.txt",
+    "src/paper_r7/classified_commitments.cpp",
+    "src/paper_r7/classified_commitments.hpp",
+    "src/paper_r7/classified_mapping_plan.hpp",
+    "src/paper_r7/opt3b_mapping_tests.cpp",
+    "src/paper_r7/opt3b_reference.hpp"
+  ],
+  "census": {
+    "claims": 1502,
+    "frozen": 1076,
+    "unfrozen": 426,
+    "all_mapping_digests_match": true,
+    "reasons": {
+      "RUN_COUNT_EXCEEDS_REMAINING_CACHE": 29,
+      "CACHE_CAPACITY_EXHAUSTED": 397
+    }
+  },
+  "reference": "opt3b_reference.hpp frozen exact OPT3A helper algorithms + independently enumerated mapping identities/multiplicities",
+  "exact_field": "BN254 Fr, no tolerance",
+  "tested_comparisons": [
+    "MappingDigest",
+    "Root/logical-index/coordinate identity and multiplicity",
+    "every K field element",
+    "per-root partialDot",
+    "affine bias",
+    "aggregate claim",
+    "full canonical FS messages/challenges/Transcript"
+  ],
+  "fixture_variants": 20,
+  "negative_paths": [
+    "wrongRoot",
+    "outsideActual",
+    "invalidRootHint",
+    "changedDigest/bias",
+    "mutable fallback",
+    "RAM budget",
+    "zero file budget",
+    "partial file-cap exhaustion preserves earlier chain",
+    "open failure",
+    "EINTR and short transfer",
+    "partial pwrite/pread error",
+    "premature EOF",
+    "invalid chain bounds"
+  ],
+  "frozen_callback_not_reused": true,
+  "deterministic_transcripts": {
+    "opt3b-final-transcript.bin": {
+      "bytes": 37264,
+      "sha256": "fad991078e0230a3721369f68db4c00e692c0771d068ad8e2b83c88187f2b91d",
+      "before_after_equal": true,
+      "baseline_path": "r7-opt3a-kernel-20261029-v1\\restored-evidence\\evidence\\kernel\\verified-final-transcript.bin"
+    },
+    "spilled-transcript-before.bin": {
+      "bytes": 37724,
+      "sha256": "71a9a82d3df6e1b77fc80713e7a1456907239f2b38494756d4e37db6bdaf57e9",
+      "before_after_equal": true,
+      "baseline_path": "r7-opt3b-mapping-20261030-v1\\mapping-restored\\evidence\\spilled-transcript-before.bin"
+    }
+  },
+  "streamed_transcript": {
+    "messages": 121,
+    "bytes": 37724,
+    "independent_verifier_replay_eof": true,
+    "file_bytes": 491536
+  },
+  "r7_ctest": {
+    "passed": 19,
+    "failed": 0,
+    "log": "mapping-evidence/verified-ctest-r7.log"
+  },
+  "supplementary": "FS IO; RowMajor parameter recomputation and identity negatives; partition layout; Full12 public plan;10chunkAnchor; freshcomponentPthenindependentV",
+  "benchmark_runs": 12,
+  "performance_gate": true,
+  "review": "REVIEW_RESULT.md: no unresolved findings;111evidenceSHA independently checked",
+  "full12_status": "FULL12_OPT3B_INDEPENDENT_VERIFIED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "full12_success": true,
+  "full12_result": "R7_OPT3B_FULL12_RESULT.json"
+}

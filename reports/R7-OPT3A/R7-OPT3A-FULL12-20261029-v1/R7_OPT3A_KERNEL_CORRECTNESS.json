@@ -1,0 +1,322 @@
+{
+  "status": "PASS_KERNEL_AND_REGRESSIONS",
+  "source_sha256_manifest": "FINAL_SOURCE_SHA.json",
+  "source_files": 391,
+  "baseline_snapshot": "before/; BASELINE_NO_FULLBASE_DIFF.patch preserves17 uncommitted baseline changes",
+  "reference": "opt3a_reference.hpp exact pre-OPT3 optimized No-FullBase algorithm; independent dense r1::weights reference also checked",
+  "expanded_equivalence_cases": 35,
+  "field": "exact BN254 Fr; no floating-point tolerance",
+  "comparisons": [
+    "every kernel coordinate",
+    "each root partialDot",
+    "affine bias",
+    "aggregate authentication claim"
+  ],
+  "edge_cases": {
+    "status": "PASS",
+    "padded": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "query": [
+      "all0",
+      "all1",
+      "mixed01"
+    ],
+    "lambda": [
+      0,
+      1,
+      -1
+    ],
+    "mapping": [
+      "constant",
+      "singleton",
+      "cross-root",
+      "positive/negative/zero stride",
+      "maximum supported r1::kMaxVector signed delta"
+    ]
+  },
+  "values": [
+    "seeded random Fr",
+    "allzero",
+    "allone",
+    "one nonzero coordinate"
+  ],
+  "independent_dense_reference": true,
+  "bounded_snapshot_contract": {
+    "baseline_exit_code": 1,
+    "baseline_failure_expected": true,
+    "candidate_exit_code": 0,
+    "callback_not_reused": true
+  },
+  "existing_mutable_map_and_budget_rejection_tests": "PASS via r7_opt2_kernel_dense",
+  "deterministic_protocol": {
+    "messages": 121,
+    "bytes": 37264,
+    "before_after_complete_bytes_equal": true,
+    "sha256": "fad991078e0230a3721369f68db4c00e692c0771d068ad8e2b83c88187f2b91d",
+    "canonical_FS_challenges_and_final_digest_equal": true,
+    "production_rng_unchanged": true
+  },
+  "r7_ctest": {
+    "passed": 17,
+    "failed": 0,
+    "log": "kernel-evidence/final-ctest-r7.log"
+  },
+  "supplementary_tests": {
+    "final-bench-bench-1024-0": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1024"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.0138618852943182
+    },
+    "final-bench-bench-1024-1": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1024"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.01082080090418458
+    },
+    "final-bench-bench-1024-2": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1024"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.012132301926612854
+    },
+    "final-bench-bench-1048576-0": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1048576"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 2.6342749358154833
+    },
+    "final-bench-bench-1048576-1": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1048576"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 2.6400559837929904
+    },
+    "final-bench-bench-1048576-2": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "1048576"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 2.6323333606123924
+    },
+    "final-bench-bench-16384-0": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16384"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.05399558926001191
+    },
+    "final-bench-bench-16384-1": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16384"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.04764473997056484
+    },
+    "final-bench-bench-16384-2": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16384"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.047826884780079126
+    },
+    "final-bench-bench-16777216-0": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16777216"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 81.44703328423202
+    },
+    "final-bench-bench-16777216-1": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16777216"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 81.0696366187185
+    },
+    "final-bench-bench-16777216-2": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "bench",
+        "16777216"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 80.94795452291146
+    },
+    "final-bench-native-bench-16777216-0": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "native-bench"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 47.777188839856535
+    },
+    "final-bench-native-bench-16777216-1": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "native-bench"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 47.813927561976016
+    },
+    "final-bench-native-bench-16777216-2": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "native-bench"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 47.664176845923066
+    },
+    "final-build-all": {
+      "command": [
+        "cmake",
+        "--build",
+        "build/release",
+        "-j4"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 28.604982807766646
+    },
+    "final-component-P": {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_component_prover",
+        "reports/R7-OPT3A-KERNEL-20261029-v1/component-final.fsproof"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.3138972697779536
+    },
+    "final-component-V": {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_component_verifier",
+        "reports/R7-OPT3A-KERNEL-20261029-v1/component-final.fsproof"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.19267023028805852
+    },
+    "final-contract-green": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "contract"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.013023339677602053
+    },
+    "final-ctest-r7": {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "build/release",
+        "-R",
+        "^r7_",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 30.60794446617365
+    },
+    "final-equivalence-expanded": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "correctness"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.6217516022734344
+    },
+    "final-r7_fs_io_tests": {
+      "command": [
+        "build/release/src/paper_r7/r7_fs_io_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.014195428229868412
+    },
+    "final-r7_full12_anchor_tests": {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_anchor_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 15.324728086125106
+    },
+    "final-r7_full12_plan_tests": {
+      "command": [
+        "build/release/src/paper_r7/r7_full12_plan_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 36.33729561697692
+    },
+    "final-r7_partitioned_layout_tests": {
+      "command": [
+        "build/release/src/paper_r7/r7_partitioned_layout_tests"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.0048314169980585575
+    },
+    "final-r7_rowmajor_anchor_tests": {
+      "command": [
+        "build/release/src/paper_r7/r7_rowmajor_anchor_tests",
+        "reports/R7-OPT3A-KERNEL-20261029-v1/final-rowmajor-anchor-negatives"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 35.553141286130995
+    },
+    "final-transcript-final": {
+      "command": [
+        "build/release/src/paper_r7/r7_opt3a_kernel_tests",
+        "transcript",
+        "reports/R7-OPT3A-KERNEL-20261029-v1/verified-final-transcript.bin"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.1237620860338211
+    }
+  },
+  "microbenchmark_runs": 15,
+  "microbenchmark_all_Fr_comparisons_passed": true,
+  "performance_gate": true,
+  "review": "REVIEW_AND_RUNNER_NOTES.md; no unresolved production finding",
+  "initial_runner_failure": {
+    "exit_code": 1,
+    "error": "anchor test requires new evidence directory",
+    "stage": "supplementary invocation before test execution",
+    "resolved": "unique final-rowmajor-anchor-negatives argument; final exit0, original failure retained"
+  },
+  "full12_status": "FULL12_OPT3A_INDEPENDENT_VERIFIED",
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "full12_required_count": 8066,
+  "full12_verified_count": 8066,
+  "full12_independent_verifier_exit_code": 0,
+  "full12_prover_exit_code": 0,
+  "full12_eof_verified": true,
+  "full12_old_registration_messages_zero": true
+}

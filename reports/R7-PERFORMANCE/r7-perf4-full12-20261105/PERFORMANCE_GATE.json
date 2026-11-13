@@ -1,0 +1,9 @@
+{
+ "scope":"real Full12, one same-config reference and one final candidate; no bounded-benchmark speed acceptance",
+ "reference":"PERF3 production behavior plus identical profiling instrumentation; A on, all earlier failed candidates off",
+ "primary_composite_gate":{"candidate_over_reference_prover_seconds_max":0.98,"candidate_over_reference_verifier_seconds_max":1.02,"candidate_over_reference_peak_RSS_max":1.10,"proof_byte_growth_max":0,"coverage_count_must_equal":true,"proof_relations_and_transcript_suite_unchanged":true},
+ "interpretation":"one-run measurement only; no claim of statistically stable acceleration. V improvement reported separately if below reference; main P optimization acceptance requires >=2percent measured reduction without >2percent V regression",
+ "module_gate":"exact math/security mandatory; use actual Full12 exclusive/inclusive work counters and timers for attribution. A module performance failure disables that candidate only, preserves independent read-only profiling",
+ "resource":{"cores":4,"rss_bytes":68719476736,"address_space_bytes":103079215104,"P_wall_seconds":10800,"V_wall_seconds":3600,"total_groups_max":2,"total_wall_seconds_max":28800,"new_swap_growth_bytes_max":268435456,"free_disk_before_group_bytes_min":34359738368,"memory_available_before_group_bytes_min":85899345920},
+ "authorization":"user confirmed two-group resource budget in async reply; no real execution until correctness/build/identity/resource/isolation gates pass"
+}

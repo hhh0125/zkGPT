@@ -4,10 +4,10 @@ import os,sys,json,hashlib,subprocess,time,resource,traceback
 from r7_process import run_process_group
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
 PIN='3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073'
-MANIFEST='reports/R6A/oneblock-model-manifest-v1.txt'
+MANIFEST='reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt'
 assert Path.cwd().resolve()==ROOT
 stage=ROOT/sys.argv[1]
-assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-ROUND2-RUN-')
+assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-ROUND2'} and stage.name.startswith('R7-ROUND2-RUN-')
 identity=json.loads((stage/'SYNC_IDENTITY.json').read_text())
 events=[]
 env=os.environ.copy()
@@ -32,7 +32,7 @@ def preservation():
  # Current source bytes; frozen evidence and model resource metadata only.
  source={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7') and p!=ROOT/'src/CMakeLists.txt'}
  frozen={}
- for directory in ['reports/R6A','reports/R6B-OPT2-20261021','data']:
+ for directory in ['reports/R6-BASELINE/R6A','reports/R6B/R6B-OPT2-20261021','data']:
   for p in (ROOT/directory).rglob('*'):
    if p.is_file():
     s=p.stat();frozen[str(p.relative_to(ROOT))]=[s.st_size,s.st_mtime_ns,s.st_ino]

@@ -3,7 +3,7 @@ from pathlib import Path
 import json,sys,subprocess,hashlib,time,resource,os,traceback
 from r7_process import run_process_group
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-stage=ROOT/sys.argv[1];assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-FS-RUN-')
+stage=ROOT/sys.argv[1];assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-FS'} and stage.name.startswith('R7-FS-RUN-')
 flags=set(sys.argv[2:]);assert flags and flags<={'--red','--io-red','--unit','--small','--full'} and ('--red' not in flags or len(flags)==1)
 env=os.environ.copy();env.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
 events=[];result=dict(status='FAILED',security_status='FS_NIZK_CANDIDATE',production_gate='BLOCKED_CRYPTOGRAPHIC_DESIGN',may_enter_stage2=False)
@@ -14,7 +14,7 @@ def run(name,cmd,timeout=180,expect=0,limited=True):
  events.append(dict(name=name,command=cmd,exit_code=code,seconds=time.monotonic()-start,passed=code==expect));print('DONE',name,code,flush=True)
  if code!=expect:print((stage/(name+'.log')).read_text(errors='replace')[-5000:],flush=True);raise RuntimeError(name)
 def preservation():
- return dict(source={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')},frozen={p.relative_to(ROOT).as_posix():[p.stat().st_size,p.stat().st_mtime_ns,p.stat().st_ino] for d in ['reports/R6A','reports/R6B-OPT2-20261021','data'] for p in (ROOT/d).rglob('*') if p.is_file()})
+ return dict(source={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')},frozen={p.relative_to(ROOT).as_posix():[p.stat().st_size,p.stat().st_mtime_ns,p.stat().st_ino] for d in ['reports/R6-BASELINE/R6A','reports/R6B/R6B-OPT2-20261021','data'] for p in (ROOT/d).rglob('*') if p.is_file()})
 try:
  before=preservation();(stage/'PRESERVATION_BEFORE.json').write_text(json.dumps(before,indent=2))
  run('configure',['cmake','-S','.','-B','build/release','-DZKGPT_BUILD_R7_FRAMEWORK=ON'])
@@ -56,8 +56,8 @@ finally:
  (stage/'PUBLIC_PROOF_PARTS.json').write_text(json.dumps(public_parts,indent=2))
  result['events']=events;result['toolchain']={n:subprocess.run([n,'--version'],capture_output=True,text=True).stdout.splitlines()[0] for n in ['cmake','c++','python3']}
  result['dependency_sha256']={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for pattern in ['deps/cnpy/lib/libcnpy.a','3rd/mcl/include/mcl/bn.hpp','build/release/src/paper_r7/r7_fs_*'] for p in ROOT.glob(pattern) if p.is_file()}
- result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
- (stage/'PUBLIC_MODEL_MANIFEST.txt').write_bytes((ROOT/'reports/R6A/oneblock-model-manifest-v1.txt').read_bytes())
+ result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
+ (stage/'PUBLIC_MODEL_MANIFEST.txt').write_bytes((ROOT/'reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt').read_bytes())
  result['mcl_header_sha256']={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'3rd/mcl/include').rglob('*.hpp')}
  (stage/'CMakeCache.txt').write_bytes((ROOT/'build/release/CMakeCache.txt').read_bytes());(stage/'RESULT.json').write_text(json.dumps(result,indent=2));print('RESULT',result['status'],flush=True)
 sys.exit(1 if result['status']=='FAILED' else 0)

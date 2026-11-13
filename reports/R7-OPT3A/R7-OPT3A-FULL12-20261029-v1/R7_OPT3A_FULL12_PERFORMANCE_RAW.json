@@ -1,0 +1,475 @@
+{
+  "prover": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_prover",
+      "prove",
+      "reports/R7-OPT3A-FULL12-20261029-v1/full12-opt3a-v1.fsproof",
+      "zkGPT/R7/Full12/opt3a-kernel/20261029/v1"
+    ],
+    "pid": 3868124,
+    "exit_code": 0,
+    "wall_seconds": 5749.672307198867,
+    "user_cpu_seconds": 5715.39569,
+    "system_cpu_seconds": 118.799428,
+    "cpu_seconds": 5834.195118000001,
+    "peak_rss_kib": 52079148,
+    "peak_vmsize_kib": 52743092,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T14:35:47.806233+00:00"
+  },
+  "verifier": {
+    "command": [
+      "build/release/src/paper_r7/r7_fs_full12_verifier",
+      "verify",
+      "reports/R7-OPT3A-FULL12-20261029-v1/full12-opt3a-v1.fsproof",
+      "zkGPT/R7/Full12/opt3a-kernel/20261029/v1"
+    ],
+    "pid": 4029706,
+    "exit_code": 0,
+    "wall_seconds": 3251.4675149610266,
+    "user_cpu_seconds": 3272.036495,
+    "system_cpu_seconds": 30.014574,
+    "cpu_seconds": 3302.0510689999996,
+    "peak_rss_kib": 6493924,
+    "peak_vmsize_kib": 6903048,
+    "resource_pressure_stop": false,
+    "arbitrary_time_limit": null,
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "ended_utc": "2026-10-29T15:29:59.827092+00:00"
+  },
+  "proof_bytes": 263710425,
+  "proof_sha256": "324d57c39a5bb3c6e4b4f1e25b70c9ba0979abc1d904c666fd28b440fcf4e287",
+  "prover_summary": {
+    "status": "FS_PROOF_CREATED_CANDIDATE",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 5744.51,
+    "wire_bytes": 263710425,
+    "P_wire_bytes": 263710425,
+    "frames": 676288,
+    "peak_rss_kib": 52079148,
+    "MSM_calls": 1281061,
+    "MSM_terms": 558035360,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 308.045,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 34567200,
+        "cumulative_peak_rss_kib": 34567200
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 755.081,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 542722,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0292233,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0367379,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 218.052,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 94083,
+        "rss_end_kib": 36481480,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 1157.9,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 629790,
+        "rss_end_kib": 30087924,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 59.742,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 16,
+        "rss_end_kib": 30087924,
+        "cumulative_peak_rss_kib": 52079148
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 3161.89,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 14448,
+        "rss_end_kib": 30087800,
+        "cumulative_peak_rss_kib": 52079148
+      }
+    ]
+  },
+  "verifier_summary": {
+    "status": "FS_NIZK_CANDIDATE_VERIFIED",
+    "suite": "R7-FULL12-CLASSIFIED-HYRAX-LOOKUP-FS-ROWMAJOR-CANDIDATE-v2",
+    "required_count": 8066,
+    "coverage_sha256": "05f18ba6ddfefdf3178bcb6655967d5a81191c5006f1bb1ff7d49238773a1b08",
+    "layout_id": "6523fb153c8608e27fd1da461a2110a640ed8ae2307ed737b7baa7447cdd0087",
+    "root_count": 45,
+    "claims": 1502,
+    "registered_rows": 0,
+    "registration_response_bytes": 0,
+    "tail_rows": 54,
+    "tail_response_bytes": 15040,
+    "GKR_rounds": 7524,
+    "seconds": 3250.23,
+    "wire_bytes": 263710425,
+    "P_wire_bytes": 263710425,
+    "frames": 676288,
+    "peak_rss_kib": 6493924,
+    "MSM_calls": 281356,
+    "MSM_terms": 1299146,
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false,
+    "phases": [
+      {
+        "name": "frozen-witness-and-prechallenge-lookup",
+        "seconds": 5.82355,
+        "P_wire_bytes": 0,
+        "MSM_calls": 0,
+        "rss_end_kib": 5559320,
+        "cumulative_peak_rss_kib": 5559320
+      },
+      {
+        "name": "all-classified-roots-prechallenge-seal",
+        "seconds": 97.3025,
+        "P_wire_bytes": 24274886,
+        "MSM_calls": 0,
+        "rss_end_kib": 5587364,
+        "cumulative_peak_rss_kib": 5587364
+      },
+      {
+        "name": "classified-physical-zero-tails",
+        "seconds": 0.0228177,
+        "P_wire_bytes": 19442,
+        "MSM_calls": 1,
+        "rss_end_kib": 5587364,
+        "cumulative_peak_rss_kib": 5587364
+      },
+      {
+        "name": "classified-public-X-Y-constants",
+        "seconds": 0.0338696,
+        "P_wire_bytes": 2680208,
+        "MSM_calls": 1,
+        "rss_end_kib": 5601620,
+        "cumulative_peak_rss_kib": 5601620
+      },
+      {
+        "name": "all-native-GKR",
+        "seconds": 53.661,
+        "P_wire_bytes": 24520709,
+        "MSM_calls": 35403,
+        "rss_end_kib": 5620640,
+        "cumulative_peak_rss_kib": 5751616
+      },
+      {
+        "name": "native-Range-Exp-Lasso-Memory-Product",
+        "seconds": 369.043,
+        "P_wire_bytes": 182248997,
+        "MSM_calls": 240477,
+        "rss_end_kib": 5709948,
+        "cumulative_peak_rss_kib": 6182928
+      },
+      {
+        "name": "all-source-original-handles",
+        "seconds": 25.6379,
+        "P_wire_bytes": 20225,
+        "MSM_calls": 0,
+        "rss_end_kib": 5710096,
+        "cumulative_peak_rss_kib": 6182928
+      },
+      {
+        "name": "mandatory-classified-authentication-barrier",
+        "seconds": 2614.54,
+        "P_wire_bytes": 27242747,
+        "MSM_calls": 5474,
+        "rss_end_kib": 5968124,
+        "cumulative_peak_rss_kib": 6493924
+      }
+    ]
+  },
+  "comparison": {
+    "prover_wall_seconds": {
+      "before": 5935.546122,
+      "after": 5749.672307198867,
+      "absolute_change": -185.87381480113254,
+      "percent_change": -3.1315368625002247,
+      "before_over_after": 1.0323277231936174
+    },
+    "verifier_wall_seconds": {
+      "before": 3492.154318,
+      "after": 3251.4675149610266,
+      "absolute_change": -240.68680303897327,
+      "percent_change": -6.8922155529718285,
+      "before_over_after": 1.074024052810461
+    },
+    "prover_peak_rss_kib": {
+      "before": 52071416,
+      "after": 52079148,
+      "absolute_change": 7732,
+      "percent_change": 0.014848837604108942,
+      "before_over_after": 0.9998515336694832
+    },
+    "verifier_peak_rss_kib": {
+      "before": 6500324,
+      "after": 6493924,
+      "absolute_change": -6400,
+      "percent_change": -0.09845663077717356,
+      "before_over_after": 1.0009855366339366
+    },
+    "proof_bytes": {
+      "before": 263710424,
+      "after": 263710425,
+      "absolute_change": 1,
+      "percent_change": 3.7920381941367627e-07,
+      "before_over_after": 0.9999999962079619
+    },
+    "full_registration_response_bytes": {
+      "before": 0,
+      "after": 0,
+      "absolute_change": 0,
+      "percent_change": null,
+      "before_over_after": null
+    }
+  },
+  "registered_rows_field_meaning": "full base row knowledge registration rows; disabled, zero; excludes model Anchor binding and physical tail-only rows",
+  "tail_rows": 54,
+  "tail_response_bytes": 15040,
+  "measurement": "actual native Full12 run; no synthetic or reduced witness",
+  "prover_authentication_comparison": {
+    "before_seconds": 3432.34,
+    "after_seconds": 3161.89,
+    "absolute_change": -270.4500000000003,
+    "percent_change": -7.879464155648924,
+    "speedup": 1.0855342848739205
+  },
+  "verifier_authentication_comparison": {
+    "before_seconds": 2857.03,
+    "after_seconds": 2614.54,
+    "absolute_change": -242.49000000000024,
+    "percent_change": -8.487485255667606,
+    "speedup": 1.0927467164396032
+  },
+  "kernel_metrics": {
+    "prover": {
+      "OPT2_SCAN_PLAN": {
+        "claims": 1502,
+        "root_only_claims": 842,
+        "multi_root_claims": 660,
+        "frozen_claims": 1076,
+        "legacy_kernel_calls": 90,
+        "legacy_kernel_coordinates": 77882227424,
+        "legacy_weights_precomputations": 61744,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT2_PARTIAL": {
+        "coordinates": 2599956852,
+        "matched_coordinates": 2461708448,
+        "fallback_map_queries": 583705824,
+        "Fr_multiplications": 5375083948,
+        "Fr_additions": 2461708448,
+        "wall_seconds": 198.123,
+        "cpu_seconds": 198.064,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 21810771592,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 2599956852,
+        "frozen_kernel_coordinates": 2016251028,
+        "fallback_map_queries": 26850467904,
+        "kernel_and_partial_Fr_multiplications": 8288459448,
+        "kernel_and_partial_Fr_additions": 4923416896,
+        "kernel_wall_seconds": 2302.22,
+        "partial_wall_seconds": 198.123,
+        "prepare_wall_seconds": 218.805,
+        "kernel_and_partial_cpp_allocations": 46,
+        "kernel_and_partial_cpp_allocated_bytes": 23152625056
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 434.251,
+        "kernel_calls": 45,
+        "kernel_coordinates": 28283013108,
+        "kernel_cpu_seconds": 2301.44,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.137952,
+        "weight_products": 4961443648,
+        "partial_cpu_seconds": 198.064,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 603.942,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 90,
+            "terms": 90,
+            "cpu_seconds": 0.00367235,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 736903,
+            "terms": 1473806,
+            "cpu_seconds": 45.9121,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 180,
+            "terms": 1080,
+            "cpu_seconds": 0.0235808,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 270,
+            "terms": 10080,
+            "cpu_seconds": 0.188624,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 543578,
+            "terms": 556427424,
+            "cpu_seconds": 556.786,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 40,
+            "terms": 122880,
+            "cpu_seconds": 1.02744,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    },
+    "verifier": {
+      "OPT2_SCAN_PLAN": {
+        "claims": 1502,
+        "root_only_claims": 842,
+        "multi_root_claims": 660,
+        "frozen_claims": 1076,
+        "legacy_kernel_calls": 45,
+        "legacy_kernel_coordinates": 38941113712,
+        "legacy_weights_precomputations": 31202,
+        "map_cache_bytes": 268435456,
+        "weight_cache_bytes": 79627520
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 21365314172,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 2016251028,
+        "fallback_map_queries": 26266762080,
+        "kernel_and_partial_Fr_multiplications": 2913375500,
+        "kernel_and_partial_Fr_additions": 2461708448,
+        "kernel_wall_seconds": 2299.17,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 212.763,
+        "kernel_and_partial_cpp_allocations": 45,
+        "kernel_and_partial_cpp_allocated_bytes": 23152623616
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 419.325,
+        "kernel_calls": 45,
+        "kernel_coordinates": 28283013108,
+        "kernel_cpu_seconds": 2298.54,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.152439,
+        "weight_products": 2499735200,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 22.9212,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 280725,
+            "terms": 561450,
+            "cpu_seconds": 15.703,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 601,
+            "terms": 614816,
+            "cpu_seconds": 6.23084,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 30,
+            "terms": 122880,
+            "cpu_seconds": 0.987397,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    }
+  }
+}

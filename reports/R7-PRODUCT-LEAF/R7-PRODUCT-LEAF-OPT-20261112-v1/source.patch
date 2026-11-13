@@ -1,0 +1,865 @@
+--- a/src/paper_r7/oneblock_lookup.cpp
++++ b/src/paper_r7/oneblock_lookup.cpp
+@@ -22,17 +22,29 @@
+ Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
+ std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
+ Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&g2,const Fr&t){return g2*a+g*v+c-t;}
++// Fr addition/subtraction use fixed-size field arithmetic without allocation.
++// Restore only after hiddenProduct's callbacks and tree owners are destroyed.
++class AddOneGuard {
++ std::vector<Fr>&values_;
++ public:explicit AddOneGuard(std::vector<Fr>&values):values_(values){for(auto&x:values_)x+=Fr(1);}
++ ~AddOneGuard() noexcept {for(auto&x:values_)x-=Fr(1);}
++ AddOneGuard(const AddOneGuard&)=delete;
++ AddOneGuard&operator=(const AddOneGuard&)=delete;
++};
+ Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
+ void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
+ }
+-void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
++void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role,const std::shared_ptr<std::vector<Fr>>&prepared_leaves){
+  const auto*b2=std::getenv("ZKGPT_PERF6_B2");
+  perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
+  bool contiguous=false;if(io.prover()){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
+  perf4::Scope native_scope("Native/Product",role,n);
+  perf5::Product product_profile(role,n,io.prover());perf5::Scope product_total(perf5::Total);
+  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
+- std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");std::shared_ptr<std::vector<Fr>>leaf;{perf5::Scope t(perf5::TreeAllocInit);leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));}{perf5::Scope t(perf5::TreeLeaf);for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);}tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){std::shared_ptr<std::vector<Fr>>next;{perf5::Scope t(perf5::TreeAllocInit);next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));}{perf5::Scope t(perf5::TreeParent);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);}tree.push_back(next);}}
++ std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){
++  if(prepared_leaves){need(!prepared_leaves->empty() && prepared_leaves->size()==n,"lookup Product prepared leaves dimension mismatch");tree.push_back(prepared_leaves);}
++  else{need(bool(leaves),"lookup Product leaves missing");std::shared_ptr<std::vector<Fr>>leaf;{perf5::Scope t(perf5::TreeAllocInit);leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));}{perf5::Scope t(perf5::TreeLeaf);for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);}tree.push_back(leaf);}
++  for(std::size_t width=n;width>1;width/=2){std::shared_ptr<std::vector<Fr>>next;{perf5::Scope t(perf5::TreeAllocInit);next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));}{perf5::Scope t(perf5::TreeParent);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);}tree.push_back(next);}}
+  // The supplied root replaces the stored top level; only children are read.
+  if(io.prover() && n>1)tree.pop_back();
+  Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
+@@ -41,7 +53,7 @@
+   if(contiguous){ProductInputs inputs{*w,*tree.at(d-layer-1)};end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&inputs);}
+   else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck");
+   need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
+-  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context)need(tree.at(d-layer-1).use_count()==1,"PERF5 TreeFree requires final tree owner");tree.at(d-layer-1).reset();}
++  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context){const bool external_leaf=prepared_leaves && d-layer-1==0 && tree.at(0).get()==prepared_leaves.get();need(tree.at(d-layer-1).use_count()==(external_leaf?2:1),"PERF5 TreeFree requires final tree owner");}tree.at(d-layer-1).reset();}
+  }
+  {perf5::Scope t(perf5::LeafAuthentication);auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");}
+  // A layer is recorded only after the recursive chain reaches an actually
+@@ -54,7 +66,16 @@
+  pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
+  auto readValues=std::make_shared<std::vector<Fr>>(),finalValues=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){readValues->resize(a.padded,Fr(0));finalValues->resize(table.size(),Fr(0));std::vector<std::size_t>counts(table.size(),0);for(std::size_t i=0;i<a.padded;++i){auto j=integer(a.value(i),table.size());need(v.value(i)==table[j],"lookup private memory value mismatch");readValues->at(i)=Fr(counts[j]++);}for(std::size_t j=0;j<table.size();++j)finalValues->at(j)=Fr(counts[j]);}
+  auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();shape(read);shape(final);need(read.actual==a.padded && read.padded==a.padded && final.actual==table.size() && final.padded==table.size(),"lookup counter factory dimensions");
+- auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}std::array<Value,3>leaves;std::array<Hidden,3>roots;for(unsigned kind=0;kind<3;++kind){Fr value=1;auto size=kind==2?table.size():a.padded;if(io.prover()){if(kind==2)leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};else leaves[kind]=[a,v,read,g,g2,tau,kind](std::size_t i){return fingerprint(a.value(i),v.value(i),read.value(i)+Fr(kind==0?1:0),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
++ auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}
++ std::array<Value,3>leaves;std::array<Hidden,3>roots;
++ std::shared_ptr<std::vector<Fr>>base_leaves;Fr root0=1,root1=1;
++ if(io.prover()){
++  perf4::Scope prepare("Native/Product01-base-leaves",role,a.padded);
++  base_leaves=std::make_shared<std::vector<Fr>>(a.padded,Fr(0));
++  for(std::size_t i=0;i<a.padded;++i){auto z=fingerprint(a.value(i),v.value(i),read.value(i),g,g2,tau);base_leaves->at(i)=z;root0*=z+Fr(1);root1*=z;}
++ }
++ // Preserve the root handle/RNG/message order despite computing 0/1 together.
++ for(unsigned kind=0;kind<3;++kind){Fr value=kind==0?root0:kind==1?root1:Fr(1);auto size=kind==2?table.size():a.padded;if(io.prover() && kind==2){leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
+  Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
+  for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{
+    // The three MLEs and openings stay sequential and independent. Only this
+@@ -64,7 +85,8 @@
+    vv=evaluateWithWeights(live,v,q.point,weights,random,name+"/value");
+    c=evaluateWithWeights(live,read,q.point,weights,random,name+"/read");
+    Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g2,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
+-  hiddenProduct(io,kind==2?table.size():a.padded,roots[kind],leaves[kind],auth,rng,role+"/product/"+std::to_string(kind));}
++  auto product=[&]{if(kind==2)hiddenProduct(io,table.size(),roots[kind],leaves[kind],auth,rng,role+"/product/2",{});else hiddenProduct(io,a.padded,roots[kind],{},auth,rng,role+"/product/"+std::to_string(kind),base_leaves);};
++  if(kind==0 && io.prover()){AddOneGuard guard(*base_leaves);product();}else product();}
+  evidence(io,role+"/multiset");
+ }
+ void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+--- a/src/paper_r7/oneblock_lookup.hpp
++++ b/src/paper_r7/oneblock_lookup.hpp
+@@ -5,7 +5,9 @@
+ using LeafAuthenticator=std::function<void(IO&,const Query&,const Hidden*,Random*,std::string)>;
+ // Root is fixed before this reduction. Intermediate product layers are proved
+ // recursively and never represented by independent unauthenticated PCs.
+-void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&);
++// Prover-only optional storage, borrowed without copying. The caller retains
++// one shared owner and must keep values unchanged until the call returns.
++void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&,const std::shared_ptr<std::vector<Fr>>& prepared_leaves={});
+ void hiddenMemory(IO&,const VectorOracle&address,const VectorOracle&value,const std::vector<Fr>&table,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+ // Caller supplies role="r7/" + native RangeSpec/ExpSpec.id so factory IDs
+ // exactly match the native auxiliary registry. The encoded Range query must
+--- a/src/paper_r7/CMakeLists.txt
++++ b/src/paper_r7/CMakeLists.txt
+@@ -407,3 +407,11 @@
+ add_test(NAME r7_product_weights COMMAND r7_product_weight_tests)
+ set_tests_properties(r7_product_weights PROPERTIES TIMEOUT 120 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+ 
++
++add_executable(r7_product_leaf_tests product_leaf_tests.cpp)
++target_link_libraries(r7_product_leaf_tests PRIVATE paper_r7)
++add_test(NAME r7_product_leaves COMMAND r7_product_leaf_tests)
++set_tests_properties(r7_product_leaves PROPERTIES TIMEOUT 180 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
++
++add_executable(r7_product_leaf_probe product_leaf_probe.cpp)
++target_link_libraries(r7_product_leaf_probe PRIVATE paper_r7)
+--- /dev/null
++++ b/src/paper_r7/product_leaf_tests.cpp
+@@ -0,0 +1,146 @@
++// Existing real A.3 fixture, deterministic entropy and complete event tape.
++#include "product_leaf_fixture.inc"
++namespace zkgpt::r7::leaf_reference {using namespace zkgpt::r7::oneblock;}
++#define oneblock leaf_reference
++#define hiddenProduct referenceProduct
++#define hiddenMemory referenceMemory
++#define hiddenRange referenceRange
++#define hiddenRangeBinding referenceRangeBinding
++#define hiddenExp referenceExp
++#include "product_leaf_reference.inc"
++#undef oneblock
++#undef hiddenProduct
++#undef hiddenMemory
++#undef hiddenRange
++#undef hiddenRangeBinding
++#undef hiddenExp
++
++namespace {
++void singleFingerprintScan(){
++ const std::size_t n=8;const std::vector<Fr> table{Fr(7),Fr(11),Fr(5),Fr(19)};
++ WeightRandom rng;EventTape io(true);auto make=factory(rng);
++ std::size_t aReads=0,vReads=0,readReads=0;
++ auto a=make(io,"scan/address",n,n,[](std::size_t j){return Fr(j%4);});
++ auto v=make(io,"scan/value",n,n,[&](std::size_t j){return table[j%4];});
++ auto av=a.value,vv=v.value;
++ a.value=[&](std::size_t j){++aReads;return av(j);};
++ v.value=[&](std::size_t j){++vReads;return vv(j);};
++ VectorFactory counted=[&](IO& live,std::string id,std::size_t actual,std::size_t padded,Value values){
++  auto out=make(live,id,actual,padded,values);
++  if(live.prover() && id=="scan/memory/read"){
++   auto raw=out.value;out.value=[&,raw](std::size_t j){++readReads;return raw(j);};
++  }return out;
++ };
++ hiddenMemory(io,a,v,table,counted,&rng,"scan/memory");
++ // One witness-building pass, one fingerprint pass, two independent MLEs.
++ need(aReads==4*n && vReads==4*n && readReads==3*n,
++      ("Product 0/1 repeated fingerprint witness scans: a="+std::to_string(aReads)+" v="+std::to_string(vReads)+" read="+std::to_string(readReads)).c_str());
++}
++void exactLeafTrees(){
++ for(std::size_t n:{1u,2u,4u,8u,16u,1024u})for(auto g:{Fr(0),Fr(1),Fr(-1),Fr(17)}){
++  std::array<std::vector<Fr>,2>oldLeaves,newLeaves;
++  for(auto&x:oldLeaves)x.resize(n);for(auto&x:newLeaves)x.resize(n);
++  Fr old0=1,old1=1,new0=1,new1=1;
++  for(std::size_t i=0;i<n;++i){Fr a=Fr(int(i%7)-3),v=Fr(int(i%13)-8),read=Fr(i%5),tau=Fr(19);
++   oldLeaves[0][i]=g*g*a+g*v+(read+Fr(1))-tau;oldLeaves[1][i]=g*g*a+g*v+read-tau;
++   auto z=fingerprint(a,v,read,g,g*g,tau);newLeaves[0][i]=z+Fr(1);newLeaves[1][i]=z;
++   old0*=oldLeaves[0][i];old1*=oldLeaves[1][i];new0*=z+Fr(1);new1*=z;
++  }
++  need(old0==new0 && old1==new1,"exact leaf root equality");
++  for(unsigned kind=0;kind<2;++kind){auto old=oldLeaves[kind],fresh=newLeaves[kind];
++   for(auto width=n;;width/=2){need(old==fresh,"every Product tree layer must match");if(width==1)break;
++    for(std::size_t j=0;j<width/2;++j){old[j]=old[2*j]*old[2*j+1];fresh[j]=fresh[2*j]*fresh[2*j+1];}old.resize(width/2);fresh.resize(width/2);
++   }
++  }
++ }
++}
++void preparedProductEquivalence(){
++ using zkgpt::r7::perf5::context;
++ for(const char*c2:{"0","1"})for(std::size_t n:{1u,2u,4u,8u,16u,1024u}){
++  setenv("ZKGPT_PERF6_C2",c2,1);
++  auto base=std::make_shared<std::vector<Fr>>(n);for(std::size_t i=0;i<n;++i)base->at(i)=Fr(int(i%23)-11);
++  const auto original=*base;const auto*pointer=base->data();
++  for(unsigned kind=0;kind<2;++kind){
++   WeightRandom oldR,newR;EventTape oldIO(true),newIO(true);Fr root=1;for(auto x:original)root*=x+Fr(kind==0?1:0);
++   auto oldRoot=hide(oldIO.session(),"prepared/root",root,oldR),newRoot=hide(newIO.session(),"prepared/root",root,newR);
++   auto auth=[&](IO&io,const Query&q,const Hidden*h,Random*,std::string){if(io.prover()){
++    auto expected=r1::mle(original,q.point)+Fr(kind==0?1:0);need(h && h->value==expected,"prepared Product authenticated endpoint");
++   }};
++   Value oldLeaf=[&](std::size_t j){return original[j]+Fr(kind==0?1:0);};
++   zkgpt::r7::leaf_reference::referenceProduct(oldIO,n,oldRoot,oldLeaf,auth,&oldR,"prepared/product");
++   zkgpt::r7::perf5::Context profile;context=&profile;
++   try{
++    auto execute=[&]{hiddenProduct(newIO,n,newRoot,[](std::size_t)->Fr{throw std::runtime_error("prepared path called callback");},auth,&newR,"prepared/product",base);};
++    if(kind==0){AddOneGuard guard(*base);execute();}else execute();
++   }catch(...){context=nullptr;throw;}context=nullptr;
++   need(base.use_count()==1 && base->data()==pointer && *base==original,"shared leaf storage did not survive Product intact");
++   need(profile.stats[zkgpt::r7::perf5::TreeLeaf].calls==0,"prepared Product allocated/copied callback leaves");
++   need(profile.stats[zkgpt::r7::perf5::TreeParent].calls==r1::log2exact(n),"parent calculations changed");
++   need(oldIO.events==newIO.events && oldR.counter==newR.counter,"prepared Product layer/endpoint/handle/challenge/RNG equivalence");
++   EventTape judge(false);judge.messages=newIO.messages;auto vr=newRoot;vr.value=Fr(0);vr.blind=Fr(0);
++   hiddenProduct(judge,n,vr,{},auth,nullptr,"prepared/product");need(judge.pos==judge.messages.size(),"prepared proof independent witness-free verifier");
++  }
++ }
++ unsetenv("ZKGPT_PERF6_C2");
++}
++void invalidPreparedAndExceptions(){
++ WeightRandom rng;EventTape io(true);auto root=hide(io.session(),"bad/root",Fr(2),rng);
++ LeafAuthenticator auth=[](IO&,const Query&,const Hidden*,Random*,std::string){};
++ for(auto n:{0u,1u,3u}){
++  auto bad=std::make_shared<std::vector<Fr>>(n,Fr(2));bool rejected=false;
++  try{hiddenProduct(io,2,root,{},auth,&rng,"bad/product",bad);}catch(const std::exception&e){rejected=std::string(e.what()).find("prepared leaves")!=std::string::npos;}
++  need(rejected && io.messages.empty(),"invalid prepared size must fail before messages");
++ }
++ for(std::size_t n:{1u,2u,1024u}){
++  auto base=std::make_shared<std::vector<Fr>>(n,Fr(2));auto original=*base;bool threw=false;
++  LeafAuthenticator interrupt=[](IO&,const Query&,const Hidden*,Random*,std::string){throw std::runtime_error("injected leaf authentication failure");};
++  try{AddOneGuard guard(*base);auto r=hide(io.session(),"interrupt/root",r1::mle(std::vector<Fr>{Fr(3)},{}),rng);r.value=1;for(auto x:*base)r.value*=x;r=hide(io.session(),"interrupt/root",r.value,rng);hiddenProduct(io,n,r,{},interrupt,&rng,"interrupt/product",base);}
++  catch(const std::exception&e){threw=std::string(e.what())=="injected leaf authentication failure";}
++  need(threw && *base==original && base.use_count()==1,"RAII failed to restore interrupted Product 0");
++  auto r=hide(io.session(),"reuse/root",Fr(1),rng);r.value=Fr(1);for(auto x:*base)r.value*=x;r=hide(io.session(),"reuse/root",r.value,rng);
++  hiddenProduct(io,n,r,{},auth,&rng,"reuse/product",base);need(*base==original && base.use_count()==1,"Product 1 could not reuse after exception");
++ }
++ // Extra aliases are rejected by the exact existing ownership invariant.
++ auto base=std::make_shared<std::vector<Fr>>(2,Fr(2));auto alias=base;auto r=hide(io.session(),"alias/root",Fr(4),rng);bool rejected=false;
++ zkgpt::r7::perf5::Context profile;zkgpt::r7::perf5::context=&profile;
++ try{hiddenProduct(io,2,r,{},auth,&rng,"alias/product",base);}catch(const std::exception&e){rejected=std::string(e.what()).find("final tree owner")!=std::string::npos;}
++ zkgpt::r7::perf5::context=nullptr;need(rejected,"prepared ownership check was globally relaxed");
++}
++void postWeightMemoryEquivalence(){
++ const std::vector<Fr>table{Fr(7),Fr(11),Fr(5),Fr(19)};
++ for(const char*c2:{"0","1"})for(std::size_t n:{1u,2u,8u,16u}){
++  setenv("ZKGPT_PERF6_C2",c2,1);WeightRandom oldR,newR;EventTape oldIO(true),newIO(true);
++  auto execute=[&](EventTape&live,WeightRandom&random,bool reference){auto make=factory(random);auto a=make(live,"post/address",n,n,[](std::size_t j){return Fr(j%4);});auto v=make(live,"post/value",n,n,[&](std::size_t j){return table[j%4];});
++   if(reference)zkgpt::r7::leaf_reference::referenceMemory(live,a,v,table,make,live.prover()?&random:nullptr,"post/memory",false);else hiddenMemory(live,a,v,table,make,live.prover()?&random:nullptr,"post/memory");};
++  execute(oldIO,oldR,true);execute(newIO,newR,false);need(oldIO.events==newIO.events && oldR.counter==newR.counter,"post-weight complete Memory transcript/RNG mismatch");
++  EventTape ov(false),nv(false);ov.messages=oldIO.messages;nv.messages=newIO.messages;WeightRandom vr1,vr2;execute(ov,vr1,true);execute(nv,vr2,false);
++  need(ov.events==nv.events && nv.pos==nv.messages.size(),"post-weight verifier Evidence/transcript mismatch");
++ }
++ unsetenv("ZKGPT_PERF6_C2");
++}
++// Throws while f's child captures and, for C2, ProductInputs are still live.
++void liveLayerExceptionRestoration(){
++ struct InterruptIO final:IO {
++  EventTape tape{true};std::string match;bool armed=true;
++  bool prover()const override{return true;}std::string session()const override{return tape.session();}Digest prefix()const override{return tape.prefix();}
++  Bytes message(const std::string&role,const Bytes&b={})override{if(armed && role.find(match)!=std::string::npos)throw std::runtime_error("injected live Product layer failure");return tape.message(role,b);}
++  Fr coin(const std::string&role)override{if(armed && role.find(match)!=std::string::npos)throw std::runtime_error("injected live Product layer failure");return tape.coin(role);}
++ };
++ for(const char*c2:{"0","1"})for(const char*where:{"/level/3/sumcheck/","/level/9/fold"}){
++  setenv("ZKGPT_PERF6_C2",c2,1);InterruptIO io;io.match=where;WeightRandom rng;
++  auto base=std::make_shared<std::vector<Fr>>(1024,Fr(2));const auto original=*base;bool caught=false;
++  Fr value=1;for(auto x:original)value*=x+Fr(1);auto root=hide(io.session(),"live/root",value,rng);
++  LeafAuthenticator auth=[](IO&,const Query&,const Hidden*,Random*,std::string){};
++  zkgpt::r7::perf5::Context profile;zkgpt::r7::perf5::context=&profile;
++  try{AddOneGuard guard(*base);hiddenProduct(io,base->size(),root,{},auth,&rng,"live/product",base);}
++  catch(const std::exception&e){caught=std::string(e.what())=="injected live Product layer failure";}
++  zkgpt::r7::perf5::context=nullptr;
++  need(caught && base.use_count()==1 && *base==original,"live layer unwind retained child owners or shifted data");
++  io.armed=false;value=1;for(auto x:original)value*=x;root=hide(io.session(),"live/reuse-root",value,rng);
++  hiddenProduct(io,base->size(),root,{},auth,&rng,"live/reuse",base);
++  need(base.use_count()==1 && *base==original,"Product 1 reuse after live-layer exception failed");
++ }
++ unsetenv("ZKGPT_PERF6_C2");
++}
++}
++int main(){try{r1::init();singleFingerprintScan();exactLeafTrees();preparedProductEquivalence();invalidPreparedAndExceptions();liveLayerExceptionRestoration();postWeightMemoryEquivalence();memoryTranscriptEquivalence();verifierWeights();std::cout<<"PASS single fingerprint scan; exact leaf/root/all tree layers n=1,2,4,8,16,1024; prepared alias/callback/size checks; C2 off/on; normal, leaf-auth and live-layer exceptional RAII reuse; real A.3 complete post-weight Memory messages/challenges/handles/endpoints/Sigma/openings/Evidence and entropy; retained zero Verifier weights\n";return 0;}catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/src/paper_r7/product_leaf_fixture.inc
+@@ -0,0 +1,143 @@
++// Reuse the existing real A.3 opening fixture, with test-only fixed entropy.
++#define main retained_lookup_fixture_main
++#include "oneblock_lookup_tests.cpp"
++#undef main
++#include "perf5_profile.hpp"
++// Expose anonymous-namespace helpers in this test TU without exporting a test
++// hook, or changing the linked production entry points.
++#define hiddenProduct weightUnitProduct
++#define hiddenMemory weightUnitMemory
++#define hiddenRange weightUnitRange
++#define hiddenRangeBinding weightUnitRangeBinding
++#define hiddenExp weightUnitExp
++#include "oneblock_lookup.cpp"
++#undef hiddenProduct
++#undef hiddenMemory
++#undef hiddenRange
++#undef hiddenRangeBinding
++#undef hiddenExp
++// Frozen BASE_SHA lookup implementation, compiled only into this test.
++// A distinct namespace permits a full old/new Memory transcript comparison.
++namespace zkgpt::r7::reference_oneblock {using namespace zkgpt::r7::oneblock;}
++#define oneblock reference_oneblock
++#define hiddenProduct referenceProduct
++#define hiddenMemory referenceMemory
++#define hiddenRange referenceRange
++#define hiddenRangeBinding referenceRangeBinding
++#define hiddenExp referenceExp
++#include "product_weight_reference.inc"
++#undef oneblock
++#undef hiddenProduct
++#undef hiddenMemory
++#undef hiddenRange
++#undef hiddenRangeBinding
++#undef hiddenExp
++
++namespace {
++struct WeightRandom final:Random {
++ std::uint64_t counter=0;
++ void fill(std::uint8_t*out,std::size_t n)override{
++  while(n){Writer w;w.text("product-weight-unit-test-only");w.number(counter++,8);auto d=r1::hash(w.b);auto take=std::min(n,d.size());std::copy_n(d.data(),take,out);out+=take;n-=take;}
++ }
++};
++struct EventTape final:IO,EvidenceSink {
++ bool p;std::size_t pos=0,coins=0;std::vector<std::pair<std::string,Bytes>>messages,events;
++ explicit EventTape(bool prover):p(prover){}
++ bool prover()const override{return p;}
++ std::string session()const override{return std::string(64,'b');}
++ Digest prefix()const override{return {};}
++ Bytes message(const std::string&role,const Bytes&input={})override{
++  Bytes out=input;
++  if(p)messages.emplace_back(role,out);
++  else{need(pos<messages.size() && messages[pos].first==role,"weight event message order");out=messages[pos++].second;}
++  events.emplace_back("message/"+role,out);return out;
++ }
++ Fr coin(const std::string&role)override{Fr out=Fr(2+(coins++%97));events.emplace_back("challenge/"+role,r1::encode(out));return out;}
++ void checkedRelation(const std::string&role)override{events.emplace_back("evidence/"+role,Bytes{});}
++};
++void evaluateEquivalence(){
++ for(unsigned bits:{0u,1u,3u,6u})for(auto challenge:{Fr(0),Fr(1),Fr(-1),Fr(17)}){
++  const auto n=std::size_t(1)<<bits;std::vector<Fr>point(bits,challenge);
++  WeightRandom oldRandom,newRandom;EventTape oldIO(true),newIO(true);
++  auto oldFactory=factory(oldRandom),newFactory=factory(newRandom);
++  std::array<VectorOracle,3>oldVectors,newVectors;std::array<Hidden,3>oldResults,newResults;
++  std::array<std::size_t,3>reads{};
++  for(unsigned kind=0;kind<3;++kind){
++   auto values=[kind](std::size_t j){return Fr(std::int64_t((j*7+kind*3)%19)-8);};
++   auto id="evaluate/source/"+std::to_string(kind);
++   oldVectors[kind]=oldFactory(oldIO,id,n,n,values);newVectors[kind]=newFactory(newIO,id,n,n,values);
++   auto underlying=newVectors[kind].value;
++   newVectors[kind].value=[&,kind,underlying](std::size_t j){++reads[kind];return underlying(j);};
++  }
++  auto weights=r1::weights(point);
++  for(unsigned kind=0;kind<3;++kind){auto role="evaluate/"+std::to_string(kind);
++   oldResults[kind]=evaluate(oldIO,oldVectors[kind],point,&oldRandom,role);
++   newResults[kind]=evaluateWithWeights(newIO,newVectors[kind],point,weights,&newRandom,role);
++   need(oldResults[kind].value==newResults[kind].value && oldResults[kind].blind==newResults[kind].blind && encode(oldResults[kind].handle)==encode(newResults[kind].handle),"Evaluate MLE/handle/randomness mismatch");
++   std::vector<Fr>values(n);for(std::size_t j=0;j<n;++j)values[j]=Fr(std::int64_t((j*7+kind*3)%19)-8);
++   need(newResults[kind].value==r1::mle(values,point),"Evaluate independent MLE mismatch");
++   need(reads[kind]==n,"Evaluate did not retain three independent data scans");
++  }
++  need(oldIO.messages==newIO.messages && oldIO.events==newIO.events,"Evaluate message roles/bytes/openings/challenges mismatch");
++  need(oldRandom.counter==newRandom.counter,"Evaluate entropy consumption mismatch");
++  EventTape judge(false);judge.messages=newIO.messages;WeightRandom unused;auto vm=factory(unused);
++  for(unsigned k=0;k<3;++k)newVectors[k]=vm(judge,"evaluate/source/"+std::to_string(k),n,n,{});
++  for(unsigned k=0;k<3;++k)evaluateWithWeights(judge,newVectors[k],point,{},nullptr,"evaluate/"+std::to_string(k));
++  need(judge.pos==judge.messages.size(),"Evaluate empty Verifier weights failed");
++ }
++ WeightRandom rng;EventTape io(true);auto make=factory(rng);auto v=make(io,"bad/source",2,2,[](std::size_t j){return Fr(j);});
++ auto count=io.messages.size();bool rejected=false;
++ try{evaluateWithWeights(io,v,{Fr(3)},{Fr(1)},&rng,"bad/evaluate");}catch(const std::exception&e){rejected=std::string(e.what()).find("dimension mismatch")!=std::string::npos;}
++ need(rejected && io.messages.size()==count,"shared weights shape did not fail before exchange/open");
++}
++void memoryTranscriptEquivalence(){
++ const std::vector<Fr>table{Fr(7),Fr(11),Fr(5),Fr(19)};
++ for(const char*c2:{"0","1"}){
++  setenv("ZKGPT_PERF6_C2",c2,1);
++  WeightRandom oldRandom,newRandom;EventTape oldIO(true),newIO(true);
++  auto execute=[&](EventTape&io,WeightRandom&rng,bool reference){auto make=factory(rng);
++   auto a=make(io,"exact/address",8,8,[](std::size_t j){return Fr(j%4);});
++   auto v=make(io,"exact/value",8,8,[&](std::size_t j){return table[j%4];});
++   if(reference)zkgpt::r7::reference_oneblock::referenceMemory(io,a,v,table,make,io.prover()?&rng:nullptr,"exact/memory",false);
++   else hiddenMemory(io,a,v,table,make,io.prover()?&rng:nullptr,"exact/memory");
++  };
++  execute(oldIO,oldRandom,true);execute(newIO,newRandom,false);
++  need(oldIO.messages==newIO.messages && oldIO.events==newIO.events,"Product 0/1/2 full old/new prover transcript mismatch");
++  need(oldRandom.counter==newRandom.counter,"Memory entropy consumption mismatch");
++  EventTape oldV(false),newV(false);oldV.messages=oldIO.messages;newV.messages=newIO.messages;WeightRandom a,b;
++  execute(oldV,a,true);execute(newV,b,false);
++  need(oldV.pos==oldV.messages.size() && newV.pos==newV.messages.size(),"Memory transcript verifier incomplete");
++  need(oldV.events==newV.events,"Product 0/1/2 verifier messages/challenges/evidence mismatch");
++  need(std::count_if(newV.events.begin(),newV.events.end(),[](const auto&e){return e.first.find("evidence/")==0;})>0,"Memory equivalence did not inspect Evidence");
++ }
++ unsetenv("ZKGPT_PERF6_C2");
++}
++void verifierWeights(){
++ unsetenv("ZKGPT_PERF5_PROFILE");
++ const std::vector<Fr>table{Fr(7),Fr(11),Fr(5),Fr(19)};
++ WeightRandom rng;Tape p(true);auto make=factory(rng);
++ auto a=make(p,"weights/address",8,8,[](std::size_t j){return Fr(j%4);});
++ auto v=make(p,"weights/value",8,8,[&](std::size_t j){return table[j%4];});
++ zkgpt::r7::perf5::Context prover;zkgpt::r7::perf5::context=&prover;
++ hiddenMemory(p,a,v,table,make,&rng,"weights/memory");
++ zkgpt::r7::perf5::context=nullptr;
++ need(prover.leaf_weight_calls==3 && prover.leaf_weight_elements==20 && prover.leaf_weight_muls==34 && prover.leaf_weight_payload_bytes==20*sizeof(Fr),"Product 0/1 leaf weights were not shared independently; Product 2 must retain one evaluation");
++ // Test every historical setting, including the default and forced reference.
++ for(const char*setting:{"unset","0","1"}){
++  if(std::string(setting)=="unset")unsetenv("ZKGPT_PERF5_WEIGHTS_REFERENCE");
++  else setenv("ZKGPT_PERF5_WEIGHTS_REFERENCE",setting,1);
++  Tape judge(false);judge.messages=p.messages;auto vm=factory(rng);
++  auto va=vm(judge,"weights/address",8,8,{}),vv=vm(judge,"weights/value",8,8,{});
++  zkgpt::r7::perf5::Context ctx;zkgpt::r7::perf5::context=&ctx;
++  try{hiddenMemory(judge,va,vv,table,vm,nullptr,"weights/memory");}
++  catch(...){zkgpt::r7::perf5::context=nullptr;throw;}
++  zkgpt::r7::perf5::context=nullptr;
++  need(judge.pos==judge.messages.size(),"weights verifier did not consume full proof");
++  need(ctx.weight_calls==0 && ctx.weight_elements==0 && ctx.weight_muls==0,
++       "Verifier materialized Product layer weights");
++  need(ctx.leaf_weight_calls==0 && ctx.leaf_weight_elements==0 && ctx.leaf_weight_muls==0,"Verifier materialized Evaluate weights");
++  need(ctx.stats[zkgpt::r7::perf5::Equality].calls==8,"Product equality authentication was skipped");
++ }
++ unsetenv("ZKGPT_PERF5_WEIGHTS_REFERENCE");
++}
++}
+--- /dev/null
++++ b/src/paper_r7/product_leaf_reference.inc
+@@ -0,0 +1,89 @@
++#include "oneblock_lookup.hpp"
++#include "perf4_profile.hpp"
++#include "perf5_profile.hpp"
++#include "perf6_options.hpp"
++#include <algorithm>
++#include <array>
++#include <memory>
++namespace zkgpt::r7::oneblock {
++namespace {
++void evidence(IO&io,const std::string&id){if(!io.prover())checked(io,id);}
++Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"lookup entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/handle",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
++Hidden known(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
++void linear(IO&io,const std::string&role,const std::vector<Hidden>&h,const std::vector<Fr>&a,Random*rng){need(h.size()==a.size(),"lookup linear shape");Relations r;r.role=role;for(auto&v:h)r.handles.push_back(v.handle);r.linear={a};sigma(io,r,io.prover()?&h:nullptr,rng);}
++void constant(IO&io,const Hidden&h,const Fr&v,Random*rng,const std::string&role){linear(io,role,{h,known(io,role+"/public",v)},{Fr(1),Fr(-1)},rng);}
++void shape(const VectorOracle&v){need(v.actual>0 && v.actual<=v.padded && v.padded<=(1u<<24) && !(v.padded&(v.padded-1)) && !v.id.empty() && bool(v.open),"lookup oracle shape/authenticator");}
++void pairShape(const VectorOracle&a,const VectorOracle&b){shape(a);shape(b);need(a.actual==b.actual && a.padded==b.padded,"lookup source/value dimensions");}
++std::vector<Fr> point(IO&io,std::size_t n,const std::string&role){std::vector<Fr>r;for(unsigned i=0;i<r1::log2exact(n);++i)r.push_back(io.coin(role+"/"+std::to_string(i)));return r;}
++std::vector<Fr> evaluateWeights(const std::vector<Fr>&r){perf5::Scope t(perf5::LeafWeights);auto w=r1::weights(r);perf5::leafWeights(w.size());return w;}
++Hidden evaluateWithWeights(IO&io,const VectorOracle&v,const std::vector<Fr>&r,const std::vector<Fr>&weights,Random*rng,const std::string&role){Fr value=0;if(io.prover()){need(bool(v.value),"lookup oracle missing private values");need(weights.size()==v.padded,"Evaluate shared weights dimension mismatch");for(std::size_t i=0;i<v.padded;++i)value+=weights[i]*v.value(i);}auto h=exchange(io,role,value,rng);v.open(io,{r,h.handle},io.prover()?&h:nullptr,rng,role+"/open");return h;}
++Hidden evaluate(IO&io,const VectorOracle&v,const std::vector<Fr>&r,Random*rng,const std::string&role){Fr value=0;if(io.prover()){need(bool(v.value),"lookup oracle missing private values");auto w=evaluateWeights(r);for(std::size_t i=0;i<v.padded;++i)value+=w[i]*v.value(i);}auto h=exchange(io,role,value,rng);v.open(io,{r,h.handle},io.prover()?&h:nullptr,rng,role+"/open");return h;}
++Fr publicMLE(const Value&v,std::size_t n,const std::vector<Fr>&r){auto w=r1::weights(r);need(w.size()==n,"lookup public MLE dimension");Fr out=0;for(std::size_t i=0;i<n;++i)out+=v(i)*w[i];return out;}
++Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
++std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
++Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&g2,const Fr&t){return g2*a+g*v+c-t;}
++Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
++void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
++}
++void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role){
++ const auto*b2=std::getenv("ZKGPT_PERF6_B2");
++ perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
++ bool contiguous=false;if(io.prover()){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
++ perf4::Scope native_scope("Native/Product",role,n);
++ perf5::Product product_profile(role,n,io.prover());perf5::Scope product_total(perf5::Total);
++ need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
++ std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){need(bool(leaves),"lookup Product leaves missing");std::shared_ptr<std::vector<Fr>>leaf;{perf5::Scope t(perf5::TreeAllocInit);leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));}{perf5::Scope t(perf5::TreeLeaf);for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);}tree.push_back(leaf);for(std::size_t width=n;width>1;width/=2){std::shared_ptr<std::vector<Fr>>next;{perf5::Scope t(perf5::TreeAllocInit);next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));}{perf5::Scope t(perf5::TreeParent);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);}tree.push_back(next);}}
++ // The supplied root replaces the stored top level; only children are read.
++ if(io.prover() && n>1)tree.pop_back();
++ Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
++ for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);std::shared_ptr<std::vector<Fr>>w;Value eq;if(io.prover()){perf5::Scope t(perf5::Weights);perf5::weights(width);w=std::make_shared<std::vector<Fr>>(r1::weights(row));eq=[w](std::size_t j){return w->at(j);};}std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
++  Reduction end;
++  if(contiguous){ProductInputs inputs{*w,*tree.at(d-layer-1)};end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&inputs);}
++  else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck");
++  need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
++  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context)need(tree.at(d-layer-1).use_count()==1,"PERF5 TreeFree requires final tree owner");tree.at(d-layer-1).reset();}
++ }
++ {perf5::Scope t(perf5::LeafAuthentication);auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");}
++ // A layer is recorded only after the recursive chain reaches an actually
++ // authenticated source leaf. A provisional recurrence is not tree coverage.
++ {perf5::Scope t(perf5::Coverage);for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
++ evidence(io,role+"/root");}
++}
++void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Memory",role,a.padded);
++ pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
++ auto readValues=std::make_shared<std::vector<Fr>>(),finalValues=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){readValues->resize(a.padded,Fr(0));finalValues->resize(table.size(),Fr(0));std::vector<std::size_t>counts(table.size(),0);for(std::size_t i=0;i<a.padded;++i){auto j=integer(a.value(i),table.size());need(v.value(i)==table[j],"lookup private memory value mismatch");readValues->at(i)=Fr(counts[j]++);}for(std::size_t j=0;j<table.size();++j)finalValues->at(j)=Fr(counts[j]);}
++ auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();shape(read);shape(final);need(read.actual==a.padded && read.padded==a.padded && final.actual==table.size() && final.padded==table.size(),"lookup counter factory dimensions");
++ auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}std::array<Value,3>leaves;std::array<Hidden,3>roots;for(unsigned kind=0;kind<3;++kind){Fr value=1;auto size=kind==2?table.size():a.padded;if(io.prover()){if(kind==2)leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};else leaves[kind]=[a,v,read,g,g2,tau,kind](std::size_t i){return fingerprint(a.value(i),v.value(i),read.value(i)+Fr(kind==0?1:0),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
++ Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
++ for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{
++   // The three MLEs and openings stay sequential and independent. Only this
++   // invocation's challenge-dependent weight vector is shared.
++   std::vector<Fr>weights;if(live.prover())weights=evaluateWeights(q.point);
++   aa=evaluateWithWeights(live,a,q.point,weights,random,name+"/address");
++   vv=evaluateWithWeights(live,v,q.point,weights,random,name+"/value");
++   c=evaluateWithWeights(live,read,q.point,weights,random,name+"/read");
++   Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g2,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
++  hiddenProduct(io,kind==2?table.size():a.padded,roots[kind],leaves[kind],auth,rng,role+"/product/"+std::to_string(kind));}
++ evidence(io,role+"/multiset");
++}
++void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Range",role,q.padded);
++ shape(q);need(bits>=1 && bits<=126,"lookup Range bits");Writer statement;statement.text("R7-HIDDEN-RANGE-9BIT-v1");statement.text(q.id);statement.number(bits);statement.number(q.actual,8);statement.number(q.padded,8);bindPublic(io,role+"/statement",statement.b);unsigned count=(bits+8)/9;std::vector<VectorOracle>digits;
++ for(unsigned h=0;h<count;++h){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(q.padded,Fr(0));for(std::size_t i=0;i<q.padded;++i){auto b=r1::encode(q.value(i));for(unsigned bit=bits;bit<256;++bit)need(!(b[bit/8]&(1u<<(bit%8))),"lookup private Range exceeds bitwidth");need(i<q.actual || q.value(i).isZero(),"lookup private Range nonzero padding");unsigned digit=0;for(unsigned j=0;j<std::min(9u,bits-9*h);++j){auto k=9*h+j;digit|=((b[k/8]>>(k%8))&1u)<<j;}values->at(i)=Fr(digit);}}
++  digits.push_back(factory(io,role+"/digit/"+std::to_string(h),q.actual,q.padded,privateValues(io,values)));shape(digits.back());need(digits.back().actual==q.actual && digits.back().padded==q.padded,"lookup digit factory dimensions");}
++ auto r=point(io,q.padded,role+"/row");std::vector<Hidden>opened{evaluate(io,q,r,rng,role+"/query")};std::vector<Fr>coeff{Fr(-1)};Fr scale=1;for(unsigned h=0;h<count;++h){opened.push_back(evaluate(io,digits[h],r,rng,role+"/digit-evaluation/"+std::to_string(h)));coeff.push_back(scale);scale*=Fr(512);}linear(io,role+"/reconstruction",opened,coeff,rng);evidence(io,role+"/reconstruction");for(unsigned h=0;h<count;++h)evidence(io,role+"/digit/"+std::to_string(h)+"/opening");
++ for(unsigned h=0;h<count;++h){std::vector<Fr>table(std::size_t(1)<<std::min(9u,bits-9*h),Fr(0));for(std::size_t j=0;j<table.size();++j)table[j]=Fr(j);hiddenMemory(io,digits[h],digits[h],table,factory,rng,role+"/memory/"+std::to_string(h),prepared);}tail(io,q,rng,role+"/zero-tail");evidence(io,role+"/zero-tail"); // Includes a verifier-known empty tail when actual==padded.
++}
++void hiddenRangeBinding(IO&io,const VectorOracle&source,const VectorOracle&encoded,unsigned bits,bool sign,Random*rng,const std::string&role){pairShape(source,encoded);need(bits>=1 && bits<=126,"lookup binding bitwidth");Writer identity;identity.text(source.id);identity.text(encoded.id);identity.number(bits);identity.number(sign);bindPublic(io,role+"/identity",identity.b);auto r=point(io,source.padded,role+"/point");auto s=evaluate(io,source,r,rng,role+"/source"),q=evaluate(io,encoded,r,rng,role+"/encoded");Fr bias=sign?Fr(1):Fr(0);if(sign)for(unsigned i=1;i<bits;++i)bias*=Fr(2);auto b=known(io,role+"/bias",bias*active(source.actual,r));linear(io,role+"/relation",{q,s,b},{Fr(1),Fr(-1),Fr(-1)},rng);}
++void hiddenExp(IO&io,const VectorOracle&index,const VectorOracle&value,r1::ExpProfile profile,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
++ perf4::Scope native_scope("Native/Exp",role,index.padded);
++ pairShape(index,value);need(profile==r1::ExpProfile::LegacyClampOne || profile==r1::ExpProfile::Unclamped,"lookup Exp profile");Writer statement;statement.text("R7-HIDDEN-EXP-u32-St2^-9-Se2^-20-v1");statement.text(index.id);statement.text(value.id);statement.number(unsigned(profile));auto digest=r1::expTableDigest(profile);statement.raw(Bytes(digest.begin(),digest.end()));bindPublic(io,role+"/statement",statement.b);
++ constexpr std::uint32_t K=8191,Scale=1048576;std::array<VectorOracle,4>helper;const std::array<std::string,4>names{"x","selector","delta","native-E"};for(unsigned k=0;k<4;++k){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(index.padded,Fr(0));for(std::size_t i=0;i<index.padded;++i){if(i>=index.actual){if(k==3)values->at(i)=value.value(i)+Fr(Scale);continue;}auto raw=integer(index.value(i),std::uint64_t(1)<<32);values->at(i)=k==0?Fr(std::min<std::size_t>(raw,K)):k==1?Fr(raw<K?1:0):k==2?Fr(raw<K?K-1-raw:raw-K):value.value(i);}}helper[k]=factory(io,role+"/"+names[k],index.actual,index.padded,privateValues(io,values));shape(helper[k]);need(helper[k].actual==index.actual && helper[k].padded==index.padded,"lookup Exp factory dimensions");}
++ hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
++ for(unsigned kind=0;kind<2;++kind){auto name=role+"/branch/"+std::to_string(kind);auto row=point(io,index.padded,name+"/row");auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t i){return w->at(i);},mask=[actual=index.actual](std::size_t i){return Fr(i<actual?1:0);};std::vector<Value>f;if(io.prover())f={eq,helper[kind==0?0:2].value,helper[1].value,index.value,mask};Expression expr;expr.factor_count=5;
++  if(kind==0)expr.terms={{Fr(1),{0,1}},{Fr(-1),{0,2,3}},{Fr(-std::int64_t(K)),{0,4}},{Fr(K),{0,2}}};else expr.terms={{Fr(1),{0,1}},{Fr(2),{0,2,3}},{Fr(-1),{0,4,3}},{Fr(K),{0,4}},{Fr(-std::int64_t(2*K-1)),{0,2}}};
++  auto zero=known(io,name+"/zero",Fr(0));auto end=expressionSumcheck(io,index.padded,zero,f,expr,rng,name+"/sumcheck");need(end.endpoints.size()==5,"lookup Exp branch endpoint count");constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/eq");constant(io,end.endpoints[4],active(index.actual,end.point),rng,name+"/mask");helper[kind==0?0:2].open(io,{end.point,end.endpoints[1].handle},io.prover()?&end.endpoints[1]:nullptr,rng,name+"/helper");helper[1].open(io,{end.point,end.endpoints[2].handle},io.prover()?&end.endpoints[2]:nullptr,rng,name+"/selector");index.open(io,{end.point,end.endpoints[3].handle},io.prover()?&end.endpoints[3]:nullptr,rng,name+"/index");evidence(io,role+"/constraint/"+std::to_string(kind));}
++ auto r=point(io,index.padded,role+"/value-point");auto original=evaluate(io,value,r,rng,role+"/original-E"),native=evaluate(io,helper[3],r,rng,role+"/native-E-evaluation");auto pad=known(io,role+"/padding",Fr(Scale)*(Fr(1)-active(index.actual,r)));linear(io,role+"/value-binding",{native,original,pad},{Fr(1),Fr(-1),Fr(-1)},rng);evidence(io,role+"/value-binding/0");evidence(io,role+"/value-binding/1");hiddenMemory(io,helper[0],helper[3],r1::expTable(profile),factory,rng,role+"/indexed",prepared);
++}
++}
+--- /dev/null
++++ b/src/paper_r7/product_leaf_probe.cpp
+@@ -0,0 +1,50 @@
++// Measurement-only Memory fixture: real Product and Sigma arithmetic, synthetic
++// vector oracles. It does not replace independent cryptographic verification.
++#include "oneblock_lookup.hpp"
++#include "perf5_profile.hpp"
++#include "opt2_metrics.hpp"
++#include <chrono>
++#include <iostream>
++#include <memory>
++namespace zkgpt::r7::leaf_reference {using namespace zkgpt::r7::oneblock;}
++#define oneblock leaf_reference
++#define hiddenProduct referenceProduct
++#define hiddenMemory referenceMemory
++#define hiddenRange referenceRange
++#define hiddenRangeBinding referenceRangeBinding
++#define hiddenExp referenceExp
++#include "product_leaf_reference.inc"
++#undef oneblock
++#undef hiddenProduct
++#undef hiddenMemory
++#undef hiddenRange
++#undef hiddenRangeBinding
++#undef hiddenExp
++using namespace zkgpt::r7::crypto;
++using namespace zkgpt::r7::oneblock;
++namespace {
++struct FixedRandom:Random {std::uint64_t counter=0;void fill(std::uint8_t*out,std::size_t n)override{while(n){Writer w;w.text("leaf-probe-test-only");w.number(counter++,8);auto d=r1::hash(w.b);auto take=std::min(n,d.size());std::copy_n(d.data(),take,out);out+=take;n-=take;}}};
++struct ProbeIO:IO {std::uint64_t messages=0,coins=0; r1::Fs digest{"LEAF-PROBE-MESSAGES"};bool prover()const override{return true;}std::string session()const override{return std::string(64,'b');}Digest prefix()const override{return {};}
++ Bytes message(const std::string&role,const Bytes&b={})override{++messages;digest.text("role",role);digest.bytes("bytes",b);return b;}
++ Fr coin(const std::string&role)override{auto x=Fr(2+(coins++%97));digest.text("coin",role);digest.scalar("value",x);return x;}
++};
++}
++int main(int argc,char**argv){try{
++ r1::init();need(argc==3,"usage: product_leaf_probe A|B n");const std::string label=argv[1];const std::size_t n=std::stoull(argv[2]);need(label=="A" || label=="B","probe label");
++ ProbeIO io;FixedRandom rng;const std::vector<Fr>table{Fr(7),Fr(11),Fr(5),Fr(19)};
++ auto av=std::make_shared<std::vector<Fr>>(n),vv=std::make_shared<std::vector<Fr>>(n),reads=std::make_shared<std::vector<Fr>>(n),finals=std::make_shared<std::vector<Fr>>(4,Fr(0));
++ for(std::size_t i=0;i<n;++i){av->at(i)=Fr(i%4);vv->at(i)=table[i%4];reads->at(i)=finals->at(i%4);finals->at(i%4)+=Fr(1);}
++ std::size_t aReads=0,vReads=0,rReads=0;
++ auto auth=[](IO&,const Query&,const Hidden*h,Random*,std::string){need(h,"probe source witness");};
++ VectorOracle a{n,n,"probe/address",[&](std::size_t j){++aReads;return av->at(j);},auth};
++ VectorOracle v{n,n,"probe/value",[&](std::size_t j){++vReads;return vv->at(j);},auth};
++ VectorFactory factory=[&](IO&,std::string id,std::size_t actual,std::size_t padded,Value){VectorOracle out;out.actual=actual;out.padded=padded;out.id=id;out.open=auth;
++  if(id=="probe/memory/read")out.value=[&](std::size_t j){++rReads;return reads->at(j);};
++  else {need(id=="probe/memory/final","probe factory role");out.value=[&](std::size_t j){return finals->at(j);};}return out;};
++ // Start tracking after input preparation, before all root/leaf work.
++ auto start=std::chrono::steady_clock::now();std::uint64_t allocs,bytes;
++ {AllocationTrace trace;if(label=="A")zkgpt::r7::leaf_reference::referenceMemory(io,a,v,table,factory,&rng,"probe/memory",true);else hiddenMemory(io,a,v,table,factory,&rng,"probe/memory",true);allocs=trace.count();bytes=trace.bytes();}
++ auto elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();auto d=io.digest.digest();
++ std::cout<<"LEAF_PROBE {\"label\":\""<<label<<"\",\"n\":"<<n<<",\"wall_seconds\":"<<elapsed<<",\"allocations\":"<<allocs<<",\"allocated_bytes\":"<<bytes<<",\"a_reads\":"<<aReads<<",\"v_reads\":"<<vReads<<",\"read_reads\":"<<rReads<<",\"messages\":"<<io.messages<<",\"coins\":"<<io.coins<<",\"digest\":\"";for(auto b:d)std::cout<<"0123456789abcdef"[b>>4]<<"0123456789abcdef"[b&15];std::cout<<"\"}\n";
++ return 0;
++ }catch(const std::exception&e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/tools/product_leaves_remote.py
+@@ -0,0 +1,121 @@
++"""Local-authored serial validation and measurements in the fixed workspace."""
++from pathlib import Path
++import hashlib,json,os,resource,shutil,subprocess,time,sys,importlib.util,traceback
++ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
++S=ROOT/'reports/R7-PRODUCT-LEAF/R7-PRODUCT-LEAF-OPT-20261112-v1'
++B=ROOT/'build/product-leaf-20261112-v1'
++BIN=B/'src/paper_r7'
++os.chdir(ROOT)
++ENV={k:v for k,v in os.environ.items() if not k.startswith(('ZKGPT_','R7_'))}
++ENV.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
++AFFINITY=sorted(os.sched_getaffinity(0))[:4]
++def save(name,data):
++ p=S/name;assert not p.exists(),p;p.write_text(json.dumps(data,indent=2)+'\n')
++def sha(path):
++ h=hashlib.sha256()
++ with Path(path).open('rb') as f:
++  for chunk in iter(lambda:f.read(4<<20),b''):h.update(chunk)
++ return h.hexdigest()
++def objects(path,tag):return [json.loads(l[len(tag)+1:]) for l in Path(path).read_text(errors='replace').splitlines() if l.startswith(tag+' ')]
++def run(name,args,env=None,expected=0):
++ log=S/(name+'.log');assert not log.exists(),log
++ def limits():os.sched_setaffinity(0,AFFINITY);resource.setrlimit(resource.RLIMIT_CORE,(0,0))
++ start=time.monotonic()
++ with log.open('xb') as f:
++  p=subprocess.Popen(list(map(str,args)),stdout=f,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,env=env or ENV,preexec_fn=limits)
++  (S/'ACTIVE.json').write_text(json.dumps({'name':name,'pid':p.pid,'started_unix':time.time()}))
++  _,status,usage=os.wait4(p.pid,0);p.returncode=os.waitstatus_to_exitcode(status)
++ r={'name':name,'command':list(map(str,args)),'exit_code':p.returncode,'wall_seconds':time.monotonic()-start,'cpu_seconds':usage.ru_utime+usage.ru_stime,'peak_rss_kib':usage.ru_maxrss,'log':str(log),'cpu_affinity':AFFINITY,'load_after':os.getloadavg()}
++ save(name+'.json',r);print(name,p.returncode,r['wall_seconds'],flush=True)
++ assert p.returncode==expected,(name,p.returncode,log.read_text(errors='replace')[-4000:])
++ return r
++def baseline():
++ text=(S/'expected-red.log').read_text();assert 'repeated fingerprint witness scans: a=56 v=56 read=48' in text
++ dest=S/'baseline-bin';dest.mkdir()
++ for name in ['r7_perf6_exact_native','r7_fs_full12_prover','r7_fs_full12_verifier']:
++  shutil.copy2(BIN/name,dest/name)
++ save('BASELINE_READY.json',{'expected_red':text,'binary_sha256':{p.name:sha(p) for p in dest.iterdir()},'lookup_sha256':sha(ROOT/'src/paper_r7/oneblock_lookup.cpp')})
++def candidate():
++ assert (S/'BASELINE_READY.json').exists()
++ run('resumed-configure',['cmake','-S',ROOT,'-B',B])
++ run('resumed-build',['cmake','--build',B,'--target','r7_product_leaf_tests','r7_product_leaf_probe','r7_product_weight_tests','r7_perf5_product_tests','r7_perf5_profile_tests','r7_perf6_product_inputs_tests','r7_oneblock_lookup_tests','r7_perf6_exact_native','r7_fs_full12_prover','r7_fs_full12_verifier','-j4'])
++ run('resumed-leaf-tests',[BIN/'r7_product_leaf_tests'])
++ run('resumed-product-tests',['ctest','--test-dir',B,'-R','^r7_(product_weights|product_leaves|perf5_product_equivalence|perf5_profile_hierarchy|perf6_product_inputs)$','--output-on-failure'])
++ seed=S/'deterministic-test-seed.bin';seed.write_bytes(bytes(range(32)))
++ comparisons=[]
++ for c2 in ['0','1']:
++  env=ENV|{'ZKGPT_PERF5_PROFILE':'1','ZKGPT_PERF6_C2':c2};outputs={}
++  for label,base in [('A',S/'baseline-bin'),('B',BIN)]:
++   proof=S/f'resumed-exact-{label}-c2-{c2}.fsproof';pt=S/f'resumed-exact-{label}-c2-{c2}-P.trace';vt=S/f'resumed-exact-{label}-c2-{c2}-V.trace'
++   run(f'resumed-exact-{label}-c2-{c2}-P',[base/'r7_perf6_exact_native','prove',proof,pt,'512',seed],env)
++   r=run(f'resumed-exact-{label}-c2-{c2}-V',[base/'r7_perf6_exact_native','verify',proof,vt,'512'],env)
++   if label=='B':
++    ps=objects(r['log'],'PERF5_PRODUCT');assert len(ps)==3
++    assert all(p['weights']['calls']==p['leaf_evaluate_weights']['calls']==0 for p in ps)
++   outputs[label]=[proof,pt,vt]
++  assert all(a.read_bytes()==b.read_bytes() for a,b in zip(outputs['A'],outputs['B']))
++  comparisons.append({'c2':c2,'proof_bytes_equal':True,'prover_events_equal':True,'verifier_events_equal':True})
++ save('CANDIDATE_READY.json',{'success':True,'deterministic_native_comparisons':comparisons})
++def micro():
++ assert json.loads((S/'CANDIDATE_READY.json').read_text())['success']
++ results=[];env=ENV|{'ZKGPT_PERF5_PROFILE':'1','ZKGPT_PERF4_PROFILE':'1','ZKGPT_PERF6_C2':'1'}
++ for n in [1<<19,1<<21,1<<22,1<<23]:
++  digests=set()
++  for i,label in enumerate(['A','B','B','A','A','B']):
++   r=run(f'memory-{n}-{i}-{label}',[BIN/'r7_product_leaf_probe',label,n],env)
++   data=objects(r['log'],'LEAF_PROBE');assert len(data)==1
++   scopes=objects(r['log'],'PERF4_SCOPE')
++   r.update(label=label,n=n,measurement=data[0],products=objects(r['log'],'PERF5_PRODUCT'),scopes=scopes)
++   assert len(r['products'])==3
++   digests.add(data[0]['digest']);assert data[0]['a_reads']==data[0]['v_reads']==(6 if label=='A' else 3)*n
++   assert data[0]['read_reads']==(6 if label=='A' else 3)*n
++   results.append(r)
++   (S/'MICRO-RAW.json').write_text(json.dumps(results,indent=2))
++  assert len(digests)==1,'full synthetic Memory transcript differs'
++ save('MICRO_RESULT.json',{'success':True,'runs':len(results),'order':'ABBAAB','source_openings':'synthetic only; real A.3 tested separately','primary_timing':'whole Memory includes roots, base allocation and shift/restoration; Product-only timing excludes these and is secondary','preparation_timing':'candidate PERF4 base scope is reported separately, no baseline standalone root/shift timing comparison claimed','allocation_scope':'ordinary C++ new/new[] on calling thread; excludes malloc, aligned and other threads'})
++def full12():
++ assert json.loads((S/'CANDIDATE_READY.json').read_text())['success']
++ source=ROOT/'tools/product_leaves_r9_method.py'
++ spec=importlib.util.spec_from_file_location('retained_r9',source);r9=importlib.util.module_from_spec(spec);spec.loader.exec_module(r9)
++ r9.S=S;r9.LOG=ROOT/'logs'/S.name;r9.LOG.mkdir(exist_ok=True);r9.BIN=BIN;r9.AFFINITY=AFFINITY;r9.ENV['ZKGPT_PERF5_PROFILE']='1'
++ frozen=r9.sources();save('FROZEN_SOURCE.json',frozen)
++ parameters=json.loads((ROOT/'reports/R9-FULL12-PHASE-TIMING/R9-FULL12-PHASE-TIMING-20261111-v1/PARAMETERS.json').read_text());assert {p:sha(ROOT/p) for p in parameters}==parameters
++ save('PARAMETERS.json',parameters);save('METHOD.json',{'R9_runner_sha256':sha(source),'environment':{k:v for k,v in r9.ENV.items() if k.startswith('ZKGPT_') or k=='MALLOC_ARENA_MAX'},'cpu_affinity':AFFINITY,'candidate_full12_repetitions':1,'baseline':'completed post-weight stage Full12 evidence; not pre-weight baseline','no_precise_causal_full12_speedup_claim':True})
++ r9.execute('full12','full12-B-shared-leaf','R9',frozen)
++ assert {p:sha(ROOT/p) for p in parameters}==parameters
++ save('FULL12_RESULT.json',{'success':True,'parameters_unchanged':True,'source_unchanged':r9.sources()==frozen,'production_gate':'BLOCKED_CRYPTOGRAPHIC_DESIGN','may_enter_stage2':False})
++def suite():
++ run('all-targets-build',['cmake','--build',B,'-j4'])
++ run('all-ctest',['ctest','--test-dir',B,'--output-on-failure','-j4'])
++def sanitizer():
++ ab=ROOT/'build/product-leaf-asan-20261112-v1'
++ run('asan-configure',['cmake','-S',ROOT,'-B',ab,'-DCMAKE_BUILD_TYPE=Debug','-DZKGPT_BUILD_R7_FRAMEWORK=ON','-DCNPY_INCLUDE_DIR='+str(ROOT/'deps/cnpy/include'),'-DCNPY_LIBRARY='+str(ROOT/'deps/cnpy/lib/libcnpy.a'),'-DCMAKE_CXX_FLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer','-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined','-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined'])
++ run('asan-build',['cmake','--build',ab,'--target','r7_product_leaf_tests','-j4'])
++ run('asan-leaf-tests',[ab/'src/paper_r7/r7_product_leaf_tests'],ENV|{'ASAN_OPTIONS':'detect_leaks=1:halt_on_error=1','UBSAN_OPTIONS':'halt_on_error=1:print_stacktrace=1'})
++def remaining():
++ candidate();suite();sanitizer();micro();full12()
++def after_suite():
++ failed=Path(B/'Testing/Temporary/LastTestsFailed.log').read_text().splitlines()
++ assert failed==['76:r7_zero_suffix_storage'],failed
++ identities={}
++ for label,binary in [('isolated-candidate',BIN/'r7_zero_suffix_storage_tests'),('retained-release',ROOT/'build/release/src/paper_r7/r7_zero_suffix_storage_tests')]:
++  r=json.loads((S/('storage-'+label+'.json')).read_text());assert r['exit_code']==1
++  assert 'R7 source allocation still materializes padded witness suffix' in Path(r['log']).read_text()
++  identities[label]={'binary_sha256':sha(binary),'exit_code':1,'same_allocation_budget_failure':True}
++ save('SUITE_RESULT.json',{'all_target_build':True,'ctest_passed':120,'ctest_total':121,'ctest_success':False,'known_existing_failure':'r7_zero_suffix_storage: R7 source allocation still materializes padded witness suffix','baseline_and_candidate_reproduction':identities,'ruling':'retain failure and continue scoped Product validation; no changes to unrelated storage/parallel/U code'})
++ sanitizer();micro();full12()
++def full12_resume():
++ assert json.loads((S/'CANDIDATE_READY.json').read_text())['success'] and json.loads((S/'MICRO_RESULT.json').read_text())['success']
++ source=ROOT/'tools/product_leaves_r9_method.py'
++ spec=importlib.util.spec_from_file_location('retained_r9_resume',source);r9=importlib.util.module_from_spec(spec);spec.loader.exec_module(r9)
++ r9.S=S;r9.LOG=ROOT/'logs'/S.name;r9.LOG.mkdir(exist_ok=True);r9.BIN=BIN;r9.AFFINITY=AFFINITY;r9.ENV['ZKGPT_PERF5_PROFILE']='1'
++ frozen=json.loads((S/'FROZEN_SOURCE.json').read_text());assert r9.sources()==frozen
++ parameters=json.loads((S/'PARAMETERS.json').read_text());assert {p:sha(ROOT/p) for p in parameters}==parameters
++ save('METHOD-RESUMED.json',{'runner_sha256':sha(source),'statement_sha256':sha(S/'input/STATEMENT.bin'),'statement_source':'identical restored Windows prior-weight validated public statement','prior_attempt':'failed missing moved historical statement before launching proof; empty stage retained','run_name':'full12-B-shared-leaf-v2','source_frozen':True,'parameters_unchanged':True})
++ r9.execute('full12','full12-B-shared-leaf-v2','R9',frozen)
++ assert {p:sha(ROOT/p) for p in parameters}==parameters
++ save('FULL12_RESULT.json',{'success':True,'run_name':'full12-B-shared-leaf-v2','parameters_unchanged':True,'source_unchanged':r9.sources()==frozen,'production_gate':'BLOCKED_CRYPTOGRAPHIC_DESIGN','may_enter_stage2':False})
++if __name__=='__main__':
++ try:globals()[sys.argv[1]]()
++ except BaseException as e:
++  (S/('FAILURE-'+sys.argv[1]+'-'+str(time.time_ns())+'.json')).write_text(json.dumps({'error':repr(e),'traceback':traceback.format_exc()},indent=2));raise
+--- /dev/null
++++ b/tools/product_leaves_r9_method.py
+@@ -0,0 +1,109 @@
++"""Serial R9 experiments with preserved R8 Immediate binaries. Never overwrite/retry a stage or launch two proofs."""
++from pathlib import Path
++import hashlib,json,os,resource,shutil,subprocess,time,traceback
++ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
++S=Path(__file__).resolve().parent
++LOG=ROOT/'logs'/S.name
++BIN=ROOT/'build/release/src/paper_r7'
++os.chdir(ROOT)
++def save(p,x):Path(p).write_text(json.dumps(x,indent=2,ensure_ascii=False)+'\n')
++def sha(p):
++ h=hashlib.sha256()
++ with Path(p).open('rb') as f:
++  for b in iter(lambda:f.read(4<<20),b''):h.update(b)
++ return h.hexdigest()
++def sources():return {str(p):sha(p) for p in sorted(Path('src').rglob('*')) if p.is_file()}|{'CMakeLists.txt':sha('CMakeLists.txt')}
++def objects(path,tag=None):
++ out=[]
++ for line in Path(path).read_text(errors='replace').splitlines():
++  text=line[len(tag)+1:] if tag and line.startswith(tag+' ') else line if not tag and line.startswith('{') else ''
++  if text:
++   try:out.append(json.loads(text))
++   except ValueError:pass
++ return out
++ENV={k:v for k,v in os.environ.items() if not k.startswith(('ZKGPT_','R7_'))}
++ENV.update(ZKGPT_THREADS='4',ZKGPT_U_THREADS='4',ZKGPT_SINGLE_COMMIT_THREADS='4',MALLOC_ARENA_MAX='2',ZKGPT_OPT2_METRICS='1',ZKGPT_PERF4_U_FOLD='1',ZKGPT_CATEGORY_U_FOLD='1',ZKGPT_K_COMPACT='1',ZKGPT_CATEGORY_K_ENDPOINT='1',ZKGPT_SOURCE_MLE_STREAM='1',ZKGPT_CATEGORY_U_RAM_BYTES=str(512<<20),ZKGPT_CATEGORY_U_IMMEDIATE_RAM_BYTES=str(16<<30),ZKGPT_U_PROFILE_READ='0',ZKGPT_PERF4_PROFILE='1',PYTHONDONTWRITEBYTECODE='1')
++AFFINITY=sorted(os.sched_getaffinity(0))[:4]
++CG=Path('/sys/fs/cgroup')/Path(next(x[3:] for x in Path('/proc/self/cgroup').read_text().splitlines() if x.startswith('0::/'))).relative_to('/')
++def readnum(p):
++ try:return int(p.read_text().strip())
++ except (OSError,ValueError):return None
++def cgstate():return {str(CG/name):readnum(CG/name) for name in ['memory.current','memory.peak']}
++def limits():os.sched_setaffinity(0,AFFINITY);resource.setrlimit(resource.RLIMIT_CORE,(0,0))
++def run(stage,role,scope,statement,proof,mode):
++ env=ENV.copy()
++ if mode=='R8':env['ZKGPT_CATEGORY_U_FOLD_MODE']='immediate'
++ else:
++  for key in list(env):
++   if key.startswith(('ZKGPT_CATEGORY_U_','ZKGPT_PERF4_U_')):env.pop(key)
++ binary_dir=S/'bin-R8' if mode=='R8' else BIN
++ args=[str(binary_dir/('r7_fs_'+scope+('_prover' if role=='P' else '_verifier'))),'prove' if role=='P' else 'verify',str(proof),'zkGPT/R8/pure-RAM/'+scope+'/20261111/v5']
++ handles=[]
++ for key,path in [('R7_ONEBLOCK_STATEMENT_FD',statement),('R7_ONEBLOCK_COVERAGE_FD',stage/(role+'-COVERAGE.json')),('R7_CLASSIFIED_LAYOUT_FD',stage/(role+'-LAYOUT.json'))]:
++  f=path.open('rb' if key.endswith('STATEMENT_FD') else 'xb');handles.append(f);env[key]=str(f.fileno())
++ log=LOG/(stage.name+'-'+role+'.log');before=cgstate();start=time.monotonic();sampled_peak=0;last_io=None
++ with log.open('xb') as output, (stage/(role+'-RESOURCE-SAMPLES.jsonl')).open('x') as samples:
++  p=subprocess.Popen(args,stdin=subprocess.DEVNULL,stdout=output,stderr=subprocess.STDOUT,env=env,pass_fds=tuple(f.fileno() for f in handles),preexec_fn=limits)
++  print('START',stage.name,role,p.pid,flush=True)
++  save(S/'ACTIVE.json',{'stage':stage.name,'role':role,'pid':p.pid,'command':args,'started_unix':time.time(),'mode':mode})
++  while True:
++   pid,status,usage=os.wait4(p.pid,os.WNOHANG)
++   if pid:p.returncode=os.waitstatus_to_exitcode(status);break
++   sampled_peak=max(sampled_peak,readnum(CG/'memory.current') or 0)
++   if int((time.monotonic()-start)*2)%4==0:
++    observation={'elapsed_seconds':time.monotonic()-start,'load':os.getloadavg(),'cgroup_memory_current':readnum(CG/'memory.current')}
++    for item in ['stat','status','schedstat']:
++     try:observation[item]=Path(f'/proc/{p.pid}/{item}').read_text()
++     except OSError:pass
++    observation['cpu_frequency_khz']={str(c):readnum(Path(f'/sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq')) for c in AFFINITY}
++    observation['system_cpu_stat']=Path('/proc/stat').read_text()
++    samples.write(json.dumps(observation)+'\n');samples.flush()
++   try:last_io={key:int(value) for key,value in (line.split(':') for line in Path(f'/proc/{p.pid}/io').read_text().splitlines())}
++   except (OSError,ValueError):pass
++   time.sleep(.5)
++ for f in handles:f.close()
++ result={'command':args,'exit_code':p.returncode,'wall_seconds':time.monotonic()-start,'peak_rss_kib':usage.ru_maxrss,'user_cpu_seconds':usage.ru_utime,'system_cpu_seconds':usage.ru_stime,'whole_process_block_input_operations':usage.ru_inblock,'whole_process_block_output_operations':usage.ru_oublock,'last_observable_process_io':last_io,'cgroup_before':before,'cgroup_after':cgstate(),'sampled_shared_cgroup_current_peak_bytes':sampled_peak,'cgroup_scope':'shared login scope, not isolated per-process; memory.peak is lifetime cumulative, NOT a reset benchmark peak','log':str(log.relative_to(ROOT))}
++ save(stage/(role+'.json'),result);print('DONE',stage.name,role,result['exit_code'],result['wall_seconds'],flush=True)
++ assert p.returncode==0,(stage.name,role,p.returncode)
++ return result
++def execute(scope,name,mode,frozen):
++ assert sources()==frozen,'source changed before experiment'
++ stage=S/name;stage.mkdir()
++ original=S/'input/STATEMENT.bin' if scope=='full12' else ROOT/'reports/R7-OPT3C/R7-OPT3C-K-FOLDING-20261102-v1'/(scope+'-v1/PROTOCOL1_STATEMENT.bin')
++ expected={'oneblock':'46d050f75220d8f78e657e786ac8612ff25320e482136774ca2a1b9f6af8c37d','full12':'ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b'}[scope]
++ assert sha(original)==expected
++ statement=stage/'STATEMENT.bin';shutil.copyfile(original,statement);proof=stage/(scope+'.fsproof')
++ mem={l.split(':')[0]:int(l.split()[1]) for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith(('MemAvailable:','SwapFree:'))}
++ assert mem['MemAvailable']>64*1024*1024 and shutil.disk_usage(ROOT).free>32<<30,'host resource preflight'
++ save(stage/'ENVIRONMENT.json',{'environment':({k:v for k,v in ENV.items() if (k.startswith('ZKGPT_') or k=='MALLOC_ARENA_MAX') and (mode=='R8' or not k.startswith(('ZKGPT_CATEGORY_U_','ZKGPT_PERF4_U_')))}|({'ZKGPT_CATEGORY_U_FOLD_MODE':'immediate'} if mode=='R8' else {})),'cpu_affinity':AFFINITY,'memory_kib':mem,'cgroup':cgstate(),'load':os.getloadavg(),'statement_sha256':expected,'binary_sha256':{r:sha((S/'bin-R8' if mode=='R8' else BIN)/('r7_fs_'+scope+'_'+r)) for r in ['prover','verifier']}})
++ p=run(stage,'P',scope,statement,proof,mode);v=run(stage,'V',scope,statement,proof,mode)
++ plog=ROOT/p['log'];vlog=ROOT/v['log'];ps=[x for x in objects(plog) if 'challenge_digest' in x];vs=[x for x in objects(vlog) if 'challenge_digest' in x];assert len(ps)==len(vs)==1
++ for key in ['suite','session','proof_sha256','proof_bytes','transcript_digest','challenge_digest','challenges','prover_messages','events','complete']:assert ps[0][key]==vs[0][key],key
++ assert ps[0]['complete'] and 'DIRECT-LOGICAL' in ps[0]['suite'] and ps[0]['proof_sha256']==sha(proof)
++ coverage=json.loads((stage/'V-COVERAGE.json').read_text());assert coverage['required_count']==coverage['verified_count']==len(coverage['required']) and all(x['status']=='VERIFIED' for x in coverage['required'])
++ assert any(e['id']=='public/X' and 'all-claims-authenticated' in e['last_checked_message'] for e in coverage['evidence'])
++ layout=json.loads((stage/'V-LAYOUT.json').read_text());assert layout['logical_commitments']==1 and layout['physical_domain']==layout['domain'] and all(x['physical_offset']==x['logical_offset'] for x in layout['source_segments'])
++ result={'success':True,'scope':scope,'mode':mode,'P':p,'V':v,'proof_bytes':proof.stat().st_size,'proof_sha256':sha(proof),'fs':ps[0],'coverage_count':coverage['verified_count'],'layout':layout,'source_unchanged':sources()==frozen}
++ assert result['source_unchanged']
++ for tag in ['U_SCAN_DETAIL','OPT3D_U_ROUND','R8_U_FOLD_ROUND','PERF4_U_STATE','UNIFIED_SUMCHECK','CATEGORY_INPUT','COMPACT_QUERY','SINGLE_HYRAX_COMMIT','PERF4_SCOPE','PHASE_CPU']:
++  result[tag]={r:objects(log,tag) for r,log in [('P',plog),('V',vlog)]}
++ state=result['PERF4_U_STATE']['P'];assert len(state)==1 and not state[0]['failed'] and state[0]['private_files']==0
++ if mode=='R8':assert state[0]['immediate_callback_mode'],'R8 Immediate fell back'
++ else:
++  rounds=result['R8_U_FOLD_ROUND']['P'];assert rounds and all(rounds[i]['mapped_bytes']<=rounds[i-1]['mapped_bytes'] for i in range(1,len(rounds)))
++  assert all(r['original_read_elements']==0 for r in rounds[1:])
++  assert state[0]['unmap_calls']>0 and state[0]['unmapped_tail_bytes']>0
++ save(stage/'RESULT.json',result)
++ print('VERIFIED',name,flush=True)
++def main():
++ assert not (S/'EXPERIMENTS_STARTED.json').exists(),'refuse accidental rerun/overwrite'
++ frozen=sources();save(S/'FROZEN_SOURCE.json',frozen)
++ previous=json.loads((ROOT/'reports/R9-IMMEDIATE-ONLY-U-20261111-v1/FROZEN_SOURCE.json').read_text());assert frozen==previous,'R9 source changed'
++ parameters=json.loads((ROOT/'reports/R9-IMMEDIATE-ONLY-U-20261111-v1/PARAMETERS.json').read_text());assert {p:sha(ROOT/p) for p in parameters}==parameters
++ save(S/'PARAMETERS.json',parameters);save(S/'EXPERIMENTS_STARTED.json',{'unix_time':time.time(),'sequence':['Full12-R9-profiled-P','Full12-R9-profiled-independent-V'],'profiling':'existing PERF4_SCOPE inclusive/exclusive wall/cpu, native and IPA','production_gate':'BLOCKED_CRYPTOGRAPHIC_DESIGN','may_enter_stage2':False})
++ execute('full12','full12-R9-profiled','R9',frozen)
++ assert {path:sha(ROOT/path) for path in parameters}==parameters
++ save(S/'EXPERIMENTS_RESULT.json',{'success':True,'oneblock_prover_attempts':0,'oneblock_verifier_attempts':0,'full12_prover_attempts':1,'full12_verifier_attempts':1,'source_unchanged':sources()==frozen,'parameters_unchanged':True,'production_gate':'BLOCKED_CRYPTOGRAPHIC_DESIGN','may_enter_stage2':False})
++if __name__=='__main__':
++ try:main()
++ except BaseException as e:save(S/'EXPERIMENTS_FAILURE.json',{'error':str(e),'traceback':traceback.format_exc(),'no_automatic_retry':True});raise
+--- /dev/null
++++ b/tools/product_leaves_package.py
+@@ -0,0 +1,80 @@
++"""Capture complete source and stage evidence without deleting anything."""
++from pathlib import Path
++import hashlib,json,subprocess,tarfile,shutil
++ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
++S=ROOT/'reports/R7-PRODUCT-LEAF/R7-PRODUCT-LEAF-OPT-20261112-v1'
++B=ROOT/'build/product-leaf-20261112-v1'
++def sha(path):
++ h=hashlib.sha256()
++ with Path(path).open('rb') as f:
++  for chunk in iter(lambda:f.read(4<<20),b''):h.update(chunk)
++ return h.hexdigest()
++def save(name,value):
++ p=S/name;assert not p.exists(),p;p.write_text(json.dumps(value,indent=2)+'\n')
++def main():
++ for name in ['CANDIDATE_READY.json','MICRO_RESULT.json','FULL12_RESULT.json']:
++  assert json.loads((S/name).read_text())['success']
++ assert json.loads((S/'asan-leaf-tests.json').read_text())['exit_code']==0
++ suite=json.loads((S/'SUITE_RESULT.json').read_text());assert suite['ctest_passed']==120 and suite['ctest_total']==121
++ assert all(x['same_allocation_budget_failure'] for x in suite['baseline_and_candidate_reproduction'].values())
++ frozen=json.loads((S/'FROZEN_SOURCE.json').read_text())
++ current={p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'src').rglob('*') if p.is_file()}
++ current['CMakeLists.txt']=sha(ROOT/'CMakeLists.txt');assert current==frozen,'source changed after measurement'
++ candidates=S/'candidate-bin';candidates.mkdir()
++ for name in ['r7_fs_full12_prover','r7_fs_full12_verifier','r7_perf6_exact_native','r7_product_leaf_tests','r7_product_leaf_probe','r7_product_weight_tests']:
++  shutil.copy2(B/'src/paper_r7'/name,candidates/name)
++ asan=ROOT/'build/product-leaf-asan-20261112-v1'
++ shutil.copy2(asan/'src/paper_r7/r7_product_leaf_tests',candidates/'asan_product_leaf_tests')
++ runtime=S/'runtime-libraries';runtime.mkdir()
++ for label,build in [('release',B),('asan',asan)]:
++  dest=runtime/label;dest.mkdir()
++  for name in ['libmcl.so.1','libmclbn256.so.1']:
++   path=build/'lib'/name
++   if path.is_file():shutil.copy2(path.resolve(),dest/name)
++ config=S/'build-identity';config.mkdir()
++ for build,label in [(B,'release'),(ROOT/'build/product-leaf-asan-20261112-v1','asan')]:
++  shutil.copy2(build/'CMakeCache.txt',config/(label+'-CMakeCache.txt'))
++  for target in ['paper_r7','r7_fs_full12_prover','r7_fs_full12_verifier','r7_product_leaf_tests']:
++   for name in ['flags.make','link.txt']:
++    p=build/'src/paper_r7/CMakeFiles'/(target+'.dir')/name
++    if p.exists():shutil.copy2(p,config/(label+'-'+target+'-'+name))
++ identities={}
++ for p in candidates.iterdir():
++  output=subprocess.check_output(['ldd',str(p)],text=True);libs={}
++  for line in output.splitlines():
++   for word in line.split():
++    if word.startswith('/') and Path(word).is_file():libs[word]=sha(word)
++  identities[p.name]={'sha256':sha(p),'ldd':output,'libraries':libs}
++ save('DEPENDENCIES_AND_TOOLCHAIN.json',{'binaries':identities,'compiler':subprocess.check_output(['c++','--version'],text=True),'cmake':subprocess.check_output(['cmake','--version'],text=True),'uname':subprocess.check_output(['uname','-a'],text=True)})
++ files={}
++ def tree(root,prefix):
++  for p in root.rglob('*'):
++   if p.is_file() and not p.is_symlink():files[prefix+'/'+p.relative_to(root).as_posix()]=p
++ tree(ROOT/'src','source/src')
++ for name in ['CMakeLists.txt','build.sh','AGENTS.md']:files['source/'+name]=ROOT/name
++ for name in ['product_leaves_remote.py','product_leaves_r9_method.py','product_leaves_package.py','product_leaves_diagnose.py']:files['source/tools/'+name]=ROOT/'tools'/name
++ for p in (ROOT/'3rd/mcl').rglob('*'):
++  rel=p.relative_to(ROOT/'3rd/mcl')
++  if p.is_file() and not p.is_symlink() and not any(k in ['.git','obj','lib','bin','build','__pycache__'] for k in rel.parts) and p.suffix not in ['.o','.obj','.pdb','.pyc']:files['source/3rd/mcl/'+rel.as_posix()]=p
++ tree(ROOT/'deps/cnpy','dependency/cnpy')
++ # Public trust material needed to restore the exact standalone verifier.
++ # Large unchanged parameter arrays remain identified by PARAMETERS.json.
++ for rel in ['reports/R7-FULL12/R7-FULL12-UNRESTRICTED-20261029-v1/full12-chunks.anchor','reports/R6-BASELINE/R6A/full12-model-manifest-v1.txt','reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt','reports/R6-ROWMAJOR/R6-ROWMAJOR-v2/oneblock-operator-trust-rowmajor-v2.anchor']:
++  p=ROOT/rel;assert p.is_file(),p;files['runtime-public/'+rel]=p
++ tree(S,'evidence');tree(ROOT/'logs'/S.name,'logs')
++ reference=ROOT/'reports/R9-FULL12-PHASE-TIMING/R9-FULL12-PHASE-TIMING-20261111-v1'
++ for name in ['P-SCOPES.tsv','V-SCOPES.tsv','PARAMETERS.json','run_experiments.py','FROZEN_SOURCE.json','FINAL_REPORT.zh-CN.md']:
++  p=reference/name
++  if p.is_file():files['reference/R9/'+name]=p
++ weight=ROOT/'reports/R7-PRODUCT-WEIGHT/R7-PRODUCT-WEIGHT-OPT-20261112-v1'
++ for name in ['EXPERIMENTS_RESULT.json','ARCHIVE_RECEIPT.json','FROZEN_SOURCE.json']:
++  p=weight/name
++  if p.is_file():files['reference/previous-weight/'+name]=p
++ manifest={name:{'sha256':sha(path),'bytes':path.stat().st_size} for name,path in sorted(files.items())}
++ save('ARCHIVE_MANIFEST.json',manifest);files['evidence/ARCHIVE_MANIFEST.json']=S/'ARCHIVE_MANIFEST.json'
++ archive=S.parent/(S.name+'.tar.gz');assert not archive.exists()
++ with tarfile.open(archive,'w:gz',compresslevel=3) as tf:
++  for name,p in sorted(files.items()):tf.add(p,arcname=name,recursive=False)
++ save('ARCHIVE_RECEIPT.json',{'path':str(archive),'sha256':sha(archive),'bytes':archive.stat().st_size,'manifest_sha256':sha(S/'ARCHIVE_MANIFEST.json'),'files':len(files),'remote_deletion_authorized':False})
++ print((S/'ARCHIVE_RECEIPT.json').read_text())
++if __name__=='__main__':main()
+--- /dev/null
++++ b/tools/product_leaves_diagnose.py
+@@ -0,0 +1,5 @@
++from product_leaves_remote import *
++for label,binary in [('isolated-candidate',BIN/'r7_zero_suffix_storage_tests'),('retained-release',ROOT/'build/release/src/paper_r7/r7_zero_suffix_storage_tests')]:
++ if binary.is_file():
++  r=run('storage-'+label,[binary],expected=1)
++  assert 'R7 source allocation still materializes padded witness suffix' in Path(r['log']).read_text()

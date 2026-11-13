@@ -2,7 +2,7 @@
 from pathlib import Path
 import subprocess,time,json,sys
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1'
+STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1'
 deadline=time.monotonic()+18000
 while not (STAGE/'FULL_SUCCESS.json').exists():
  assert time.monotonic()<deadline,'full-run wait deadline'

@@ -2,7 +2,7 @@
 from pathlib import Path
 import os,sys,subprocess,json,hashlib
 from r7_sync_safety import no_links
-root=Path.cwd().resolve();stage=Path(sys.argv[1]);assert stage.parent==root/'reports' and stage.name.startswith(('R7-HYRAX-A3-STAGE2-RUN-','R7-STAGE3A-RUN-','R7-STAGE3B1-RUN-'))
+root=Path.cwd().resolve();stage=Path(sys.argv[1]);assert stage.parent in {root/'reports', root/'reports'/'R7-HYRAX-A3', root/'reports'/'R7-STAGE3A', root/'reports'/'R7-STAGE3B1'} and stage.name.startswith(('R7-HYRAX-A3-STAGE2-RUN-','R7-STAGE3A-RUN-','R7-STAGE3B1-RUN-'))
 private=root/'build/r7-stage2-private'/stage.name/'fixture.private';no_links(root,private);private.parent.mkdir(parents=True,exist_ok=True,mode=0o700);os.chmod(private.parent,0o700)
 paths=[private,stage/'registry.bin',stage/'alternate-registry.bin',stage/'bad-tail-registry.bin'];fds=[]
 try:

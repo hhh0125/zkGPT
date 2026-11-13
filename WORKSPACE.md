@@ -3,7 +3,7 @@
 All zkGPT development, builds, witness construction, GKR/production Lasso proof generation, independent verification and resource measurements take place in this directory:
 `/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work`.
 
-Before starting the next stage, check `reports/migration-20261020/MIGRATION_RESULT.json` has `success: true`. A missing/failed result means migration is incomplete; preserve old R5A and diagnose migration first.
+Before starting the next stage, check `reports/WORKSPACE/migration-20261020/MIGRATION_RESULT.json` has `success: true`. A missing/failed result means migration is incomplete; preserve old R5A and diagnose migration first.
 
 Do not create new sibling full project snapshots for R5B/R6. Any exceptional full copy needs a concrete technical reason and explicit user approval. Never delete/reset/clean the original `/home/yttan/project/zkGPT/zkGPT-main/zkGPT` or modify historical R3/R4/R5A evidence.
 

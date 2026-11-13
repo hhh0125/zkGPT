@@ -1,0 +1,63 @@
+{
+  "frozen_before_formal_AB": true,
+  "samples_per_size_per_variant": 3,
+  "paired_order": "alternating AB BA AB; fresh process per side",
+  "sizes": [
+    8388608,
+    4194304,
+    2097152,
+    524288,
+    512
+  ],
+  "candidate_A": {
+    "polynomial_median_ratio_max": 0.95,
+    "Product_Prover_median_ratio_max": 0.98,
+    "Product_Verifier_median_ratio_max": 1.02,
+    "bounded_whole_PV_median_ratio_max": 1.02
+  },
+  "candidate_B_or_C": {
+    "target_region_median_ratio_max": 0.95,
+    "target_role_Product_median_ratio_max": 0.98,
+    "other_role_Product_median_ratio_max": 1.02,
+    "bounded_whole_PV_median_ratio_max": 1.02
+  },
+  "RSS_ratio_max": 1.05,
+  "proof_bytes_equal": true,
+  "all_messages_and_challenges_exact": true,
+  "resource_limits": {
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "RLIMIT_AS_bytes": 12884901888,
+    "per_process_wall_seconds": 180,
+    "bounded_measurement_cumulative_seconds": 1800,
+    "build_wall_seconds": 1800,
+    "no_new_Full12_authorization": true
+  },
+  "Full12": {
+    "status": "NOT_RUN",
+    "gates": [
+      "separate explicit authorization",
+      "same configuration reference and candidate",
+      "1502 claims",
+      "8011 coverage",
+      "31 rounds",
+      "strict EOF",
+      "independent verifier accept",
+      "proof transcript challenge identity",
+      "no resource increase"
+    ],
+    "single_measurement_only": true
+  },
+  "aggregation": "full12-call-count-weighted medians over tested sizes; each size still must have no P/V or whole regression above 2%; target improvement applies aggregate, not timer-noise-limited small kernels",
+  "weights_for_tested_sizes": {
+    "8388608": 44,
+    "4194304": 28,
+    "2097152": 6,
+    "524288": 22,
+    "512": 86
+  }
+}

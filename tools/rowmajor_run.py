@@ -3,7 +3,7 @@ from pathlib import Path
 import os,sys,subprocess,time,json,resource,hashlib
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
 assert Path.cwd().resolve()==ROOT
-STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1'
+STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1'
 os.environ.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
 os.sched_setaffinity(0,sorted(os.sched_getaffinity(0))[:4])
 mode=sys.argv[1];suffix='-'+sys.argv[2] if len(sys.argv)>2 else ''
@@ -24,8 +24,8 @@ if mode in ('build','preflight'):
   run('units',['python3','-B','tools/rowmajor_run.py','units'],1800)
   run('anchor-check',['python3','-B','tools/rowmajor_run.py','anchor-check'],1200)
 elif mode=='anchor':
- out=ROOT/'reports/R6-ROWMAJOR-v2';out.mkdir()
- run('anchor-preprocess',['build/release/src/paper_r2/r6_model_preprocess','--blocks','1','data/gpt2_int','reports/R6A/oneblock-model-manifest-v1.txt',out/'oneblock-operator-trust-rowmajor-v2.anchor',out/'preprocessing.json'],1200)
+ out=ROOT/'reports/R6-ROWMAJOR/R6-ROWMAJOR-v2';out.mkdir()
+ run('anchor-preprocess',['build/release/src/paper_r2/r6_model_preprocess','--blocks','1','data/gpt2_int','reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt',out/'oneblock-operator-trust-rowmajor-v2.anchor',out/'preprocessing.json'],1200)
 elif mode=='units':
  for t in ['r6_rowmajor_tests','r7_oneblock_vectors_tests','r7_oneblock_model_tests','r7_classified_crypto_tests','r7_classified_layout_tests','r7_a3_tests','r7_oneblock_lookup_tests','r7_oneblock_gkr_tests','r7_fs_io_tests','r7_oneblock_public_tests','r7_lookup_prepare_tests']:
   run('unit-'+t,['build/release/src/'+('paper_r2/' if t.startswith('r6') else 'paper_r7/')+t],300)

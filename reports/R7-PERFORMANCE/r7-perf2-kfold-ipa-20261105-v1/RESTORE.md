@@ -1,0 +1,7 @@
+# 恢复与保留
+
+保留本目录和历史归档。FINAL_SOURCE.zip是Windows最终权威字节；BEFORE_SOURCE.zip为任务前字节；MEASURED_CANDIDATE_SOURCE.zip为实际性能测量版本，默认曾启用候选，不应混作最终默认。每个ZIP按SOURCE_ARCHIVE_RECEIPTS.json/SOURCE_SHA256_MANIFEST.json核验。TASK_ONLY.patch仅表示本轮差异；Git HEAD不包含原有未提交修改，不能单独用HEAD复现。
+
+EVIDENCE.tar.gz按ARCHIVE.json验证容器SHA、全部成员路径/SHA和gzip CRC，再恢复至独立目录。final-restore为已完成的实际恢复读取副本，未作为新活动源码。归档路径均相对固定Linux项目；不要直接覆盖活动仓库或原始zkGPT。构建环境需恢复相同依赖/参数身份并重新校验有效输入与链接库。参数文件记录身份，未复制共享模型/checkpoint数据。
+
+交付包DELIVERY.zip包含本地报告、源码归档、原始EVIDENCE与辅助脚本；DELIVERY_MANIFEST.json和DELIVERY_VERIFIED.json给出验证收据。不包含final-restore展开副本以避免重复。未经另行授权不删除任何远端/本地历史；本轮没有将任何副本声明为可删除。

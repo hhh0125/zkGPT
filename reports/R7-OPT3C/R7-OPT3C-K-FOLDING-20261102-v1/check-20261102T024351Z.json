@@ -1,0 +1,25 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/opt3c-k-folding-release",
+      "-j4",
+      "--target",
+      "r7_opt3c_folding_tests",
+      "r7_unified_input_tests"
+    ],
+    "exit_code": 0,
+    "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/check-20261102T024351Z-0.log"
+  },
+  {
+    "command": [
+      "taskset",
+      "-c",
+      "0,1,2,3",
+      "build/opt3c-k-folding-release/src/paper_r7/r7_opt3c_folding_tests"
+    ],
+    "exit_code": 1,
+    "log": "reports/R7-OPT3C-K-FOLDING-20261102-v1/check-20261102T024351Z-1.log"
+  }
+]

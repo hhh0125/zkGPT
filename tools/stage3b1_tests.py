@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib,json,os,struct,subprocess,sys,time,shutil
 from r7_process import start_interactive_child
 from r7_sync_safety import no_links
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-STAGE3B1-RUN-');no_links(ROOT,stage)
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-STAGE3B1'} and stage.name.startswith('R7-STAGE3B1-RUN-');no_links(ROOT,stage)
 out=stage/'b1-sessions';out.mkdir();pub=stage/'m3-public';priv=ROOT/'build/r7-stage3b1-private'/stage.name;BIN=ROOT/'build/release/src/paper_r7';cases=[]
 def digest(path):
  h=hashlib.sha256()

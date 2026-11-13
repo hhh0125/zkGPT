@@ -1,0 +1,14 @@
+# Ledger R7-CATEGORY-X-20261106-v1
+A: migration success checked, baseline archive preserved, ancestor Git not source identity.
+B RED: makeCategoryPlan absent (compiler diagnostic). Category metadata and compressed layout implemented; not yet verified.
+B GREEN: 3/5/7/9/11 layout and empty-category test PASS. C RED: original category fixture rejected by legacy singlePlan (unknown native category). C/D implemented original borrowed sources, mandatory post-seal X Claim, bounded dyadic tiles and K.
+
+A/B/C/D complete: canonical public R6 X span was checked for Oneblock and Full12 (offset 0, count 32768); category/physical coverage audit PASS. No root padding in the production category path. Helpers preserve materialized padded values.
+Tests: full build PASS; CTest 112/112 PASS; 120 independent mapped-MLE cases; metadata spanning two 2^24 chunks; 3 algebraic X mismatch negatives; 5 verifier mutations; source map/duplicate-X negatives; standalone X point/handle tests PASS; standalone six clipped K cases across 2^20 boundary PASS.
+Independent review: no Critical findings. Fixed model mutation/missing-authentication attack hooks, exact consumed fallback map digest, and legacy segment-0 comment. No deferred review minor remains. Full soundness of inherited Hyrax/Sigma was not reviewed; production gate stays blocked.
+Oneblock P/V PASS, 5346/5346 coverage and same IDs/families as historical baseline. P 578.409245 s, V 239.789893 s, proof 143266980 bytes. public/X evidence is after CategoryInput/all-claims-authenticated/ack.
+Full12 running automatically via run_validation.py; always inspect ACTIVE.json and process/log state before resuming. Do not restart completed work.
+Git metadata only: source-review.git; main 43662cd23019105b52cad89ce8cc36f2824ac78b; retained overlay baseline f723c87dd4adb21a4853dc0ccfcd75067e11867f; candidate 622fa03324bce696c024ab96b5679d3881b67553. Source frozen; SOURCE_AND_PARAMETERS_BEFORE.json enforced before/after proofs.
+Rulings: retain pre-existing PERF6 overlay rather than reset other work; use fixed workspace without sibling worktree; computation tiles are internal aligned execution views, no independent PC or Claim; noncontiguous borrowed U spans disable retained-U optimization to avoid a large copy.
+Archives already verified on Windows r7-category-x-20261106-v1: baseline-source.tar.gz (e43061ed...), implementation-stage.tar.gz (5a44ab99...), oneblock-stage.tar.gz (f3d0b28c...). No deletion authorized or performed. Baseline historical archives rechecked locally under zkGPT-backups/r7-single-compact-independent-20261104-v1.
+Pending: Full12 completion/coverage identity audit; final performance report with historical-baseline confounding note; source/parameter/build/proof final hashes; complete delivery archive and independent per-file Windows restore checks. Do not claim final completion before these exist.

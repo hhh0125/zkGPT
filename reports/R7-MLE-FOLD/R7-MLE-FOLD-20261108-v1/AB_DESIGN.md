@@ -1,0 +1,13 @@
+# Controlled PERF6 experiment
+All A/B/C use the same frozen Release executable bytes, source snapshot, dependency and parameter identities, original read-only copied Statement, five-category layout/source map and required relation set. Fresh P and witness-free V processes, four fixed CPUs from the available affinity set, four protocol/worker threads, MALLOC_ARENA_MAX=2, U budget512MiB, K RAM512MiB/file4GiB, 32MiB K tile builder. No full global U/K materialization or val0 copy. Random session/blinding values are fresh; compare within-run FS P/V digests, rules/counts/coverage across runs, never expect independent randomized proofs to have identical digests.
+
+A: category U cache0, K compact0, category K direct endpoint0, source MLE stream0, read profile0.
+B: category U cache1, K compact1, category K direct endpoint1, source MLE stream0, read profile0.
+C: B plus source MLE stream1; final combined validation, excluded from strict A/B.
+D: A plus read profile1; standalone diagnostic after the Full12 strict/combined series, excluded from A/B. Read/map worker CPU is measured jointly; the scalar callback API does not expose physical bulk reads or separate address arithmetic clocks. Coverage is explicit; untimed small contractions and Fr/dispatch remain in residual, not falsely attributed.
+
+Oneblock strict: A2 B1 A3 B2 A4 B3; A1 is the preserved interrupted faulty pre-fix profiling diagnostic and excluded. Then Oneblock C1. Full12 strict: B1 A1 B2 A2 B3 A3; then C1 and diagnostic D1. Source q28 oracle: separate fresh-process reference/stream alternating three times before proofs, same synthetic values and point, exact result checked. Proof phases are not mixed with this standalone source benchmark.
+
+All elapsed phase metrics are nested as documented in PERFORMANCE_SUMMARY.json; do not sum them twice. External P/V elapsed uses wait4 process lifecycle and ru_maxrss. Vector capacities, witness snapshot, U/K retention and temporary builder bounds are distinct from RSS and do not constitute an exhaustive allocation census. Machine memory/load/free space and fixed affinity are saved per run. No competing build/test/benchmark is scheduled during this sequential pipeline.
+
+Final v2 ruling: actual v1 endpoint admission22.3 percent caused old dense fallback and no V benefit. Preserve ab/ as superseded diagnostics, including successful A2/B1/A3. New final source includes proven carry/borrow endpoint; only ab-v2 is strict. Same new frozen bin-B2 bytes/FROZEN_BUILD_V2 for both A/B. Oneblock A1 B1 A2 B2 A3 B3 thenC1; Full12 B1 A1 B2 A2 B3 A3 thenC1/D1. Standalone source-bench-v2 reruns three alternating pairs. All final119 tests/probes and source identities are recorded anew.

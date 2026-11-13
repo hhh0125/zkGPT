@@ -2,7 +2,7 @@
 from pathlib import Path
 import os,sys,subprocess,time,json,struct,hashlib,resource,statistics,shutil
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1';BIN=ROOT/'build/release/src/paper_r7'
+STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1';BIN=ROOT/'build/release/src/paper_r7'
 CONTEXT='zkGPT/R7/FS/test-request-20261028'
 os.environ.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
 os.sched_setaffinity(0,sorted(os.sched_getaffinity(0))[:4])
@@ -58,16 +58,16 @@ if mode=='small':
  for attack in ['challenge','map','value','late-change','missing-barrier']:
   f=STAGE/('row-malicious-'+attack+'.fsproof');run('row-malicious-'+attack+'-P',[BIN/'r7_fs_probe_prover',64,'grouped',f,CONTEXT,attack],0 if attack in ['challenge','map','late-change'] else 2)
   selected=f if f.exists() else next(STAGE.glob(f.name+'.partial.*'));run('row-malicious-'+attack+'-V',[BIN/'r7_fs_probe_verifier',64,'grouped',selected,CONTEXT],2)
- old=ROOT/'reports/R7-FS-RUN-20261028T040858Z/fs-16-joint.fsproof';oldv=STAGE/'baseline-binaries/r7_fs_probe_verifier'
+ old=ROOT/'reports/R7-FS/R7-FS-RUN-20261028T040858Z/fs-16-joint.fsproof';oldv=STAGE/'baseline-binaries/r7_fs_probe_verifier'
  run('old-verifier-old-proof-control',[oldv,16,'joint',old,CONTEXT]);run('new-verifier-old-proof',[BIN/'r7_fs_probe_verifier',16,'joint',old,CONTEXT],2);run('old-verifier-new-proof',[oldv,16,'joint',STAGE/'row-fs-16-joint.fsproof',CONTEXT],2)
 elif mode=='full':
  for f in ['unit-r6_rowmajor_tests','unit-r7_oneblock_vectors_tests','unit-r7_oneblock_model_tests','unit-r7_classified_crypto_tests','unit-r7_classified_layout_tests','unit-r7_a3_tests','unit-r7_oneblock_lookup_tests','unit-r7_oneblock_gkr_tests','unit-r7_fs_io_tests','anchor-independent']:
   assert json.loads((STAGE/(f+'.json')).read_text())['exit_code']==0,f
  assert all(x['passed'] for x in json.loads((STAGE/'small-CASES.json').read_text()))
- statement=STAGE/'PUBLIC_STATEMENT.bin';oldstatement=ROOT/'reports/R7-CLASSIFIED-RUN-20261027T131024Z/PUBLIC_STATEMENT.bin'
+ statement=STAGE/'PUBLIC_STATEMENT.bin';oldstatement=ROOT/'reports/R7-CLASSIFIED/R7-CLASSIFIED-RUN-20261027T131024Z/PUBLIC_STATEMENT.bin'
  run('public-statement',[BIN/'r7_rowmajor_statement',oldstatement,statement])
  proof=STAGE/'full-rowmajor.fsproof';p=run('full-row-P',[BIN/'r7_fs_oneblock_prover','prove',proof,CONTEXT],statement=statement,timeout=7200);v=run('full-row-V',[BIN/'r7_fs_oneblock_verifier','verify',proof,CONTEXT],statement=statement,timeout=7200);parity(p,v,proof)
- coverage=json.loads((STAGE/'full-row-V-COVERAGE.json').read_text());old=json.loads((ROOT/'reports/R7-FS-RUN-20261028T080308Z/full-V-COVERAGE.json').read_text())
+ coverage=json.loads((STAGE/'full-row-V-COVERAGE.json').read_text());old=json.loads((ROOT/'reports/R7-FS/R7-FS-RUN-20261028T080308Z/full-V-COVERAGE.json').read_text())
  assert coverage['required_count']==coverage['verified_count']==5351 and all(x['status']=='VERIFIED' for x in coverage['required'])
  assert {(x['id'],x['family'],x['domain'],x['sumcheck_rounds']) for x in coverage['required']}=={(x['id'],x['family'],x['domain'],x['sumcheck_rounds']) for x in old['required']}
  assert v['metrics']['root_count']==6 and v['metrics']['claims']==936 and v['metrics']['registered_rows']==8193

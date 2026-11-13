@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib,json,os,struct,subprocess,sys,time
 from r7_process import start_interactive_child
 from r7_sync_safety import no_links
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-STAGE3A-RUN-');no_links(ROOT,stage);out=stage/'m3-sessions';out.mkdir()
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-STAGE3A'} and stage.name.startswith('R7-STAGE3A-RUN-');no_links(ROOT,stage);out=stage/'m3-sessions';out.mkdir()
 BIN=ROOT/'build/release/src/paper_r7';pub=stage/'m3-public';priv=ROOT/'build/r7-stage3a-private'/stage.name;cases=[]
 def save(): (out/'CASES.json').write_text(json.dumps(cases,indent=2))
 def run(mode,N=4096,attack='',reason=None,tag=''):

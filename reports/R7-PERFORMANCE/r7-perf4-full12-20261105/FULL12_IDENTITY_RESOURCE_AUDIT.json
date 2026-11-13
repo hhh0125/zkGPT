@@ -1,0 +1,82 @@
+{
+  "all_checks_passed": true,
+  "parameters_equal": 120,
+  "dependency_tree_equal": true,
+  "same_runtime_environment": true,
+  "same_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "full12_target_flags_and_link_commands_equal_after_build_path_normalization": true,
+  "common_non_source_build_inputs_identical": 630,
+  "coverage_entries_identical": 8011,
+  "all1502frozen_plan_records_identical_per_role": true,
+  "actual_PV_FS_metadata_equal_within_each_group": true,
+  "final_Windows_source_files_unchanged": 509,
+  "resources": {
+    "reference": {
+      "P": {
+        "samples": 220,
+        "load1_min": 1.03369140625,
+        "load1_median": 1.4208984375,
+        "load1_max": 8.11279296875,
+        "memory_samples": 220,
+        "final_process_exit_without_proc_status_samples": 0,
+        "sampled_peak_RSS_bytes": 38667980800,
+        "sampled_peak_swap_bytes": 0
+      },
+      "V": {
+        "samples": 56,
+        "load1_min": 1.099609375,
+        "load1_median": 1.3681640625,
+        "load1_max": 1.98095703125,
+        "memory_samples": 55,
+        "final_process_exit_without_proc_status_samples": 1,
+        "sampled_peak_RSS_bytes": 6378663936,
+        "sampled_peak_swap_bytes": 0
+      }
+    },
+    "candidate": {
+      "P": {
+        "samples": 194,
+        "load1_min": 1.10205078125,
+        "load1_median": 1.35693359375,
+        "load1_max": 5.18505859375,
+        "memory_samples": 194,
+        "final_process_exit_without_proc_status_samples": 0,
+        "sampled_peak_RSS_bytes": 42626912256,
+        "sampled_peak_swap_bytes": 0
+      },
+      "V": {
+        "samples": 54,
+        "load1_min": 1.1279296875,
+        "load1_median": 1.427490234375,
+        "load1_max": 2.33056640625,
+        "memory_samples": 54,
+        "final_process_exit_without_proc_status_samples": 0,
+        "sampled_peak_RSS_bytes": 6393618432,
+        "sampled_peak_swap_bytes": 0
+      }
+    }
+  },
+  "budget": {
+    "groups_started": 2,
+    "wall_seconds_used": 7947.15134581551
+  },
+  "same_CPU_model_topology": true,
+  "logged_resource_series_interval_seconds": 15,
+  "driver_live_poll_interval_seconds": 0.1,
+  "peak_RSS_authority": "group RESULT wait4.ru_maxrss; 15second logged series can miss brief peaks; driver 0.1s max is recorded separately in RESULT",
+  "new_candidate_defaults_from_frozen_source": {
+    "static_source_locator": true,
+    "U_fold_state": true,
+    "U_state_cap_bytes": 17179869184,
+    "Memory_gamma_squared_reuse": true,
+    "public_IPA_joint_generator_fold": true
+  },
+  "FS_NIZK_CANDIDATE": true,
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

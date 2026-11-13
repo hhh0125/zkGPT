@@ -1,0 +1,29 @@
+{
+  "reviewer": "/root/review_perf4_admission",
+  "baseline": "REFERENCE_VALIDATED_SOURCE_SHA256.json",
+  "critical": 0,
+  "important": 0,
+  "minor": [
+    {
+      "file": "src/paper_r7/u_streaming.cpp",
+      "line": 67,
+      "issue": "domain/storage admission outside poison catch boundary",
+      "resolution": "pending strengthened failure boundary and regression test"
+    },
+    {
+      "file": "src/paper_r7/perf4_u_tests.cpp",
+      "line": 42,
+      "issue": "four early negative branches skip failed-state reuse assertion",
+      "resolution": "pending assertions"
+    },
+    {
+      "file": "src/paper_r7/u_streaming.cpp",
+      "line": 122,
+      "issue": "legacy source_payload_read_bytes can denote retained storage; contracted count denotes logical coverage in cached mode",
+      "resolution": "final report must distinguish original/cache/coverage and include state-fold time"
+    }
+  ],
+  "assessment": "No remaining Critical/Important math/security findings; Full12 only after exact final source all build/test/equality/identity/resource gates.",
+  "read_only_windows": true,
+  "full12_started_by_reviewer": false
+}

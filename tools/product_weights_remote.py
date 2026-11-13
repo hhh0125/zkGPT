@@ -11,7 +11,7 @@ import importlib.util
 import resource
 
 ROOT = Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
-STAGE = ROOT/'reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1'
+STAGE = ROOT/'reports/R7-PRODUCT-WEIGHT/R7-PRODUCT-WEIGHT-OPT-20261112-v1'
 BUILD = ROOT/'build/product-weight-20261112-v1'
 BIN = BUILD/'src/paper_r7'
 os.chdir(ROOT)
@@ -128,14 +128,14 @@ def experiments():
             save('PRODUCT-AB-RAW.json',results)
     # Reuse R9's exact statement, parameter identity, environment, 4-core
     # affinity, resource sampling and independent-verifier acceptance checks.
-    source=ROOT/'reports/R9-FULL12-PHASE-TIMING-20261111-v1/run_experiments.py'
+    source=ROOT/'reports/R9-FULL12-PHASE-TIMING/R9-FULL12-PHASE-TIMING-20261111-v1/run_experiments.py'
     spec=importlib.util.spec_from_file_location('retained_r9_method',source)
     r9=importlib.util.module_from_spec(spec);spec.loader.exec_module(r9)
     r9.S=STAGE;r9.LOG=ROOT/'logs'/STAGE.name;r9.LOG.mkdir(exist_ok=True)
     r9.ENV['ZKGPT_PERF5_PROFILE']='1'
     r9.AFFINITY=affinity
     frozen=r9.sources();save('FROZEN_SOURCE.json',frozen)
-    parameters=json.loads((ROOT/'reports/R9-FULL12-PHASE-TIMING-20261111-v1/PARAMETERS.json').read_text())
+    parameters=json.loads((ROOT/'reports/R9-FULL12-PHASE-TIMING/R9-FULL12-PHASE-TIMING-20261111-v1/PARAMETERS.json').read_text())
     assert {p:sha(ROOT/p) for p in parameters}==parameters
     save('PARAMETERS.json',parameters)
     save('METHOD.json',{'R9_method_script_sha256':sha(source),'micro_cpu_affinity':affinity,'full12_environment':{k:v for k,v in r9.ENV.items() if k.startswith('ZKGPT_') or k=='MALLOC_ARENA_MAX'},'baseline_binary_source':'BASE_SHA snapshot, before weight implementation; original source bytes preserved in overwrite backup','candidate_binary_source':'FROZEN_SOURCE.json','baseline_leaf_weights_wall':'not instrumented in original binary; analytical counts are reconstructed separately','full12_repetitions_per_variant':1,'full12_causal_precision':'one B/A pair; no precise causal speedup claim from this pair alone'})

@@ -5,7 +5,7 @@ from r7_process import run_process_group
 from r7_sync_safety import no_links
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
 assert Path.cwd().resolve()==ROOT
-stage=ROOT/sys.argv[1];assert stage.parent==ROOT/'reports' and stage.name.startswith(('R7-STAGE3B1-RUN-','R7-STAGE3A-RUN-','R7-HYRAX-A3-STAGE1-RUN-','R7-HYRAX-A3-STAGE2-RUN-'))
+stage=ROOT/sys.argv[1];assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-HYRAX-A3', ROOT/'reports'/'R7-STAGE3A', ROOT/'reports'/'R7-STAGE3B1'} and stage.name.startswith(('R7-STAGE3B1-RUN-','R7-STAGE3A-RUN-','R7-HYRAX-A3-STAGE1-RUN-','R7-HYRAX-A3-STAGE2-RUN-'))
 b1=stage.name.startswith('R7-STAGE3B1-RUN-')
 supplement='--b1-supplement' in sys.argv
 assert not supplement or b1
@@ -27,7 +27,7 @@ def run(label,args,timeout=300,limited=False):
 def preservation():
  source={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')}
  frozen={}
- for d in ['reports/R6A','reports/R6B-OPT2-20261021','data']:
+ for d in ['reports/R6-BASELINE/R6A','reports/R6B/R6B-OPT2-20261021','data']:
   for p in (ROOT/d).rglob('*'):
    if p.is_file():s=p.stat();frozen[str(p.relative_to(ROOT))]=[s.st_size,s.st_mtime_ns,s.st_ino]
  return {'source_sha256':source,'frozen_file_metadata':frozen}

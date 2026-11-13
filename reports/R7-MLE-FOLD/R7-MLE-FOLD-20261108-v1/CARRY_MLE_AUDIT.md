@@ -1,0 +1,16 @@
+# Public power-stride endpoint carry identity
+For a prepared run, source j_t=J+2^k*t and global z_t=Z+s*t, where s is zero or signed power-of-two. Partition t ranges into source-aligned blocks of 2^ell terms: (J>>k) is divisible by2^ell. The source bits k..k+ell-1 are free bits of t; all other source bits are fixed. Constants/biases remain outside K and unchanged.
+
+If s=0, sum of all free source-bit weights is1, so the block equals fixed_source_weight*chi_Z(q).
+
+If s=+2^h, global bits below h are fixed Z bits. For each free bit u_b, let v_b be bit h+b of Z. State c in {0,1} represents incoming carry. Output bit is (v_b+u_b+c)%2 and next carry is floor((v_b+u_b+c)/2). Starting state c0=0, multiply each transition by chi_(u_b)(a[k+b])*chi_(output)(q[h+b]) and sum paths reaching the same next state. After ell bits, the remaining global high word is (Z>>(h+ell))+carry. Multiply by its fixed high-bit basis and sum both terminal states.
+
+For s=-2^h, output=(v_b-u_b-borrow) mod2, next borrow=(u_b+borrow>v_b). Final high word subtracts the terminal borrow. Out-of-domain terminal states have zero coefficient because valid public run bounds make those states unreachable. The implementation omits them by public word/domain bounds, not by witness/point values.
+
+Induction on b proves each DP state equals the sum of the exact joint source/global bit products for all low-bit choices producing that carry/borrow. Multiplying fixed source/global bits and summing final states is therefore exactly sum_t chi_(J+2^k*t)(a)*chi_(Z+s*t)(q). Global Z may be arbitrarily unaligned, cross bit boundaries, or lie in an arbitrarily shifted category. Only source block alignment is required. There is no division or challenge-value admission, so zero/one/negative field points are valid. Neither witness values nor any new P-supplied data enter this evaluation.
+
+Production decomposes only source quotient J>>k into aligned dyadic blocks; unsupported non-power steps/strides and short blocks use existing exact scalar weighting. Public geometry still requires >=1024 eligible coordinates and >=75% eligibility before selecting the endpoint; otherwise old dense endpoint executes. The exact consumed-map digest remains on the unfrozen callback path. Prepared frozen maps, rho, claim identities, biases and every transcript message/challenge are unchanged.
+
+Independent direct-bit-product RED/GREEN: carry-RED.log and carry-GREEN.log,2200 random power-step/positive-negative-zero power-stride cases,0/1/negative points; additional262144-term unaligned interval gives identical field value. New category endpoint test compares220 frozen/public maps to independent products and dense K, checks changed callback digest, and replays one real bounded proof through dense/direct V with identical transcript. Entire old full Oneblock proof replay and final119-CTest evidence are separate obligations.
+
+Memory: DP holds2 current and2 next Fr values plus bounded scalar temporaries and references to public point vectors. It allocates no witness or dense K. Existing additional split-weight tables remain<=8MiB; existing authentication tables/metadata are separate. No crypto soundness or production gate is discharged.

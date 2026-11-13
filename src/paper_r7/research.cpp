@@ -28,7 +28,7 @@ Result research(c::IO&io,const std::string&mode,std::size_t n,const std::string&
   c::need(mode=="sumcheck2" || mode=="sumcheck3" || mode=="sumcheck-zero" || mode=="real-FC0","R7 unsupported local interactive mode");
   bool real=mode=="real-FC0";std::size_t degree=mode=="sumcheck3"?3:2;if(real)n=1024;else c::need(n && n<=256 && !(n&(n-1)),"R7 bounded Sumcheck size");
   std::vector<Fr>w(degree*n+1,Fr(0));std::string role=real?"real-oneblock-FC0-layer4-row0-col0":"bounded-"+mode;
-  if(real){const std::string manifest="reports/R6A/oneblock-model-manifest-v1.txt",pin="3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073";R7Context context;R7WitnessStore store;R7Statement statement;
+  if(real){const std::string manifest="reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt",pin="3ab43263570f08a2fe314bca99f2f95c11020abae17eca587f1717f52d298073";R7Context context;R7WitnessStore store;R7Statement statement;
    {SilenceStdout quiet;checkManifest(manifest,pin);context=buildR6Context(pin);if(io.prover()){auto output=R7OneblockProver{}.run(context,manifest,store);c::need(output.result.code==Code::Incomplete,"R7 real witness framework result");statement=output.statement;auto values=store.firstFCContraction(context);for(std::size_t j=0;j<n;++j){w[j]=values.activation[j];w[n+j]=values.weight[j];}w[2*n]=values.output;}}
    auto b=io.message("real-FC0/R7Statement",io.prover()?R7Wire::encodeStatement(statement):Bytes{});auto actual=R7Wire::decodeStatement(b);c::need(validateStatement(actual,context).code==Code::Ok,"R7 real FC statement/profile/model/layout rejected");
   }else if(io.prover()){

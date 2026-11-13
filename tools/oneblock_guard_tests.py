@@ -3,14 +3,14 @@ from pathlib import Path
 import os,sys,json,subprocess,struct
 from r7_process import start_interactive_child
 from r7_sync_safety import no_links
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith(('R7-ONEBLOCK-RUN-','R7-CLASSIFIED-RUN-'))
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-ONEBLOCK', ROOT/'reports'/'R7-CLASSIFIED'} and stage.name.startswith(('R7-ONEBLOCK-RUN-','R7-CLASSIFIED-RUN-'))
 binary=ROOT/'build/release/src/paper_r7/r7_complete_verifier';out=stage/'full-verifier-guards';out.mkdir();cases=[]
 for option in ['--challenge=1','--import-receipt']:
  p=subprocess.run([str(binary),'run',option],stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=30)
  assert p.returncode==2 and 'cannot import challenges/receipt/options' in p.stderr,p.stderr
  cases.append(dict(case=option,V_exit=p.returncode,passed=True,reason=p.stderr.strip()))
 source=None
-for d in sorted((ROOT/'reports').glob('R7-ONEBLOCK-RUN-*'),reverse=True):
+for d in sorted((ROOT/'reports/R7-ONEBLOCK').glob('R7-ONEBLOCK-RUN-*'),reverse=True):
  p=d/'full-sessions/CASES.json'
  if p.exists() and any(c['case']=='correct-full' and c['passed'] for c in json.loads(p.read_text())):source=d;break
 assert source is not None,'requires actual completed full positive'

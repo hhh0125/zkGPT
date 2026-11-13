@@ -1,0 +1,287 @@
+{
+  "status": "PASS",
+  "complete_oneblock_positive_and16_negatives": true,
+  "full12_positive_and4_selected_negatives": true,
+  "original_required_relation_inventory_exactly_preserved": true,
+  "old_relation_removed": "CLASSIFIED_AUTHENTICATION",
+  "required_count": 8112,
+  "verified_count": 8112,
+  "families": {
+    "MAPPED_INPUT": 16,
+    "PUBLIC_BINDING": 3,
+    "MODEL_AUTHORITY": 1,
+    "MODEL_RERANDOMIZATION": 1,
+    "MODEL_MASTER_LINK": 1,
+    "MODEL_PARAMETER_LINK": 144,
+    "CROSS_BLOCK_STATE": 11,
+    "GKR_OUTPUT": 1,
+    "GKR_PREDICATE": 276,
+    "GKR_SUMCHECK": 420,
+    "GKR_ZERO_REGION": 216,
+    "GKR_INTERNAL_AGGREGATION": 276,
+    "GKR_MASTER_TERMINAL": 612,
+    "FC_MATRIX": 96,
+    "GKR_INPUT_AGGREGATION": 1,
+    "GKR_AGGREGATION_TERMINAL": 1,
+    "RANGE_RECONSTRUCTION": 17,
+    "RANGE_TAIL": 17,
+    "RANGE_DIGIT": 103,
+    "MEMORY_MULTISET": 104,
+    "PRODUCT_ROOT": 312,
+    "PRODUCT_LAYER": 4314,
+    "MEMORY_LEAF": 728,
+    "EXP_SUMCHECK": 2,
+    "EXP_VALUE_BINDING": 2,
+    "CLASSIFIED_COMMITMENT": 45,
+    "CLASSIFIED_TRUSTED_ANCHOR_TAIL": 10,
+    "CLASSIFIED_ZERO_TAIL": 4,
+    "CLASSIFIED_VIEW": 331,
+    "UNIFIED_INPUT_SUMCHECK": 1,
+    "UNIFIED_INPUT_OPENING": 1,
+    "UNIFIED_CLASSIFIED_ROOT_OPENING": 45
+  },
+  "roots": 45,
+  "model_chunks": 10,
+  "claims": 1502,
+  "cross_block_connections": 11,
+  "full_base_registration_rows": 0,
+  "full_base_registration_response_bytes": 0,
+  "tail_rows": 54,
+  "tail_response_bytes": 15040,
+  "source_binary_parameter_sha_unchanged": true,
+  "complete_fs_and_eof": true,
+  "independent_verifier": true,
+  "telemetry": {
+    "P": {
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 4066,
+        "cpu_seconds": 4064.01,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_OPENING": {
+        "roots": 45,
+        "wall_seconds": 256.656,
+        "cpu_seconds": 256.563,
+        "includes_root_MLE_and_hidden_stitch": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 81236378784,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 81236378784,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 81930065151,
+        "kernel_and_partial_Fr_additions": 81236378784,
+        "kernel_wall_seconds": 2255.12,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 210.999,
+        "kernel_and_partial_cpp_allocations": 1485,
+        "kernel_and_partial_cpp_allocated_bytes": 764036579328
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 412.638,
+        "kernel_calls": 1485,
+        "kernel_coordinates": 81236378784,
+        "kernel_cpu_seconds": 2254.03,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.132997,
+        "weight_products": 81274405536,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 588.875,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 90,
+            "terms": 90,
+            "cpu_seconds": 0.00361019,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 724443,
+            "terms": 1448886,
+            "cpu_seconds": 40.7859,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 180,
+            "terms": 1080,
+            "cpu_seconds": 0.0229882,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 270,
+            "terms": 10080,
+            "cpu_seconds": 0.182577,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 543578,
+            "terms": 556427424,
+            "cpu_seconds": 546.859,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 40,
+            "terms": 122880,
+            "cpu_seconds": 1.02131,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    },
+    "V": {
+      "UNIFIED_SUMCHECK": {
+        "domain": 4294967296,
+        "rounds": 32,
+        "wall_seconds": 91.5145,
+        "cpu_seconds": 91.4514,
+        "includes_public_kernel_endpoint": true
+      },
+      "UNIFIED_OPENING": {
+        "roots": 45,
+        "wall_seconds": 70.6809,
+        "cpu_seconds": 70.6464,
+        "includes_root_MLE_and_hidden_stitch": true
+      },
+      "UNIFIED_INPUT": {
+        "claims": 1502,
+        "roots_opened": 45,
+        "partition_size": 1073741824,
+        "domain": 4294967296,
+        "sumcheck_rounds": 32,
+        "full_input_copy_bytes": 0,
+        "private_folded_input_copy_bytes": 0,
+        "old_root_sumchecks": 0,
+        "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+        "may_enter_stage2": false
+      },
+      "OPT3A_AUTH": {
+        "builtin_RowMajor_base_coordinate_lookups": 1319730272,
+        "kernel_matched_coordinates": 2461708448,
+        "partial_visited_coordinates": 0,
+        "frozen_kernel_coordinates": 2461708448,
+        "fallback_map_queries": 0,
+        "kernel_and_partial_Fr_multiplications": 2482729247,
+        "kernel_and_partial_Fr_additions": 2461708448,
+        "kernel_wall_seconds": 69.0979,
+        "partial_wall_seconds": 0,
+        "prepare_wall_seconds": 212.603,
+        "kernel_and_partial_cpp_allocations": 45,
+        "kernel_and_partial_cpp_allocated_bytes": 23152623616
+      },
+      "OPT2_AUTH": {
+        "map_calls": 3004,
+        "map_coordinates": 5254320864,
+        "map_cpu_seconds": 414.484,
+        "kernel_calls": 45,
+        "kernel_coordinates": 2461708448,
+        "kernel_cpu_seconds": 69.053,
+        "weights_precomputations": 1502,
+        "weights_terms": 2488360,
+        "weights_cpu_seconds": 0.143305,
+        "weight_products": 2499735200,
+        "partial_cpu_seconds": 0,
+        "kernel_peak_bytes": 536870912
+      },
+      "OPT2_MSM": {
+        "cpu_seconds": 22.0913,
+        "allocation_scope": "ordinary C++ new on tracing thread inside wrappers; excludes caller construction, C malloc, aligned and worker allocation",
+        "bins": [
+          {
+            "length": "1",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "2",
+            "calls": 276066,
+            "terms": 552132,
+            "cpu_seconds": 15.12,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "3-8",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "9-64",
+            "calls": 0,
+            "terms": 0,
+            "cpu_seconds": 0,
+            "cpp_allocations": 0
+          },
+          {
+            "length": "65-1024",
+            "calls": 601,
+            "terms": 614816,
+            "cpu_seconds": 5.98207,
+            "cpp_allocations": 0
+          },
+          {
+            "length": ">1024",
+            "calls": 30,
+            "terms": 122880,
+            "cpu_seconds": 0.989196,
+            "cpp_allocations": 0
+          }
+        ]
+      }
+    }
+  },
+  "negative_cases": [
+    {
+      "case": "replaced-model-commitment",
+      "exit_code": 2,
+      "original_error": "REJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch"
+    },
+    {
+      "case": "wrong-source-mapping",
+      "exit_code": 2,
+      "original_error": "REJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch"
+    },
+    {
+      "case": "wrong-sumcheck-round",
+      "exit_code": 2,
+      "original_error": "REJECT_OR_INCOMPLETE R7 public statement/parent binding mismatch"
+    },
+    {
+      "case": "wrong-hyrax-opening",
+      "exit_code": 2,
+      "original_error": "REJECT_OR_INCOMPLETE A3 scalar knowledge equation failed"
+    }
+  ],
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false
+}

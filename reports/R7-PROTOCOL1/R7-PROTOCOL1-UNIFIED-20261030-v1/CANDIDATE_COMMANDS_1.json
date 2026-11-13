@@ -1,0 +1,73 @@
+[
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "build/protocol1-unified-release",
+      "-j4",
+      "--target",
+      "r7_protocol1_oneblock_prover",
+      "r7_protocol1_oneblock_verifier",
+      "r7_protocol1_full12_prover",
+      "r7_protocol1_full12_verifier",
+      "r7_unified_input_tests",
+      "r7_full12_runtime_tests",
+      "r7_fs_io_tests",
+      "r7_oneblock_gkr_tests",
+      "r7_oneblock_lookup_tests",
+      "r7_oneblock_model_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 18.594034804962575
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_unified_input_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.7430998971685767
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_unified_input_tests",
+      "exhaustion"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 8.799902131780982
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_full12_runtime_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.2832343326881528
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_fs_io_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.01589092705398798
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_oneblock_gkr_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.45141710294410586
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_oneblock_lookup_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 22.195869480259717
+  },
+  {
+    "command": [
+      "build/protocol1-unified-release/src/paper_r7/r7_oneblock_model_tests"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.3231890853494406
+  }
+]

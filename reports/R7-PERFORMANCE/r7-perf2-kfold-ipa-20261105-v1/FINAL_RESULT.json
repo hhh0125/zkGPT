@@ -1,0 +1,97 @@
+{
+  "stage": "r7-perf2-kfold-ipa-20261105-v1",
+  "status": "STOP_PERFORMANCE",
+  "implementation_disposition": {
+    "K": "IMPLEMENTED_DEFAULT_DISABLED_PERFORMANCE_GATE",
+    "IPA": "ANALYZED_NOT_IMPLEMENTED_STOP_PERFORMANCE",
+    "Source_actual": "RETAINED_UNCHANGED",
+    "Witness_scan": "DEFAULT_DISABLED_UNCHANGED",
+    "P0_P1_mapping": "UNCHANGED"
+  },
+  "default_K_candidate_enabled": false,
+  "candidate_opt_in": "ZKGPT_PERF2_K_REFERENCE=0",
+  "performance_gate": {
+    "passed": false,
+    "ab": {
+      "n": 524288,
+      "samples": 7,
+      "preprocessing_seconds": 0.00862745,
+      "reference_median": 1.14607,
+      "candidate_median": 1.09151,
+      "paired_ratio_median": 1.04977,
+      "paired_ratio_min": 1.0489,
+      "paired_ratio_max": 1.05032,
+      "reference_min": 1.14548,
+      "reference_max": 1.14644,
+      "candidate_min": 1.09096,
+      "candidate_max": 1.09279
+    },
+    "P_before": {
+      "n": 524288,
+      "preprocessing_seconds": 0.009817621,
+      "dynamic_seconds": 1.941835083,
+      "total_seconds": 1.95171237,
+      "peak_rss_kib": 49280
+    },
+    "P_after": {
+      "n": 524288,
+      "preprocessing_seconds": 0.0085035,
+      "dynamic_seconds": 1.879396287,
+      "total_seconds": 1.887957682,
+      "peak_rss_kib": 49284
+    },
+    "P_single_sample_limitation": true,
+    "decision": "STOP_PERFORMANCE",
+    "next_fixture_allowed": false
+  },
+  "new_full12_speedup_percent": null,
+  "full12": "NOT_RUN_AUTHORIZATION_REQUIRED",
+  "real_oneblock": "NOT_RUN_AUTHORIZATION_REQUIRED",
+  "crypto_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "verification": {
+    "release_all": true,
+    "ctest_passed": 101,
+    "ctest_failed": 0,
+    "targeted_passed": 11,
+    "deterministic_proof": {
+      "bytes": 285432,
+      "before_sha256": "d3626d7adf641d83c45a38599191c4f73bc2da36117034a4a99e20b2b776854c",
+      "after_sha256": "d3626d7adf641d83c45a38599191c4f73bc2da36117034a4a99e20b2b776854c",
+      "equal": true
+    },
+    "independent_cross_combinations_passed": 4,
+    "strict_EOF": true,
+    "negative_files_rejected": 3,
+    "final_default_off_independent_and_negatives": true
+  },
+  "identity": {
+    "final_source_tree": "90852a18f9b24463c58307578ae758b5c6fa263b270956cb91e91cb8b00345e1",
+    "measured_source_tree": "b93971922e902c6ef4b7ae784c4741b9559adf3ea98bc29db0493011d9fac6d8",
+    "windows_files": 496,
+    "remote_inputs": 417,
+    "dependencies": 272,
+    "parameters": 120,
+    "effective_compile_inputs": 1154,
+    "depfiles": 286,
+    "final_binary_count": 8,
+    "inputs_unchanged_during_final_verification": true
+  },
+  "archive": {
+    "sha256": "d332281a9e9ed1cd4547d56c343f85bc277ca18c0badcd0d70385a6426f4b7b2",
+    "members": 1057,
+    "container_sha": true,
+    "gzip_crc": true,
+    "member_sha": true,
+    "actual_restore_read": true
+  },
+  "limitations": [
+    "Single bounded contiguous K fixture only; no extrapolation",
+    "P single sample only",
+    "V AB uses fresh verifier instances replaying the same FS session within one warm process",
+    "Exclusive K/IPA subphase profiles not run after immediate stop"
+  ],
+  "git_mutations": false,
+  "historical_deletions": false
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 import os,sys,json,time,struct,hashlib,shutil,subprocess
 from r7_process import start_interactive_child
 from r7_sync_safety import no_links
-ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-ONEBLOCK-RUN-')
+ROOT=Path.cwd();stage=Path(sys.argv[1]);assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-ONEBLOCK'} and stage.name.startswith('R7-ONEBLOCK-RUN-')
 BIN=ROOT/'build/release/src/paper_r7';out=stage/'full-sessions';out.mkdir();cases=[]
 def digest(p):
  h=hashlib.sha256()

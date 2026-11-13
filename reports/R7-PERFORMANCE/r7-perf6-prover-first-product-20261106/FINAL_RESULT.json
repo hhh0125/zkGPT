@@ -1,0 +1,168 @@
+{
+  "task_execution_complete": true,
+  "measurement_execution_complete": true,
+  "closure_state": "COMPLETE_ARCHIVES_SHA_CRC_PHYSICAL_RESTORE_VERIFIED",
+  "overall_acceptance": false,
+  "status": "STOP_PERFORMANCE",
+  "baseline_tree_sha256": "6fb9a077467429ab5f5cc15273071227ef99844c98c4572459ca2c18093338b8",
+  "A_historical_root_cause": "UNRESOLVED",
+  "A_evidence_classification": "MEASUREMENT_VARIABILITY_SUPPORTED",
+  "B_historical_root_cause": "UNRESOLVED physical cause; exact statistical failure and source changes reproduced",
+  "B_weights_elimination_confirmed": true,
+  "surrogate": {
+    "A2": {
+      "passed": false,
+      "weighted_ratios": {
+        "P": {
+          "Product": 0.9128638052726737,
+          "whole": 0.9146314707475837
+        },
+        "V": {
+          "Product": 1.0523379104767363,
+          "whole": 1.0522613585155587
+        }
+      },
+      "failed_checks": [
+        "V_Product",
+        "V_whole",
+        "each_size_V"
+      ]
+    },
+    "B2": {
+      "passed": false,
+      "weighted_ratios": {
+        "P": {
+          "Product": 0.9166177251622004,
+          "whole": 0.9268285164513718
+        },
+        "V": {
+          "Product": 0.9648282513162497,
+          "whole": 0.9647994398462055
+        }
+      },
+      "failed_checks": [
+        "each_size_V"
+      ]
+    },
+    "C2": {
+      "passed": true,
+      "weighted_ratios": {
+        "P": {
+          "Product": 0.8995709762356154,
+          "whole": 0.9074377696449969
+        },
+        "V": {
+          "Product": 0.9840608962508568,
+          "whole": 0.9842217877026992
+        }
+      },
+      "failed_checks": []
+    }
+  },
+  "native": {
+    "A2": {
+      "passed": false,
+      "weighted_ratios": {
+        "P": {
+          "Product": 1.0286515165617138,
+          "whole": 1.0507483511628375
+        },
+        "V": {
+          "Product": 0.7480643750058475,
+          "whole": 0.7573649920807909
+        }
+      },
+      "failed_checks": [
+        "P_Product",
+        "P_whole"
+      ]
+    },
+    "B2": {
+      "passed": false,
+      "weighted_ratios": {
+        "P": {
+          "Product": 1.04977420952567,
+          "whole": 1.045833488575354
+        },
+        "V": {
+          "Product": 1.0166678362331079,
+          "whole": 1.0125882877806995
+        }
+      },
+      "failed_checks": [
+        "P_Product",
+        "P_whole",
+        "each_size_V"
+      ]
+    },
+    "C2": {
+      "passed": false,
+      "weighted_ratios": {
+        "P": {
+          "Product": 0.9744891265626004,
+          "whole": 0.96954772782411
+        },
+        "V": {
+          "Product": 1.0817982163226438,
+          "whole": 1.0736791892113053
+        }
+      },
+      "failed_checks": [
+        "P_Product",
+        "V_Product",
+        "V_whole",
+        "each_size_V"
+      ]
+    }
+  },
+  "eligible_bundles": {
+    "A2": false,
+    "B2": false,
+    "C2": false
+  },
+  "selected_default_bundle": null,
+  "default_options": {
+    "A2": false,
+    "B2": false,
+    "C2": false,
+    "legacy_B_verifier_weights": false
+  },
+  "Full12": {
+    "executed": false,
+    "authorized": false,
+    "performance_admitted": false,
+    "ready_to_run": false
+  },
+  "security_status": "FS_NIZK_CANDIDATE",
+  "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+  "may_enter_stage2": false,
+  "limitations": [
+    "same-machine noisy bounded observations are not stable causal attribution",
+    "CPU effective frequency and hardware counters NOT_MEASURED",
+    "surrogate 186/312 calls plus separate 126-call distribution check is not actual Full12",
+    "native fixture uses private synthetic seed and real deferred authentication, not Full12 witness",
+    "native bounded scales 512/8192/32768 do not cover largest Full12 domains",
+    "deterministic native test masks provide no confidentiality for synthetic proofs"
+  ],
+  "exact_byte_validation": {
+    "passed": true,
+    "cases": 52,
+    "formal_proofs_bound": 348,
+    "actual_labelled_message_event_streams_compared": true,
+    "actual_canonical_challenge_sequences_compared": true,
+    "timings_not_used_for_performance": true
+  },
+  "delivery_source_tree_sha256": "89d45ddaf4f1d957c35a27bb7d37c8e30245c26a100ac5c508b24b19fc298503",
+  "closure_audit_passed": true,
+  "closure_archive_sha256": "feb536a693bf5b83c26b9ff1feb9c24305e7dce004213fef846d7eb7d905407f",
+  "delivery_source_archive_sha256": "fe43bb0990a08edce23cbc6f0cedd25d4966b7ec620c273f7259363065ad4777",
+  "source_files": 521,
+  "remote_exact_build_inputs": 442,
+  "parameters_unchanged": 120,
+  "dependencies_unchanged": 272,
+  "ctest": {
+    "passed": 110,
+    "total": 110
+  },
+  "all_saved_formal_proofs_SHA_verified": 348
+}

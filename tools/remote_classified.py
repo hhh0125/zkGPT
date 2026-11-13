@@ -5,7 +5,7 @@ from r7_process import run_process_group
 from classified_test_policy import validate_options,completed_status,retain_stream
 validate_options(sys.argv[2:])
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-stage=ROOT/sys.argv[1];assert stage.parent==ROOT/'reports' and stage.name.startswith('R7-CLASSIFIED-RUN-')
+stage=ROOT/sys.argv[1];assert stage.parent in {ROOT/'reports', ROOT/'reports'/'R7-CLASSIFIED'} and stage.name.startswith('R7-CLASSIFIED-RUN-')
 events=[];env=os.environ.copy();env.update(ZKGPT_THREADS='4',MALLOC_ARENA_MAX='2',PYTHONDONTWRITEBYTECODE='1')
 def limits():resource.setrlimit(resource.RLIMIT_AS,(8<<30,8<<30));os.sched_setaffinity(0,sorted(os.sched_getaffinity(0))[:4])
 def run(name,cmd,timeout=180,limited=True,expect=0):
@@ -14,7 +14,7 @@ def run(name,cmd,timeout=180,limited=True,expect=0):
  events.append(dict(name=name,command=cmd,exit_code=code,seconds=time.monotonic()-start,passed=code==expect));print('DONE',name,code,flush=True)
  if code!=expect:print((stage/(name+'.log')).read_text(errors='replace')[-5000:],flush=True);raise RuntimeError(name)
 def preservation():
- return dict(source={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')},frozen={p.relative_to(ROOT).as_posix():[p.stat().st_size,p.stat().st_mtime_ns,p.stat().st_ino] for directory in ['reports/R6A','reports/R6B-OPT2-20261021','data'] for p in (ROOT/directory).rglob('*') if p.is_file()})
+ return dict(source={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').rglob('*') if p.is_file() and not p.is_relative_to(ROOT/'src/paper_r7')},frozen={p.relative_to(ROOT).as_posix():[p.stat().st_size,p.stat().st_mtime_ns,p.stat().st_ino] for directory in ['reports/R6-BASELINE/R6A','reports/R6B/R6B-OPT2-20261021','data'] for p in (ROOT/directory).rglob('*') if p.is_file()})
 result=dict(status='FAILED',production_gate='BLOCKED_CRYPTOGRAPHIC_DESIGN',may_enter_stage2=False)
 try:
  before=preservation();(stage/'PRESERVATION_BEFORE.json').write_text(json.dumps(before,indent=2))
@@ -52,6 +52,6 @@ finally:
    retain_stream(raw,raw.with_suffix('.interrupted-parts'))
  result['toolchain']={n:subprocess.run([n,'--version'],capture_output=True,text=True).stdout.splitlines()[0] for n in ['cmake','c++','python3']};result['openssl']=subprocess.run(['openssl','version'],capture_output=True,text=True).stdout.strip()
  result['dependency_sha256']={p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for pattern in ['deps/cnpy/lib/libcnpy.a','3rd/mcl/include/mcl/bn.hpp','build/release/lib/*mcl*','build/release/src/paper_r7/r7_complete_*','build/release/src/paper_r7/r7_classified_*'] for p in ROOT.glob(pattern) if p.is_file()}
- result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
+ result['parameter_manifest_sha256']=hashlib.sha256((ROOT/'reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt').read_bytes()).hexdigest()
  result['events']=events;(stage/'RESULT.json').write_text(json.dumps(result,indent=2));(stage/'CMakeCache.txt').write_bytes((ROOT/'build/release/CMakeCache.txt').read_bytes());print('RESULT',result['status'],flush=True)
 sys.exit(0 if result['status']!='FAILED' else 1)

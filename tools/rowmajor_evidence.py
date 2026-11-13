@@ -2,7 +2,7 @@
 from pathlib import Path
 import os,sys,json,hashlib,tarfile,subprocess,platform,shlex,re
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work');assert Path.cwd().resolve()==ROOT
-STAGE=ROOT/'reports/R7-ROWMAJOR-RUN-20261028-v1'
+STAGE=ROOT/'reports/R7-ROWMAJOR/R7-ROWMAJOR-RUN-20261028-v1'
 def sha(p):
  h=hashlib.sha256()
  with p.open('rb') as f:
@@ -36,7 +36,7 @@ if mode=='identity':
  write('LINKED_DEPENDENCIES.json',dict(files=dependency_files,link_commands=link_commands,ldd=dynamic))
  run_cases=json.loads((STAGE/'full-CASES.json').read_text());affinities={tuple(c['affinity']) for c in run_cases};assert len(affinities)==1
  write('BUILD_IDENTITY.json',dict(files={p.relative_to(ROOT).as_posix():sha(p) for p in paths},toolchain={n:subprocess.check_output([n,'--version'],text=True).splitlines()[0] for n in ['cmake','c++','python3']},uname=platform.uname()._asdict(),affinity=list(next(iter(affinities))),threads=4,malloc_arena_max=2,cpu_info=Path('/proc/cpuinfo').read_text().split('\n\n')[0]))
- pins=['reports/R6A/oneblock-operator-trust-v1.anchor','reports/R6A/oneblock-model-manifest-v1.txt','reports/R6-ROWMAJOR-v2/oneblock-operator-trust-rowmajor-v2.anchor','src/export_gpt2_complete_params.py']
+ pins=['reports/R6-BASELINE/R6A/oneblock-operator-trust-v1.anchor','reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt','reports/R6-ROWMAJOR/R6-ROWMAJOR-v2/oneblock-operator-trust-rowmajor-v2.anchor','src/export_gpt2_complete_params.py']
  write('MODEL_IDENTITY.json',{n:sha(ROOT/n) for n in pins})
  with tarfile.open(STAGE/'current-source.tar.gz','x:gz') as t:
   for p in sorted((ROOT/'src').rglob('*')):
@@ -50,7 +50,7 @@ elif mode=='archive':
   if not p.is_file() or p.name in ['evidence.tar.gz','EVIDENCE_CONTAINER.json'] or p.name.startswith('sync-') or p.name=='full-row-tampered.fsproof':continue
   paths.append(p)
  # Include the shared new trusted anchor at its real default path and manifest.
- paths+=list((ROOT/'reports/R6-ROWMAJOR-v2').glob('*'))+[ROOT/'reports/R6A/oneblock-model-manifest-v1.txt']
+ paths+=list((ROOT/'reports/R6-ROWMAJOR/R6-ROWMAJOR-v2').glob('*'))+[ROOT/'reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt']
  manifest={p.relative_to(ROOT).as_posix():dict(bytes=p.stat().st_size,sha256=sha(p)) for p in sorted(set(paths))}
  write('ARCHIVE_MANIFEST.json',manifest);paths.append(STAGE/'ARCHIVE_MANIFEST.json')
  with tarfile.open(STAGE/'evidence.tar.gz','x:gz',compresslevel=1) as t:

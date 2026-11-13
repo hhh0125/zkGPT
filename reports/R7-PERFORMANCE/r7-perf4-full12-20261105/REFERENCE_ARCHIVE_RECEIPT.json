@@ -1,0 +1,95 @@
+{
+  "reference_group": {
+    "success": true,
+    "variant": "reference",
+    "P": {
+      "args": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-reference/src/paper_r7/r7_fs_full12_prover",
+        "prove",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/full12-reference/full12.fsproof",
+        "zkGPT/R7/perf4/full12/20261105/v3"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 3329.4838016731665,
+      "peak_rss_kib": 51763024,
+      "sampled_peak_rss_bytes": 52988846080,
+      "sampled_peak_swap_bytes": 0,
+      "user_cpu_seconds": 4262.131782,
+      "system_cpu_seconds": 147.935887,
+      "resource_failure": null,
+      "interruption": null
+    },
+    "V": {
+      "args": [
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release/r7-perf4-full12-20261105-reference/src/paper_r7/r7_fs_full12_verifier",
+        "verify",
+        "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/r7-perf4-full12-20261105/full12-reference/full12.fsproof",
+        "zkGPT/R7/perf4/full12/20261105/v3"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 844.2776471469551,
+      "peak_rss_kib": 6229420,
+      "sampled_peak_rss_bytes": 6378926080,
+      "sampled_peak_swap_bytes": 0,
+      "user_cpu_seconds": 871.140325,
+      "system_cpu_seconds": 20.771525,
+      "resource_failure": null,
+      "interruption": null
+    },
+    "proof_bytes": 526435830,
+    "proof_sha256": "6c0320e89f7faf6df82402eec1e9ada9ca60355f9ee4e8d595dfbd3349e3c00f",
+    "statement_sha256": "ce1f1c7253802da5ceb90355c8c34b0547f4febe710fe6ef2691e14271fcb76b",
+    "coverage_count": 8011,
+    "FS": {
+      "security_status": "FS_NIZK_CANDIDATE",
+      "suite": "R7-FULL12-SINGLE-HYRAX-COMPACT-INDEPENDENT-REGIONS-FS-CANDIDATE-v3",
+      "session": "f699b88634e174e15d1931b13beef5df5423f2f1f466e2d716af5ba8d626a8cc",
+      "complete": true,
+      "proof_bytes": 526435830,
+      "proof_sha256": "6c0320e89f7faf6df82402eec1e9ada9ca60355f9ee4e8d595dfbd3349e3c00f",
+      "transcript_digest": "fcd8bb0866959124560d3976705a981329c96e7f9c870ef5271af95e24c834fc",
+      "challenge_digest": "d031ddb9ac4a1fb39d476c63cac18f110baafbc885e750506e644f7053fa5110",
+      "challenges": 165784,
+      "prover_messages": 499855,
+      "events": 665641,
+      "field_rejections": 976844,
+      "hash_seconds": 1.51651,
+      "file_io_seconds": 0.348631,
+      "file_syscalls": 3786,
+      "file_buffer_bytes": 65536,
+      "max_message_payload_bytes": 2097743,
+      "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+      "may_enter_stage2": false
+    },
+    "strict_EOF": true,
+    "source_dependencies_parameters_stable": true,
+    "single_measurement_only": true,
+    "crypto_status": "FS_NIZK_CANDIDATE",
+    "production_gate": "BLOCKED_CRYPTOGRAPHIC_DESIGN",
+    "may_enter_stage2": false
+  },
+  "windows_evidence": {
+    "variant": "reference",
+    "tar_sha256": "640a4727909e894605ff3d3c0320fdbe7465109eb0e4e5a1d4cd72fe224df5f3",
+    "members": 102,
+    "payload_bytes": 543307063,
+    "physical_restore_read": true,
+    "all_member_sha256_match": true,
+    "proof_sha256": "6c0320e89f7faf6df82402eec1e9ada9ca60355f9ee4e8d595dfbd3349e3c00f",
+    "no_remote_artifact_disposable_authorized": true
+  },
+  "windows_build": {
+    "variant": "reference",
+    "members": 1530,
+    "archive_sha256": "f4d5af1ac542ae2091a0d1d2aa06abc62017d8d5deb0eda60216c44882a1d531",
+    "physical_restore_read": true,
+    "all_build_dependency_config_binary_sha256_match": true
+  },
+  "source_tree_sha256": "2be078ab25cf4c06055ca78e43587333bd5e1120788b7a00eea64766cc22b355",
+  "physical_source_restore": {
+    "files": 501,
+    "all_sha256_match": true,
+    "physical_restore_read": true
+  },
+  "parameter_CAS_rechecked": true
+}

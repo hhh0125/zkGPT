@@ -1,0 +1,27 @@
+{
+  "status": "DELETED_AND_HASH_VERIFIED",
+  "deleted_files_or_links": 90521,
+  "deleted_logical_bytes": 83763942098,
+  "removed_empty_directories": 7448,
+  "retained_files_or_links_verified": 8263,
+  "protected_files_verified": 858,
+  "errors": [],
+  "delete_paths_remaining": [],
+  "completed_utc": "2026-11-12T08:17:52Z",
+  "authorization": "User approved exact cleanup list and deletion on 2026-11-12; no external backup claim",
+  "post_cleanup_validation": {
+    "build": {
+      "command": "cmake --build build/release -j 4",
+      "exit_code": 0,
+      "log": "docs/cleanup-20261112/build-after-cleanup.log"
+    },
+    "existing_smoke_test": {
+      "command": "ctest --test-dir build/release -R '^circuit_storage_tests$' --output-on-failure",
+      "passed": 1,
+      "failed": 0
+    },
+    "full12_prover_dynamic_dependencies": "all resolved",
+    "new_cryptographic_proof_runs": 0,
+    "disk_usage": "1.2G\t."
+  }
+}

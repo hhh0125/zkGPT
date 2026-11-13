@@ -1,0 +1,26 @@
+[  5%] Built target mcl
+[  5%] Built target mclbn256
+[ 25%] Built target paper_r1
+[ 50%] Built target gpt_lib
+[ 55%] Built target paper_r2
+[100%] Built target paper_r7
+[100%] Building CXX object src/paper_r7/CMakeFiles/r7_product_leaf_tests.dir/product_leaf_tests.cpp.o
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_leaf_tests.cpp: In function ‘void {anonymous}::singleFingerprintScan()’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_leaf_tests.cpp:23:120: error: cannot convert ‘std::__cxx11::basic_string<char>’ to ‘const char*’
+   23 |       "Product 0/1 repeated fingerprint witness scans: a="+std::to_string(aReads)+" v="+std::to_string(vReads)+" read="+std::to_string(readReads));
+      |       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                                                                        |
+      |                                                                                                                        std::__cxx11::basic_string<char>
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/sigma.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_sumcheck.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup.hpp:2,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/oneblock_lookup_tests.cpp:1,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_leaf_fixture.inc:3,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/product_leaf_tests.cpp:2:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/src/paper_r7/crypto.hpp:11:16: note:   initializing argument 2 of ‘void zkgpt::r7::crypto::need(bool, const char*)’
+   11 | void need(bool,const char*);
+      |                ^~~~~~~~~~~
+gmake[3]: *** [src/paper_r7/CMakeFiles/r7_product_leaf_tests.dir/build.make:79: src/paper_r7/CMakeFiles/r7_product_leaf_tests.dir/product_leaf_tests.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:8042: src/paper_r7/CMakeFiles/r7_product_leaf_tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:8049: src/paper_r7/CMakeFiles/r7_product_leaf_tests.dir/rule] Error 2
+gmake: *** [Makefile:2792: r7_product_leaf_tests] Error 2

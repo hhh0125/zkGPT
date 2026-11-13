@@ -9,7 +9,7 @@ import tarfile
 import sys
 
 ROOT=Path('/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work')
-STAGE=ROOT/'reports/R7-PRODUCT-WEIGHT-OPT-20261112-v1'
+STAGE=ROOT/'reports/R7-PRODUCT-WEIGHT/R7-PRODUCT-WEIGHT-OPT-20261112-v1'
 BUILD=ROOT/'build/product-weight-20261112-v1'
 ARCHIVE=STAGE.with_suffix('.tar.gz')
 
@@ -71,7 +71,7 @@ def main():
     files.pop('evidence/METHOD.json',None) # only scoped task environment is public
     add_tree(ROOT/'logs'/STAGE.name,'logs')
     add_tree(ROOT.parent/'zkGPT-work-backup'/STAGE.name,'baseline-overwrite')
-    r9=ROOT/'reports/R9-FULL12-PHASE-TIMING-20261111-v1'
+    r9=ROOT/'reports/R9-FULL12-PHASE-TIMING/R9-FULL12-PHASE-TIMING-20261111-v1'
     for name in ['P-SCOPES.tsv','V-SCOPES.tsv','PARAMETERS.json','run_experiments.py','FROZEN_SOURCE.json','FINAL_REPORT.zh-CN.md']:
         files['reference/R9/'+name]=r9/name
     manifest={name:{'sha256':sha(path),'bytes':path.stat().st_size} for name,path in sorted(files.items())}
