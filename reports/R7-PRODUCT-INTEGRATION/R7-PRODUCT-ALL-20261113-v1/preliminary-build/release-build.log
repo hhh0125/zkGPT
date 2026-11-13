@@ -1,0 +1,63 @@
+[  0%] Building CXX object 3rd/mcl/CMakeFiles/mcl.dir/src/fp.cpp.o
+[  0%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/bint-x64-amd64.S.o
+[  0%] Building CXX object 3rd/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[  1%] Building ASM object 3rd/mcl/CMakeFiles/mcl.dir/src/asm/x86-64.S.o
+[  1%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/bint-x64-amd64.S.o
+[  1%] Building ASM object 3rd/mcl/CMakeFiles/mcl_st.dir/src/asm/x86-64.S.o
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+In file included from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/op.hpp:9,
+                 from /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/src/fp.cpp:5:
+In member function ‘bool mcl::SquareRoot::setIfPrecomputed(const mpz_class&)’,
+    inlined from ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’ at /home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:783:46:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:738:29: warning: ‘b’ may be used uninitialized [-Wmaybe-uninitialized]
+  738 |                         if (!b) continue;
+      |                             ^~
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp: In member function ‘void mcl::SquareRoot::set(bool*, const mpz_class&, bool)’:
+/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/3rd/mcl/include/mcl/gmp_util.hpp:736:30: note: ‘b’ declared here
+  736 |                         bool b;
+      |                              ^
+[  1%] Linking CXX shared library ../../lib/libmcl.so
+[  1%] Linking CXX static library ../../lib/libmcl.a
+[  1%] Built target mcl
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384_256.dir/src/bn_c384_256.cpp.o
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mclbn384.dir/src/bn_c384.cpp.o
+[  2%] Building CXX object 3rd/mcl/CMakeFiles/mclbn256.dir/src/bn_c256.cpp.o
+[  2%] Built target mcl_st
+[  2%] Linking CXX shared library ../../lib/libmclbn256.so
+[  2%] Linking CXX shared library ../../lib/libmclbn384.so
+[  2%] Built target mclbn256
+[  2%] Built target mclbn384
+[  3%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/lookup_batch.cpp.o
+[  3%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/lookup_batch.cpp.o
+[  3%] Building CXX object src/CMakeFiles/gpt_lib.dir/circuit.cpp.o
+[  4%] Linking CXX shared library ../../lib/libmclbn384_256.so
+[  4%] Built target mclbn384_256
+[  4%] Building CXX object src/CMakeFiles/gpt_lib.dir/exp_lookup.cpp.o
+[  4%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/mapped_input.cpp.o
+[  5%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/mapped_input.cpp.o
+[  5%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/core.cpp.o
+[  5%] Building CXX object src/CMakeFiles/gpt_lib.dir/generator_cache.cpp.o
+[  5%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/core.cpp.o
+[  5%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_proof_builder.cpp.o
+[  6%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_serialization.cpp.o
+[  6%] Building CXX object src/CMakeFiles/gpt_lib.dir/gkr_verifier.cpp.o
+[  6%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/pc.cpp.o
+[  6%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax.cpp.o
+[  6%] Building CXX object src/paper_r1/CMakeFiles/paper_r1_verifier.dir/pc.cpp.o
+[  6%] Building CXX object src/CMakeFiles/gpt_lib.dir/hyrax_opening.cpp.o
+[  6%] Building CXX object src/paper_r1/CMakeFiles/paper_r1.dir/sumcheck.cpp.o
+gmake[2]: *** [src/CMakeFiles/gpt_lib.dir/build.make:149: src/CMakeFiles/gpt_lib.dir/gkr_verifier.cpp.o] Terminated
+gmake[2]: *** [src/paper_r1/CMakeFiles/paper_r1.dir/build.make:135: src/paper_r1/CMakeFiles/paper_r1.dir/sumcheck.cpp.o] Terminated
+gmake[2]: *** [src/paper_r1/CMakeFiles/paper_r1_verifier.dir/build.make:121: src/paper_r1/CMakeFiles/paper_r1_verifier.dir/pc.cpp.o] Terminated
+gmake[1]: *** [CMakeFiles/Makefile2:1747: src/paper_r1/CMakeFiles/paper_r1.dir/all] Terminated
+gmake: *** [Makefile:146: all] Terminated

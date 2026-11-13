@@ -1,0 +1,8 @@
+# Ledger — plan: PLAN.md
+Migration successful at relocated WORKSPACE path; before source frozen.
+Ruling: direct current-workspace execution authorized by full user spec; no extra approval/worktree/commit.
+Ruling: user confirms existing OS entropy for Full12.
+Preflight: PERF5 keys remain compatible; trace changes no canonical bytes.
+Build attempt1 failed in macro-included test TU: explicit specialization policy argument omitted on internal call. Fixed at caller; all failure logs retained. Added external root2 and Product0 shift/restore PERF4 scopes to include preparation costs. Revalidation starts with new source freeze.
+Product test attempt1 failed because global PERF5_PROFILE created per-Product contexts while existing leaf test intentionally installs its own external Context; no TreeParent arithmetic defect. Remove PERF5_PROFILE from unit/sanitizer environment, retain it explicitly for exact and Full12 profiling. Existing assertions unchanged. Rebuild final source after external timer wrapper update before all validation.
+Task1 complete: Release full build, Product6/6, oneblock2/2, fullCTest121/122 only known storage failure reproduced, deterministic Proof/P-V event/canonical bytes equal, ASan+UBSan6/6. VALIDATION_SEAL binds exact source/binary bytes; changed-source/binary maps rejected. No Full12 started. Preparing preflight archive.\nTask2 complete: one optimized Full12 P exit0 3336.4997978378s; separate V exit0 678.2667341512s, coverage8011/8011; complete canonical events equal and independent digest rehash passed. Actual P/V Product0/1/2 each104, A2 total30170, direct C2 fold3254; source/parameters/binaries unchanged. Final source/parameter/proof audit passed. Preparing FINAL Windows archive.\n

@@ -24,7 +24,7 @@ std::vector<Fr>expressionPolynomial(const Expression&,std::size_t,const std::vec
 std::vector<Fr>productPolynomial(std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
 }
 Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
-Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr);
+Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr,bool allow_specialized=true);
 Hidden publicHidden(IO&,const std::string&,const Fr&);
 Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
 void equalHidden(IO&,const Hidden&,const Fr&,Random*,const std::string&);

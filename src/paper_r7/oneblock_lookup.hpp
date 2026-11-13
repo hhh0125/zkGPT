@@ -7,7 +7,7 @@ using LeafAuthenticator=std::function<void(IO&,const Query&,const Hidden*,Random
 // recursively and never represented by independent unauthenticated PCs.
 // Prover-only optional storage, borrowed without copying. The caller retains
 // one shared owner and must keep values unchanged until the call returns.
-void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&,const std::shared_ptr<std::vector<Fr>>& prepared_leaves={});
+void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&,const std::shared_ptr<std::vector<Fr>>& prepared_leaves={},bool allow_specialized=true);
 void hiddenMemory(IO&,const VectorOracle&address,const VectorOracle&value,const std::vector<Fr>&table,const VectorFactory&,Random*,const std::string&,bool prepared=false);
 // Caller supplies role="r7/" + native RangeSpec/ExpSpec.id so factory IDs
 // exactly match the native auxiliary registry. The encoded Range query must

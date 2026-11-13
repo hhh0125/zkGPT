@@ -188,6 +188,8 @@ add_test(NAME r7_lookup_preparation COMMAND r7_lookup_prepare_tests)
 
 add_executable(r7_fs_io_tests fs_tests.cpp)
 target_link_libraries(r7_fs_io_tests PRIVATE paper_r7)
+add_test(NAME r7_product_canonical_trace COMMAND r7_fs_io_tests)
+set_tests_properties(r7_product_canonical_trace PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 target_sources(paper_r7 PRIVATE fs_io.cpp)
 
 add_executable(r7_fs_oneblock_prover oneblock_main.cpp)

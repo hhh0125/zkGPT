@@ -1,0 +1,277 @@
+--- before/src/paper_r7/CMakeLists.txt
++++ after/src/paper_r7/CMakeLists.txt
+@@ -188,6 +188,8 @@
+ 
+ add_executable(r7_fs_io_tests fs_tests.cpp)
+ target_link_libraries(r7_fs_io_tests PRIVATE paper_r7)
++add_test(NAME r7_product_canonical_trace COMMAND r7_fs_io_tests)
++set_tests_properties(r7_product_canonical_trace PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+ target_sources(paper_r7 PRIVATE fs_io.cpp)
+ 
+ add_executable(r7_fs_oneblock_prover oneblock_main.cpp)
+--- before/src/paper_r7/fs_io.cpp
++++ after/src/paper_r7/fs_io.cpp
+@@ -14,6 +14,7 @@
+ #include <linux/fs.h>
+ #include <unistd.h>
+ #include <cerrno>
++#include <cstdio>
+ namespace zkgpt::r7::fs {
+ namespace {
+ constexpr std::uint64_t byteLimit=1ull<<30,eventLimit=1048576,payloadLimit=4ull<<20;
+@@ -39,13 +40,28 @@
+ Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(bindingSuite(b));w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
+ Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==bindingSuite(b) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
+ }
++namespace {
++class CanonicalEventTrace {
++ FILE* file_=nullptr;
++ public:CanonicalEventTrace(){if(const auto*path=std::getenv("ZKGPT_EVENT_TRACE_PATH")){
++  auto f=::open(path,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);need(f>=0,"canonical trace exclusive open");
++  file_=::fdopen(f,"wb");if(!file_){::close(f);throw std::runtime_error("canonical trace fdopen");}
++  ::setvbuf(file_,nullptr,_IOFBF,65536);
++ }}
++ ~CanonicalEventTrace(){if(file_)::fclose(file_);}
++ void append(const Bytes&h,const Bytes&b){if(file_)need(::fwrite(h.data(),1,h.size(),file_)==h.size() && ::fwrite(b.data(),1,b.size(),file_)==b.size(),"canonical trace write");}
++ void finish(){if(file_)need(::fflush(file_)==0,"canonical trace flush");}
++};
++}
+ struct CanonicalTranscript::Impl {
++ CanonicalEventTrace trace;
+  Hash state,audit;std::set<std::pair<char,std::string>>labels;std::uint64_t seq=0,msg=0,coins=0,rejected=0,max_events=eventLimit;double candidate_seconds=0;
+  Impl(const Bytes&h,const Bytes&i,bool full12){max_events=full12?16ull*eventLimit:eventLimit;state.text("zkGPT.R7.FS.canonical.SHA256.v1");audit.text("zkGPT.R7.FS.challenge-audit.v1");event('I',"header",h);event('I',"public-instance",i);}
+- void event(char tag,const std::string&label,const Bytes&b){need(seq<max_events && labels.emplace(tag,label).second,"FS repeated event label/budget");state.add(eventHeader(tag,seq,label,b.size()));state.add(b);++seq;}
++ void event(char tag,const std::string&label,const Bytes&b){need(seq<max_events && labels.emplace(tag,label).second,"FS repeated event label/budget");auto h=eventHeader(tag,seq,label,b.size());state.add(h);state.add(b);trace.append(h,b);++seq;}
+ };
+ CanonicalTranscript::CanonicalTranscript(const Bytes&h,const Bytes&i,bool full12):impl_(std::make_unique<Impl>(h,i,full12)){}
+ CanonicalTranscript::~CanonicalTranscript()=default;
++void CanonicalTranscript::finishTrace(){impl_->trace.finish();}
+ void CanonicalTranscript::message(const std::string&s,const Bytes&b){impl_->event('P',s,b);++impl_->msg;}
+ Fr CanonicalTranscript::coin(const std::string&s){auto&v=*impl_;need(!v.labels.count({'C',s}),"FS repeated challenge label");auto parent=v.state.digest();
+  for(std::uint64_t counter=0;counter<4096;++counter){Writer w;w.raw(bytes(parent));w.number(v.coins,8);w.number(counter,8);Hash h;h.text(hashSuite);h.add(eventHeader('H',v.seq,s,w.b.size()));h.add(w.b);auto candidate=h.digest();v.candidate_seconds+=h.seconds;Fr f;
+@@ -89,7 +105,7 @@
+ void FsIO::finish(){auto&v=*impl_;need(!v.finished,"FS repeated completion");Writer w;w.number(v.transcript->events(),8);w.number(v.transcript->messages(),8);w.number(v.transcript->coins(),8);w.raw(bytes(prefix()));w.raw(bytes(v.transcript->challengeDigest()));
+  if(v.prover){v.sendEvent('F',"end",w.b);v.flush();auto t=Clock::now();need(::fsync(v.fd)==0,"FS proof fsync");need(::syscall(SYS_renameat2,v.dir,v.temp_name.c_str(),v.dir,v.final_name.c_str(),RENAME_NOREPLACE)==0,"FS atomic no-replace publication");need(::fsync(v.dir)==0,"FS directory fsync");v.io_seconds+=elapsed(t);
+  }else{need(v.readEvent('F',"end")==w.b,"FS completion/challenge/transcript digest mismatch");need(v.cursor==v.used,"FS appended buffered data rejected");std::uint8_t trailing=0;ssize_t n;do{++v.file_syscalls;n=::read(v.fd,&trailing,1);}while(n<0 && errno==EINTR);need(n==0 && v.total==std::uint64_t(v.original.st_size),"FS appended data rejected");struct stat now{};need(fstat(v.fd,&now)==0 && now.st_size==v.original.st_size && now.st_mtim.tv_sec==v.original.st_mtim.tv_sec && now.st_mtim.tv_nsec==v.original.st_mtim.tv_nsec && now.st_ctim.tv_sec==v.original.st_ctim.tv_sec && now.st_ctim.tv_nsec==v.original.st_ctim.tv_nsec,"FS concurrent proof modification rejected");}
+- v.finished=true;
++ v.transcript->finishTrace();v.finished=true;
+ }
+ std::uint64_t FsIO::frames()const{return impl_->transcript->events();}std::uint64_t FsIO::wireBytes()const{return impl_->total;}std::uint64_t FsIO::proofBytes()const{return impl_->total;}
+ std::string FsIO::metadataJson()const{auto&v=*impl_;std::ostringstream o;o<<"{\"security_status\":\"FS_NIZK_CANDIDATE\",\"suite\":\""<<v.suite_name<<"\",\"session\":\""<<v.sid<<"\",\"complete\":"<<(v.finished?"true":"false")<<",\"proof_bytes\":"<<v.total<<",\"proof_sha256\":\""<<hex(v.file_hash.digest())<<"\",\"transcript_digest\":\""<<hex(prefix())<<"\",\"challenge_digest\":\""<<hex(v.transcript->challengeDigest())<<"\",\"challenges\":"<<v.transcript->coins()<<",\"prover_messages\":"<<v.transcript->messages()<<",\"events\":"<<frames()<<",\"field_rejections\":"<<v.transcript->rejections()<<",\"hash_seconds\":"<<v.transcript->seconds()+v.file_hash.seconds<<",\"file_io_seconds\":"<<v.io_seconds<<",\"file_syscalls\":"<<v.file_syscalls<<",\"file_buffer_bytes\":"<<v.buffer.size()<<",\"max_message_payload_bytes\":"<<v.max_payload<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}";return o.str();}
+--- before/src/paper_r7/fs_io.hpp
++++ after/src/paper_r7/fs_io.hpp
+@@ -17,6 +17,7 @@
+  struct Impl;std::unique_ptr<Impl>impl_;
+  public:CanonicalTranscript(const Bytes&header,const Bytes&public_instance,bool full12=false);~CanonicalTranscript();
+  CanonicalTranscript(const CanonicalTranscript&)=delete;CanonicalTranscript&operator=(const CanonicalTranscript&)=delete;
++ void finishTrace();
+  void message(const std::string&,const Bytes&);Fr coin(const std::string&);
+  Digest prefix()const;Digest challengeDigest()const;
+  std::uint64_t events()const;std::uint64_t messages()const;std::uint64_t coins()const;std::uint64_t rejections()const;double seconds()const;
+--- before/src/paper_r7/fs_tests.cpp
++++ after/src/paper_r7/fs_tests.cpp
+@@ -29,6 +29,19 @@
+   consume(name+".new",candidate);rejects([&]{fs::FsVerifierIO v(name+".new",old);});
+  }
+ }
++void canonicalTrace(const std::string&p){
++ unsetenv("ZKGPT_EVENT_TRACE_PATH");fs::CanonicalTranscript original({1,2,3},{4,5});original.message("m",{7,8});auto expected=original.coin("c");
++ setenv("ZKGPT_EVENT_TRACE_PATH",p.c_str(),1);
++ {fs::CanonicalTranscript recorded({1,2,3},{4,5});recorded.message("m",{7,8});need(recorded.coin("c")==expected && recorded.prefix()==original.prefix() && recorded.challengeDigest()==original.challengeDigest(),"canonical trace changed transcript/challenge");recorded.finishTrace();}
++ unsetenv("ZKGPT_EVENT_TRACE_PATH");
++ Writer bytes;auto event=[&](char kind,std::uint64_t seq,const std::string&label,const Bytes&payload){bytes.number(kind,1);bytes.number(seq,8);bytes.number(label.size(),8);bytes.raw(Bytes(label.begin(),label.end()));bytes.number(payload.size(),8);bytes.raw(payload);};
++ event('I',0,"header",{1,2,3});event('I',1,"public-instance",{4,5});event('P',2,"m",{7,8});event('C',3,"c",r1::encode(expected));
++ need(read(p)==bytes.b,"canonical trace missing/reordered/wrong event");
++ setenv("ZKGPT_EVENT_TRACE_PATH",p.c_str(),1);rejects([&]{fs::CanonicalTranscript duplicate({1},{2});});unsetenv("ZKGPT_EVENT_TRACE_PATH");
++ need(read(p)==bytes.b,"canonical trace overwrote existing file");
++ auto link=p+".link";need(symlink(p.c_str(),link.c_str())==0,"trace symlink fixture");
++ setenv("ZKGPT_EVENT_TRACE_PATH",link.c_str(),1);rejects([&]{fs::CanonicalTranscript linked({1},{2});});unsetenv("ZKGPT_EVENT_TRACE_PATH");
++}
+ void buffered(const std::string&p,const fs::Binding&b){
+  Bytes big(131073,17);fs::FsProverIO tx(p,b);
+  for(unsigned i=0;i<1000;++i)tx.message("batch/"+std::to_string(i),Bytes(31,std::uint8_t(i)));
+@@ -47,7 +60,7 @@
+ int main(){try{
+  r1::init();char pattern[]="build/fs-unit-XXXXXX";auto d=mkdtemp(pattern);need(d,"FS test temp");std::string p=std::string(d)+"/proof.fsproof";
+  fs::Binding b{"Unit","test-context",std::string(64,'a'),{1,2,3}};
+- buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
++ canonicalTrace(p+".events");buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
+  fs::CanonicalTranscript t({1,2,3},{4,5});auto initial=t.prefix();need(t.prefix()==initial,"FS prefix mutated state");t.message("m",{7,8});auto c=t.coin("c");std::cout<<"REFERENCE "<<hex(t.prefix())<<' '<<hex(t.challengeDigest())<<' '<<hex(r1::hash(r1::encode(c)))<<' '<<t.rejections()<<'\n';rejects([&]{t.coin("c");});
+  fs::FsProverIO w(p,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));need(!std::filesystem::exists(p),"FS early publication");auto prefix=w.prefix();w.finish();consume(p,b);need(std::filesystem::exists(p) && w.prefix()==prefix,"FS publication/prefix");
+  auto bytes=read(p);rejects([&]{fs::FsProverIO duplicate(p,b);});need(read(p)==bytes,"FS overwrite changed original");
+--- before/src/paper_r7/oneblock_lookup.cpp
++++ after/src/paper_r7/oneblock_lookup.cpp
+@@ -34,15 +34,15 @@
+ Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
+ void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
+ }
+-void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role,const std::shared_ptr<std::vector<Fr>>&prepared_leaves){
++void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role,const std::shared_ptr<std::vector<Fr>>&prepared_leaves,bool allow_specialized){
+  const auto*b2=std::getenv("ZKGPT_PERF6_B2");
+  perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
+- bool contiguous=false;if(io.prover()){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
++ bool contiguous=false;if(io.prover() && allow_specialized){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
+  perf4::Scope native_scope("Native/Product",role,n);
+  perf5::Product product_profile(role,n,io.prover());perf5::Scope product_total(perf5::Total);
+  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
+  std::vector<std::shared_ptr<std::vector<Fr>>>tree;if(io.prover()){
+-  if(prepared_leaves){need(!prepared_leaves->empty() && prepared_leaves->size()==n,"lookup Product prepared leaves dimension mismatch");tree.push_back(prepared_leaves);}
++  if(prepared_leaves){need(!prepared_leaves->empty() && prepared_leaves->size()==n,"lookup Product prepared leaves dimension mismatch");tree.push_back(prepared_leaves);if(perf5::context)++perf5::context->prepared_leaf_reuses;}
+   else{need(bool(leaves),"lookup Product leaves missing");std::shared_ptr<std::vector<Fr>>leaf;{perf5::Scope t(perf5::TreeAllocInit);leaf=std::make_shared<std::vector<Fr>>(n,Fr(0));}{perf5::Scope t(perf5::TreeLeaf);for(std::size_t i=0;i<n;++i)leaf->at(i)=leaves(i);}tree.push_back(leaf);}
+   for(std::size_t width=n;width>1;width/=2){std::shared_ptr<std::vector<Fr>>next;{perf5::Scope t(perf5::TreeAllocInit);next=std::make_shared<std::vector<Fr>>(width/2,Fr(0));}{perf5::Scope t(perf5::TreeParent);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree.back()->at(2*j)*tree.back()->at(2*j+1);}tree.push_back(next);}}
+  // The supplied root replaces the stored top level; only children are read.
+@@ -50,8 +50,11 @@
+  Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
+  for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);std::shared_ptr<std::vector<Fr>>w;Value eq;if(io.prover()){perf5::Scope t(perf5::Weights);perf5::weights(width);w=std::make_shared<std::vector<Fr>>(r1::weights(row));eq=[w](std::size_t j){return w->at(j);};}std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
+   Reduction end;
+-  if(contiguous){ProductInputs inputs{*w,*tree.at(d-layer-1)};end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&inputs);}
+-  else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck");
++  if(contiguous){
++   std::optional<ProductInputs>inputs;
++   {perf5::Scope construct(perf5::InputsConstruct);inputs.emplace(ProductInputs{*w,*tree.at(d-layer-1)});if(perf5::context)++perf5::context->input_constructions;}
++   end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&*inputs,allow_specialized);
++  }else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",nullptr,allow_specialized);
+   need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
+   if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context){const bool external_leaf=prepared_leaves && d-layer-1==0 && tree.at(0).get()==prepared_leaves.get();need(tree.at(d-layer-1).use_count()==(external_leaf?2:1),"PERF5 TreeFree requires final tree owner");}tree.at(d-layer-1).reset();}
+  }
+@@ -75,7 +78,7 @@
+   for(std::size_t i=0;i<a.padded;++i){auto z=fingerprint(a.value(i),v.value(i),read.value(i),g,g2,tau);base_leaves->at(i)=z;root0*=z+Fr(1);root1*=z;}
+  }
+  // Preserve the root handle/RNG/message order despite computing 0/1 together.
+- for(unsigned kind=0;kind<3;++kind){Fr value=kind==0?root0:kind==1?root1:Fr(1);auto size=kind==2?table.size():a.padded;if(io.prover() && kind==2){leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
++ for(unsigned kind=0;kind<3;++kind){Fr value=kind==0?root0:kind==1?root1:Fr(1);auto size=kind==2?table.size():a.padded;if(io.prover() && kind==2){perf4::Scope prepare("Native/Product2-root-leaves",role,table.size());leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
+  Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
+  for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{
+    // The three MLEs and openings stay sequential and independent. Only this
+@@ -85,8 +88,13 @@
+    vv=evaluateWithWeights(live,v,q.point,weights,random,name+"/value");
+    c=evaluateWithWeights(live,read,q.point,weights,random,name+"/read");
+    Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g2,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
+-  auto product=[&]{if(kind==2)hiddenProduct(io,table.size(),roots[kind],leaves[kind],auth,rng,role+"/product/2",{});else hiddenProduct(io,a.padded,roots[kind],{},auth,rng,role+"/product/"+std::to_string(kind),base_leaves);};
+-  if(kind==0 && io.prover()){AddOneGuard guard(*base_leaves);product();}else product();}
++  auto product=[&]{if(kind==2)hiddenProduct(io,table.size(),roots[kind],leaves[kind],auth,rng,role+"/product/2",{},false);else hiddenProduct(io,a.padded,roots[kind],{},auth,rng,role+"/product/"+std::to_string(kind),base_leaves,true);};
++  if(kind==0 && io.prover()){
++   std::optional<AddOneGuard>guard;
++   {perf4::Scope shift("Native/Product0-add-one",role,a.padded);guard.emplace(*base_leaves);}
++   product();
++   {perf4::Scope restore("Native/Product0-restore",role,a.padded);guard.reset();}
++  }else product();}
+  evidence(io,role+"/multiset");
+ }
+ void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
+--- before/src/paper_r7/oneblock_lookup.hpp
++++ after/src/paper_r7/oneblock_lookup.hpp
+@@ -7,7 +7,7 @@
+ // recursively and never represented by independent unauthenticated PCs.
+ // Prover-only optional storage, borrowed without copying. The caller retains
+ // one shared owner and must keep values unchanged until the call returns.
+-void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&,const std::shared_ptr<std::vector<Fr>>& prepared_leaves={});
++void hiddenProduct(IO&,std::size_t,const Hidden&,Value,const LeafAuthenticator&,Random*,const std::string&,const std::shared_ptr<std::vector<Fr>>& prepared_leaves={},bool allow_specialized=true);
+ void hiddenMemory(IO&,const VectorOracle&address,const VectorOracle&value,const std::vector<Fr>&table,const VectorFactory&,Random*,const std::string&,bool prepared=false);
+ // Caller supplies role="r7/" + native RangeSpec/ExpSpec.id so factory IDs
+ // exactly match the native auxiliary registry. The encoded Range query must
+--- before/src/paper_r7/oneblock_sumcheck.cpp
++++ after/src/paper_r7/oneblock_sumcheck.cpp
+@@ -78,21 +78,23 @@
+  return coeff;
+ }
+ }
+-static Reduction expressionSumcheckImpl(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role,bool product,const ProductInputs*inputs=nullptr){
++static Reduction expressionSumcheckImpl(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role,bool product,const ProductInputs*inputs=nullptr,bool product_reduction=false){
+  unsigned degree=0;{perf5::Scope t(perf5::ExpressionInit);need(n && n<=(1u<<24) && !(n&(n-1)) && e.factor_count>0 && e.factor_count<=8 && !e.terms.empty() && e.terms.size()<=16,"Oneblock expression bounds");validate(initial.handle,io.session(),initial.handle.role);Writer statement;statement.text("R7-ONEBLOCK-HIDDEN-EXPRESSION-SUMCHECK-v1");statement.number(n,8);statement.number(e.factor_count);statement.raw(encode(initial.handle));statement.number(e.terms.size());for(auto&t:e.terms){need(t.factors.size()<=3,"Oneblock expression degree");degree=std::max(degree,unsigned(t.factors.size()));statement.scalar(t.coefficient);statement.number(t.factors.size());for(auto i:t.factors){need(i<e.factor_count,"Oneblock expression factor index");statement.number(i);}}bindPublic(io,role+"/statement",statement.b);if(io.prover())need(factors.size()==e.factor_count && rng,"Oneblock expression witness shape");}
+  std::vector<std::vector<Fr>>folded(e.factor_count);Hidden previous=initial;std::vector<Fr>point;std::size_t current=n;unsigned round=0;
+  while(current>1){auto name=role+"/round/"+std::to_string(round);std::vector<Fr>coeff(degree+1,Fr(0));if(io.prover()){
+-   perf5::Scope t(perf5::Polynomial);coeff=product?(inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round)):detail::expressionPolynomial(e,current,factors,folded,!round);
++   perf5::Scope t(perf5::Polynomial);
++   if(auto*c=perf5::context){if(product){++c->a2_calls;c->a2_pairs+=current/2;if(inputs && !round){++c->c2_polynomial_calls;c->c2_polynomial_pairs+=current/2;}}else if(product_reduction)++c->generic_product_calls;}
++   coeff=product?(inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round)):detail::expressionPolynomial(e,current,factors,folded,!round);
+   }
+-  std::vector<Hidden>h;{perf5::Scope t(perf5::Messages);h={previous};for(unsigned k=0;k<=degree;++k)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),coeff[k],rng));Relations r;r.role=name+"/recurrence";for(auto&v:h)r.handles.push_back(v.handle);std::vector<Fr>line(h.size(),Fr(1));line[0]=Fr(-1);line[1]=Fr(2);r.linear={line};sigma(io,r,io.prover()?&h:nullptr,rng);}
++  std::vector<Hidden>h;{perf5::Scope t(perf5::Messages);h={previous};for(unsigned k=0;k<=degree;++k)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),coeff[k],rng));{perf5::Scope recurrence(perf5::Recurrence);Relations r;r.role=name+"/recurrence";for(auto&v:h)r.handles.push_back(v.handle);std::vector<Fr>line(h.size(),Fr(1));line[0]=Fr(-1);line[1]=Fr(2);r.linear={line};sigma(io,r,io.prover()?&h:nullptr,rng);}}
+   Fr challenge;{perf5::Scope t(perf5::Challenge);challenge=io.coin(name+"/r");point.push_back(challenge);std::vector<Hidden>polynomial(h.begin()+1,h.end());std::vector<Fr>powers;Fr power=1;for(unsigned k=0;k<=degree;++k){powers.push_back(power);power*=challenge;}previous=combine(io.session(),name+"/derived",polynomial,powers);bindPublic(io,name+"/derived",encode(previous.handle));}
+-  {perf5::Scope t(perf5::Fold);if(io.prover()){if(inputs && !round)detail::foldProductInputs(*inputs,challenge,folded);else for(std::size_t k=0;k<e.factor_count;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
++  {perf5::Scope t(perf5::Fold);if(io.prover()){if(inputs && !round){if(auto*c=perf5::context){++c->c2_fold_calls;c->c2_fold_pairs+=current/2;}detail::foldProductInputs(*inputs,challenge,folded);}else for(std::size_t k=0;k<e.factor_count;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
+   }current/=2;++round;
+  }
+  perf5::Scope endpoint_scope(perf5::Endpoint);std::vector<Hidden>ends;for(std::size_t k=0;k<e.factor_count;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));endpoint(io,previous,ends,e,rng,role+"/terminal");return {initial,ends,point};
+ }
+ Reduction expressionSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role){return expressionSumcheckImpl(io,n,initial,factors,e,rng,role,false);}
+-Reduction productSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs){
++Reduction productSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs,bool allow_specialized){
+  if(inputs)need(io.prover() && n && n<=(1u<<24) && inputs->equality.size()==n && inputs->children.size()==2*n,"Product native input binding");
+  // PERF6 A2: verifier always enters the generic path and never consults
+  // Prover experiment settings. Protocol statements/messages are identical.
+@@ -100,7 +102,7 @@
+  const auto*reference=std::getenv("ZKGPT_PERF5_PRODUCT_REFERENCE");
+  const auto*a2=std::getenv("ZKGPT_PERF6_A2");
+  // Experimental path is explicit until the frozen performance gate passes.
+- bool candidate=a2?std::string(a2)=="1":reference && std::string(reference)=="0";
+- return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,inputs);
++ bool candidate=allow_specialized && (a2?std::string(a2)=="1":reference && std::string(reference)=="0");
++ return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,inputs,true);
+ }
+ }
+--- before/src/paper_r7/oneblock_sumcheck.hpp
++++ after/src/paper_r7/oneblock_sumcheck.hpp
+@@ -24,7 +24,7 @@
+ std::vector<Fr>productPolynomial(std::size_t,const std::vector<Value>&,const std::vector<std::vector<Fr>>&,bool first);
+ }
+ Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
+-Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr);
++Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr,bool allow_specialized=true);
+ Hidden publicHidden(IO&,const std::string&,const Fr&);
+ Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
+ void equalHidden(IO&,const Hidden&,const Fr&,Random*,const std::string&);
+--- before/src/paper_r7/perf5_profile.hpp
++++ after/src/paper_r7/perf5_profile.hpp
+@@ -9,10 +9,12 @@
+ namespace zkgpt::r7::perf5 {
+ enum Region { Total, TreeAllocInit, TreeLeaf, TreeParent, TreeFree, Weights,
+  ExpressionInit, Polynomial, Messages, Challenge, Fold, Endpoint, Equality,
+- Carry, LeafAuthentication, Coverage, LeafWeights, Count };
+-inline constexpr const char* names[]={"total","tree_alloc_init","tree_leaf_callback","tree_parent","tree_free","weights","expression_init","polynomial_callback_arithmetic_reduction","messages_and_recurrence_verification","challenge_and_derived","fold_callback_arithmetic","endpoint_authentication","equality_authentication","carry_and_binding","leaf_authentication","coverage","leaf_evaluate_weights"};
++ Carry, LeafAuthentication, Coverage, LeafWeights, Recurrence, InputsConstruct, Count };
++inline constexpr const char* names[]={"total","tree_alloc_init","tree_leaf_callback","tree_parent","tree_free","weights","expression_init","polynomial_callback_arithmetic_reduction","messages_and_recurrence_verification","challenge_and_derived","fold_callback_arithmetic","endpoint_authentication","equality_authentication","carry_and_binding","leaf_authentication","coverage","leaf_evaluate_weights","recurrence_verification","product_inputs_construct"};
+ struct Stat {double wall=0,exclusive=0;std::uint64_t calls=0,allocs=0,bytes=0,exclusive_allocs=0,exclusive_bytes=0;};
+-struct Context {std::array<Stat,Count> stats{};std::uint64_t weight_calls=0,weight_elements=0,weight_muls=0,weight_writes=0;
++struct Context {std::array<Stat,Count> stats{};
++ std::uint64_t a2_calls=0,a2_pairs=0,generic_product_calls=0,c2_polynomial_calls=0,c2_polynomial_pairs=0,c2_fold_calls=0,c2_fold_pairs=0,input_constructions=0,prepared_leaf_reuses=0;
++std::uint64_t weight_calls=0,weight_elements=0,weight_muls=0,weight_writes=0;
+  std::uint64_t leaf_weight_calls=0,leaf_weight_elements=0,leaf_weight_muls=0,leaf_weight_payload_bytes=0;};
+ inline thread_local Context* context=nullptr;
+ class Scope {
+@@ -27,7 +29,7 @@
+ class Product {
+  std::optional<Context> data_;Context* previous_;const std::string& role_;std::size_t n_;bool prover_,enabled_;
+  public:Product(const std::string&role,std::size_t n,bool p):previous_(context),role_(role),n_(n),prover_(p),enabled_(std::getenv("ZKGPT_PERF5_PROFILE")!=nullptr){if(enabled_){data_.emplace();context=&*data_;}}
+- ~Product(){if(!enabled_)return;context=previous_;std::cerr<<std::setprecision(12)<<"PERF5_PRODUCT {\"role\":"<<std::quoted(role_)<<",\"n\":"<<n_<<",\"prover\":"<<(prover_?"true":"false")<<",\"regions\":{";for(unsigned i=0;i<Count;++i){if(i)std::cerr<<',';auto&s=data_->stats[i];std::cerr<<std::quoted(names[i])<<":{\"calls\":"<<s.calls<<",\"inclusive_wall\":"<<s.wall<<",\"exclusive_wall\":"<<s.exclusive<<",\"allocations\":"<<s.allocs<<",\"allocated_bytes\":"<<s.bytes<<",\"exclusive_allocations\":"<<s.exclusive_allocs<<",\"exclusive_allocated_bytes\":"<<s.exclusive_bytes<<'}';}std::cerr<<"},\"weights\":{\"calls\":"<<data_->weight_calls<<",\"elements\":"<<data_->weight_elements<<",\"field_multiplications\":"<<data_->weight_muls<<",\"analytical_written_bytes\":"<<data_->weight_writes<<",\"vector_payload_bytes\":"<<data_->weight_elements*sizeof(crypto::Fr)<<"},\"leaf_evaluate_weights\":{\"calls\":"<<data_->leaf_weight_calls<<",\"elements\":"<<data_->leaf_weight_elements<<",\"field_multiplications\":"<<data_->leaf_weight_muls<<",\"vector_payload_bytes\":"<<data_->leaf_weight_payload_bytes<<"}}\n";}
++ ~Product(){if(!enabled_)return;context=previous_;std::cerr<<std::setprecision(12)<<"PERF5_PRODUCT {\"role\":"<<std::quoted(role_)<<",\"n\":"<<n_<<",\"prover\":"<<(prover_?"true":"false")<<",\"regions\":{";for(unsigned i=0;i<Count;++i){if(i)std::cerr<<',';auto&s=data_->stats[i];std::cerr<<std::quoted(names[i])<<":{\"calls\":"<<s.calls<<",\"inclusive_wall\":"<<s.wall<<",\"exclusive_wall\":"<<s.exclusive<<",\"allocations\":"<<s.allocs<<",\"allocated_bytes\":"<<s.bytes<<",\"exclusive_allocations\":"<<s.exclusive_allocs<<",\"exclusive_allocated_bytes\":"<<s.exclusive_bytes<<'}';}std::cerr<<"},\"optimization\":{\"a2_calls\":"<<data_->a2_calls<<",\"a2_pairs\":"<<data_->a2_pairs<<",\"a2_coefficient_multiplications_eliminated\":"<<4*data_->a2_pairs<<",\"generic_product_calls\":"<<data_->generic_product_calls<<",\"c2_polynomial_calls\":"<<data_->c2_polynomial_calls<<",\"c2_polynomial_pairs\":"<<data_->c2_polynomial_pairs<<",\"c2_fold_calls\":"<<data_->c2_fold_calls<<",\"c2_fold_pairs\":"<<data_->c2_fold_pairs<<",\"input_constructions\":"<<data_->input_constructions<<",\"input_copy_bytes\":0,\"prepared_leaf_reuses\":"<<data_->prepared_leaf_reuses<<"},\"weights\":{\"calls\":"<<data_->weight_calls<<",\"elements\":"<<data_->weight_elements<<",\"field_multiplications\":"<<data_->weight_muls<<",\"analytical_written_bytes\":"<<data_->weight_writes<<",\"vector_payload_bytes\":"<<data_->weight_elements*sizeof(crypto::Fr)<<"},\"leaf_evaluate_weights\":{\"calls\":"<<data_->leaf_weight_calls<<",\"elements\":"<<data_->leaf_weight_elements<<",\"field_multiplications\":"<<data_->leaf_weight_muls<<",\"vector_payload_bytes\":"<<data_->leaf_weight_payload_bytes<<"}}\n";}
+ };
+ inline void weights(std::size_t n){if(context){++context->weight_calls;context->weight_elements+=n;context->weight_muls+=2*(n-1);context->weight_writes+=(2*(n-1)+n)*32;}}
+ inline void leafWeights(std::size_t n){if(context){++context->leaf_weight_calls;context->leaf_weight_elements+=n;context->leaf_weight_muls+=2*(n-1);context->leaf_weight_payload_bytes+=n*sizeof(crypto::Fr);}}
+--- before/src/paper_r7/perf6_product_inputs_tests.cpp
++++ after/src/paper_r7/perf6_product_inputs_tests.cpp
+@@ -12,6 +12,23 @@
+   auto generic=detail::expressionPolynomial(Expression{3,{{Fr(1),{0,1,2}}}},n,f,{},true);need(detail::productPolynomialContiguous(inputs)==generic,"C2 generic coefficient mismatch");
+   for(auto r:{Fr(0),Fr(1),Fr(-1),Fr(7)}){detail::foldProductInputs(inputs,r,folded);for(unsigned k=0;k<3;++k)for(std::size_t j=0;j<n/2;++j){auto a=f[k](2*j),b=f[k](2*j+1);need(folded[k][j]==a+r*(b-a),"C2 first fold mismatch");}}
+  }
++ // Full-field deterministic values and exact 0, 1, modulus-1 boundaries.
++ for(unsigned seed=0;seed<16;++seed){auto n=std::size_t(1)<<(1+seed%7);w.resize(n);child.resize(2*n);
++  auto scalar=[&](unsigned i){r1::Fs fs("R7-C2-full-field-test");fs.integer("seed",seed);fs.integer("index",i);return fs.challenge("value");};
++  for(unsigned j=0;j<n;++j)w[j]=seed<3?Fr(int(seed)-1):scalar(j);
++  for(unsigned j=0;j<2*n;++j)child[j]=seed<3?Fr(int(seed)-1):scalar(unsigned(n)+j);
++  std::vector<Value>f{[&](std::size_t j){return w[j];},[&](std::size_t j){return child[2*j];},[&](std::size_t j){return child[2*j+1];}};
++  need(&inputs.equality==&w && &inputs.children==&child,"C2 borrowed storage identity");
++  need(detail::productPolynomialContiguous(inputs)==detail::expressionPolynomial(Expression{3,{{Fr(1),{0,1,2}}}},n,f,{},true),"C2 full-field coefficient mismatch");
++  for(auto r:{Fr(0),Fr(1),Fr(-1),scalar(9999)}){
++   detail::foldProductInputs(inputs,r,folded);
++   for(unsigned k=0;k<3;++k)for(std::size_t j=0;j<n/2;++j)need(folded[k][j]==f[k](2*j)+r*(f[k](2*j+1)-f[k](2*j)),"C2 full-field first fold");
++   for(auto current=n/2;current>1;current/=2){
++    need(detail::productPolynomial(current,f,folded,false)==detail::expressionPolynomial(Expression{3,{{Fr(1),{0,1,2}}}},current,f,folded,false),"A2 C2 subsequent-round coefficients");
++    for(auto&v:folded){for(std::size_t j=0;j<current/2;++j)v[j]=v[2*j]+r*(v[2*j+1]-v[2*j]);v.resize(current/2);}
++   }
++  }
++ }
+  w.resize(3);child.resize(6);bool reject=false;try{detail::productPolynomialContiguous(inputs);}catch(const std::exception&){reject=true;}need(reject,"C2 nonpower domain accepted");
+  w.resize(4);child.resize(7);reject=false;try{detail::foldProductInputs(inputs,Fr(3),folded);}catch(const std::exception&){reject=true;}need(reject,"C2 child shape accepted");
+  std::cout<<"PASS C2 literal coefficients/fold, signed/zero factors, shapes\n";return 0;

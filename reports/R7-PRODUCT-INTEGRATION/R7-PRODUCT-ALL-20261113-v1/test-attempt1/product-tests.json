@@ -1,0 +1,27 @@
+{
+  "name": "product-tests",
+  "command": [
+    "ctest",
+    "--test-dir",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/release",
+    "-R",
+    "^r7_(product_weights|product_leaves|perf5_product_equivalence|perf5_profile_hierarchy|perf6_product_inputs|product_canonical_trace)$",
+    "--output-on-failure"
+  ],
+  "exit_code": 8,
+  "wall_seconds": 4.203144458122551,
+  "cpu_seconds": 4.170509,
+  "peak_rss_kib": 18900,
+  "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-INTEGRATION/R7-PRODUCT-ALL-20261113-v1/product-tests.log",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "load_after": [
+    52.36279296875,
+    53.318359375,
+    50.8193359375
+  ]
+}

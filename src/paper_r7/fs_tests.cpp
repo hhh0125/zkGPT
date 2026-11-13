@@ -29,6 +29,19 @@ void unifiedSuites(const std::string&p){
   consume(name+".new",candidate);rejects([&]{fs::FsVerifierIO v(name+".new",old);});
  }
 }
+void canonicalTrace(const std::string&p){
+ unsetenv("ZKGPT_EVENT_TRACE_PATH");fs::CanonicalTranscript original({1,2,3},{4,5});original.message("m",{7,8});auto expected=original.coin("c");
+ setenv("ZKGPT_EVENT_TRACE_PATH",p.c_str(),1);
+ {fs::CanonicalTranscript recorded({1,2,3},{4,5});recorded.message("m",{7,8});need(recorded.coin("c")==expected && recorded.prefix()==original.prefix() && recorded.challengeDigest()==original.challengeDigest(),"canonical trace changed transcript/challenge");recorded.finishTrace();}
+ unsetenv("ZKGPT_EVENT_TRACE_PATH");
+ Writer bytes;auto event=[&](char kind,std::uint64_t seq,const std::string&label,const Bytes&payload){bytes.number(kind,1);bytes.number(seq,8);bytes.number(label.size(),8);bytes.raw(Bytes(label.begin(),label.end()));bytes.number(payload.size(),8);bytes.raw(payload);};
+ event('I',0,"header",{1,2,3});event('I',1,"public-instance",{4,5});event('P',2,"m",{7,8});event('C',3,"c",r1::encode(expected));
+ need(read(p)==bytes.b,"canonical trace missing/reordered/wrong event");
+ setenv("ZKGPT_EVENT_TRACE_PATH",p.c_str(),1);rejects([&]{fs::CanonicalTranscript duplicate({1},{2});});unsetenv("ZKGPT_EVENT_TRACE_PATH");
+ need(read(p)==bytes.b,"canonical trace overwrote existing file");
+ auto link=p+".link";need(symlink(p.c_str(),link.c_str())==0,"trace symlink fixture");
+ setenv("ZKGPT_EVENT_TRACE_PATH",link.c_str(),1);rejects([&]{fs::CanonicalTranscript linked({1},{2});});unsetenv("ZKGPT_EVENT_TRACE_PATH");
+}
 void buffered(const std::string&p,const fs::Binding&b){
  Bytes big(131073,17);fs::FsProverIO tx(p,b);
  for(unsigned i=0;i<1000;++i)tx.message("batch/"+std::to_string(i),Bytes(31,std::uint8_t(i)));
@@ -47,7 +60,7 @@ void buffered(const std::string&p,const fs::Binding&b){
 int main(){try{
  r1::init();char pattern[]="build/fs-unit-XXXXXX";auto d=mkdtemp(pattern);need(d,"FS test temp");std::string p=std::string(d)+"/proof.fsproof";
  fs::Binding b{"Unit","test-context",std::string(64,'a'),{1,2,3}};
- buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
+ canonicalTrace(p+".events");buffered(p+".buffered",b);legacySuites(p);unifiedSuites(p);
  fs::CanonicalTranscript t({1,2,3},{4,5});auto initial=t.prefix();need(t.prefix()==initial,"FS prefix mutated state");t.message("m",{7,8});auto c=t.coin("c");std::cout<<"REFERENCE "<<hex(t.prefix())<<' '<<hex(t.challengeDigest())<<' '<<hex(r1::hash(r1::encode(c)))<<' '<<t.rejections()<<'\n';rejects([&]{t.coin("c");});
  fs::FsProverIO w(p,b);w.message("first",{7,8});auto x=w.coin("challenge");w.message("response",r1::encode(x*Fr(7)));need(!std::filesystem::exists(p),"FS early publication");auto prefix=w.prefix();w.finish();consume(p,b);need(std::filesystem::exists(p) && w.prefix()==prefix,"FS publication/prefix");
  auto bytes=read(p);rejects([&]{fs::FsProverIO duplicate(p,b);});need(read(p)==bytes,"FS overwrite changed original");

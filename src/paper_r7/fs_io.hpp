@@ -17,6 +17,7 @@ class CanonicalTranscript {
  struct Impl;std::unique_ptr<Impl>impl_;
  public:CanonicalTranscript(const Bytes&header,const Bytes&public_instance,bool full12=false);~CanonicalTranscript();
  CanonicalTranscript(const CanonicalTranscript&)=delete;CanonicalTranscript&operator=(const CanonicalTranscript&)=delete;
+ void finishTrace();
  void message(const std::string&,const Bytes&);Fr coin(const std::string&);
  Digest prefix()const;Digest challengeDigest()const;
  std::uint64_t events()const;std::uint64_t messages()const;std::uint64_t coins()const;std::uint64_t rejections()const;double seconds()const;

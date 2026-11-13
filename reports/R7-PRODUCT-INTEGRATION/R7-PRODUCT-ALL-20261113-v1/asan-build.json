@@ -1,0 +1,32 @@
+{
+  "name": "asan-build",
+  "command": [
+    "cmake",
+    "--build",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-all-asan-20261113-v1",
+    "--target",
+    "r7_product_leaf_tests",
+    "r7_product_weight_tests",
+    "r7_perf5_product_tests",
+    "r7_perf6_product_inputs_tests",
+    "r7_perf5_profile_tests",
+    "r7_fs_io_tests",
+    "-j4"
+  ],
+  "exit_code": 0,
+  "wall_seconds": 876.015736086294,
+  "cpu_seconds": 2072.923384,
+  "peak_rss_kib": 1037260,
+  "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-INTEGRATION/R7-PRODUCT-ALL-20261113-v1/asan-build.log",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "load_after": [
+    52.12353515625,
+    53.31591796875,
+    52.71044921875
+  ]
+}

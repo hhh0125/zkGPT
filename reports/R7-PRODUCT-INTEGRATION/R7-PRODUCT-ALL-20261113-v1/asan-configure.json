@@ -1,0 +1,33 @@
+{
+  "name": "asan-configure",
+  "command": [
+    "cmake",
+    "-S",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work",
+    "-B",
+    "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/build/product-all-asan-20261113-v1",
+    "-DCMAKE_BUILD_TYPE=Debug",
+    "-DZKGPT_BUILD_R7_FRAMEWORK=ON",
+    "-DCNPY_INCLUDE_DIR=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/include",
+    "-DCNPY_LIBRARY=/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/deps/cnpy/lib/libcnpy.a",
+    "-DCMAKE_CXX_FLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer",
+    "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+    "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined"
+  ],
+  "exit_code": 0,
+  "wall_seconds": 2.422626812942326,
+  "cpu_seconds": 2.4213240000000003,
+  "peak_rss_kib": 30320,
+  "log": "/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work/reports/R7-PRODUCT-INTEGRATION/R7-PRODUCT-ALL-20261113-v1/asan-configure.log",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "load_after": [
+    54.5458984375,
+    53.8447265625,
+    51.5849609375
+  ]
+}

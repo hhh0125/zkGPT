@@ -14,6 +14,7 @@
 #include <linux/fs.h>
 #include <unistd.h>
 #include <cerrno>
+#include <cstdio>
 namespace zkgpt::r7::fs {
 namespace {
 constexpr std::uint64_t byteLimit=1ull<<30,eventLimit=1048576,payloadLimit=4ull<<20;
@@ -39,13 +40,28 @@ void validate(const Binding&b){need((full12(b) || b.proof_type=="OneblockSingleH
 Bytes header(const Binding&b,const Bytes&nonce){Writer w;w.text("ZKGPT-R7-FS-PROOF");w.number(1);w.text(bindingSuite(b));w.text(hashSuite);w.text("typed-u64le-events-v1");w.text(b.proof_type);w.text(b.context);w.text(b.parameter_id);w.raw(digestBytes(b.public_instance));w.raw(nonce);return w.b;}
 Bytes nonceFrom(const Bytes&h,const Binding&b){Reader r{h};need(r.text()=="ZKGPT-R7-FS-PROOF" && r.number()==1 && r.text()==bindingSuite(b) && r.text()==hashSuite && r.text()=="typed-u64le-events-v1","FS unknown suite/version/framing; no downgrade");need(r.text()==b.proof_type && r.text()==b.context && r.text()==b.parameter_id && r.raw(32)==digestBytes(b.public_instance),"FS external statement/context/parameter identity mismatch");auto n=r.raw(32);r.end();need(std::any_of(n.begin(),n.end(),[](auto x){return x!=0;}),"FS zero proof nonce");need(header(b,n)==h,"FS noncanonical header");return n;}
 }
+namespace {
+class CanonicalEventTrace {
+ FILE* file_=nullptr;
+ public:CanonicalEventTrace(){if(const auto*path=std::getenv("ZKGPT_EVENT_TRACE_PATH")){
+  auto f=::open(path,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);need(f>=0,"canonical trace exclusive open");
+  file_=::fdopen(f,"wb");if(!file_){::close(f);throw std::runtime_error("canonical trace fdopen");}
+  ::setvbuf(file_,nullptr,_IOFBF,65536);
+ }}
+ ~CanonicalEventTrace(){if(file_)::fclose(file_);}
+ void append(const Bytes&h,const Bytes&b){if(file_)need(::fwrite(h.data(),1,h.size(),file_)==h.size() && ::fwrite(b.data(),1,b.size(),file_)==b.size(),"canonical trace write");}
+ void finish(){if(file_)need(::fflush(file_)==0,"canonical trace flush");}
+};
+}
 struct CanonicalTranscript::Impl {
+ CanonicalEventTrace trace;
  Hash state,audit;std::set<std::pair<char,std::string>>labels;std::uint64_t seq=0,msg=0,coins=0,rejected=0,max_events=eventLimit;double candidate_seconds=0;
  Impl(const Bytes&h,const Bytes&i,bool full12){max_events=full12?16ull*eventLimit:eventLimit;state.text("zkGPT.R7.FS.canonical.SHA256.v1");audit.text("zkGPT.R7.FS.challenge-audit.v1");event('I',"header",h);event('I',"public-instance",i);}
- void event(char tag,const std::string&label,const Bytes&b){need(seq<max_events && labels.emplace(tag,label).second,"FS repeated event label/budget");state.add(eventHeader(tag,seq,label,b.size()));state.add(b);++seq;}
+ void event(char tag,const std::string&label,const Bytes&b){need(seq<max_events && labels.emplace(tag,label).second,"FS repeated event label/budget");auto h=eventHeader(tag,seq,label,b.size());state.add(h);state.add(b);trace.append(h,b);++seq;}
 };
 CanonicalTranscript::CanonicalTranscript(const Bytes&h,const Bytes&i,bool full12):impl_(std::make_unique<Impl>(h,i,full12)){}
 CanonicalTranscript::~CanonicalTranscript()=default;
+void CanonicalTranscript::finishTrace(){impl_->trace.finish();}
 void CanonicalTranscript::message(const std::string&s,const Bytes&b){impl_->event('P',s,b);++impl_->msg;}
 Fr CanonicalTranscript::coin(const std::string&s){auto&v=*impl_;need(!v.labels.count({'C',s}),"FS repeated challenge label");auto parent=v.state.digest();
  for(std::uint64_t counter=0;counter<4096;++counter){Writer w;w.raw(bytes(parent));w.number(v.coins,8);w.number(counter,8);Hash h;h.text(hashSuite);h.add(eventHeader('H',v.seq,s,w.b.size()));h.add(w.b);auto candidate=h.digest();v.candidate_seconds+=h.seconds;Fr f;
@@ -89,7 +105,7 @@ Fr FsIO::coin(const std::string&s){need(!impl_->finished,"FS closed session");re
 void FsIO::finish(){auto&v=*impl_;need(!v.finished,"FS repeated completion");Writer w;w.number(v.transcript->events(),8);w.number(v.transcript->messages(),8);w.number(v.transcript->coins(),8);w.raw(bytes(prefix()));w.raw(bytes(v.transcript->challengeDigest()));
  if(v.prover){v.sendEvent('F',"end",w.b);v.flush();auto t=Clock::now();need(::fsync(v.fd)==0,"FS proof fsync");need(::syscall(SYS_renameat2,v.dir,v.temp_name.c_str(),v.dir,v.final_name.c_str(),RENAME_NOREPLACE)==0,"FS atomic no-replace publication");need(::fsync(v.dir)==0,"FS directory fsync");v.io_seconds+=elapsed(t);
  }else{need(v.readEvent('F',"end")==w.b,"FS completion/challenge/transcript digest mismatch");need(v.cursor==v.used,"FS appended buffered data rejected");std::uint8_t trailing=0;ssize_t n;do{++v.file_syscalls;n=::read(v.fd,&trailing,1);}while(n<0 && errno==EINTR);need(n==0 && v.total==std::uint64_t(v.original.st_size),"FS appended data rejected");struct stat now{};need(fstat(v.fd,&now)==0 && now.st_size==v.original.st_size && now.st_mtim.tv_sec==v.original.st_mtim.tv_sec && now.st_mtim.tv_nsec==v.original.st_mtim.tv_nsec && now.st_ctim.tv_sec==v.original.st_ctim.tv_sec && now.st_ctim.tv_nsec==v.original.st_ctim.tv_nsec,"FS concurrent proof modification rejected");}
- v.finished=true;
+ v.transcript->finishTrace();v.finished=true;
 }
 std::uint64_t FsIO::frames()const{return impl_->transcript->events();}std::uint64_t FsIO::wireBytes()const{return impl_->total;}std::uint64_t FsIO::proofBytes()const{return impl_->total;}
 std::string FsIO::metadataJson()const{auto&v=*impl_;std::ostringstream o;o<<"{\"security_status\":\"FS_NIZK_CANDIDATE\",\"suite\":\""<<v.suite_name<<"\",\"session\":\""<<v.sid<<"\",\"complete\":"<<(v.finished?"true":"false")<<",\"proof_bytes\":"<<v.total<<",\"proof_sha256\":\""<<hex(v.file_hash.digest())<<"\",\"transcript_digest\":\""<<hex(prefix())<<"\",\"challenge_digest\":\""<<hex(v.transcript->challengeDigest())<<"\",\"challenges\":"<<v.transcript->coins()<<",\"prover_messages\":"<<v.transcript->messages()<<",\"events\":"<<frames()<<",\"field_rejections\":"<<v.transcript->rejections()<<",\"hash_seconds\":"<<v.transcript->seconds()+v.file_hash.seconds<<",\"file_io_seconds\":"<<v.io_seconds<<",\"file_syscalls\":"<<v.file_syscalls<<",\"file_buffer_bytes\":"<<v.buffer.size()<<",\"max_message_payload_bytes\":"<<v.max_payload<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}";return o.str();}
