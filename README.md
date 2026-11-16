@@ -1,25 +1,55 @@
-# zkGPT R7: Single Hyrax + Unified Input + Fiat-Shamir
+# zkGPT Full12: Single Hyrax + Unified Input + Fiat-Shamir
 
-Windows editing workspace: `C:/Users/tanyt/Desktop/program/zkGPT-R7-dev`.
-Linux build/run workspace: `/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work` on `4090_sub2api`.
+Fixed build/run workspace: `/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work`.
 
-The supported complete FS entries are:
+`src/` is flat and contains only Full12 sources, headers, included tables, the
+manifest-pinned parameter exporter and its CMake configuration. The retained
+mainline entry points are:
 
-- `r7_fs_oneblock_prover` and `r7_fs_oneblock_verifier`
-- `r7_fs_full12_prover` and `r7_fs_full12_verifier`
+- `r7_full12_witness`: construct the private witness checkpoint.
+- `r7_full12_preprocess`: generate the trusted weight anchor bundle.
+- `r7_full12_statement`: generate the public statement.
+- `r7_fs_full12_prover`: generate the Full12 Fiat-Shamir proof.
+- `r7_fs_full12_verifier`: independently verify that proof.
 
-All four require `R7_CLASSIFIED_V2`, `R7_FS_ONEBLOCK`, `R7_UNIFIED_INPUT1`, and `R7_SINGLE_HYRAX`. Full12 adds `R7_FS_FULL12`; verifiers add `R7_COMPLETE_VERIFIER`.
-
-The controller fixes source-opening handles, calls `authenticateUnifiedInput(s.x)`, and verifies all coverage relations. The production route is Category Input -> Unified Sumcheck -> one Single Hyrax global opening -> Hyrax A.3. The old authentication barrier, Oneblock V1, multi-root production variants and obsolete classified/FS probes are retired.
-
-Configure and build in the fixed Linux workspace:
+Build from the fixed workspace:
 
 ```sh
-cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release -DZKGPT_BUILD_R7_FRAMEWORK=ON -DCNPY_INCLUDE_DIR="$PWD/deps/cnpy/include" -DCNPY_LIBRARY="$PWD/deps/cnpy/lib/libcnpy.a"
-cmake --build build/release -j8
-ctest --test-dir build/release --output-on-failure -j2
+cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release \
+  -DCNPY_INCLUDE_DIR="$PWD/deps/cnpy/include" \
+  -DCNPY_LIBRARY="$PWD/deps/cnpy/lib/libcnpy.a"
+cmake --build build/release --target r7_full12_preprocess r7_full12_witness \
+  r7_full12_statement \
+  r7_fs_full12_prover r7_fs_full12_verifier -j4
 ```
 
-The FS executables retain `prove|verify PROOF_PATH CONTEXT` and independent public-statement/coverage file descriptors. Existing model data, parameter identity, proof format and transcript are retained. Component research targets have distinct bounded testing roles; they are not alternative complete production suites. The existing `BLOCKED_CRYPTOGRAPHIC_DESIGN` / `may_enter_stage2=false` gate is unchanged.
+The executables are directly under `build/release/src/`. Existing binaries under
+`build/release/src/paper_r7/` belong to the previous layout and must not be used
+as validation of the flat sources.
 
-Cleanup specification, complete Windows process evidence and validation commands are under `reports/R7-LEGACY-CLEANUP-20261116-v1/`. The final report records exact outcomes, including any pre-existing regression failures. Historical launchers and original source bytes are retained there instead of remaining active tools. Earlier stage documents are historical evidence.
+Run from the fixed workspace so relative data and manifest paths resolve.
+Keep `data/`, `reports/`, `deps/` and `3rd/` available. In particular,
+`src/export_gpt2_complete_params.py` is checked against the model manifest and
+must retain its original bytes.
+
+The prover/verifier retain the existing `prove|verify PROOF_PATH CONTEXT`
+interface, independent public-statement/coverage file descriptors, parameter
+identity and transcript format. Production definitions remain
+`R7_CLASSIFIED_V2`, `R7_FS_ONEBLOCK`, `R7_FS_FULL12`, `R7_UNIFIED_INPUT1`, and
+`R7_SINGLE_HYRAX`; the verifier also defines `R7_COMPLETE_VERIFIER`.
+
+Directory cleanup validation covers dependency selection, backup recovery,
+source equivalence, compilation and argument validation. It does not create a
+new Full12 proof or change the existing protocol acceptance status.
+
+The complete supported mainline is preprocessing -> witness/statement ->
+Full12 prover -> independent verifier. Standalone plan and test entry points
+are retired. Shared Full12 implementations retain their historical filenames.
+
+All mainline libraries use function/data sections and all five entry points
+link with `--gc-sections`. Use the supplied CMake configuration: discarded
+legacy functions can reference implementations removed from this mainline.
+
+The exact cleanup list, original source backup, source hashes, bounded runtime
+checks and build logs are in `reports/SRC-FULL12-MAINLINE-20261116-v1/`.
+The prior flattening evidence remains in `reports/SRC-FULL12-FLAT-20261116-v1/`.

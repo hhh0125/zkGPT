@@ -1,188 +1,138 @@
-# aux_source_directory(. gpt_src)
-# list(FILTER gpt_src EXCLUDE REGEX "main*")
-# option(ENABLE_MY_ASSERT "Turn on MY_ASSERT checks" ON)
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-# add_library(gpt_lib ${gpt_src})
+# Full12 production build. Sources are explicitly listed; src has no subdirectories.
 
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 
-# add_executable(demo_llm_run main_demo_llm.cpp)
-# target_link_libraries(demo_llm_run gpt_lib mcl mclbn256)
+find_package(Threads REQUIRED)
 
-
-aux_source_directory(. gpt_src)
-list(FILTER gpt_src EXCLUDE REGEX "main*")
-list(FILTER gpt_src EXCLUDE REGEX "(^|/)zk_(hiding_commitment|linear_opening|committed_linear_opening)\\.cpp$")
-
-add_library(gpt_lib ${gpt_src})
-
-# gpt_lib 的 include
-target_include_directories(gpt_lib
-    PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CNPY_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/3rd/mcl/include
+add_library(gpt_lib STATIC
+    circuit.cpp
+    gkr_verifier.cpp
+    hyrax.cpp
+    hyrax_opening.cpp
+    memory_diagnostics.cpp
+    models.cpp
+    neuralNetwork.cpp
+    polynomial.cpp
+    prover.cpp
+    r5b_gelu.cpp
+    r5b_layernorm.cpp
+    r5b_operators.cpp
+    timer.cpp
+    utils.cpp
 )
 
+target_include_directories(gpt_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
-# gpt_lib 的 link
-target_link_libraries(gpt_lib
-    PRIVATE
-    ${CNPY_LIBRARY}
-    mcl
-    mclbn256
-    pthread
-    z
+add_library(paper_r1 STATIC
+    paper_r1_core.cpp
+    paper_r1_exp.cpp
+    paper_r1_lookup_batch.cpp
+    paper_r1_mapped_input.cpp
+    paper_r1_memory.cpp
+    paper_r1_pc.cpp
+    paper_r1_range.cpp
+    paper_r1_wire.cpp
 )
 
-add_executable(demo_llm_run main_demo_llm.cpp)
-target_link_libraries(demo_llm_run PRIVATE gpt_lib)
+target_include_directories(paper_r1 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
-add_library(gkr_test_support STATIC
-    tests/gkr_test_fixture.cpp
-    tests/zkgpt_artifact_test_fixture.cpp)
-target_link_libraries(gkr_test_support PUBLIC gpt_lib)
-target_include_directories(gkr_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(paper_r2 STATIC
+    paper_r2_model_queries.cpp
+    paper_r2_model_resources.cpp
+    paper_r2_r5b_trust.cpp
+    paper_r2_r6_mapping.cpp
+    paper_r2_r6_model.cpp
+    paper_r2_r6_trust.cpp
+)
 
-add_executable(range_tests main_range_tests.cpp)
-target_link_libraries(range_tests PRIVATE gkr_test_support)
+target_include_directories(paper_r2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
-add_executable(range_protocol_tests main_range_tests.cpp)
-target_link_libraries(range_protocol_tests PRIVATE gkr_test_support)
+add_library(paper_r7 STATIC
+    paper_r7_category_auth.cpp
+    paper_r7_category_commitments.cpp
+    paper_r7_category_layout.cpp
+    paper_r7_category_plan.cpp
+    paper_r7_classified_commitments.cpp
+    paper_r7_classified_layout.cpp
+    paper_r7_crypto.cpp
+    paper_r7_fixed_cw.cpp
+    paper_r7_framework.cpp
+    paper_r7_fs_io.cpp
+    paper_r7_full12_model.cpp
+    paper_r7_hyrax_a3.cpp
+    paper_r7_lookup_prepare.cpp
+    paper_r7_master_layout.cpp
+    paper_r7_oneblock_gkr.cpp
+    paper_r7_oneblock_lookup.cpp
+    paper_r7_oneblock_model.cpp
+    paper_r7_oneblock_plan.cpp
+    paper_r7_oneblock_sumcheck.cpp
+    paper_r7_oneblock_vectors.cpp
+    paper_r7_opt2_metrics.cpp
+    paper_r7_partitioned_layout.cpp
+    paper_r7_public_k.cpp
+    paper_r7_r6_adapter.cpp
+    paper_r7_sigma.cpp
+    paper_r7_single_commitments.cpp
+    paper_r7_single_hyrax.cpp
+    paper_r7_source_mle.cpp
+    paper_r7_stage2_opening.cpp
+    paper_r7_static_source_map.cpp
+    paper_r7_streaming_master.cpp
+    paper_r7_u_fold_state.cpp
+    paper_r7_u_streaming.cpp
+    paper_r7_unified_input.cpp
+    paper_r7_wire.cpp
+)
 
-add_executable(gkr_mutation_tests main_gkr_mutation_tests.cpp)
-target_link_libraries(gkr_mutation_tests PRIVATE gkr_test_support)
+target_include_directories(paper_r7 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
-add_executable(zkgpt_artifact_mutation_tests
-    main_zkgpt_artifact_mutation_tests.cpp)
-target_link_libraries(zkgpt_artifact_mutation_tests PRIVATE gkr_test_support)
+target_link_libraries(gpt_lib PUBLIC ${CNPY_LIBRARY} mcl mclbn256 Threads::Threads z)
 
-add_executable(zkgpt_decoder_resource_tests
-    main_zkgpt_decoder_resource_tests.cpp)
-target_link_libraries(zkgpt_decoder_resource_tests PRIVATE gpt_lib)
+target_link_libraries(paper_r1 PUBLIC mcl mclbn256 Threads::Threads)
 
-add_test(NAME zkgpt_decoder_resource_tests
-         COMMAND zkgpt_decoder_resource_tests)
-set_tests_properties(zkgpt_decoder_resource_tests PROPERTIES TIMEOUT 30)
+target_compile_options(paper_r1 PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_executable(range_artifact_verify main_range_artifact_verify.cpp)
-target_link_libraries(range_artifact_verify PRIVATE gpt_lib)
+target_link_libraries(paper_r2 PUBLIC gpt_lib paper_r1)
 
-add_executable(zkgpt_artifact_verify main_zkgpt_artifact_verify.cpp)
-target_link_libraries(zkgpt_artifact_verify PRIVATE gpt_lib)
+target_compile_options(paper_r2 PRIVATE -Wall -Wextra -Wpedantic)
 
-add_executable(lasso_folding_tests main_lasso_folding_tests.cpp)
-target_link_libraries(lasso_folding_tests PRIVATE gpt_lib)
-add_test(NAME lasso_folding_tests COMMAND lasso_folding_tests)
-set_tests_properties(lasso_folding_tests PROPERTIES TIMEOUT 180)
+target_link_libraries(paper_r7 PUBLIC paper_r2 OpenSSL::Crypto)
 
-add_executable(prover_lifecycle_tests main_prover_lifecycle_tests.cpp)
-target_link_libraries(prover_lifecycle_tests PRIVATE gkr_test_support)
-add_test(NAME prover_lifecycle_tests COMMAND prover_lifecycle_tests)
+target_compile_options(paper_r7 PRIVATE -Wall -Wextra -Werror)
 
-add_executable(hyrax_opening_tests main_hyrax_opening_tests.cpp)
-target_link_libraries(hyrax_opening_tests PRIVATE gpt_lib)
-add_test(NAME hyrax_opening_tests COMMAND hyrax_opening_tests)
-set_tests_properties(hyrax_opening_tests PROPERTIES TIMEOUT 180)
+add_executable(r7_full12_witness paper_r7_full12_witness_main.cpp)
 
-add_executable(circuit_storage_tests main_circuit_storage_tests.cpp)
-target_link_libraries(circuit_storage_tests PRIVATE gpt_lib)
-add_test(NAME circuit_storage_tests COMMAND circuit_storage_tests)
-set_tests_properties(circuit_storage_tests PROPERTIES TIMEOUT 180)
+target_link_libraries(r7_full12_witness PRIVATE paper_r7)
 
-add_executable(model_binding main_model_binding.cpp)
-target_link_libraries(model_binding PRIVATE gpt_lib)
-add_executable(model_binding_tests main_model_binding_tests.cpp)
-target_link_libraries(model_binding_tests PRIVATE gpt_lib)
+add_executable(r7_full12_preprocess paper_r7_full12_preprocess.cpp)
 
-add_executable(exp_lookup_tests main_exp_lookup_tests.cpp)
-target_link_libraries(exp_lookup_tests PRIVATE gpt_lib)
-add_test(NAME exp_lookup_tests COMMAND exp_lookup_tests)
-set_tests_properties(exp_lookup_tests PROPERTIES TIMEOUT 240)
+target_link_libraries(r7_full12_preprocess PRIVATE paper_r7)
 
-# Experimental primitive is opt-in and never linked into gpt_lib.
-option(ZKGPT_BUILD_ZK_OPENING_PROTOTYPE "Build isolated experimental ZK primitive" OFF)
-if(ZKGPT_BUILD_ZK_OPENING_PROTOTYPE)
-    add_library(zk_opening_prototype STATIC
-        zk_hiding_commitment.cpp zk_linear_opening.cpp)
-    target_include_directories(zk_opening_prototype PUBLIC . ../3rd/mcl/include)
-    target_link_libraries(zk_opening_prototype PUBLIC mcl mclbn256)
-    target_compile_options(zk_opening_prototype PRIVATE -Wall -Wextra -Wpedantic)
-    add_executable(zk_opening_tests main_zk_opening_tests.cpp)
-    target_link_libraries(zk_opening_tests PRIVATE zk_opening_prototype)
-    target_compile_options(zk_opening_tests PRIVATE -Wall -Wextra -Wpedantic)
-    add_test(NAME zk_opening_prototype_tests COMMAND zk_opening_tests)
-    set_tests_properties(zk_opening_prototype_tests PROPERTIES TIMEOUT 30)
-endif()
+add_executable(r7_full12_statement paper_r7_full12_statement.cpp)
 
-# Task11 experimental committed-y prototype; production gpt_lib excludes it.
-option(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE "Build isolated committed-y ZK primitive" OFF)
-if(ZKGPT_BUILD_COMMITTED_Y_PROTOTYPE)
-    add_library(zk_committed_opening_prototype STATIC
-        zk_hiding_commitment.cpp zk_linear_opening.cpp zk_committed_linear_opening.cpp)
-    target_include_directories(zk_committed_opening_prototype PUBLIC . ../3rd/mcl/include)
-    target_link_libraries(zk_committed_opening_prototype PUBLIC mcl mclbn256)
-    target_compile_options(zk_committed_opening_prototype PRIVATE -Wall -Wextra -Wpedantic)
-    add_executable(zk_committed_opening_tests main_zk_committed_opening_tests.cpp)
-    target_link_libraries(zk_committed_opening_tests PRIVATE zk_committed_opening_prototype)
-    target_compile_options(zk_committed_opening_tests PRIVATE -Wall -Wextra -Wpedantic)
-    add_executable(zk_committed_opening_verify main_zk_committed_opening_verify.cpp)
-    target_link_libraries(zk_committed_opening_verify PRIVATE zk_committed_opening_prototype)
-    target_compile_options(zk_committed_opening_verify PRIVATE -Wall -Wextra -Wpedantic)
-    add_test(NAME zk_committed_opening_tests COMMAND zk_committed_opening_tests)
-    set_tests_properties(zk_committed_opening_tests PROPERTIES TIMEOUT 30)
-endif()
+target_link_libraries(r7_full12_statement PRIVATE paper_r7)
 
-# Route B Phase B1: isolated opt-in Lasso/Surge prototype.
-option(ZKGPT_BUILD_LASSO_PROTOTYPE "Build isolated Lasso/Surge prototype" OFF)
-if(ZKGPT_BUILD_LASSO_PROTOTYPE)
-    add_subdirectory(lasso)
-endif()
+add_executable(r7_fs_full12_prover paper_r7_oneblock_main.cpp)
 
-# Route B P0: isolated, default-off production source contract.
-option(ZKGPT_ENABLE_ROUTE_B_PRODUCTION "Build Route B production source contract" OFF)
-if(ZKGPT_ENABLE_ROUTE_B_PRODUCTION)
-    add_subdirectory(route_b)
-endif()
+target_link_libraries(r7_fs_full12_prover PRIVATE paper_r7)
 
-add_executable(r2_gkr_terminal_tests main_r2_gkr_terminal_tests.cpp)
-target_link_libraries(r2_gkr_terminal_tests PRIVATE gkr_test_support)
-add_test(NAME r2_gkr_terminals COMMAND r2_gkr_terminal_tests)
+target_compile_definitions(r7_fs_full12_prover PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1 R7_UNIFIED_INPUT1=1 R7_SINGLE_HYRAX=1)
 
-# R2 reuses existing production GKR and R1 lookup primitives.
-add_subdirectory(paper_r1)
-add_subdirectory(paper_r2)
+add_executable(r7_fs_full12_verifier paper_r7_oneblock_main.cpp)
 
-# R7 framework is additive; R6 computation/proof targets remain unchanged.
-option(ZKGPT_BUILD_R7_FRAMEWORK "Build fail-closed R7 Oneblock framework" OFF)
-if(ZKGPT_BUILD_R7_FRAMEWORK)
-    add_subdirectory(paper_r7)
-endif()
+target_link_libraries(r7_fs_full12_verifier PRIVATE paper_r7)
 
-add_executable(r5a_host_tests main_r5a_host_tests.cpp)
-target_link_libraries(r5a_host_tests PRIVATE paper_r2)
-foreach(mode counter round wide-gelu minimum missing codec arithmetic construct-boundaries wide-ln search-boundary input-config)
- add_test(NAME r5a_host_${mode} COMMAND r5a_host_tests ${mode})
+target_compile_definitions(r7_fs_full12_verifier PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_FS_FULL12=1 R7_UNIFIED_INPUT1=1 R7_SINGLE_HYRAX=1 R7_COMPLETE_VERIFIER=1)
+
+# Preserve the existing R7 treatment of shared production headers.
+target_include_directories(paper_r7 SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Keep only code reachable from the supported Full12 entry points.
+foreach(lib gpt_lib paper_r1 paper_r2 paper_r7)
+ target_compile_options(${lib} PRIVATE -ffunction-sections -fdata-sections)
 endforeach()
-
-add_executable(r5b_tests main_r5b_tests.cpp)
-target_link_libraries(r5b_tests PRIVATE paper_r2)
-
-foreach(mode round round-boundaries attention attention-boundaries ln ln-boundaries gelu gelu-boundaries arithmetic)
- add_test(NAME r5b_${mode} COMMAND r5b_tests ${mode})
+foreach(entry r7_full12_preprocess r7_full12_witness r7_full12_statement r7_fs_full12_prover r7_fs_full12_verifier)
+ target_compile_options(${entry} PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(${entry} PRIVATE -Wl,--gc-sections "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${entry}.map")
 endforeach()
-
-add_test(NAME r5b_public_layout COMMAND r5b_tests public-layout)
-
-add_executable(r5b_gkr_tests main_r5b_gkr_tests.cpp)
-target_link_libraries(r5b_gkr_tests PRIVATE paper_r2)
-add_test(NAME r5b_FC_GKR_coupling COMMAND r5b_gkr_tests)
-
-add_executable(opt2_ownership_tests main_opt2_ownership_tests.cpp)
-target_link_libraries(opt2_ownership_tests PRIVATE gpt_lib gkr_test_support)
-add_test(NAME opt2_shared_ownership COMMAND opt2_ownership_tests)
-
-add_executable(opt2_allocation_tests main_opt2_allocation_tests.cpp)
-target_link_libraries(opt2_allocation_tests PRIVATE gpt_lib gkr_test_support)
-add_test(NAME opt2_master_allocation COMMAND opt2_allocation_tests)
-
-add_test(NAME opt2_postpublication_diagnostic_failure COMMAND opt2_allocation_tests --postpublish)

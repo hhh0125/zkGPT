@@ -1,0 +1,77 @@
+// Shared Single Hyrax + Unified Input FS production controller.
+// Full12 and Oneblock retain their original statement and verifier-local ledger.
+ R7WitnessStore witness;Value master;
+ const layeredCircuit*graph=&publicArtifacts->graph();
+ classified::Prepared prepared;
+ timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
+  {master3::QuietStdout quiet;
+#ifdef R7_FS_FULL12
+ witness.generateR6(ctx,executionTarget(12).manifest_path);
+#else
+ witness.generateR6(ctx,executionTarget(1).manifest_path);
+#endif
+ }
+  graph=&witness.executionForR7().C;master=masterValue(witness);
+  if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx,*publicArtifacts);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
+  prepared=classified::prepareLookup(ctx,master);
+  {std::uint64_t helpers=0,helper_elements=0,layers=0;std::set<const void*>seen;
+   for(const auto&entry:prepared)if(entry.second && seen.insert(entry.second.get()).second){helpers+=entry.second->capacity()*sizeof(Fr);helper_elements+=entry.second->size();}
+   const auto&values=witness.executionForR7().val;for(std::size_t j=1;j<values.size();++j)layers+=values[j].capacity()*sizeof(Fr);
+   std::cerr<<"WITNESS_STORAGE {\"native_master_size\":"<<witness.baseMaster().size()<<",\"native_master_capacity_bytes\":"<<witness.baseMaster().capacity()*sizeof(Fr)<<",\"helper_materialized_elements\":"<<helper_elements<<",\"helper_capacity_bytes\":"<<helpers<<",\"other_native_layer_capacity_bytes\":"<<layers<<",\"snapshot\":\"all-witness-and-helpers-ready\",\"capacity_not_RSS\":true}\n";}
+
+  if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
+  if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);}
+ }});
+ std::optional<classified::Commitments>commitments;
+ timed("all-classified-roots-prechallenge-seal",[&]{
+ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,s.x);
+});
+ auto&pcs=*commitments;
+ need(pcs.logicalCommitments()==1,"production single Hyrax identity count");checked(io,"single/commitment");checked(io,"model/frozen-numerical-profile");
+ if(isP && attack=="wrong-model-witness"){
+  need(!ctx.plan.sources.back().spans.empty(),"single native model mutation target");
+  const auto at=ctx.plan.sources.back().spans.front().offset;
+  witness.executionForR7().val[0].at(at)+=Fr(1);
+ }
+ timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
+ checked(io,"single/direct-logical-domain");
+ if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;
+ single::writeLayout(out,pcs.singlePublic());
+ output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
+ timed("classified-public-Y-constants-and-input-definition",[&]{
+  auto entries=trustedPublicEntries(s,ctx);
+  auto all=std::make_shared<PublicEntries>();
+  all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
+  Writer binding;binding.text(liveSuite);binding.text(classified::identity(layout));binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
+  auto N=classified::power2(all->size());std::vector<Fr>point;for(unsigned j=0;j<r1::log2exact(N);++j)point.push_back(io.coin("Classified/public-query/"+std::to_string(j)));auto weights=r1::weights(point);Fr expected=0;for(std::size_t j=0;j<all->size();++j)expected+=weights[j]*all->at(j).second;
+  pcs.deferBase(
+   "public/Y-constants",
+   all->size(),N,[all](std::size_t j){return all->at(j).first;},publicHidden(io,"Classified/public-expected",expected),point);
+ });
+ for(auto id:{"public/Y","public/constants"})checked(io,id);
+ std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;
+ // Every later private read is served by sealed classified roots/model W.
+ // Terminal maps borrow graph wiring, never these native field arrays.
+ if(isP){
+ // val[0] is the original sealed storage borrowed by C_U, source views and
+ // Unified Sumcheck. It stays alive until authentication finishes.
+ for(std::size_t k=1;k<witness.executionForR7().val.size();++k)std::vector<Fr>().swap(witness.executionForR7().val[k]);
+ master={};
+ }
+ std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
+ for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id));}
+ VectorFactory factory=[&](IO&live,std::string id,std::size_t actual,std::size_t padded,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");auto v=pcs.view(id);need(v.actual==actual && v.padded==padded,"classified wrong native view shape");return v;};
+ timed("native-Range-Exp-Lasso-Memory-Product",[&]{for(auto&r:ctx.plan.ranges)hiddenRange(io,sources.at(r.child),r.bits,factory,rng,"r7/"+r.id,true);for(auto&e:ctx.plan.exps)hiddenExp(io,sources.at(e.index_child),sources.at(e.value_child),e.profile,factory,rng,"r7/"+e.id,true);});
+ for(auto&t:pending.terminals){const auto&l=graph->circuit.at(t.layer);const auto*indices=t.port?&l.ori_id_v:&l.ori_id_u;auto id="gkr/layer/"+std::to_string(t.layer)+"/terminal/"+(t.port?"v":"u")+"/"+std::to_string(t.matrix_point);need(terminals.insert(id).second,"classified repeated terminal");pcs.deferBase(id,t.actual,t.padded,[indices](std::size_t j){return indices->at(j);},t.value,t.point);}
+ std::set<std::string>requiredTerminals;for(auto&r:plan.required)if(r.family=="GKR_MASTER_TERMINAL")requiredTerminals.insert(r.id);need(terminals==requiredTerminals,"classified native terminal omission/substitution");
+ timed("all-source-original-handles",[&]{for(std::size_t j=0;j<sources.size();++j){auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);std::vector<Fr>point;for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));auto h=exchangeHidden(io,label+"/value",isP?evaluateOracle(v,point):Fr(0),rng);v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");}});
+ need(objects.size()==layout.views.size(),"classified unused/missing native view");
+ timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");
+ checked(io,"public/X");checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
+ for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
+ for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
+ if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
+ pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
+ io.save(true);
+ const auto a3metrics=hyrax_a3::measurement();std::cerr<<"A3_TIMING {\"knowledge_wall_seconds\":"<<a3metrics.guard_seconds<<",\"inner_product_wall_seconds\":"<<a3metrics.core_seconds<<",\"knowledge_payload_bytes\":"<<a3metrics.guard_payload_bytes<<",\"inner_product_payload_bytes\":"<<a3metrics.core_payload_bytes<<"}\n";
+ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
