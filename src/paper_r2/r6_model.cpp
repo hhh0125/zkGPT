@@ -1,5 +1,6 @@
 #include "r6_model.hpp"
 #include "r5b_trust.hpp"
+#include "r6_trust.hpp"
 #include <set>
 #include <map>
 namespace zkgpt::r6 {
@@ -44,8 +45,14 @@ void auditGraph(const layeredCircuit &c,const LLM &nn,const r2::ModelQueryPlan &
  r1::require(p.output.front()==edges.back().output && p.output.back()==edges.back().output+32767,"R6 final hidden state output");
  r1::require(p.constants.size()==8*blocks,"R6 numerical constant coverage");
 }
-void writePlan(std::ostream &o,const layeredCircuit&c,const LLM&nn,const r2::ModelQueryPlan&p){
- auditGraph(c,nn,p);auto res=r2::modelResources(c,p);
+PublicCircuit::PublicCircuit(unsigned blocks):network_(blocks,12,64,768,3072),
+ graph_([&]{configure(network_);return network_.buildPublicCircuit();}()),
+ plan_(r2::planModelQueries(graph_,network_.getWitnessRegistry(),network_.parameterRegions(),r1::ExpProfile::LegacyClampOne)){
+ auditGraph(graph_,network_,plan_);validateRegions(plan_,network_.parameterRegions());
+}
+namespace {
+void serializePlan(std::ostream &o,const layeredCircuit&c,const LLM&nn,const r2::ModelQueryPlan&p){
+ auto res=r2::modelResources(c,p);
  std::size_t layer_fields=0,gate_capacity=0,coordinate_capacity=0,max_layer=0;
  for(std::size_t i=0;i<c.circuit.size();++i){const auto &l=c.circuit[i];if(i)layer_fields+=(std::size_t(1)<<l.bit_length);max_layer=std::max(max_layer,std::size_t(1)<<l.bit_length);gate_capacity+=l.uni_gates.capacity()*sizeof(uniGate)+l.bin_gates.capacity()*sizeof(binGate);coordinate_capacity+=(l.ori_id_u.capacity()+l.ori_id_v.capacity())*sizeof(u32);}
  o<<"{\"blocks\":"<<p.shape.layer_count<<",\"profile\":\""<<r5b::kProfile<<"\",\"profile_sha256\":\""<<r5b::profileHash()<<"\",\"circuit\":\""<<p.circuit_id<<"\",\"layers\":"<<c.size<<",\"metadata_field_witness_elements\":"<<nn.metadataWitnessElements()<<",\"master_actual\":"<<p.master.actual<<",\"master_padded\":"<<p.master.padded<<",\"W_actual\":"<<p.sources.back().spec.actual<<",\"W_padded\":"<<p.sources.back().spec.padded<<",\"child_padded_elements\":"<<res.child_elements<<",\"range_values\":"<<res.range_values<<",\"Exp_actual\":"<<res.exp_values<<",\"terminals\":"<<res.terminals<<",\"gate_and_map_bytes\":"<<res.gate_bytes<<",\"gate_capacity_bytes\":"<<gate_capacity<<",\"coordinate_capacity_bytes\":"<<coordinate_capacity<<",\"nonmaster_layer_padded_fields\":"<<layer_fields<<",\"max_layer_padded_fields\":"<<max_layer<<",\"lookup_prover_bytes\":"<<res.lookup_prover_bytes<<",\"lookup_retained_query_bytes\":"<<res.lookup_retained_bytes<<",\"lookup_local_workspace_bytes\":"<<res.lookup_local_bytes<<",\"lookup_mapped_workspace_bytes\":"<<res.lookup_mapped_bytes<<",\"gkr_checked_input_max_padded\":"<<res.gkr_checked_input_padded<<",\"lookup_immutable_master_bytes\":"<<p.master.padded*sizeof(Fr)<<",\"lookup_mapped_incremental_bytes\":"<<res.lookup_mapped_bytes-p.master.padded*sizeof(Fr)<<",\"lookup_incremental_prover_bytes\":"<<res.lookup_retained_bytes+std::max(res.lookup_local_bytes,res.lookup_mapped_bytes-p.master.padded*sizeof(Fr))<<",\"planned_val0_capacity_bytes\":"<<p.master.actual*sizeof(Fr)<<",\"shared_cc_caller_master_bytes\":"<<p.master.padded*sizeof(Fr)<<",\"graph_additional_safety_reserve_bytes\":"<<2*(gate_capacity+coordinate_capacity)<<",\"shared_legacy_resource_envelope_prover\":"<<res.prover_peak_bytes<<",\"shared_legacy_resource_envelope_verifier\":"<<res.verifier_peak_bytes<<",\"proof_upper_bytes\":"<<res.proof_upper_bytes<<",\"full12_proof_executed\":false,\"connections\":[";
@@ -61,4 +68,9 @@ void writePlan(std::ostream &o,const layeredCircuit&c,const LLM&nn,const r2::Mod
  }
  o<<"],\"gkr_layers\":[";first=true;for(std::size_t i=0;i<c.circuit.size();++i){const auto&l=c.circuit[i];if(!first)o<<',';first=false;o<<"{\"layer\":"<<i<<",\"type\":"<<unsigned(l.ty)<<",\"actual\":"<<l.size<<",\"padded\":"<<(std::size_t(1)<<l.bit_length)<<",\"unary_gates\":"<<l.uni_gates.size()<<",\"binary_gates\":"<<l.bin_gates.size()<<",\"u_master\":"<<l.size_u[0]<<",\"v_master\":"<<l.size_v[0]<<",\"phase2\":"<<(l.need_phase2?"true":"false")<<"}";}o<<"]}\n";r1::require(bool(o),"R6 plan output failed");
 }
+}
+void writePlan(std::ostream&o,const layeredCircuit&c,const LLM&nn,const r2::ModelQueryPlan&p){
+ auditGraph(c,nn,p);serializePlan(o,c,nn,p);
+}
+void writePlan(std::ostream&o,const PublicCircuit&a){serializePlan(o,a.graph(),a.network(),a.plan());}
 }

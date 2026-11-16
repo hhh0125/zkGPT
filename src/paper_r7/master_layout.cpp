@@ -13,6 +13,7 @@ namespace zkgpt::r7::master3 {
 QuietStdout::QuietStdout(){std::cout.flush();std::fflush(stdout);saved_=dup(1);int fd=open("/dev/null",O_WRONLY);need(saved_>=0 && fd>=0 && dup2(fd,1)>=0,"M3 public-plan output isolation");close(fd);}
 QuietStdout::~QuietStdout(){std::cout.flush();std::fflush(stdout);dup2(saved_,1);close(saved_);}
 R7Context trustedContext(unsigned blocks){const auto target=executionTarget(blocks);QuietStdout quiet;return buildR6Context(target.manifest_pin,blocks);}
+R7Context trustedContext(const R6PublicArtifacts&artifacts){return buildR6Context(executionTarget(artifacts.plan().shape.layer_count).manifest_pin,artifacts);}
 void validate(const Layout&l){
  if(!(l.actual==16642424 && l.padded==(1u<<24) && l.profile==r5b::profileHash() && l.context.size()==64 && l.object_count==331))throw std::runtime_error("M3 frozen layout identity: actual="+std::to_string(l.actual)+" padded="+std::to_string(l.padded)+" objects="+std::to_string(l.object_count)+" context_bytes="+std::to_string(l.context.size()));
  std::uint64_t end=0;std::set<std::string>ids;for(auto&r:l.regions){need(ids.insert(r.id).second && !r.id.empty() && r.offset==end && r.count>0 && r.offset<l.actual && r.count<=l.actual-r.offset && r.stride==1 && r.rows>0 && r.columns>0 && r.rows<=r.count && r.count/r.rows==r.columns && r.count%r.rows==0 && r.logical_rows<=r.rows && r.logical_columns<=r.columns,"M3 region overlap/coverage/overflow/shape");end+=r.count;}need(end==l.actual,"M3 missing layout coverage");
@@ -20,8 +21,10 @@ void validate(const Layout&l){
  ids.clear();need(l.views.size()==332 && l.views.front().kind==ObjectKind::BaseMaster,"M3 source identity count");for(auto&v:l.views){need(ids.insert(v.id).second && v.actual && v.actual<=v.padded,"M3 source identity conflict/length");if(!v.spans.empty()){std::uint64_t n=0;for(auto&s:v.spans){need(s.count && s.offset<l.actual && s.count<=l.actual-s.offset && n<=v.actual && s.count<=v.actual-n,"M3 view bounds/overflow");n+=s.count;}need(n==v.actual,"M3 view mapping omission");}}
 }
 Layout trustedLayout(const R7Context&context){
- QuietStdout quiet;
- LLM nn(1,12,64,768,3072);r6::configure(nn);auto g=nn.buildPublicCircuit();auto p=r2::planModelQueries(g,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(g,nn,p);
+ auto artifacts=buildR6PublicArtifacts(1);return trustedLayout(context,*artifacts);
+}
+Layout trustedLayout(const R7Context&context,const R6PublicArtifacts&artifacts){
+ const auto&nn=artifacts.network();const auto&g=artifacts.graph();const auto&p=artifacts.plan();
  need(p.master==context.plan.master && p.circuit_id==context.plan.circuit_id,"M3 trusted plan mismatch");Layout l;l.actual=p.master.actual;l.padded=p.master.padded;l.profile=r5b::profileHash();l.context=context.layout_sha256;l.object_count=context.objects.size()-1;l.views=context.objects;
  std::vector<Region>known;known.push_back({"R6/public-X","X","row-major-32x1024",0,32768,32,1024,1});
  auto padded=[](std::size_t n){std::size_t p=1;while(p<n){need(p<=(1u<<23),"M3 physical shape overflow");p*=2;}return p;};

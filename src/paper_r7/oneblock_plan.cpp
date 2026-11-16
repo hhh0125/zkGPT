@@ -1,4 +1,5 @@
 #include "oneblock_plan.hpp"
+#include "execution_target.hpp"
 #include "paper_r2/r6_model.hpp"
 #include "paper_r2/r6_trust.hpp"
 #include "paper_r2/r5b_trust.hpp"
@@ -25,7 +26,11 @@ void range(Coverage&p,const r1::RangeSpec&s){
 std::string quoted(const std::string&s){std::string o="\"";for(auto c:s){if(c=='\"'||c=='\\')o+='\\';need(static_cast<unsigned char>(c)>=32,"coverage nonprintable ID");o+=c;}return o+'\"';}
 }
 Coverage discover(unsigned blocks){
- Coverage p;p.context=master3::trustedContext(blocks);master3::QuietStdout quiet;LLM nn(blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();auto q=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,q);r6::validateRegions(q,nn.parameterRegions());crypto::need(q.circuit_id==p.context.plan.circuit_id,"native coverage circuit mismatch");std::ostringstream native;r6::writePlan(native,graph,nn,q);p.native_json=native.str();p.objects=p.context.objects;p.source_objects=p.objects.size();
+ auto artifacts=buildR6PublicArtifacts(blocks);return discover(*artifacts);
+}
+Coverage discover(const R6PublicArtifacts&artifacts){
+ const auto&q=artifacts.plan();const auto&nn=artifacts.network();const auto&graph=artifacts.graph();const auto blocks=q.shape.layer_count;
+ Coverage p;p.context=buildR6Context(executionTarget(blocks).manifest_pin,artifacts);std::ostringstream native;r6::writePlan(native,artifacts);p.native_json=native.str();p.objects=p.context.objects;p.source_objects=p.objects.size();
  const auto base=object(q.master);add(p,"master/registration","MASTER_REGISTRATION",base,q.master.padded);add(p,"master/zero-tail","MASTER_TAIL",base,q.master.padded-q.master.actual);add(p,"master/hidden-openings","MASTER_OPENING",base,q.master.padded);
  for(const auto&o:p.objects){add(p,"object/"+o.id+"/commitment","OBJECT_COMMITMENT",o.id,o.padded);if(o.kind!=ObjectKind::BaseMaster)add(p,"object/"+o.id+"/source","OBJECT_SOURCE",o.parent,o.padded);p.object_padded_coordinates+=o.padded;
   // Cost of DIRECT reuse of current complete representation registration.

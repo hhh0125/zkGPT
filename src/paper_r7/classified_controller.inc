@@ -4,7 +4,7 @@
 #ifdef R7_FS_ONEBLOCK
  const auto&trust=fsTrust;
 #else
- auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+ auto trust=[&](){master3::QuietStdout quiet;return model::loadTrust(*publicArtifacts);}();
 #endif
  #ifdef R7_FS_FULL12
  std::vector<model::Secret>modelSecrets;
@@ -13,7 +13,7 @@
 #endif
 #endif
  R7WitnessStore witness;Value master;
- std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;
+ const layeredCircuit*graph=&publicArtifacts->graph();
  classified::Prepared prepared;
  timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
   {master3::QuietStdout quiet;
@@ -25,14 +25,14 @@
 #endif
 #else
 #ifdef R7_SINGLE_HYRAX
- witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");
+ witness.generateR6(ctx,executionTarget(1).manifest_path);
 #else
- witness.generateR6(ctx,"reports/R6A/oneblock-model-manifest-v1.txt");modelSecret=model::prepare(trust,io.session(),random);
+ witness.generateR6(ctx,executionTarget(1).manifest_path);modelSecret=model::prepare(trust,io.session(),random);
 #endif
 #endif
  }
   graph=&witness.executionForR7().C;master=masterValue(witness);
-  if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
+  if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx,*publicArtifacts);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
   prepared=classified::prepareLookup(ctx,master);
   {std::uint64_t helpers=0,helper_elements=0,layers=0;std::set<const void*>seen;
    for(const auto&entry:prepared)if(entry.second && seen.insert(entry.second.get()).second){helpers+=entry.second->capacity()*sizeof(Fr);helper_elements+=entry.second->size();}
@@ -41,7 +41,7 @@
 
   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
   if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);}
- }else{master3::QuietStdout quiet;network.emplace(ctx.plan.shape.layer_count,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}});
+ }});
  std::optional<classified::Commitments>commitments;
  timed("all-classified-roots-prechallenge-seal",[&]{
 #ifdef R7_SINGLE_HYRAX

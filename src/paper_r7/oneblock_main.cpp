@@ -9,9 +9,9 @@
 #include "oneblock_public.hpp"
 #include "interactive.hpp"
 #include "fs_io.hpp"
+#include "execution_target.hpp"
 #ifdef R7_FS_FULL12
 #include "full12_model.hpp"
-#include "execution_target.hpp"
 #endif
 #include "paper_r2/r6_model.hpp"
 #include <sys/prctl.h>
@@ -113,14 +113,14 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  need(argc>=2 && argc<=3,"Oneblock usage setup|run [P_ATTACK]");
 #endif
  #ifdef R7_FS_FULL12
- auto plan=discover(12);
+ auto publicArtifacts=buildR6PublicArtifacts(12);
 #else
- auto plan=discover();
+ auto publicArtifacts=buildR6PublicArtifacts();
 #endif
- auto&ctx=plan.context;
+ auto plan=discover(*publicArtifacts);auto&ctx=plan.context;
 #ifdef R7_CLASSIFIED_V2
  #ifdef R7_SINGLE_HYRAX
- auto layout=classified::makeCategoryLayout(ctx);
+ auto layout=classified::makeCategoryLayout(ctx,*publicArtifacts);
 #else
  auto layout=classified::makeLayout(ctx);
 #endif
@@ -178,7 +178,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  #ifdef R7_FS_FULL12
  auto fsTrust=full12::loadTrust(ctx);
 #else
- auto fsTrust=[](){master3::QuietStdout quiet;return model::loadTrust();}();
+ auto fsTrust=[&](){master3::QuietStdout quiet;return model::loadTrust(*publicArtifacts);}();
 #endif
 #endif
  Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
@@ -237,14 +237,15 @@ instance.raw(statement_bytes);
 #endif
 };
  #ifndef R7_CLASSIFIED_V2
- auto trust=[](){master3::QuietStdout quiet;return model::loadTrust();}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
+ auto trust=[&](){master3::QuietStdout quiet;return model::loadTrust(*publicArtifacts);}();std::optional<model::Secret>modelSecret;model::Public modelPublic;
  timed("model-authority-registration",[&]{if(isP)executePrivateWitness([&]{master3::QuietStdout quiet;modelSecret=model::prepare(trust,io.session(),random);});modelPublic=model::registerModel(io,trust,isP?&*modelSecret:nullptr,rng);});checked(io,"model/checkpoint-exporter-profile");checked(io,"model/anchor-hiding-rerandomization");
- R7WitnessStore witness;std::optional<LLM>network;layeredCircuit publicGraph;const layeredCircuit*graph=nullptr;Value master;master3::Secret masterSecret;master3::Master pc;
+ const auto nativeLayout=master3::trustedLayout(ctx,*publicArtifacts);
+ R7WitnessStore witness;const layeredCircuit*graph=&publicArtifacts->graph();Value master;master3::Secret masterSecret;master3::Master pc;
  timed("frozen-witness-and-master-commitment",[&]{if(isP){{master3::QuietStdout quiet;witness.generateR6(ctx,"reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");}graph=&witness.executionForR7().C;
-  if(attack=="wrong-internal" || attack=="wrong-weight"){auto layout=master3::trustedLayout(ctx);auto it=std::find_if(layout.regions.begin(),layout.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=layout.regions.end(),"Oneblock attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
-  master=masterValue(witness);masterSecret=master3::commitMaster(master3::makeSpec(master3::trustedLayout(ctx),ctx.plan.master.padded),master);pc=masterSecret.public_pc;
- }else{master3::QuietStdout quiet;network.emplace(1,12,64,768,3072);r6::configure(*network);publicGraph=network->buildPublicCircuit();graph=&publicGraph;}
- auto b=io.message("Oneblock/BaseMaster/PC",isP?master3::encodeMaster(pc):Bytes{});pc=master3::decodeMaster(b,master3::makeSpec(master3::trustedLayout(ctx),ctx.plan.master.padded));});checked(io,"object/"+ctx.objects.front().id+"/commitment");
+  if(attack=="wrong-internal" || attack=="wrong-weight"){auto it=std::find_if(nativeLayout.regions.begin(),nativeLayout.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=nativeLayout.regions.end(),"Oneblock attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
+  master=masterValue(witness);masterSecret=master3::commitMaster(master3::makeSpec(nativeLayout,ctx.plan.master.padded),master);pc=masterSecret.public_pc;
+ }
+ auto b=io.message("Oneblock/BaseMaster/PC",isP?master3::encodeMaster(pc):Bytes{});pc=master3::decodeMaster(b,master3::makeSpec(nativeLayout,ctx.plan.master.padded));});checked(io,"object/"+ctx.objects.front().id+"/commitment");
  masterB::RegistrationMetrics registration;std::optional<masterB::Registered>registered;timed("one-full-master-registration",[&]{registered.emplace(masterB::Registered::establish(io,pc,isP?&masterSecret:nullptr,"oneblock-full",registration));});checked(io,"master/registration");checked(io,"master/zero-tail");
  timed("public-X-Y-constants",[&]{auto entries=trustedPublicEntries(s,ctx);auto all=std::move(entries.x);all.insert(all.end(),entries.y.begin(),entries.y.end());all.insert(all.end(),entries.constants.begin(),entries.constants.end());publicBinding(io,*registered,isP?&masterSecret:nullptr,master,all,rng,"Oneblock/public");});for(auto id:{"public/X","public/Y","public/constants"})checked(io,id);
  std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;std::cerr<<"ALL_NATIVE_GKR_REDUCED "<<pending.layers<<' '<<pending.matrices<<' '<<pending.terminals.size()<<' '<<pending.rounds<<'\n';

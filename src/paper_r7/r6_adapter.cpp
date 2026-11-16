@@ -1,4 +1,5 @@
 #include "r6_adapter.hpp"
+#include "master_layout.hpp"
 #include "execution_target.hpp"
 #include "paper_r2/r6_model.hpp"
 #include "paper_r2/r6_trust.hpp"
@@ -24,11 +25,19 @@ void executePrivateWitness(const std::function<void()>&operation){
  catch(const std::bad_alloc&){throw std::runtime_error("R7 private witness resource exhaustion (std::bad_alloc); details suppressed");}
  catch(...){throw std::runtime_error("R7 private witness generation/validation failed; details suppressed");}
 }
+std::unique_ptr<R6PublicArtifacts> buildR6PublicArtifacts(unsigned blocks){
+ executionTarget(blocks);master3::QuietStdout quiet;return std::make_unique<R6PublicArtifacts>(blocks);
+}
 R7Context buildR6Context(const std::string&pin,unsigned blocks){
+ executionTarget(blocks);r1::require(pin.size()==64,"independent model manifest SHA256 required");
+ auto artifacts=buildR6PublicArtifacts(blocks);return buildR6Context(pin,*artifacts);
+}
+R7Context buildR6Context(const std::string&pin,const R6PublicArtifacts&artifacts){
+ const auto blocks=artifacts.plan().shape.layer_count;
  const auto target=executionTarget(blocks);
  r1::require(pin.size()==64,"independent model manifest SHA256 required");
  R7Context c;c.model_manifest_sha256=pin;
- {Quiet quiet(std::cout);LLM nn(blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();c.plan=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,nn,c.plan);r6::validateRegions(c.plan,nn.parameterRegions());}
+ c.plan=artifacts.plan();
  r1::require(c.plan.circuit_id==target.circuit,"frozen native R6 target circuit changed");
  add(c.objects,c.plan.master,ObjectKind::BaseMaster,"");
  r1::Fs layout(blocks==1?"zkGPT.R7.R6-layout.split-aux.rowmajor.v2":"zkGPT.R7.R6-full12-layout.split-aux.rowmajor.v3");dimensions(layout,c.plan.master);
@@ -50,9 +59,10 @@ R7Context buildR6Context(const std::string&pin,unsigned blocks){
  const auto d=layout.digest();c.layout_sha256=r5b::hex(Bytes(d.begin(),d.end()));return c;
 }
 std::vector<r1::InputSpan> nativeXSpans(const R7Context&c){
- const auto target=executionTarget(c.plan.shape.layer_count);Quiet quiet(std::cout);
- LLM nn(target.blocks,12,64,768,3072);r6::configure(nn);auto graph=nn.buildPublicCircuit();
- auto p=r2::planModelQueries(graph,nn.getWitnessRegistry(),nn.parameterRegions(),r1::ExpProfile::LegacyClampOne);
+ auto artifacts=buildR6PublicArtifacts(c.plan.shape.layer_count);return nativeXSpans(c,*artifacts);
+}
+std::vector<r1::InputSpan> nativeXSpans(const R7Context&c,const R6PublicArtifacts&artifacts){
+ const auto&p=artifacts.plan();const auto&nn=artifacts.network();
  r1::require(p.circuit_id==c.plan.circuit_id && p.master==c.plan.master && p.shape.sequence_length==32 && p.shape.hidden_dimension==768,"category native X public layout mismatch");
  std::vector<r1::InputSpan>spans;
  for(const auto&r:nn.getWitnessRegistry().constraints())if(r.name=="r5b_input"){

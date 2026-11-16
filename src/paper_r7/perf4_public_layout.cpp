@@ -13,7 +13,7 @@ struct BiasCount {Fr previous;bool have=false;std::uint64_t serialized=0,reused=
  void add(const Fr&b,std::size_t count){if(!count)return;bool same=have && previous==b;serialized+=!same;reused+=count-!same;previous=b;have=true;}
 };
 int main(int argc,char**argv){try{
- need(argc==2,"PERF4 public census STATEMENT");r1::init();auto discovery=discover(12);auto p=cl::makeLayout(discovery.context);
+ need(argc==2,"PERF4 public census STATEMENT");r1::init();auto artifacts=buildR6PublicArtifacts(12);auto discovery=discover(*artifacts);auto p=cl::makeLayout(discovery.context);
  std::ifstream in(argv[1],std::ios::binary);Bytes bytes{std::istreambuf_iterator<char>(in),{}};auto statement=R7Wire::decodeStatement(bytes);need(validateStatement(statement,discovery.context).code==Code::Ok,"PERF4 trusted statement");auto plan=cl::singlePlan(p,statement.x);
  std::vector<std::vector<single::PublicCell>>cells(p.roots.size());for(auto c:plan.public_cells)cells.at(c.source-1).push_back(c);
  std::cout<<"{\"kind\":\"layout\",\"identity\":"<<std::quoted(cl::identity(p))<<",\"roots\":"<<p.roots.size()<<",\"views\":"<<p.views.size()<<",\"base_runs\":"<<p.base_runs.size()<<",\"logical_domain\":"<<plan.domain<<",\"physical_domain\":"<<plan.physical_domain<<",\"private_runs\":"<<plan.runs.size()<<"}\n";
@@ -33,7 +33,7 @@ int main(int argc,char**argv){try{
   std::cout<<"{\"kind\":\"view\",\"id\":"<<std::quoted(id)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<",\"mapped\":"<<(v.mapped?"true":"false")<<",\"spans\":"<<v.spans.size()<<",\"pieces\":"<<v.pieces.size()<<",\"A_serializations\":"<<count.serialized<<",\"A_reuses\":"<<count.reused<<",\"runs\":[";bool first=true;
   for(const auto&r:runs){if(!first)std::cout<<',';first=false;std::cout<<"["<<r.begin<<','<<r.count<<','<<r.at.root<<','<<r.at.index<<','<<(r.constant?1:0)<<','<<std::quoted(r.bias.getStr())<<"]";}std::cout<<"]}\n";
  }
- layeredCircuit graph;{master3::QuietStdout quiet;LLM nn(12,12,64,768,3072);zkgpt::r6::configure(nn);graph=nn.buildPublicCircuit();}
+ const auto&graph=artifacts->graph();
  for(std::size_t layer=1;layer<graph.circuit.size();++layer)for(unsigned port=0;port<2;++port){const auto&l=graph.circuit[layer];const auto&ids=port?l.ori_id_v:l.ori_id_u;auto width=port?l.bit_length_v[0]:l.bit_length_u[0];if(width<0)continue;std::size_t padded=std::size_t(1)<<width;BiasCount count;std::uint64_t positive=0,negative=0,zero=0,changes=0;cl::Coordinate previous{};bool have=false;
   for(auto index:ids){auto c=cl::baseCoordinate(p,index);Fr bias=0;auto&list=cells.at(c.root);auto found=std::lower_bound(list.begin(),list.end(),c.index,[](const auto&x,std::size_t j){return x.index<j;});if(found!=list.end() && found->index==c.index)bias=statement.x.at(found->x_index);count.add(bias,1);
    if(have && previous.root==c.root){auto stride=std::int64_t(c.index)-previous.index;positive+=stride>0;negative+=stride<0;zero+=stride==0;}else ++changes;previous=c;have=true;

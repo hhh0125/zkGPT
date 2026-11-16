@@ -1,5 +1,6 @@
 #pragma once
 #include "hyrax_a3.hpp"
+#include "r6_adapter.hpp"
 #include "paper_r2/r6_trust.hpp"
 namespace zkgpt::r7::oneblock::model {
 using namespace crypto;
@@ -15,6 +16,7 @@ struct Trust {
  std::vector<neuralNetwork::ParameterRegion> regions;
 };
 Trust loadTrust(const std::string&anchor_path=r6::oneblockAnchorPath,const std::string&manifest_path="reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");
+Trust loadTrust(const R6PublicArtifacts&,const std::string&anchor_path=r6::oneblockAnchorPath,const std::string&manifest_path="reports/R6-BASELINE/R6A/oneblock-model-manifest-v1.txt");
 std::string trustIdentity(const Trust&);
 struct Public {
  std::string version=model::suite,session,trust_id;

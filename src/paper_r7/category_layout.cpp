@@ -12,6 +12,7 @@ void run(std::vector<Piece>&out,std::size_t begin,std::size_t count,Coordinate s
 }
 }
 Layout makeCategoryLayout(const R7Context&c,std::size_t cap){return categoryLayout(c,nativeXSpans(c),cap);}
+Layout makeCategoryLayout(const R7Context&c,const R6PublicArtifacts&artifacts,std::size_t cap){return categoryLayout(c,nativeXSpans(c,artifacts),cap);}
 Layout categoryLayout(const R7Context&c,const std::vector<r1::InputSpan>&xs,std::size_t cap){
  need(cap && cap<=(1u<<24) && !(cap&(cap-1)) && !c.plan.sources.empty(),"category storage cap/sources");
  Layout p;p.category_mode=true;p.native=c.layout_sha256;p.master_actual=c.plan.master.actual;p.x_spans=xs;

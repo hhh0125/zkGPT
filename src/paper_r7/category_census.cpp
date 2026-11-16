@@ -5,7 +5,7 @@ using namespace zkgpt::r7;using namespace oneblock;
 namespace cl=classified;
 std::size_t mapBytes(const cl::Layout&l){std::size_t n=l.base.capacity()*sizeof(cl::Coordinate)+l.base_runs.capacity()*sizeof(cl::Piece);for(const auto&[id,v]:l.views)n+=v.spans.capacity()*sizeof(r1::InputSpan)+v.pieces.capacity()*sizeof(cl::Piece);return n;}
 int main(int argc,char**argv){try{
- r1::init();need(argc==2,"category census blocks");unsigned blocks=std::stoul(argv[1]);R7Context c;cl::Layout old,now;{master3::QuietStdout quiet;c=discover(blocks).context;old=cl::makeLayout(c);now=cl::makeCategoryLayout(c);}std::vector<Fr>x(32768,Fr(0));auto a=cl::singlePlan(old,x),b=cl::singlePlan(now,x);
+ r1::init();need(argc==2,"category census blocks");unsigned blocks=std::stoul(argv[1]);R7Context c;cl::Layout old,now;{master3::QuietStdout quiet;auto artifacts=buildR6PublicArtifacts(blocks);c=discover(*artifacts).context;old=cl::makeLayout(c);now=cl::makeCategoryLayout(c,*artifacts);}std::vector<Fr>x(32768,Fr(0));auto a=cl::singlePlan(old,x),b=cl::singlePlan(now,x);
  std::size_t rootpad=0;for(auto&r:old.roots)rootpad+=r.padded;
  // Verify each storage chunk has an exact interval partition, and native
  // val[0] coordinates have one location. Helper object padding stays stored.

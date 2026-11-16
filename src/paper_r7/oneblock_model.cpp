@@ -22,11 +22,13 @@ G1 modelMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
 }
 }
 Trust loadTrust(const std::string&anchor_path,const std::string&manifest_path){
+ auto artifacts=buildR6PublicArtifacts(1);return loadTrust(*artifacts,anchor_path,manifest_path);
+}
+Trust loadTrust(const R6PublicArtifacts&artifacts,const std::string&anchor_path,const std::string&manifest_path){
  Trust t;t.anchor_hash=anchorPin;t.manifest_hash=manifestPin;
  auto manifest=r1::readFile(manifest_path);need(r5b::digestHex(manifest)==manifestPin,"oneblock model independently pinned manifest mismatch");t.manifest=r6::parseManifest(manifest,1);
- // Derive the original operator anchor spec from a fresh, public native R6
- // circuit and parameter registry. Stage2 fixture bytes are never consulted.
- {Quiet quiet(std::cout);LLM n(1,12,64,768,3072);r6::configure(n);auto graph=n.buildPublicCircuit();t.plan=r2::planModelQueries(graph,n.getWitnessRegistry(),n.parameterRegions(),r1::ExpProfile::LegacyClampOne);r6::auditGraph(graph,n,t.plan);t.regions=n.parameterRegions();r6::validateRegions(t.plan,t.regions);}
+ // The owner was independently constructed by this process and audited once.
+ need(artifacts.plan().shape.layer_count==1,"oneblock model native target");t.plan=artifacts.plan();t.regions=artifacts.network().parameterRegions();
  t.anchor=r6::loadAnchor(anchor_path,anchorPin,manifest_path,t.plan);checkTrust(t);return t;
 }
 std::string trustIdentity(const Trust&t){

@@ -15,6 +15,7 @@ struct Category {std::size_t actual=0,padded=0,logical_offset=0,physical_offset=
 struct Layout {bool category_mode=false;std::array<Category,5>categories{};std::vector<r1::InputSpan>x_spans;std::string native;std::vector<RootSpec>roots;std::vector<Coordinate>base;std::map<std::string,View>views;std::vector<Piece>base_runs;std::size_t master_actual=0;};
 Layout makePartitionedLayout(const R7Context&,std::size_t);
 Layout makeCategoryLayout(const R7Context&,std::size_t cap=1u<<24);
+Layout makeCategoryLayout(const R7Context&,const R6PublicArtifacts&,std::size_t cap=1u<<24);
 // Explicit trusted spans are for adapters/tests. Production derives them from
 // the independently reconstructed native R6 registry via the overload above.
 Layout categoryLayout(const R7Context&,const std::vector<r1::InputSpan>&,std::size_t cap);
