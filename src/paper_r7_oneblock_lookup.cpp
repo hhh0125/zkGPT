@@ -22,15 +22,6 @@ Fr publicMLE(const Value&v,std::size_t n,const std::vector<Fr>&r){auto w=r1::wei
 Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
 std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
 Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&g2,const Fr&t){return g2*a+g*v+c-t;}
-// Fr addition/subtraction use fixed-size field arithmetic without allocation.
-// Restore only after hiddenProduct's callbacks and tree owners are destroyed.
-class AddOneGuard {
- std::vector<Fr>&values_;
- public:explicit AddOneGuard(std::vector<Fr>&values):values_(values){for(auto&x:values_)x+=Fr(1);}
- ~AddOneGuard() noexcept {for(auto&x:values_)x-=Fr(1);}
- AddOneGuard(const AddOneGuard&)=delete;
- AddOneGuard&operator=(const AddOneGuard&)=delete;
-};
 Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover())return {};return [v](std::size_t i){return v->at(i);};}
 void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
 }
@@ -64,6 +55,37 @@ void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const Leaf
  {perf5::Scope t(perf5::Coverage);for(unsigned layer=0;layer<d;++layer)evidence(io,role+"/level/"+std::to_string(layer));
  evidence(io,role+"/root");}
 }
+void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,const std::shared_ptr<std::vector<Fr>>&base,const BatchedLeafAuthenticator&auth,Random*rng,const std::string&role){
+ const auto*b2=std::getenv("ZKGPT_PERF6_B2");perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
+ perf4::Scope native_scope("Native/Product01",role,n);auto batch=role+"/01";
+ perf5::Product profile(batch,n,io.prover());perf5::Scope total(perf5::Total);
+ need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"Product01 domain/authenticator");
+ Writer statement;statement.text("R7-HIDDEN-PRODUCT01-v1");statement.number(n,8);
+ for(auto&h:roots){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}bindPublic(io,batch+"/statement",statement.b);
+ std::array<std::vector<std::shared_ptr<std::vector<Fr>>>,2>tree;
+ if(io.prover()){
+  need(base && base->size()==n,"Product01 base dimension");
+  {perf5::Scope t(perf5::TreeLeaf);auto write=std::make_shared<std::vector<Fr>>(n);for(std::size_t i=0;i<n;++i)write->at(i)=base->at(i)+Fr(1);tree[0].push_back(write);tree[1].push_back(base);}
+  {perf5::Scope t(perf5::TreeParent);for(std::size_t width=n;width>1;width/=2)for(unsigned b=0;b<2;++b){auto next=std::make_shared<std::vector<Fr>>(width/2);for(std::size_t j=0;j<width/2;++j)next->at(j)=tree[b].back()->at(2*j)*tree[b].back()->at(2*j+1);tree[b].push_back(next);}}
+  if(n>1)for(auto&t:tree)t.pop_back();
+ }
+ auto carry=roots;std::vector<Fr>row;auto d=r1::log2exact(n);
+ for(unsigned layer=0;layer<d;++layer){
+  auto width=std::size_t(1)<<layer;auto name=batch+"/level/"+std::to_string(layer);std::vector<Value>f;
+  if(io.prover()){
+   std::shared_ptr<std::vector<Fr>>weights;{perf5::Scope t(perf5::Weights);perf5::weights(width);weights=std::make_shared<std::vector<Fr>>(r1::weights(row));}
+   f.push_back([weights](std::size_t j){return weights->at(j);});
+   for(unsigned b=0;b<2;++b){auto child=tree[b].at(d-layer-1);f.push_back([child](std::size_t j){return child->at(2*j);});f.push_back([child](std::size_t j){return child->at(2*j+1);});}
+  }
+  auto end=batchedProductSumcheck(io,width,carry,f,rng,name+"/sumcheck");
+  need(end[0].point==end[1].point,"Product01 point mismatch");
+  {perf5::Scope t(perf5::Equality);constant(io,end[0].endpoints[0],r1::equality(row,end[0].point),rng,name+"/equality");}
+  {perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");for(unsigned b=0;b<2;++b){auto label=name+"/instance/"+std::to_string(b)+"/carry";carry[b]=combine(io.session(),label,{end[b].endpoints[1],end[b].endpoints[2]},{Fr(1)-r,r});bindPublic(io,label,encode(carry[b].handle));}row=end[0].point;row.insert(row.begin(),r);}
+  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();for(auto&t:tree)t.at(d-layer-1).reset();}
+ }
+ {perf5::Scope t(perf5::LeafAuthentication);auth(io,row,carry,rng,batch+"/leaf");}
+ {perf5::Scope t(perf5::Coverage);for(unsigned b=0;b<2;++b){auto prefix=role+"/"+std::to_string(b);for(unsigned layer=0;layer<d;++layer)evidence(io,prefix+"/level/"+std::to_string(layer));evidence(io,prefix+"/root");}}
+}
 void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vector<Fr>&table,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
  perf4::Scope native_scope("Native/Memory",role,a.padded);
  pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
@@ -80,21 +102,26 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
  // Preserve the root handle/RNG/message order despite computing 0/1 together.
  for(unsigned kind=0;kind<3;++kind){Fr value=kind==0?root0:kind==1?root1:Fr(1);auto size=kind==2?table.size():a.padded;if(io.prover() && kind==2){perf4::Scope prepare("Native/Product2-root-leaves",role,table.size());leaves[kind]=[&table,final,g,g2,tau](std::size_t i){return fingerprint(Fr(i),table[i],final.value(i),g,g2,tau);};for(std::size_t i=0;i<size;++i)value*=leaves[kind](i);}roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),value,rng);}
  Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
- for(unsigned kind=0;kind<3;++kind){LeafAuthenticator auth=[&,kind,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){Hidden c,aa,vv;if(kind==2){c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");}else{
-   // The three MLEs and openings stay sequential and independent. Only this
-   // invocation's challenge-dependent weight vector is shared.
-   std::vector<Fr>weights;if(live.prover())weights=evaluateWeights(q.point);
-   aa=evaluateWithWeights(live,a,q.point,weights,random,name+"/address");
-   vv=evaluateWithWeights(live,v,q.point,weights,random,name+"/value");
-   c=evaluateWithWeights(live,read,q.point,weights,random,name+"/read");
-   Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,aa,vv,c,known(live,name+"/offset",Fr(kind==0?1:0)-tau)},{Fr(1),-g2,-g,Fr(-1),Fr(-1)},random);evidence(live,name+"/address");evidence(live,name+"/value");evidence(live,name+"/read");}};
-  auto product=[&]{if(kind==2)hiddenProduct(io,table.size(),roots[kind],leaves[kind],auth,rng,role+"/product/2",{},false);else hiddenProduct(io,a.padded,roots[kind],{},auth,rng,role+"/product/"+std::to_string(kind),base_leaves,true);};
-  if(kind==0 && io.prover()){
-   std::optional<AddOneGuard>guard;
-   {perf4::Scope shift("Native/Product0-add-one",role,a.padded);guard.emplace(*base_leaves);}
-   product();
-   {perf4::Scope restore("Native/Product0-restore",role,a.padded);guard.reset();}
-  }else product();}
+ BatchedLeafAuthenticator shared_auth=[&](IO&live,const std::vector<Fr>&point,const std::array<Hidden,2>&leaf,Random*random,std::string name){
+  std::vector<Fr>weights;if(live.prover())weights=evaluateWeights(point);
+  auto aa=evaluateWithWeights(live,a,point,weights,random,name+"/address");
+  auto vv=evaluateWithWeights(live,v,point,weights,random,name+"/value");
+  auto c=evaluateWithWeights(live,read,point,weights,random,name+"/read");
+  std::vector<Hidden>w{leaf[0],leaf[1],aa,vv,c,known(live,name+"/write-offset",Fr(1)-tau),known(live,name+"/read-offset",-tau)};
+  Relations relation;relation.role=name+"/fingerprints";for(auto&h:w)relation.handles.push_back(h.handle);
+  relation.linear={{Fr(1),Fr(0),-g2,-g,Fr(-1),Fr(-1),Fr(0)},
+                   {Fr(0),Fr(1),-g2,-g,Fr(-1),Fr(0),Fr(-1)}};
+  sigma(live,relation,live.prover()?&w:nullptr,random);
+  // One authenticated source query supports BOTH original leaf obligations.
+  for(unsigned b=0;b<2;++b)for(const auto*source:{"address","value","read"})evidence(live,role+"/product/"+std::to_string(b)+"/leaf/"+source);
+ };
+ hiddenBatchedProduct(io,a.padded,{roots[0],roots[1]},base_leaves,shared_auth,rng,role+"/product");
+ base_leaves.reset();
+ // Kind 2 retains the original unbatched reduction and final leaf relation.
+ LeafAuthenticator final_auth=[&,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){
+  auto c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");
+ };
+ hiddenProduct(io,table.size(),roots[2],leaves[2],final_auth,rng,role+"/product/2",{},false);
  evidence(io,role+"/multiset");
 }
 void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){

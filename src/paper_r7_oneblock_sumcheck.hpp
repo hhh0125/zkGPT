@@ -25,6 +25,11 @@ std::vector<Fr>productPolynomial(std::size_t,const std::vector<Value>&,const std
 }
 Reduction expressionSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,const Expression&,Random*,const std::string&);
 Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,const ProductInputs* =nullptr,bool allow_specialized=true);
+// Two independent cubic claims with a common equality factor and challenge
+// point. factors=[equality,left0,right0,left1,right1], prover only.
+// Each result has [shared equality, own left, own right] endpoints.
+std::array<Reduction,2> batchedProductSumcheck(IO&,std::size_t,const std::array<Hidden,2>&,
+ const std::vector<Value>&,Random*,const std::string&);
 Hidden publicHidden(IO&,const std::string&,const Fr&);
 Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
 void equalHidden(IO&,const Hidden&,const Fr&,Random*,const std::string&);

@@ -128,6 +128,33 @@ target_compile_definitions(r7_fs_full12_verifier PRIVATE R7_CLASSIFIED_V2=1 R7_F
 # Preserve the existing R7 treatment of shared production headers.
 target_include_directories(paper_r7 SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+option(ZKGPT_KIND01_TESTS "Build focused Product01 protocol tests" OFF)
+if(ZKGPT_KIND01_TESTS)
+ add_executable(r7_kind01_tests paper_r7_kind01_tests.cpp)
+ target_link_libraries(r7_kind01_tests PRIVATE paper_r7)
+ target_compile_options(r7_kind01_tests PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_kind01_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_kind01_shared COMMAND r7_kind01_tests shared 8 5)
+ add_test(NAME r7_kind01_negative COMMAND r7_kind01_tests negative 8 5)
+ add_test(NAME r7_kind01_length1 COMMAND r7_kind01_tests shared 1 1)
+ add_test(NAME r7_kind01_length2 COMMAND r7_kind01_tests shared 2 1)
+ add_test(NAME r7_kind01_length4 COMMAND r7_kind01_tests shared 4 3)
+ add_test(NAME r7_kind01_length16 COMMAND r7_kind01_tests shared 16 9)
+ add_test(NAME r7_kind01_range_integration COMMAND r7_kind01_tests range 8 5)
+ add_test(NAME r7_kind01_exp_integration COMMAND r7_kind01_tests exp 4 3)
+ # Optional archived two-file baseline, with the identical benchmark harness.
+ # Never used by production targets or selected at protocol runtime.
+ if(ZKGPT_KIND01_REFERENCE_DIR)
+  add_executable(r7_kind01_reference_tests paper_r7_kind01_tests.cpp
+   ${ZKGPT_KIND01_REFERENCE_DIR}/paper_r7_oneblock_lookup.cpp
+   ${ZKGPT_KIND01_REFERENCE_DIR}/paper_r7_oneblock_sumcheck.cpp)
+  target_compile_definitions(r7_kind01_reference_tests PRIVATE KIND01_REFERENCE=1)
+  target_compile_options(r7_kind01_reference_tests PRIVATE -ffunction-sections -fdata-sections)
+  target_link_options(r7_kind01_reference_tests PRIVATE -Wl,--gc-sections)
+  target_link_libraries(r7_kind01_reference_tests PRIVATE paper_r7)
+ endif()
+endif()
+
 # Keep only code reachable from the supported Full12 entry points.
 foreach(lib gpt_lib paper_r1 paper_r2 paper_r7)
  target_compile_options(${lib} PRIVATE -ffunction-sections -fdata-sections)

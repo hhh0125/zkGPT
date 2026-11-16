@@ -105,4 +105,41 @@ Reduction productSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::ve
  bool candidate=allow_specialized && (a2?std::string(a2)=="1":reference && std::string(reference)=="0");
  return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,inputs,true);
 }
+std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role){
+ need(n && n<=(1u<<24) && !(n&(n-1)),"Product01 sumcheck domain");
+ Writer statement;statement.text("R7-PRODUCT01-SHARED-CHALLENGE-v1");statement.number(n,8);
+ for(const auto&h:initial){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}
+ bindPublic(io,role+"/statement",statement.b);
+ if(io.prover())need(factors.size()==5 && rng,"Product01 witness shape");
+ std::array<Hidden,2>previous=initial;std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;
+ auto current=n;unsigned round=0;
+ while(current>1){
+  auto name=role+"/round/"+std::to_string(round);std::array<std::vector<Fr>,2>coeff{std::vector<Fr>(4,Fr(0)),std::vector<Fr>(4,Fr(0))};
+  if(io.prover()){
+   perf5::Scope t(perf5::Polynomial);
+   for(std::size_t j=0;j<current/2;++j){
+    std::array<Fr,5>a,d;for(unsigned k=0;k<5;++k){a[k]=round?folded[k][2*j]:factors[k](2*j);d[k]=(round?folded[k][2*j+1]:factors[k](2*j+1))-a[k];}
+    for(unsigned b=0;b<2;++b){auto l=1+2*b,r=l+1;auto c0=a[0]*a[l],c1=a[0]*d[l]+d[0]*a[l],c2=d[0]*d[l];auto&c=coeff[b];c[0]+=c0*a[r];c[1]+=c0*d[r]+c1*a[r];c[2]+=c1*d[r]+c2*a[r];c[3]+=c2*d[r];}
+   }
+  }
+  // Fix BOTH polynomials before ANY challenge depending on this round.
+  std::array<std::vector<Hidden>,2>messages;
+  {perf5::Scope t(perf5::Messages);for(unsigned b=0;b<2;++b){auto&h=messages[b];h.push_back(previous[b]);for(unsigned k=0;k<4;++k)h.push_back(exchangeHidden(io,name+"/instance/"+std::to_string(b)+"/c/"+std::to_string(k),coeff[b][k],rng));}
+   // Independent recurrence checks: no cancellation between product claims.
+   for(unsigned b=0;b<2;++b){auto&h=messages[b];Relations r;r.role=name+"/instance/"+std::to_string(b)+"/recurrence";for(auto&x:h)r.handles.push_back(x.handle);r.linear={{Fr(-1),Fr(2),Fr(1),Fr(1),Fr(1)}};sigma(io,r,io.prover()?&h:nullptr,rng);}}
+  Fr challenge;{perf5::Scope t(perf5::Challenge);challenge=io.coin(name+"/r");point.push_back(challenge);std::vector<Fr>powers{Fr(1),challenge,challenge*challenge,challenge*challenge*challenge};for(unsigned b=0;b<2;++b){std::vector<Hidden>polynomial(messages[b].begin()+1,messages[b].end());auto label=name+"/instance/"+std::to_string(b)+"/derived";previous[b]=combine(io.session(),label,polynomial,powers);bindPublic(io,label,encode(previous[b].handle));}}
+  {perf5::Scope t(perf5::Fold);if(io.prover())for(unsigned k=0;k<5;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
+  current/=2;++round;
+ }
+ perf5::Scope t(perf5::Endpoint);std::vector<Hidden>ends;
+ for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));
+ // Four individually checked multiplication equations certify both terminals.
+ // Sharing equality saves one endpoint; no scalar batch of product equations.
+ std::vector<Hidden>w=ends;
+ for(unsigned b=0;b<2;++b)w.push_back(exchangeHidden(io,role+"/terminal/product/"+std::to_string(b),io.prover()?ends[1+2*b].value*ends[2+2*b].value:Fr(0),rng));
+ w.push_back(previous[0]);w.push_back(previous[1]);Relations terminal;terminal.role=role+"/terminal";
+ for(auto&h:w)terminal.handles.push_back(h.handle);
+ terminal.products={{1,2,5},{0,5,7},{3,4,6},{0,6,8}};sigma(io,terminal,io.prover()?&w:nullptr,rng);
+ return {Reduction{initial[0],{ends[0],ends[1],ends[2]},point},Reduction{initial[1],{ends[0],ends[3],ends[4]},point}};
+}
 }
