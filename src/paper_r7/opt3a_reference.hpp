@@ -47,7 +47,7 @@ inline std::vector<Fr>kernel(std::size_t k,const std::vector<Fr>&lambda,const st
   else{MapHash digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots[k].spec.actual,"reference kernel bounds");result[l.coordinate.index]+=lambda[i]*w.at(j);}}need(digest.finish()==c.map_digest,"reference changed map");}
  }return result;
 }
-inline std::vector<Fr>partialDot(const std::vector<Fr>&lambda,const std::vector<Root>&roots,const std::vector<Claim>&claims,const Authentication&auth){
+inline std::vector<Fr>kernelDotChecksum(const std::vector<Fr>&lambda,const std::vector<Root>&roots,const std::vector<Claim>&claims,const Authentication&auth){
  std::vector<Fr>values(roots.size(),Fr(0));
  for(std::size_t i=0;i<claims.size();++i){auto&c=claims[i];auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point);auto&w=p.weights?*p.weights:*scratch;
   if(p.frozen){for(auto&run:p.runs)for(std::size_t j=0;j<run.count;++j)values[run.first.root]+=lambda[i]*w.at(run.begin+j)*roots[run.first.root].value(run.first.index+j);}

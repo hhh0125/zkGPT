@@ -11,7 +11,7 @@ int main(){try{
   Access::Auth a(claims.size());ref::Authentication b(claims.size(),false);
   for(std::size_t i=0;i<claims.size();++i)need(Access::prepare(c,a,i)==ref::prepare(claims[i],roots,b,i),"PERF3 affine bias mismatch");
   std::vector<Fr>rho{Fr(0),Fr(1),Fr(-1),Fr(7)};
-  need(Access::dots(c,rho,a)==ref::partialDot(rho,roots,claims,b),"PERF3 partial mismatch");
+  need(Access::dots(c,rho,a)==ref::kernelDotChecksum(rho,roots,claims,b),"PERF3 partial mismatch");
   for(std::size_t k=0;k<roots.size();++k)need(Access::kernel(c,k,rho,a)==ref::kernel(k,rho,roots,claims,b),"PERF3 coordinate/weight/kernel mismatch");
   auto good=claims[0].map;claims[0].map=[good](std::size_t j){auto l=good(j);if(j==511)l.bias+=Fr(1);return l;};bool rejected=false;
   try{Access::Auth bad(claims.size());Access::prepare(c,bad,0);}catch(const std::exception&){rejected=true;}need(rejected,"PERF3 changed bias accepted");claims[0].map=good;

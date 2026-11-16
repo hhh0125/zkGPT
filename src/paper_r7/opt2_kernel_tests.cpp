@@ -18,14 +18,13 @@ struct AuthenticationTestAccess {
   if(optimized)for(unsigned i=0;i<c.claims_.size();++i)bias+=lambda[i]*c.prepareClaim(c.claims_[i],prepared,i);
   else for(unsigned i=0;i<c.claims_.size();++i){auto&a=c.claims_[i];need(c.mapDigest(a)==a.map_digest,"reference barrier map");if(a.only_root<0){auto w=r1::weights(a.point);for(std::size_t j=0;j<a.padded;++j)bias+=lambda[i]*w[j]*a.map(j).bias;}}
   std::vector<Fr>dots(c.roots_.size(),Fr(0));
-  if(optimized)dots=c.partialDot(lambda,prepared);
-  else for(unsigned k=0;k<6;++k){auto kernel=c.kernel(k,lambda);for(std::size_t j=0;j<kernel.size();++j)dots[k]+=kernel[j]*c.roots_[k].value(j);}
+  for(unsigned k=0;k<6;++k){auto kernel=optimized?c.kernel(k,lambda,prepared):c.kernel(k,lambda);for(std::size_t j=0;j<kernel.size();++j)dots[k]+=kernel[j]*c.roots_[k].value(j);}
   for(unsigned k=0;k<6;++k){auto got=optimized?c.kernel(k,lambda,prepared):c.kernel(k,lambda);if(!bench){auto ref=c.kernel(k,lambda);need(got==ref,"optimized/reference kernel mismatch");std::vector<Fr>want(got.size(),Fr(0));for(unsigned i=0;i<c.claims_.size();++i){auto&a=c.claims_[i];auto w=r1::weights(a.point);for(std::size_t j=0;j<a.padded;++j){auto l=a.map(j);if(!l.constant && l.coordinate.root==k)want[l.coordinate.index]+=lambda[i]*w[j];}}need(want==got,"kernel dense reference mismatch");Fr dot=0;for(std::size_t j=0;j<got.size();++j)dot+=got[j]*c.roots_[k].value(j);need(dot==dots[k],"partial-dot reference mismatch");}checksum+=got[0]+dots[k];}
   // A validated snapshot is independent of later mutations of callbacks.
   if(!bench && optimized){
    Commitments::Authentication uncached(c.claims_.size());uncached.map_bytes=Commitments::Authentication::map_limit;uncached.weight_bytes=Commitments::Authentication::weight_limit;
    for(unsigned i=0;i<c.claims_.size();++i){c.prepareClaim(c.claims_[i],uncached,i);need(!uncached.claims[i].frozen && !uncached.claims[i].weights,"budget fallback retained cache");}
-   for(unsigned k=0;k<6;++k)need(c.kernel(k,lambda,prepared)==c.kernel(k,lambda,uncached),"budget fallback kernel mismatch");need(c.partialDot(lambda,uncached)==dots,"budget fallback dot mismatch");
+   for(unsigned k=0;k<6;++k)need(c.kernel(k,lambda,prepared)==c.kernel(k,lambda,uncached),"budget fallback kernel mismatch");
    Commitments::Authentication tight(c.claims_.size());tight.map_bytes=Commitments::Authentication::map_limit-2*sizeof(Commitments::Authentication::Run);c.prepareClaim(c.claims_[24],tight,24);need(!tight.claims[24].frozen && tight.claims[24].runs.empty(),"fragmented map exceeded cache bound");
    auto good=c.kernel(0,lambda,prepared);c.claims_[0].map=[](std::size_t)->Located{throw std::runtime_error("callback must not be reused after freeze");};need(good==c.kernel(0,lambda,prepared),"snapshot retained mutable callback");
    need(prepared.map_bytes<=Commitments::Authentication::map_limit && prepared.weight_bytes<=Commitments::Authentication::weight_limit,"cache budget exceeded");

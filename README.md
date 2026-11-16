@@ -1,50 +1,25 @@
-# zkGPT
+# zkGPT R7: Single Hyrax + Unified Input + Fiat-Shamir
 
-## Introduction
+Windows editing workspace: `C:/Users/tanyt/Desktop/program/zkGPT-R7-dev`.
+Linux build/run workspace: `/home/yttan/project/zkGPT/zkGPT-main/zkGPT-work` on `4090_sub2api`.
 
-This is the implementation of zkGPT, which is a SNARK for LLM inference. 
-This project partially references code from the work of zkCNN and Lasso.
-**Current implementation only supports GPT-2.** 
+The supported complete FS entries are:
 
+- `r7_fs_oneblock_prover` and `r7_fs_oneblock_verifier`
+- `r7_fs_full12_prover` and `r7_fs_full12_verifier`
 
-## Requirement
-### Software Requirement
-- C++14
-- cmake >= 3.10
-- GMP library
+All four require `R7_CLASSIFIED_V2`, `R7_FS_ONEBLOCK`, `R7_UNIFIED_INPUT1`, and `R7_SINGLE_HYRAX`. Full12 adds `R7_FS_FULL12`; verifiers add `R7_COMPLETE_VERIFIER`.
 
-### Recommended Server Configuration
-To ensure smooth execution, we recommend using a server with the following specifications:
-- Operating System (OS): Linux (e.g., Ubuntu 18.04 or later)
-- Processor (CPU): Multi-core CPU, preferably with 16 cores or more
-- Memory (RAM): at least 200GB
+The controller fixes source-opening handles, calls `authenticateUnifiedInput(s.x)`, and verifies all coverage relations. The production route is Category Input -> Unified Sumcheck -> one Single Hyrax global opening -> Hyrax A.3. The old authentication barrier, Oneblock V1, multi-root production variants and obsolete classified/FS probes are retired.
 
+Configure and build in the fixed Linux workspace:
 
-## Experiment Script
-### Clone the repo
-To run the code, make sure you clone with
-``` bash
-git clone --recurse-submodules git@github.com:security-Anonymous/zkGPT.git
-```
-since the mcl library is included as a submodule.
-
-### Install GMP Library
-```
-sudo apt install libgmp-dev
+```sh
+cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release -DZKGPT_BUILD_R7_FRAMEWORK=ON -DCNPY_INCLUDE_DIR="$PWD/deps/cnpy/include" -DCNPY_LIBRARY="$PWD/deps/cnpy/lib/libcnpy.a"
+cmake --build build/release -j8
+ctest --test-dir build/release --output-on-failure -j2
 ```
 
-### Run a demo of proving LLM inference
-The script to run LLM inference proving.
-``` bash
-./llm.sh
-```
-### Performance Notes
-The circuit initiation phase may take minutes because brute-forcely computing plaintext matrix multiplication using CPU single thread. We will optimize this part in future. Note this part will not become bottleneck in real world, due to it can be computed extremely efficiently on GPU.
+The FS executables retain `prove|verify PROOF_PATH CONTEXT` and independent public-statement/coverage file descriptors. Existing model data, parameter identity, proof format and transcript are retained. Component research targets have distinct bounded testing roles; they are not alternative complete production suites. The existing `BLOCKED_CRYPTOGRAPHIC_DESIGN` / `may_enter_stage2=false` gate is unchanged.
 
-## Reference
-- [zkCNN: Zero knowledge proofs for convolutional neural network predictions and accuracy](https://doi.org/10.1145/3460120.3485379).
-
-- [Unlocking the lookup singularity with Lasso](https://eprint.iacr.org/2023/1216)
-
-- [mcl](https://github.com/herumi/mcl)
-
+Cleanup specification, complete Windows process evidence and validation commands are under `reports/R7-LEGACY-CLEANUP-20261116-v1/`. The final report records exact outcomes, including any pre-existing regression failures. Historical launchers and original source bytes are retained there instead of remaining active tools. Earlier stage documents are historical evidence.

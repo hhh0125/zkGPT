@@ -34,7 +34,7 @@ struct Engine {
 
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
- std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
+ std::vector<Fr>kernelDotChecksum(const std::vector<Fr>&,const Authentication&)const;
 };
 Engine::Weights::Weights(const std::vector<Fr>&q,AuthMetrics*m):split_(q.size()/2){auto t=processCPU();a_=r1::weights({q.begin(),q.begin()+split_});b_=r1::weights({q.begin()+split_,q.end()});if(m){++m->weights;m->weight_terms+=a_.size()+b_.size();m->weights_cpu+=processCPU()-t;}}
 std::size_t Engine::Weights::bytes()const{return (a_.capacity()+b_.capacity())*sizeof(Fr);}
@@ -86,7 +86,7 @@ std::vector<Fr>Engine::kernel(std::size_t k,const std::vector<Fr>&lambda,const A
  if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"coordinates\":"<<visited<<",\"matched_coordinates\":"<<matched<<",\"fallback_map_queries\":"<<fallback<<",\"Fr_multiplications\":"<<multiplies<<",\"Fr_additions\":"<<matched<<",\"wall_seconds\":"<<seconds<<",\"cpu_seconds\":"<<cpu<<"}\n";
  return result;
 }
-std::vector<Fr>Engine::partialDot(const std::vector<Fr>&lambda,const Authentication&auth)const{
+std::vector<Fr>Engine::kernelDotChecksum(const std::vector<Fr>&lambda,const Authentication&auth)const{
  auto started=processCPU();auto wall=Clock::now();crypto::AllocationTrace allocation;std::vector<Fr>values(roots_.size(),Fr(0));std::uint64_t visited=0,matched=0,multiplies=0,fallback=0;
  for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);auto&w=p.weights?*p.weights:*scratch;
   if(p.frozen){for(auto&run:p.runs){std::int64_t at=run.first.index;

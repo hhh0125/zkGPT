@@ -1,7 +1,5 @@
 // Reuse only the existing small real commitment fixture and tape transport.
-#define main classified_fixture_main
-#include "classified_crypto_tests.cpp"
-#undef main
+#include "commitment_test_fixture.hpp"
 #include "unified_input.hpp"
 #include "interactive.hpp"
 #include <sys/socket.h>
@@ -149,7 +147,7 @@ void exhaustedProtocolTest(){
 }
 void interactiveReady(){
  int sockets[2];need(socketpair(AF_UNIX,SOCK_STREAM,0,sockets)==0,"unified READY socketpair");char name[]="build/protocol1-ready-XXXXXX";int audit=mkstemp(name);need(audit>2,"unified READY audit file");auto child=fork();need(child>=0,"unified READY fork");
- if(!child){close(sockets[0]);dup2(sockets[1],0);dup2(sockets[1],1);close(sockets[1]);try{PipeIO io(false,"unified-ready","","R7-CLASSIFIED-PROTOCOL1-INDEPENDENT-REGIONS-INTERACTIVE-v2",PipeIO::Profile::ClassifiedV2,audit);_exit(0);}catch(const std::exception&e){std::cerr<<e.what()<<'\n';_exit(2);}}
+ if(!child){close(sockets[0]);dup2(sockets[1],0);dup2(sockets[1],1);close(sockets[1]);try{PipeIO io(false,"unified-ready","","R7-CLASSIFIED-PROTOCOL1-INDEPENDENT-REGIONS-INTERACTIVE-v2",PipeIO::Profile::UnifiedInputTest,audit);_exit(0);}catch(const std::exception&e){std::cerr<<e.what()<<'\n';_exit(2);}}
  close(sockets[1]);Bytes frame;std::array<unsigned char,4096>buffer;for(;;){auto n=read(sockets[0],buffer.data(),buffer.size());if(n<0 && errno==EINTR)continue;need(n>=0,"unified READY read");if(!n)break;frame.insert(frame.end(),buffer.begin(),buffer.begin()+n);}close(sockets[0]);int status=0;need(waitpid(child,&status,0)==child,"unified READY wait");close(audit);need(WIFEXITED(status) && WEXITSTATUS(status)==0 && frame.size()>4,"new unified interactive READY rejected");
  Bytes header(frame.begin(),frame.begin()+4);Reader length{header};need(length.number()==frame.size()-4,"unified READY frame length");auto record=R7Wire::decodeLocalRecord(Bytes(frame.begin()+4,frame.end()));std::string expected="R7-CLASSIFIED-PROTOCOL1-INDEPENDENT-REGIONS-INTERACTIVE-v2";need(record.label=="READY/unified-ready" && record.payload==Bytes(expected.begin(),expected.end()),"unified READY suite was downgraded");std::cout<<"UNIFIED_INTERACTIVE_READY_TESTED audit="<<name<<'\n';
 }

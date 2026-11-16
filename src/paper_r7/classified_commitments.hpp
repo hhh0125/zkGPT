@@ -55,7 +55,6 @@ class Commitments {
  bool usesBaseCoordinates(const Claim&)const;
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
- std::vector<Fr>partialDot(const std::vector<Fr>&,const Authentication&)const;
  std::optional<Fr>categoryKernelEndpoint(const std::vector<Fr>&,const std::vector<Fr>&,const Authentication&,bool require_profitable=true)const;
  Fr kernelEndpoint(std::size_t,const std::vector<Fr>&,const Authentication&,const std::vector<Fr>&)const;
  IO&io_;const Layout&layout_;std::string identity_,session_;Random*rng_;std::vector<Root>roots_;std::vector<Claim>claims_;std::set<std::string>names_;bool sealed_=false,tails_constrained_=false,authenticated_=false;
@@ -84,9 +83,6 @@ class Commitments {
  VectorOracle view(const std::string&);
  void defer(Claim);
  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);
- // Legacy OPT3-B barrier, retained for explicit reference/unit/probe targets.
- // Current complete Oneblock/Full12 entrypoints use the unified path below.
- void authenticate();
  // Protocol1(6),(7) candidate; real Oneblock replacement gate passed.
  void authenticateUnifiedInput(const std::vector<Fr>&public_x);
  bool authenticated()const{return authenticated_;}

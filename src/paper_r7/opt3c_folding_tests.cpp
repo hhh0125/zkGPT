@@ -1,6 +1,4 @@
-#define main classified_fixture_main
-#include "classified_crypto_tests.cpp"
-#undef main
+#include "commitment_test_fixture.hpp"
 #include "unified_input.hpp"
 #include "public_k.hpp"
 #include "fs_io.hpp"

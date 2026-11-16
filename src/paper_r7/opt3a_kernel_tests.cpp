@@ -16,7 +16,7 @@ struct AuthenticationTestAccess {
  static Fr prepare(Commitments&c,Auth&a,std::size_t i){return c.prepareClaim(c.claims_[i],a,i);}
  static auto kernel(Commitments&c,std::size_t k,const std::vector<Fr>&l,const Auth&a){return c.kernel(k,l,a);}
  static Fr endpoint(Commitments&c,std::size_t k,const std::vector<Fr>&l,const Auth&a,const std::vector<Fr>&p){return c.kernelEndpoint(k,l,a,p);}
- static auto dots(Commitments&c,const std::vector<Fr>&l,const Auth&a){return c.partialDot(l,a);}
+ static auto dots(Commitments&c,const std::vector<Fr>&l,const Auth&a){std::vector<Fr>out(c.roots_.size(),Fr(0));for(std::size_t k=0;k<out.size();++k){auto K=c.kernel(k,l,a);for(std::size_t j=0;j<K.size();++j)out[k]+=K[j]*c.roots_[k].value(j);}return out;}
  static void digest(Commitments&c){for(auto&a:c.claims_)a.map_digest=c.mapDigest(a);}
  static auto&metrics(Commitments&c){return c.auth_metrics_;}
 };
@@ -53,7 +53,7 @@ void contract(){Fixture f;f.setup(1024,6,1);Access::Auth a(4);a.map_bytes=a.map_
 void equivalence(std::size_t n,unsigned pattern,unsigned values){
  Fixture f;f.setup(n,6,pattern,values);auto&c=*f.pcs;auto&claims=Access::claims(c);auto&roots=Access::roots(c);Access::Auth a(claims.size());ref::Authentication b(claims.size(),false);std::vector<Fr>lambda;Fr bias=0,expectedBias=0;
  for(std::size_t i=0;i<claims.size();++i){auto l=values==4?Fr(0):values==5?Fr(i==1):f.rng.scalar();lambda.push_back(l);bias+=l*Access::prepare(c,a,i);expectedBias+=l*ref::prepare(claims[i],roots,b,i);}need(bias==expectedBias,"OPT3A affine bias mismatch");
- auto gotDot=Access::dots(c,lambda,a);auto refDot=ref::partialDot(lambda,roots,claims,b);need(gotDot==refDot,"OPT3A partialDot mismatch");Fr aggregate=bias,referenceAggregate=expectedBias;
+ auto gotDot=Access::dots(c,lambda,a);auto refDot=ref::kernelDotChecksum(lambda,roots,claims,b);need(gotDot==refDot,"OPT3A kernelDotChecksum mismatch");Fr aggregate=bias,referenceAggregate=expectedBias;
  for(std::size_t k=0;k<roots.size();++k){auto got=Access::kernel(c,k,lambda,a);auto expected=ref::kernel(k,lambda,roots,claims,b);need(got==expected,"OPT3A elementwise kernel mismatch");Fr dot=0;for(std::size_t j=0;j<got.size();++j)dot+=got[j]*roots[k].value(j);need(dot==gotDot[k],"OPT3A kernel/dot relation mismatch");aggregate+=gotDot[k];referenceAggregate+=refDot[k];
   if(n<=16384){std::vector<Fr>dense(n,Fr(0));for(std::size_t i=0;i<claims.size();++i){auto w=r1::weights(claims[i].point);for(std::size_t j=0;j<n;++j){auto l=claims[i].map(j);if(!l.constant && l.coordinate.root==k)dense[l.coordinate.index]+=lambda[i]*w[j];}}need(got==dense,"OPT3A independent dense Fr mismatch");}
  }need(aggregate==referenceAggregate,"OPT3A aggregate authentication claim mismatch");
@@ -66,18 +66,18 @@ void edgeCases(){
   auto&claims=Access::claims(*f.pcs);claims.clear();Claim c;c.id="edge";c.padded=n;for(unsigned i=0;i<r1::log2exact(n);++i)c.point.push_back(Fr(query==2?i%2:query));
   c.map=[n,mapping](std::size_t j)->Located{if(mapping==0)return {{},Fr(7),true};if(mapping==1 && j+1==n)return {{},Fr(0),true};return {{std::uint32_t(j%2),std::uint32_t(mapping==3?n-1-j:j)},Fr(mapping==2?-3:0),false};};claims.push_back(std::move(c));Access::digest(*f.pcs);
   Access::Auth a(1);ref::Authentication b(1,false);need(Access::prepare(*f.pcs,a,0)==ref::prepare(claims[0],roots,b,0),"edge affine bias");
-  for(Fr lambda:{Fr(0),Fr(1),Fr(-1)}){std::vector<Fr>l{lambda};need(Access::dots(*f.pcs,l,a)==ref::partialDot(l,roots,claims,b),"edge partialDot");for(std::size_t k=0;k<2;++k)need(Access::kernel(*f.pcs,k,l,a)==ref::kernel(k,l,roots,claims,b),"edge kernel");}
+  for(Fr lambda:{Fr(0),Fr(1),Fr(-1)}){std::vector<Fr>l{lambda};need(Access::dots(*f.pcs,l,a)==ref::kernelDotChecksum(l,roots,claims,b),"edge kernelDotChecksum");for(std::size_t k=0;k<2;++k)need(Access::kernel(*f.pcs,k,l,a)==ref::kernel(k,l,roots,claims,b),"edge kernel");}
  }
  // Public maximum supported coordinate deltas, without allocating a huge root.
- for(bool reverse:{false,true}){Fixture f;auto&roots=Access::roots(*f.pcs);roots[0].spec.actual=roots[0].spec.padded=r1::kMaxVector;roots[0].value=[](std::size_t j){return Fr(j+1);};auto&claims=Access::claims(*f.pcs);claims.clear();Claim c;c.id="large-stride";c.padded=2;c.point={Fr(1)};c.map=[reverse](std::size_t j)->Located{return {{0,std::uint32_t((j!=std::size_t(reverse))?r1::kMaxVector-1:0)},Fr(0),false};};claims.push_back(std::move(c));Access::digest(*f.pcs);Access::Auth a(1);ref::Authentication b(1,false);Access::prepare(*f.pcs,a,0);ref::prepare(claims[0],roots,b,0);need(Access::dots(*f.pcs,{Fr(1)},a)==ref::partialDot({Fr(1)},roots,claims,b),"large signed stride partialDot");}
+ for(bool reverse:{false,true}){Fixture f;auto&roots=Access::roots(*f.pcs);roots[0].spec.actual=roots[0].spec.padded=r1::kMaxVector;roots[0].value=[](std::size_t j){return Fr(j+1);};auto&claims=Access::claims(*f.pcs);claims.clear();Claim c;c.id="large-stride";c.padded=2;c.point={Fr(1)};c.map=[reverse](std::size_t j)->Located{return {{0,std::uint32_t((j!=std::size_t(reverse))?r1::kMaxVector-1:0)},Fr(0),false};};claims.push_back(std::move(c));Access::digest(*f.pcs);Access::Auth a(1);ref::Authentication b(1,false);Access::prepare(*f.pcs,a,0);ref::prepare(claims[0],roots,b,0);std::vector<std::uint32_t>mapped(2);a.claims[0].forRoot(0,a.store,[&](const mapping::Run&run){for(std::size_t j=0;j<run.count;++j)mapped.at(run.begin+j*run.logical_step)=std::uint32_t(std::int64_t(run.first.index)+std::int64_t(j)*run.stride);});for(unsigned j=0;j<2;++j)need(mapped[j]==claims[0].map(j).coordinate.index,"maximum signed stride prepared coordinate");}
  std::cout<<"OPT3A_EDGE_CASES_PASS padded=1,2,4,8 query=0,1,mixed lambda=0,1,-1 constant-and-singleton-map max-supported-signed-stride\n";
 }
 void transcript(const char*path){
  Layout l;l.native=std::string(64,'a');l.roots={{"C_aux",5,8,true,false},{"helper",8,8,false,false}};for(unsigned j=0;j<5;++j)l.base.push_back({0,j});View v;v.id="helper/view";v.actual=5;v.padded=8;v.start={1,0};v.kind=ObjectKind::ExpHelper;l.views.emplace(v.id,v);
  std::vector<Fr>values{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11),Fr(13),Fr(17),Fr(19)};
  Prepared data;data[v.id]=std::make_shared<std::vector<Fr>>(values);FixedRandom rng(713);Tape p;Commitments pcs(p,l,[](std::size_t j){return Fr(j+1);},&data,&rng);pcs.constrainBaseTails();auto view=pcs.view(v.id);std::vector<Fr>q{Fr(3),Fr(5),Fr(7)};auto h=exchangeHidden(p,"fixture/value",r1::mle(values,q),&rng);
- view.open(p,{q,h.handle},&h,&rng,"fixture/view");pcs.authenticate();
- Tape rx;rx.p=false;rx.data=p.data;Commitments verifier(rx,l,{},nullptr,nullptr);verifier.constrainBaseTails();auto vv=verifier.view(v.id);auto vh=exchangeHidden(rx,"fixture/value",Fr(0),nullptr);vv.open(rx,{q,vh.handle},nullptr,nullptr,"fixture/view");verifier.authenticate();
+ view.open(p,{q,h.handle},&h,&rng,"fixture/view");pcs.authenticateUnifiedInput({Fr(11)});
+ Tape rx;rx.p=false;rx.data=p.data;Commitments verifier(rx,l,{},nullptr,nullptr);verifier.constrainBaseTails();auto vv=verifier.view(v.id);auto vh=exchangeHidden(rx,"fixture/value",Fr(0),nullptr);vv.open(rx,{q,vh.handle},nullptr,nullptr,"fixture/view");verifier.authenticateUnifiedInput({Fr(11)});
  need(rx.cursor==rx.data.size() && rx.prefix()==p.prefix(),"OPT3A transcript replay/EOF");Writer out;for(auto&m:p.data){out.text(m.first);out.number(m.second.size(),8);out.raw(m.second);}auto digest=p.prefix();out.raw(Bytes(digest.begin(),digest.end()));
  std::ifstream existing(path,std::ios::binary);need(!existing.good(),"OPT3A transcript output exists");std::ofstream file(path,std::ios::binary);file.write(reinterpret_cast<const char*>(out.b.data()),out.b.size());need(bool(file),"OPT3A transcript write");std::cout<<"OPT3A_TRANSCRIPT_PASS messages="<<p.data.size()<<" bytes="<<out.b.size()<<"\n";
 }
@@ -92,7 +92,7 @@ void benchmark(Fixture&f,const std::string&name,std::size_t n){
  Measurement oldMap,newMap,oldKernel,newKernel,oldPartial,newPartial;Fr oldBias=0,newBias=0;
  oldMap.measure([&]{for(std::size_t i=0;i<claims.size();++i)oldBias+=lambda[i]*ref::prepare(claims[i],roots,b,i);},f.map_queries,f.rowmajor_queries);
  newMap.measure([&]{for(std::size_t i=0;i<claims.size();++i)newBias+=lambda[i]*Access::prepare(c,a,i);},f.map_queries,f.rowmajor_queries);need(oldBias==newBias,"benchmark bias mismatch");
- std::vector<Fr>oldDot,newDot;oldPartial.measure([&]{oldDot=ref::partialDot(lambda,roots,claims,b);},f.map_queries,f.rowmajor_queries);newPartial.measure([&]{newDot=Access::dots(c,lambda,a);},f.map_queries,f.rowmajor_queries);need(oldDot==newDot,"benchmark dot mismatch");
+ std::vector<Fr>oldDot,newDot;oldPartial.measure([&]{oldDot=ref::kernelDotChecksum(lambda,roots,claims,b);},f.map_queries,f.rowmajor_queries);newPartial.measure([&]{newDot=Access::dots(c,lambda,a);},f.map_queries,f.rowmajor_queries);need(oldDot==newDot,"benchmark dot mismatch");
  for(std::size_t k=0;k<roots.size();++k){std::vector<Fr>oldK,newK;
   // Alternate order across roots to reduce systematic warm-up/order bias.
   auto oldCall=[&]{oldKernel.measure([&]{oldK=ref::kernel(k,lambda,roots,claims,b);},f.map_queries,f.rowmajor_queries);};auto newCall=[&]{newKernel.measure([&]{newK=Access::kernel(c,k,lambda,a);},f.map_queries,f.rowmajor_queries);};if(k%2){newCall();oldCall();}else{oldCall();newCall();}
@@ -100,7 +100,7 @@ void benchmark(Fixture&f,const std::string&name,std::size_t n){
  }
  struct rusage usage{};getrusage(RUSAGE_SELF,&usage);std::size_t oldFrozen=0,newFrozen=0;for(auto&p:b.claims)oldFrozen+=p.frozen;for(auto&p:a.claims)newFrozen+=p.frozen;auto&m=Access::metrics(c);
  std::cout<<std::setprecision(12)<<"OPT3A_BENCH {\"fixture\":\""<<name<<"\",\"n\":"<<n<<",\"roots\":"<<roots.size()<<",\"claims\":"<<claims.size()<<",\"old_mapping\":";oldMap.json();std::cout<<",\"new_mapping\":";newMap.json();std::cout<<",\"old_kernel\":";oldKernel.json();std::cout<<",\"new_kernel\":";newKernel.json();std::cout<<",\"old_partial\":";oldPartial.json();std::cout<<",\"new_partial\":";newPartial.json();
- std::cout<<",\"old_frozen\":"<<oldFrozen<<",\"new_frozen\":"<<newFrozen<<",\"old_map_cache_bytes\":"<<b.map_bytes<<",\"new_map_cache_bytes\":"<<a.map_bytes<<",\"weight_cache_bytes\":"<<a.weight_bytes<<",\"kernel_calls\":"<<roots.size()<<",\"new_kernel_coordinates\":"<<m.kernel_coordinates<<",\"matched_coordinates\":"<<m.kernel_matched<<",\"new_kernel_and_partial_Fr_multiplications\":"<<m.fr_multiplications<<",\"new_kernel_and_partial_Fr_additions\":"<<m.fr_additions<<",\"old_kernel_and_partial_Fr_multiplications\":"<<5*m.kernel_matched<<",\"old_kernel_and_partial_Fr_additions\":"<<2*m.kernel_matched<<",\"combined_process_peak_rss_kib\":"<<usage.ru_maxrss<<",\"Fr_elementwise_equal\":true,\"partialDot_equal\":true,\"authentication_claim_equal\":true}"<<std::endl;
+ std::cout<<",\"old_frozen\":"<<oldFrozen<<",\"new_frozen\":"<<newFrozen<<",\"old_map_cache_bytes\":"<<b.map_bytes<<",\"new_map_cache_bytes\":"<<a.map_bytes<<",\"weight_cache_bytes\":"<<a.weight_bytes<<",\"kernel_calls\":"<<roots.size()<<",\"new_kernel_coordinates\":"<<m.kernel_coordinates<<",\"matched_coordinates\":"<<m.kernel_matched<<",\"new_kernel_and_partial_Fr_multiplications\":"<<m.fr_multiplications<<",\"new_kernel_and_partial_Fr_additions\":"<<m.fr_additions<<",\"old_kernel_and_partial_Fr_multiplications\":"<<5*m.kernel_matched<<",\"old_kernel_and_partial_Fr_additions\":"<<2*m.kernel_matched<<",\"combined_process_peak_rss_kib\":"<<usage.ru_maxrss<<",\"Fr_elementwise_equal\":true,\"kernelDotChecksum_equal\":true,\"authentication_claim_equal\":true}"<<std::endl;
 }
 void nativeBenchmark(){
  auto context=master3::trustedContext(12);auto layout=makeLayout(context);need(layout.roots.size()==45,"native Full12 root count");
