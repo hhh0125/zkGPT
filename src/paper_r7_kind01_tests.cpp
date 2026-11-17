@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <unistd.h>
+#include <sys/resource.h>
 using namespace zkgpt::r7;
 using namespace oneblock;
 using namespace crypto;
@@ -16,29 +17,56 @@ using Clock=std::chrono::steady_clock;
 double seconds(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
 struct Observed:IO,EvidenceSink {
  IO&base;std::string attack;bool hit=false;std::set<std::string>evidence;
- std::set<std::string>messages;
+ std::set<std::string>messages;std::map<std::string,unsigned>alphas;
+ std::size_t message_count=0,sigma_count=0,recurrence_count=0,coefficient_count=0,alpha_count=0;
+ double sigma_seconds=0;Clock::time_point last_statement{},sigma_start{};bool sigma_pending=false;
+ void finishSigma(){if(sigma_pending){sigma_seconds+=seconds(sigma_start);sigma_pending=false;}}
  Observed(IO&b,std::string a={}):base(b),attack(std::move(a)){}
  bool prover()const override{return base.prover();}
  std::string session()const override{return base.session();}
  Digest prefix()const override{return base.prefix();}
  Fr coin(const std::string&s)override{
-  if(s.find("/product/01/")!=std::string::npos && s.find("/sumcheck/round/")!=std::string::npos){
-   auto prefix=s.substr(0,s.find('/',s.find("/sumcheck/round/")+16));
-   for(unsigned b=0;b<2;++b)for(unsigned k=0;k<4;++k)
-    need(messages.count(prefix+"/instance/"+std::to_string(b)+"/c/"+std::to_string(k)+"/commitment"),"challenge before both polynomials fixed");
-  }
-  if(s.find("/product/01/")!=std::string::npos && s.size()>5 && s.substr(s.size()-5)=="/fold"){
-   auto prefix=s.substr(0,s.size()-5)+"/sumcheck";
-   for(unsigned k=1;k<5;++k)need(messages.count(prefix+"/endpoint/"+std::to_string(k)+"/commitment"),"fold challenge before both child pairs fixed");
+  finishSigma();if(s.find("/batch-alpha/")!=std::string::npos)++alpha_count;
+#ifndef KIND01_REFERENCE
+  if(s.find("/product/01/")!=std::string::npos){
+   auto layer=s.substr(0,s.find("/sumcheck"));
+   if(s.find("/batch-alpha/")!=std::string::npos){
+    need(messages.count(layer+"/sumcheck/statement"),"alpha before fixed pair of carries");
+    need(++alphas[layer]<=2,"alpha regenerated within layer");
+   }
+   if(s.find("/sumcheck/round/")!=std::string::npos){
+    auto prefix=s.substr(0,s.find('/',s.find("/sumcheck/round/")+16));
+    for(unsigned k=0;k<4;++k)need(messages.count(prefix+"/c/"+std::to_string(k)+"/commitment"),"round coin before four aggregate coefficients");
+    need(alphas[layer]==2,"missing per-layer batch coefficients");
+   }
+   if(s.size()>5 && s.substr(s.size()-5)=="/fold"){
+    auto prefix=s.substr(0,s.size()-5)+"/sumcheck";
+    for(unsigned k=0;k<5;++k)need(messages.count(prefix+"/endpoint/"+std::to_string(k)+"/commitment"),"fold before all five endpoints");
+    need(alphas[s.substr(0,s.size()-5)]==2,"layer missing fixed alpha pair");
+   }
   }
   if(s=="r7/fixture/gamma" || s=="r7/fixture/tau")for(auto&object:{"fixture/address","fixture/value","r7/fixture/read","r7/fixture/final"})
-   need(messages.count(std::string("Oneblock/object/")+object+"/PC"),"fingerprint challenge before source commitments");
+   need(messages.count(std::string("Oneblock/object/")+object+"/PC"),"fingerprint coin before sources");
+#endif
   return base.coin(s);
  }
  Bytes message(const std::string&s,const Bytes&b={})override{
+  finishSigma();++message_count;
+  if(s.find("/product/01/")!=std::string::npos){
+   if(s.size()>10 && s.substr(s.size()-10)=="/statement")last_statement=Clock::now();
+   if(s.size()>12 && s.substr(s.size()-12)=="/first-masks"){++sigma_count;sigma_start=last_statement;if(s.find("/recurrence/")!=std::string::npos)++recurrence_count;}
+   if(s.find("/sumcheck/round/")!=std::string::npos && s.find("/c/")!=std::string::npos && s.find("/commitment")!=std::string::npos)++coefficient_count;
+  }
   auto out=base.message(s,b);
+  if(s.find("/product/01/")!=std::string::npos && s.size()>10 && s.substr(s.size()-10)=="/responses")sigma_pending=true;
   messages.insert(s);
-  if(!prover() && !hit && !attack.empty() && s==attack){auto h=decodeHandle(out);h.point+=scalarCommit(Fr(1),Fr(0));out=encode(h);hit=true;}
+#ifndef KIND01_REFERENCE
+  if(s.find("/product/01/")!=std::string::npos && s.find("/sumcheck/round/")!=std::string::npos)
+   need(s.find("/instance/")==std::string::npos,"two independent coefficient/recurrence paths remain");
+#endif
+  if(!prover() && !hit && !attack.empty() && s==(attack.find("#")!=std::string::npos?attack.substr(0,attack.find("#")):attack)){if(s.find("/leaf/fingerprints/statement")!=std::string::npos){
+    Reader r{out};r.text();r.raw(32);auto handles=r.number();for(std::size_t i=0;i<handles;++i){auto bytes=r.number();r.raw(bytes);}need(r.number()==2,"expected dual leaf rows");auto offset=r.at+(attack.back()=='1'?handles*32:0);auto value=r1::encode(Fr(2));std::copy(value.begin(),value.end(),out.begin()+offset);
+   }else{auto h=decodeHandle(out);h.point+=scalarCommit(Fr(1),Fr(0));out=encode(h);}hit=true;}
   return out;
  }
  void checkedRelation(const std::string&s)override{need(evidence.insert(s).second,"duplicate coverage");}
@@ -75,7 +103,8 @@ void check(bool b,const char*s){need(b,s);}
 void direct(const std::filesystem::path&dir,std::size_t n,const std::string&fault){
  auto path=(dir/("direct-"+std::to_string(n)+"-"+fault+".proof")).string();
  fs::Binding binding{"Unit","kind01-direct",std::string(64,'b'),Bytes{4,5,6}};
- auto base=std::make_shared<std::vector<Fr>>(n);for(std::size_t i=0;i<n;++i)base->at(i)=Fr(int(i%5)-1);
+ const bool malicious=!fault.empty() && fault!="nonzero";
+ auto base=std::make_shared<std::vector<Fr>>(n);for(std::size_t i=0;i<n;++i)base->at(i)=Fr(fault=="nonzero"?int(i%5)+2:int(i%5)-1);
  std::array<Fr,2>products{Fr(1),Fr(1)};for(auto&f:*base){products[0]*=f+Fr(1);products[1]*=f;}
  // Independent sequential product, also authenticated by the original reducer.
  auto protocol=[&](IO&io,Random*rng){
@@ -86,15 +115,17 @@ void direct(const std::filesystem::path&dir,std::size_t n,const std::string&faul
    Relations rel;rel.role=role+"/leaf-relations";for(auto&h:w)rel.handles.push_back(h.handle);rel.linear={{Fr(1),Fr(0),Fr(-1),Fr(0)},{Fr(0),Fr(1),Fr(0),Fr(-1)}};sigma(live,rel,live.prover()?&w:nullptr,random);
   };
   hiddenBatchedProduct(io,n,roots,io.prover()?base:nullptr,auth,rng,"direct/product");
-  if(fault.empty())for(unsigned b=0;b<2;++b){
+  if(!malicious)for(unsigned b=0;b<2;++b){
    auto values=std::make_shared<std::vector<Fr>>(*base);if(b==0)for(auto&x:*values)x+=Fr(1);
    LeafAuthenticator old=[&,values](IO&live,const Query&q,const Hidden*h,Random*r,std::string name){Hidden claim;if(live.prover())claim=*h;else claim.handle=q.evaluation;equalHidden(live,claim,r1::mle(*values,q.point),r,name+"/expected");};
    hiddenProduct(io,n,roots[b],{},old,rng,"direct/old/"+std::to_string(b),io.prover()?values:nullptr);
   }
  };
- bool rejected=false;try{OSRandom rng;{fs::FsProverIO io(path,binding);protocol(io,&rng);io.finish();}{fs::FsVerifierIO io(path,binding);protocol(io,nullptr);io.finish();}}catch(const std::exception&e){if(fault.empty())throw;rejected=true;std::cout<<"REJECT semantic "<<fault<<" n="<<n<<": "<<e.what()<<'\n';}
- check(rejected==!fault.empty(),"false direct Product relation accepted");
- if(fault.empty())std::cout<<"PASS independent old/new roots n="<<n<<'\n';
+ std::size_t witnessed_alpha_coins=0;
+ bool rejected=false;try{OSRandom rng;{fs::FsProverIO wire(path,binding);Observed io(wire);try{protocol(io,&rng);}catch(...){witnessed_alpha_coins=io.alpha_count;throw;}witnessed_alpha_coins=io.alpha_count;wire.finish();}{fs::FsVerifierIO io(path,binding);protocol(io,nullptr);io.finish();}}catch(const std::exception&e){if(!malicious)throw;rejected=true;std::cout<<"REJECT semantic "<<fault<<" n="<<n<<": "<<e.what()<<'\n';}
+ check(rejected==malicious,"false direct Product relation accepted");
+ if(n>1){check(witnessed_alpha_coins>=2,"negative relation failed before true transcript alpha challenges");std::cout<<"TRANSCRIPT alpha_coins="<<witnessed_alpha_coins<<" fault="<<fault<<'\n';}
+ if(!malicious)std::cout<<"PASS independent old/new roots n="<<n<<'\n';
 }
 #endif
 }
@@ -128,11 +159,17 @@ int main(int argc,char**argv){try{
   {fs::FsVerifierIO wire(path,binding);Observed io(wire);protocol(io,nullptr);wire.finish();}
   std::cout<<"PASS integration "<<mode<<'\n';return 0;
  }
- OSRandom rng;Run p,v;double pt,vt;std::uint64_t bytes;
- {auto start=Clock::now();fs::FsProverIO wire(path,binding);Observed io(wire);p.memory(io,n,actual,&rng);wire.finish();bytes=wire.proofBytes();pt=seconds(start);}
- {auto start=Clock::now();fs::FsVerifierIO wire(path,binding);Observed io(wire);v.memory(io,n,actual,nullptr);wire.finish();vt=seconds(start);
+ OSRandom rng;Run p,v;double pt,vt;std::uint64_t bytes;std::size_t pm=0,vm=0,ps=0,vs=0,recurrences=0,coefficients=0,alpha_coins=0;double pst=0,vst=0;
+ {auto start=Clock::now();fs::FsProverIO wire(path,binding);Observed io(wire);p.memory(io,n,actual,&rng);io.finishSigma();pm=io.message_count;ps=io.sigma_count;pst=io.sigma_seconds;recurrences=io.recurrence_count;coefficients=io.coefficient_count;alpha_coins=io.alpha_count;wire.finish();bytes=wire.proofBytes();pt=seconds(start);}
+ {auto start=Clock::now();fs::FsVerifierIO wire(path,binding);Observed io(wire);v.memory(io,n,actual,nullptr);io.finishSigma();vm=io.message_count;vs=io.sigma_count;vst=io.sigma_seconds;wire.finish();vt=seconds(start);
   for(unsigned k=0;k<3;++k){auto prefix="fixture/product/"+std::to_string(k);check(io.evidence.count(prefix+"/root"),"missing independent root coverage");}
  }
+#ifndef KIND01_REFERENCE
+ auto depth=r1::log2exact(n);auto rounds=depth*(depth-1)/2;
+ check(coefficients==4*rounds && recurrences==rounds && alpha_coins==2*depth,"aggregate protocol message counts mismatch");
+#endif
+ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);
+ std::cout<<"BATCH_STATS {\"messages_P\":"<<pm<<",\"messages_V\":"<<vm<<",\"sigma_P\":"<<ps<<",\"sigma_V\":"<<vs<<",\"sigma_seconds_P\":"<<pst<<",\"sigma_seconds_V\":"<<vst<<",\"recurrences\":"<<recurrences<<",\"coefficient_commitments\":"<<coefficients<<",\"alpha_coins\":"<<alpha_coins<<",\"peak_rss_kib_process_P_and_V\":"<<usage.ru_maxrss<<"}\n";
  std::cout<<"RESULT {\"n\":"<<n<<",\"actual\":"<<actual<<",\"prover_seconds\":"<<pt<<",\"verifier_seconds\":"<<vt<<",\"proof_bytes\":"<<bytes<<",\"claims\":"<<p.claims<<",\"address_mle\":"<<p.opens["fixture/address"]<<",\"value_mle\":"<<p.opens["fixture/value"]<<",\"read_mle\":"<<p.opens["r7/fixture/read"]<<",\"proof\":\""<<path<<"\"}\n";
  if(mode=="shared"){
   check(p.opens["fixture/address"]==1 && p.opens["fixture/value"]==1 && p.opens["r7/fixture/read"]==1,"Kind01 must authenticate A/V/R once at shared point");
@@ -140,13 +177,13 @@ int main(int argc,char**argv){try{
  }
  if(mode=="negative"){
   std::vector<std::string>attacks{"r7/fixture/root/0/handle","r7/fixture/root/1/handle",
-   "r7/fixture/product/01/level/0/sumcheck/endpoint/1/commitment","r7/fixture/product/01/level/0/sumcheck/endpoint/3/commitment",
    "r7/fixture/product/01/leaf/address/handle","r7/fixture/product/01/leaf/value/handle","r7/fixture/product/01/leaf/read/handle"};
-  for(unsigned b=0;b<2;++b){auto instance="r7/fixture/product/01/level/1/sumcheck/round/0/instance/"+std::to_string(b);
-   attacks.push_back(instance+"/c/0/commitment");attacks.push_back(instance+"/derived");
-   attacks.push_back("r7/fixture/product/01/level/1/instance/"+std::to_string(b)+"/carry");
-   attacks.push_back("r7/fixture/product/01/level/1/sumcheck/terminal/product/"+std::to_string(b)+"/commitment");
-  }
+  auto level="r7/fixture/product/01/level/1/sumcheck";
+  for(unsigned k=0;k<4;++k)attacks.push_back(std::string(level)+"/endpoint/"+std::to_string(k+1)+"/commitment");
+  attacks.push_back(std::string(level)+"/round/0/c/0/commitment");
+  attacks.push_back(std::string(level)+"/round/0/derived");
+  for(unsigned b=0;b<2;++b){attacks.push_back("r7/fixture/product/01/level/1/instance/"+std::to_string(b)+"/carry");attacks.push_back(std::string(level)+"/terminal/product/"+std::to_string(b)+"/commitment");}
+  attacks.push_back("r7/fixture/product/01/leaf/fingerprints/statement#0");attacks.push_back("r7/fixture/product/01/leaf/fingerprints/statement#1");
   for(auto&attack:attacks){fs::FsVerifierIO wire(path,binding);Observed io(wire,attack);Run bad;bool rejected=false;try{bad.memory(io,n,actual,nullptr);wire.finish();}catch(const std::exception&e){rejected=true;std::cout<<"REJECT verifier "<<attack<<": "<<e.what()<<'\n';}check(io.hit && rejected,"tamper accepted or target not reached");}
   for(auto&source:{std::string("fixture/address"),std::string("fixture/value"),std::string("r7/fixture/read")}){
    auto badpath=(directory/(source=="fixture/address"?"bad-A.proof":source=="fixture/value"?"bad-V.proof":"bad-R.proof")).string();Run bad;bad.bad_source=source;bool rejected=false;
@@ -155,7 +192,7 @@ int main(int argc,char**argv){try{
    }catch(const std::exception&e){rejected=true;std::cout<<"REJECT source mismatch "<<source<<": "<<e.what()<<'\n';}check(rejected,"source commitment mismatch accepted");
   }
 #ifndef KIND01_REFERENCE
-  for(auto size:{1u,2u,4u,8u,16u})direct(directory,size,"");
+  for(auto size:{1u,2u,4u,8u,16u}){direct(directory,size,"");direct(directory,size,"nonzero");}
   for(auto size:{1u,8u})for(auto fault:{"root0","root1","leaf0","leaf1","cancel"})direct(directory,size,fault);
 #endif
  }

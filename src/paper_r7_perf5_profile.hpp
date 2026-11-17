@@ -9,8 +9,8 @@
 namespace zkgpt::r7::perf5 {
 enum Region { Total, TreeAllocInit, TreeLeaf, TreeParent, TreeFree, Weights,
  ExpressionInit, Polynomial, Messages, Challenge, Fold, Endpoint, Equality,
- Carry, LeafAuthentication, Coverage, LeafWeights, Recurrence, InputsConstruct, Count };
-inline constexpr const char* names[]={"total","tree_alloc_init","tree_leaf_callback","tree_parent","tree_free","weights","expression_init","polynomial_callback_arithmetic_reduction","messages_and_recurrence_verification","challenge_and_derived","fold_callback_arithmetic","endpoint_authentication","equality_authentication","carry_and_binding","leaf_authentication","coverage","leaf_evaluate_weights","recurrence_verification","product_inputs_construct"};
+ Carry, LeafAuthentication, Coverage, LeafWeights, Recurrence, InputsConstruct, BatchAggregation, BatchSigma, Count };
+inline constexpr const char* names[]={"total","tree_alloc_init","tree_leaf_callback","tree_parent","tree_free","weights","expression_init","polynomial_callback_arithmetic_reduction","messages_and_recurrence_verification","challenge_and_derived","fold_callback_arithmetic","endpoint_authentication","equality_authentication","carry_and_binding","leaf_authentication","coverage","leaf_evaluate_weights","recurrence_verification","product_inputs_construct","batch_polynomial_aggregation","batch_sigma"};
 struct Stat {double wall=0,exclusive=0;std::uint64_t calls=0,allocs=0,bytes=0,exclusive_allocs=0,exclusive_bytes=0;};
 struct Context {std::array<Stat,Count> stats{};
  std::uint64_t a2_calls=0,a2_pairs=0,generic_product_calls=0,c2_polynomial_calls=0,c2_polynomial_pairs=0,c2_fold_calls=0,c2_fold_pairs=0,input_constructions=0,prepared_leaf_reuses=0;
