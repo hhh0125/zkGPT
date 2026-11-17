@@ -17,6 +17,8 @@ struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelatio
 inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
 struct ProductInputs {const std::vector<Fr>&equality;const std::vector<Fr>&children;};
 namespace detail {
+// Internal borrowed pair: shared equality, independent interleaved child arrays.
+std::array<Reduction,2> batchedProductSumcheckContiguous(IO&,std::size_t,const std::array<Hidden,2>&,const std::vector<Value>&,Random*,const std::string&,const std::array<ProductInputs,2>&,const std::vector<Fr>* equality_point=nullptr);
 std::vector<Fr>productPolynomialContiguous(const ProductInputs&);
 void foldProductInputs(const ProductInputs&,const Fr&,std::vector<std::vector<Fr>>&);
 // Pure local arithmetic, no transcript, RNG, handles, or challenge operations.
@@ -30,7 +32,7 @@ Reduction productSumcheck(IO&,std::size_t,const Hidden&,const std::vector<Value>
 // point. factors=[equality,left0,right0,left1,right1], prover only.
 // Each result has [shared equality, own left, own right] endpoints.
 std::array<Reduction,2> batchedProductSumcheck(IO&,std::size_t,const std::array<Hidden,2>&,
- const std::vector<Value>&,Random*,const std::string&);
+ const std::vector<Value>&,Random*,const std::string&,const std::vector<Fr>* equality_point=nullptr);
 Hidden publicHidden(IO&,const std::string&,const Fr&);
 Hidden exchangeHidden(IO&,const std::string&,const Fr&,Random*);
 void equalHidden(IO&,const Hidden&,const Fr&,Random*,const std::string&);

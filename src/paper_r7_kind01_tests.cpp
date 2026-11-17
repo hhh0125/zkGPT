@@ -1,6 +1,11 @@
 #include "paper_r7_oneblock_lookup.hpp"
+#include "paper_r7_product_polynomial.hpp"
 #include "paper_r7_oneblock_vectors.hpp"
 #include "paper_r7_fs_io.hpp"
+#include "paper_r7_perf6_options.hpp"
+#include "paper_r7_unified_input.hpp"
+#include <cstring>
+#include <random>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -98,6 +103,173 @@ struct Run {
   for(auto&f:pending)f();
  }
 };
+// Test-only replay: identical random bytes, transcript header and public fixture.
+struct ReplayRandom:Random {
+ OSRandom os;Bytes data;std::size_t at=0;bool replay=false;
+ void fill(std::uint8_t*p,std::size_t n)override{
+  if(replay){need(at+n<=data.size(),"random replay exhausted");std::copy_n(data.data()+at,n,p);at+=n;}
+  else{os.fill(p,n);data.insert(data.end(),p,p+n);}
+ }
+};
+struct TapeIO:IO {
+ bool p;fs::CanonicalTranscript transcript{Bytes{1,7,6},Bytes{9,2}};
+ std::vector<std::pair<std::string,Bytes>>events;std::size_t at=0;
+ TapeIO(bool prover):p(prover){}
+ bool prover()const override{return p;}
+ std::string session()const override{return std::string(64,'e');}
+ Digest prefix()const override{return transcript.prefix();}
+ Fr coin(const std::string&s)override{return transcript.coin(s);}
+ Bytes message(const std::string&s,const Bytes&b={})override{
+  Bytes out=b;if(p)events.emplace_back(s,b);else{need(at<events.size() && events[at].first==s,"event replay role/order");out=events[at++].second;}
+  transcript.message(s,out);return out;
+ }
+};
+
+struct Counted {
+ Fr value=Fr(0);inline static std::uint64_t mul=0,add=0;
+ Counted()=default;Counted(int x):value(x){} Counted(const Fr&x):value(x){}
+ friend Counted operator*(const Counted&a,const Counted&b){++mul;return Counted(a.value*b.value);}
+ friend Counted operator+(const Counted&a,const Counted&b){++add;return Counted(a.value+b.value);}
+ friend Counted operator-(const Counted&a,const Counted&b){++add;return Counted(a.value-b.value);}
+ Counted&operator+=(const Counted&b){++add;value+=b.value;return *this;}
+};
+void arithmeticTest(){
+ std::mt19937_64 gen(20261117);auto random=[&]{Fr x=0;for(unsigned k=0;k<9;++k)x=x*Fr(2147483647)+Fr(gen()%2147483647);return x;};
+ std::size_t checks=0;
+ for(unsigned trial=0;trial<100;++trial){
+  const auto n=std::size_t(2)<<(trial%7);std::vector<std::vector<Fr>>data(5,std::vector<Fr>(n));
+  for(auto&v:data)for(auto&x:v)x=random();std::array<Fr,2>alpha{random(),random()};if(trial%9==0)alpha={Fr(0),Fr(1)};if(trial%11==0)for(auto&x:data[1])x=Fr(0);
+  std::vector<Fr>rho(r1::log2exact(n));for(auto&x:rho)x=random();
+  if(trial%4==0)rho[0]=Fr(0);if(trial%4==1)rho[0]=Fr(1);
+  // A1 must work even for completely arbitrary E. A2/A3 use real eq factors.
+  for(unsigned structured=0;structured<2;++structured){
+   auto f=data;if(structured)f[0]=r1::weights(rho);
+   for(std::size_t size=n,round=0;size>1;size/=2,++round){
+    std::vector<Value>factors;for(unsigned k=0;k<5;++k)factors.push_back([&,k](std::size_t i){return f[k][i];});
+    std::array<std::vector<Fr>,2>base;
+    for(unsigned b=0;b<2;++b)base[b]=detail::productPolynomial(size,{factors[0],factors[1+2*b],factors[2+2*b]},{},true);
+    std::array<Fr,4>expected;for(unsigned k=0;k<4;++k)expected[k]=alpha[0]*base[0][k]+alpha[1]*base[1][k];
+    auto load=[&](unsigned k,std::size_t i){return f[k][i];};
+    auto c=polynomial::bespoke<Fr>(size,load,alpha);need(c==expected,"bespoke coefficient mismatch");
+    if(structured)for(bool combined:{false,true})need(polynomial::equality<Fr>(size,load,alpha,rho[round],combined)==expected,"equality coefficient mismatch");
+    for(unsigned point=0;point<4;++point){auto x=random();Fr value=0;for(int k=3;k>=0;--k)value=value*x+c[k];Fr direct=0;
+     for(std::size_t j=0;j<size/2;++j){std::array<Fr,5>v;for(unsigned k=0;k<5;++k)v[k]=f[k][2*j]+x*(f[k][2*j+1]-f[k][2*j]);direct+=v[0]*(alpha[0]*v[1]*v[2]+alpha[1]*v[3]*v[4]);}
+     need(value==direct,"polynomial evaluation mismatch");++checks;
+    }
+    // Compare the actual contiguous fold routine independently against all five folds.
+    auto challenge=trial%8==0?Fr(1):trial%5==0?Fr(0):trial%5==1?Fr(1):random();std::vector<std::vector<Fr>>next(5);
+    for(unsigned b=0;b<2;++b){std::vector<Fr>child(2*size);for(std::size_t i=0;i<size;++i){child[2*i]=f[1+2*b][i];child[2*i+1]=f[2+2*b][i];}
+     std::vector<std::vector<Fr>>fold(3);detail::foldProductInputs({f[0],child},challenge,fold);
+     for(unsigned k=0;k<3;++k){auto index=k?2*b+k:0;for(std::size_t j=0;j<size/2;++j)need(fold[k][j]==f[index][2*j]+challenge*(f[index][2*j+1]-f[index][2*j]),"contiguous fold mismatch");next[index]=fold[k];}
+    }f=std::move(next);
+   }
+  }
+  need(polynomial::weights(rho)==r1::weights(rho),"recursive weights mismatch");
+ }
+ for(unsigned mode=1;mode<=3;++mode){
+  const std::size_t n=128,p=n/2;std::vector<std::vector<Fr>>f(5,std::vector<Fr>(n));for(auto&v:f)for(auto&x:v)x=random();
+  const std::array<Counted,2>alpha{Counted(random()),Counted(random())};Counted::mul=Counted::add=0;
+  auto load=[&](unsigned k,std::size_t i){return Counted(f[k][i]);};
+  if(mode==1)(void)polynomial::bespoke<Counted>(n,load,alpha);else (void)polynomial::equality<Counted>(n,load,alpha,Counted(2),mode==3);
+  auto m=mode==1?16*p:(mode==2?14:12)*p+(mode==2?20:12),a=mode==1?18*p:(mode==2?13:15)*p+(mode==2?10:7);
+  need(Counted::mul==m && Counted::add==a,"kernel operation count mismatch");
+  std::cout<<"COUNTED mode="<<mode<<" pairs="<<p<<" mul="<<Counted::mul<<" add_or_sub="<<Counted::add<<'\n';
+ }
+ std::cout<<"PASS arithmetic seed=20261117 evaluation_checks="<<checks<<" coefficients/five-folds/weights BN254 Fr\n";
+}
+void setOptions(int mask){
+ for(unsigned i=0;i<3;++i){const char*name=std::array<const char*,3>{"ZKGPT_PERF6_A2","ZKGPT_PERF6_C2","ZKGPT_PERF6_B2"}[i];
+  if(mask<0)unsetenv(name);else setenv(name,mask&(1<<i)?"1":"0",1);
+ }
+}
+void configTest(){
+ setOptions(-1);auto x=perf6::options();need(x.a2 && x.c2 && x.b2,"default options");
+ for(int mask=0;mask<8;++mask){setOptions(mask);x=perf6::options();need(x.a2==bool(mask&1) && x.c2==bool(mask&2) && x.b2==bool(mask&4),"independent toggles");}
+ for(const auto*name:{"ZKGPT_PERF6_A2","ZKGPT_PERF6_C2","ZKGPT_PERF6_B2"})for(const auto*bad:{"","2","-1","true","01"," 1","0 "}){
+  setOptions(-1);setenv(name,bad,1);bool rejected=false;
+  try{(void)perf6::options();}catch(const std::exception&e){rejected=std::string(e.what()).find(name)!=std::string::npos;}
+  need(rejected,"invalid environment value accepted");
+ }
+ setOptions(-1);need(!perf6::messages,"initial message scope");{perf6::ScopedMessages a(true);need(perf6::messages,"message scope enable");{perf6::ScopedMessages b(false);need(!perf6::messages,"message nested disable");}need(perf6::messages,"message nested restore");}need(!perf6::messages,"message outer restore");
+ std::cout<<"PASS config defaults, 8 toggle combinations, 21 invalid values, nested scopes\n";
+}
+void standaloneFixture(IO&io,std::size_t n,Random*rng){
+ auto values=std::make_shared<std::vector<Fr>>(n);Fr product=1;
+ for(std::size_t i=0;i<n;++i){(*values)[i]=Fr(i%7+1);product*=(*values)[i];}
+ auto root=exchangeHidden(io,"independent/root",io.prover()?product:Fr(0),rng);
+ LeafAuthenticator auth=[values](IO&live,const Query&q,const Hidden*h,Random*r,std::string role){
+  Hidden claim;if(live.prover())claim=*h;else claim.handle=q.evaluation;
+  equalHidden(live,claim,r1::mle(*values,q.point),r,role+"/expected");
+ };
+ hiddenProduct(io,n,root,{},auth,rng,"independent/product",io.prover()?values:nullptr);
+}
+void unifiedFixture(IO&io,std::size_t n,Random*rng){
+ std::vector<Fr>a(n),b(n);Fr sum=0;
+ for(std::size_t i=0;i<n;++i){a[i]=Fr(i+2);b[i]=Fr(i%3+1);sum+=a[i]*b[i];}
+ auto initial=exchangeHidden(io,"unified/initial",io.prover()?sum:Fr(0),rng);
+ unified::Factors factors;if(io.prover())factors=[&](std::size_t k,const unified::Consume&consume){need(k==0,"unit segment");consume([&](std::size_t i){return a[i];},[&](std::size_t i){return b[i];});};
+ auto end=unified::reduce(io,n,{{0,n}},initial,factors,[&](const std::vector<Fr>&point){return r1::mle(b,point);},rng,"unified/test");
+ equalHidden(io,end.endpoints[0],r1::mle(a,end.point),rng,"unified/input-authentication");
+}
+void equivalenceTest(){
+ for(const auto n:{1u,2u,4u,16u,128u}){
+  setenv("ZKGPT_PRODUCT_POLY","0",1);setOptions(0);ReplayRandom random;TapeIO reference(true);Run fixture;fixture.memory(reference,n,n>2?n-1:n,&random);standaloneFixture(reference,n,&random);unifiedFixture(reference,n,&random);
+  const auto prefix=reference.prefix(),coins=reference.transcript.challengeDigest();const auto count=reference.transcript.coins();
+  for(unsigned experiment=0;experiment<4;++experiment){setenv("ZKGPT_PRODUCT_POLY",std::to_string(experiment).c_str(),1);for(int mask=-1;mask<8;++mask){
+   setOptions(mask);random.at=0;random.replay=true;TapeIO prover(true);Run p;p.memory(prover,n,n>2?n-1:n,&random);standaloneFixture(prover,n,&random);unifiedFixture(prover,n,&random);
+   need(random.at==random.data.size(),"random consumption changed");
+   need(prover.events==reference.events && prover.prefix()==prefix && prover.transcript.challengeDigest()==coins && prover.transcript.coins()==count,"optimization changed messages/challenges");
+   TapeIO verifier(false);verifier.events=reference.events;Run v;v.memory(verifier,n,n>2?n-1:n,nullptr);standaloneFixture(verifier,n,nullptr);unifiedFixture(verifier,n,nullptr);
+   need(verifier.at==reference.events.size() && verifier.prefix()==prefix && verifier.transcript.challengeDigest()==coins,"cross-config verification changed transcript");
+  }
+  }
+  std::cout<<"PASS exact message bytes and challenges independent/batched/unified n="<<n<<" challenges="<<count<<'\n';
+ }
+ setOptions(-1);
+}
+
+struct SeededRandom:Random {
+ std::mt19937_64 engine{20261117};
+ void fill(std::uint8_t*p,std::size_t n)override{for(std::size_t i=0;i<n;++i)p[i]=std::uint8_t(engine());}
+};
+
+// Test-only deterministic file prover. Uses the unchanged production header,
+// event framing and CanonicalTranscript, and is checked by FsVerifierIO.
+// Production FsProverIO continues to generate OS-random nonces.
+struct FixedFixtureProver:IO {
+ std::unique_ptr<fs::CanonicalTranscript>transcript;Bytes file;std::string sid,path;
+ FixedFixtureProver(const std::string&p,const fs::Binding&b):path(p){
+  Writer h;h.text("ZKGPT-R7-FS-PROOF");h.number(1);h.text(fs::suite);h.text(fs::hashSuite);h.text("typed-u64le-events-v1");h.text(b.proof_type);h.text(b.context);h.text(b.parameter_id);
+  auto digest=r1::hash(b.public_instance);h.raw(Bytes(digest.begin(),digest.end()));Bytes nonce(32);for(unsigned i=0;i<32;++i)nonce[i]=i+1;h.raw(nonce);
+  transcript=std::make_unique<fs::CanonicalTranscript>(h.b,b.public_instance);
+  const std::string label="zkGPT.R7.FS.session.v1";Bytes session(label.begin(),label.end());auto prefix=transcript->prefix();session.insert(session.end(),prefix.begin(),prefix.end());sid=hex(r1::hash(session));
+  Writer start;start.raw(Bytes{'Z','K','R','7','F','S','1',0});start.number(h.b.size());start.raw(h.b);file=std::move(start.b);
+ }
+ bool prover()const override{return true;}std::string session()const override{return sid;}Digest prefix()const override{return transcript->prefix();}
+ void frame(char tag,const std::string&label,const Bytes&b){Writer w;w.number(std::uint8_t(tag),1);w.number(transcript->events(),8);w.number(label.size(),8);w.raw(Bytes(label.begin(),label.end()));w.number(b.size(),8);w.raw(b);file.insert(file.end(),w.b.begin(),w.b.end());}
+ Bytes message(const std::string&s,const Bytes&b={})override{frame('P',s,b);transcript->message(s,b);return b;}
+ Fr coin(const std::string&s)override{return transcript->coin(s);}
+ void finish(){Writer w;w.number(transcript->events(),8);w.number(transcript->messages(),8);w.number(transcript->coins(),8);auto a=transcript->prefix(),b=transcript->challengeDigest();w.raw(Bytes(a.begin(),a.end()));w.raw(Bytes(b.begin(),b.end()));frame('F',"end",w.b);transcript->finishTrace();need(!std::filesystem::exists(path),"fixture proof output already exists");std::ofstream out(path,std::ios::binary);out.write(reinterpret_cast<const char*>(file.data()),file.size());out.close();need(bool(out),"fixture proof write");}
+ std::uint64_t proofBytes()const{return file.size();}
+};
+void productBench(std::size_t n,const std::string&path,bool verifyOnly){
+ auto base=std::make_shared<std::vector<Fr>>(n);std::mt19937_64 inputs(20261117);
+ for(auto&value:*base){do{value=Fr(0);for(unsigned k=0;k<9;++k)value=value*Fr(2147483647)+Fr(inputs()%2147483647);}while(value==Fr(0) || value==Fr(-1));}
+ std::array<Fr,2>products{Fr(1),Fr(1)};for(auto&x:*base){products[0]*=x+Fr(1);products[1]*=x;}
+ auto protocol=[&](IO&io,Random*rng){
+  std::array<Hidden,2>roots;for(unsigned b=0;b<2;++b)roots[b]=exchangeHidden(io,"bench/root/"+std::to_string(b),io.prover()?products[b]:Fr(0),rng);
+  BatchedLeafAuthenticator auth=[&](IO&live,const std::vector<Fr>&point,const std::array<Hidden,2>&leaves,Random*random,std::string role){
+   const auto f=r1::mle(*base,point);for(unsigned b=0;b<2;++b)equalHidden(live,leaves[b],f+Fr(b==0?1:0),random,role+"/expected/"+std::to_string(b));
+  };
+  hiddenBatchedProduct(io,n,roots,io.prover()?base:nullptr,auth,rng,"bench/product");
+ };
+ fs::Binding binding{"Unit","product-polynomial-experiment",std::string(64,'c'),Bytes{20,26,11,17}};
+ double pt=0,vt;std::uint64_t bytes=0;
+ if(!verifyOnly){SeededRandom rng;auto start=Clock::now();FixedFixtureProver io(path,binding);protocol(io,&rng);io.finish();bytes=io.proofBytes();pt=seconds(start);}
+ {auto start=Clock::now();fs::FsVerifierIO io(path,binding);protocol(io,nullptr);io.finish();vt=seconds(start);}
+ std::cout<<std::setprecision(12)<<"POLY_BENCH {\"n\":"<<n<<",\"seed\":20261117,\"prover_seconds\":"<<pt<<",\"verifier_seconds\":"<<vt<<",\"proof_bytes\":"<<bytes<<",\"accept\":true}\n";
+}
+
 void check(bool b,const char*s){need(b,s);}
 #ifndef KIND01_REFERENCE
 void direct(const std::filesystem::path&dir,std::size_t n,const std::string&fault){
@@ -130,7 +302,11 @@ void direct(const std::filesystem::path&dir,std::size_t n,const std::string&faul
 #endif
 }
 int main(int argc,char**argv){try{
- r1::init();std::string mode=argc>1?argv[1]:"shared";std::size_t n=argc>2?std::stoull(argv[2]):8,actual=argc>3?std::stoull(argv[3]):n;
+ r1::init();std::string mode=argc>1?argv[1]:"shared";std::size_t n=argc>2?std::stoull(argv[2]):8,actual=argc>3 && mode!="productbench" && mode!="productverify"?std::stoull(argv[3]):n;
+ if(mode=="productbench" || mode=="productverify"){need(argc==4,"productbench/productverify n proof-path");productBench(n,argv[3],mode=="productverify");return 0;}
+ if(mode=="arithmetic"){arithmeticTest();return 0;}
+ if(mode=="config"){configTest();return 0;}
+ if(mode=="equivalence"){equivalenceTest();return 0;}
  if(mode=="identity"){
   Writer parameters;parameters.text(crypto::suite);parameters.text(r1::kModulus);auto p=crypto::parameters(1);parameters.point(p.scalar);parameters.point(p.hiding);
   auto g=hyrax_a3::generators(4096);parameters.number(g.size());for(auto&x:g)parameters.point(x);

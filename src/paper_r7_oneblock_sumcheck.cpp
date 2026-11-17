@@ -1,5 +1,6 @@
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include "paper_r7_perf5_profile.hpp"
+#include "paper_r7_product_polynomial.hpp"
 #include <algorithm>
 #include <array>
 namespace zkgpt::r7::oneblock {
@@ -62,11 +63,11 @@ std::vector<Fr>productPolynomial(std::size_t current,const std::vector<Value>&fa
  }
  return c;
 }
-std::vector<Fr>expressionPolynomial(const Expression&e,std::size_t current,const std::vector<Value>&factors,const std::vector<std::vector<Fr>>&folded,bool first){
+template<class Load>static std::vector<Fr>expressionPolynomialLoaded(const Expression&e,std::size_t current,Load load){
  unsigned degree=0;for(auto&t:e.terms)degree=std::max(degree,unsigned(t.factors.size()));
  std::vector<Fr>coeff(degree+1,Fr(0));std::array<Fr,8>a,d;
  for(std::size_t j=0;j<current/2;++j){
-  for(std::size_t k=0;k<e.factor_count;++k){a[k]=first?factors[k](2*j):folded[k][2*j];d[k]=(first?factors[k](2*j+1):folded[k][2*j+1])-a[k];}
+  for(std::size_t k=0;k<e.factor_count;++k){a[k]=load(k,2*j);d[k]=load(k,2*j+1)-a[k];}
   for(auto&t:e.terms){auto n=t.factors.size();const auto&c=t.coefficient;
    if(!n){coeff[0]+=c;continue;}
    auto i=t.factors[0];if(n==1){coeff[0]+=c*a[i];coeff[1]+=c*d[i];continue;}
@@ -77,35 +78,48 @@ std::vector<Fr>expressionPolynomial(const Expression&e,std::size_t current,const
  }
  return coeff;
 }
+std::vector<Fr>expressionPolynomial(const Expression&e,std::size_t current,const std::vector<Value>&factors,const std::vector<std::vector<Fr>>&folded,bool first){
+ return expressionPolynomialLoaded(e,current,[&](std::size_t k,std::size_t i)->Fr{return first?factors[k](i):folded[k][i];});
+}
+static std::vector<Fr>expressionPolynomialContiguous(const Expression&e,const ProductInputs&input){
+ inputShape(input);
+ return expressionPolynomialLoaded(e,input.equality.size(),[&](std::size_t k,std::size_t i)->Fr{return k?input.children[2*i+k-1]:input.equality[i];});
+}
 }
 static Reduction expressionSumcheckImpl(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role,bool product,const ProductInputs*inputs=nullptr,bool product_reduction=false){
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
  unsigned degree=0;{perf5::Scope t(perf5::ExpressionInit);need(n && n<=(1u<<24) && !(n&(n-1)) && e.factor_count>0 && e.factor_count<=8 && !e.terms.empty() && e.terms.size()<=16,"Oneblock expression bounds");validate(initial.handle,io.session(),initial.handle.role);Writer statement;statement.text("R7-ONEBLOCK-HIDDEN-EXPRESSION-SUMCHECK-v1");statement.number(n,8);statement.number(e.factor_count);statement.raw(encode(initial.handle));statement.number(e.terms.size());for(auto&t:e.terms){need(t.factors.size()<=3,"Oneblock expression degree");degree=std::max(degree,unsigned(t.factors.size()));statement.scalar(t.coefficient);statement.number(t.factors.size());for(auto i:t.factors){need(i<e.factor_count,"Oneblock expression factor index");statement.number(i);}}bindPublic(io,role+"/statement",statement.b);if(io.prover())need(factors.size()==e.factor_count && rng,"Oneblock expression witness shape");}
  std::vector<std::vector<Fr>>folded(e.factor_count);Hidden previous=initial;std::vector<Fr>point;std::size_t current=n;unsigned round=0;
  while(current>1){auto name=role+"/round/"+std::to_string(round);std::vector<Fr>coeff(degree+1,Fr(0));if(io.prover()){
    perf5::Scope t(perf5::Polynomial);
-   if(auto*c=perf5::context){if(product){++c->a2_calls;c->a2_pairs+=current/2;if(inputs && !round){++c->c2_polynomial_calls;c->c2_polynomial_pairs+=current/2;}}else if(product_reduction)++c->generic_product_calls;}
-   coeff=product?(inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round)):detail::expressionPolynomial(e,current,factors,folded,!round);
+   if(auto*c=perf5::context){if(product){++c->a2_calls;c->a2_pairs+=current/2;}else if(product_reduction)++c->generic_product_calls;if(inputs && !round){++c->c2_polynomial_calls;c->c2_polynomial_pairs+=current/2;}}
+   perf5::Scope a2_time(perf5::A2Polynomial,product);perf5::Scope c2_time(perf5::C2Input,inputs && !round);
+   coeff=product?(inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round)):(inputs && !round?detail::expressionPolynomialContiguous(e,*inputs):detail::expressionPolynomial(e,current,factors,folded,!round));
   }
-  std::vector<Hidden>h;{perf5::Scope t(perf5::Messages);h={previous};for(unsigned k=0;k<=degree;++k)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),coeff[k],rng));{perf5::Scope recurrence(perf5::Recurrence);Relations r;r.role=name+"/recurrence";for(auto&v:h)r.handles.push_back(v.handle);std::vector<Fr>line(h.size(),Fr(1));line[0]=Fr(-1);line[1]=Fr(2);r.linear={line};sigma(io,r,io.prover()?&h:nullptr,rng);}}
+  std::vector<Hidden>h;{perf5::Scope t(perf5::Messages);perf5::Scope b2_time(perf5::B2Message,options.b2);h={previous};for(unsigned k=0;k<=degree;++k)h.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),coeff[k],rng));{perf5::Scope recurrence(perf5::Recurrence);Relations r;r.role=name+"/recurrence";for(auto&v:h)r.handles.push_back(v.handle);std::vector<Fr>line(h.size(),Fr(1));line[0]=Fr(-1);line[1]=Fr(2);r.linear={line};sigma(io,r,io.prover()?&h:nullptr,rng);}}
   Fr challenge;{perf5::Scope t(perf5::Challenge);challenge=io.coin(name+"/r");point.push_back(challenge);std::vector<Hidden>polynomial(h.begin()+1,h.end());std::vector<Fr>powers;Fr power=1;for(unsigned k=0;k<=degree;++k){powers.push_back(power);power*=challenge;}previous=combine(io.session(),name+"/derived",polynomial,powers);bindPublic(io,name+"/derived",encode(previous.handle));}
-  {perf5::Scope t(perf5::Fold);if(io.prover()){if(inputs && !round){if(auto*c=perf5::context){++c->c2_fold_calls;c->c2_fold_pairs+=current/2;}detail::foldProductInputs(*inputs,challenge,folded);}else for(std::size_t k=0;k<e.factor_count;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
+  {perf5::Scope t(perf5::Fold);if(io.prover()){if(inputs && !round){perf5::Scope c2_time(perf5::C2Fold);if(auto*c=perf5::context){++c->c2_fold_calls;c->c2_fold_pairs+=current/2;}detail::foldProductInputs(*inputs,challenge,folded);}else for(std::size_t k=0;k<e.factor_count;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
   }current/=2;++round;
  }
- perf5::Scope endpoint_scope(perf5::Endpoint);std::vector<Hidden>ends;for(std::size_t k=0;k<e.factor_count;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));endpoint(io,previous,ends,e,rng,role+"/terminal");return {initial,ends,point};
+ perf5::Scope endpoint_scope(perf5::Endpoint);perf5::Scope b2_time(perf5::B2Message,options.b2);std::vector<Hidden>ends;for(std::size_t k=0;k<e.factor_count;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));endpoint(io,previous,ends,e,rng,role+"/terminal");return {initial,ends,point};
 }
 Reduction expressionSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role){return expressionSumcheckImpl(io,n,initial,factors,e,rng,role,false);}
 Reduction productSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs,bool allow_specialized){
  if(inputs)need(io.prover() && n && n<=(1u<<24) && inputs->equality.size()==n && inputs->children.size()==2*n,"Product native input binding");
- // PERF6 A2: verifier always enters the generic path and never consults
- // Prover experiment settings. Protocol statements/messages are identical.
- if(!io.prover())return expressionSumcheck(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role);
- const auto*reference=std::getenv("ZKGPT_PERF5_PRODUCT_REFERENCE");
- const auto*a2=std::getenv("ZKGPT_PERF6_A2");
- // Experimental path is explicit until the frozen performance gate passes.
- bool candidate=allow_specialized && (a2?std::string(a2)=="1":reference && std::string(reference)=="0");
- return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,inputs,true);
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
+ perf5::Scope independent_time(perf5::IndependentProduct);
+ const bool candidate=io.prover() && allow_specialized && options.a2;
+ return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,options.c2 && allow_specialized?inputs:nullptr,true);
 }
-std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role){
+static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const std::array<ProductInputs,2>*inputs,const std::vector<Fr>*equality_point){
+ const unsigned experiment=io.prover()?polynomial::mode():0;
+ need(experiment<2 || equality_point,"Product01 equality experiment requires equality metadata");
+ const bool structured=experiment>=2;
+ if(structured)need(equality_point->size()==r1::log2exact(n),"Product01 equality point dimensions");
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
+ perf5::Scope batched_time(perf5::BatchedProduct);
+ if(!options.c2)inputs=nullptr;
+ if(inputs){need(io.prover(),"Product01 continuous prover only");for(const auto&input:*inputs)need(input.equality.size()==n && input.children.size()==2*n,"Product01 continuous dimensions");need(&(*inputs)[0].equality==&(*inputs)[1].equality,"Product01 shared equality");}
  need(n && n<=(1u<<24) && !(n&(n-1)),"Product01 sumcheck domain");
  Writer statement;statement.text("R7-PRODUCT01-LASSO-BATCH-v2");statement.number(n,8);
  for(const auto&h:initial){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}
@@ -119,18 +133,35 @@ std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::ar
  std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;
  auto current=n;unsigned round=0;
  while(current>1){
-  auto name=role+"/round/"+std::to_string(round);std::array<std::vector<Fr>,2>coeff{std::vector<Fr>(4,Fr(0)),std::vector<Fr>(4,Fr(0))};
-  if(io.prover()){
+  std::vector<Fr>aggregate(4,Fr(0));
+  auto name=role+"/round/"+std::to_string(round);
+  const bool candidate=io.prover() && (experiment==1 || structured || experiment==3);
+  if(candidate){
    perf5::Scope t(perf5::Polynomial);
+   auto load=[&](unsigned k,std::size_t i)->Fr{if(round)return folded[k][i];if(!inputs)return factors[k](i);if(!k)return (*inputs)[0].equality[i];return (*inputs)[(k-1)/2].children[2*i+(k-1)%2];};
+   const std::array<Fr,2>weights{alpha[0],alpha[1]};
+   const auto c=structured?polynomial::equality<Fr>(current,load,weights,(*equality_point)[round],experiment==3):polynomial::bespoke<Fr>(current,load,weights);
+   std::copy(c.begin(),c.end(),aggregate.begin());
+  }else{
+std::array<std::vector<Fr>,2>coeff{std::vector<Fr>(4,Fr(0)),std::vector<Fr>(4,Fr(0))};
+  if(io.prover()){
+   perf5::Scope t(perf5::Polynomial);perf5::Scope a2_time(perf5::A2Polynomial,options.a2);perf5::Scope c2_time(perf5::C2Input,inputs && !round);
+   if(auto*c=perf5::context){if(options.a2){c->a2_calls+=2;c->a2_pairs+=current;}else c->generic_product_calls+=2;if(inputs && !round){c->c2_polynomial_calls+=2;c->c2_polynomial_pairs+=current;}}
    for(std::size_t j=0;j<current/2;++j){
-    std::array<Fr,5>a,d;for(unsigned k=0;k<5;++k){a[k]=round?folded[k][2*j]:factors[k](2*j);d[k]=(round?folded[k][2*j+1]:factors[k](2*j+1))-a[k];}
-    for(unsigned b=0;b<2;++b){auto l=1+2*b,r=l+1;auto c0=a[0]*a[l],c1=a[0]*d[l]+d[0]*a[l],c2=d[0]*d[l];auto&c=coeff[b];c[0]+=c0*a[r];c[1]+=c0*d[r]+c1*a[r];c[2]+=c1*d[r]+c2*a[r];c[3]+=c2*d[r];}
+    std::array<Fr,5>a,d;for(unsigned k=0;k<5;++k){auto at=[&](std::size_t i)->Fr{if(round)return folded[k][i];if(!inputs)return factors[k](i);if(!k)return (*inputs)[0].equality[i];return (*inputs)[(k-1)/2].children[2*i+(k-1)%2];};a[k]=at(2*j);d[k]=at(2*j+1)-a[k];}
+    for(unsigned b=0;b<2;++b){auto l=1+2*b,r=l+1;auto c0=a[0]*a[l],c1=a[0]*d[l]+d[0]*a[l],c2=d[0]*d[l];auto&c=coeff[b];if(options.a2){c[0]+=c0*a[r];c[1]+=c0*d[r]+c1*a[r];c[2]+=c1*d[r]+c2*a[r];c[3]+=c2*d[r];}else{const Fr coefficient(1);c[0]+=coefficient*(c0*a[r]);c[1]+=coefficient*(c0*d[r]+c1*a[r]);c[2]+=coefficient*(c1*d[r]+c2*a[r]);c[3]+=coefficient*(c2*d[r]);}}
    }
   }
-  std::vector<Fr>aggregate(4,Fr(0));
   if(io.prover()){perf5::Scope t(perf5::BatchAggregation);for(unsigned k=0;k<4;++k)aggregate[k]=alpha[0]*coeff[0][k]+alpha[1]*coeff[1][k];}
+  }
+  if(io.prover() && perf5::context){auto*c=perf5::context;const auto pairs=current/2;c->poly_mode=experiment;
+   c->poly_pairs+=pairs;++c->poly_rounds;
+   c->poly_mul+=structured?(experiment==2?14:12)*pairs+(experiment==2?20:12):candidate?16*pairs:(options.a2?20:28)*pairs+8;
+   c->poly_add+=structured?(experiment==2?13:15)*pairs+(experiment==2?10:7):candidate?18*pairs:19*pairs+4;
+   c->fold_mul+=5*pairs;c->fold_add+=10*pairs;
+  }
   std::vector<Hidden>messages{previous};
-  {perf5::Scope t(perf5::Messages);
+  {perf5::Scope t(perf5::Messages);perf5::Scope b2_time(perf5::B2Message,options.b2);
    for(unsigned k=0;k<4;++k)messages.push_back(exchangeHidden(io,name+"/c/"+std::to_string(k),aggregate[k],rng));
    Relations recurrence;recurrence.role=name+"/recurrence";for(auto&h:messages)recurrence.handles.push_back(h.handle);
    recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1),Fr(1)}};
@@ -141,10 +172,16 @@ std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::ar
    std::vector<Hidden>polynomial(messages.begin()+1,messages.end());auto label=name+"/derived";
    previous=combine(io.session(),label,polynomial,powers);bindPublic(io,label,encode(previous.handle));
   }
-  {perf5::Scope t(perf5::Fold);if(io.prover())for(unsigned k=0;k<5;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}}
+  {perf5::Scope t(perf5::Fold);perf5::Scope c2_time(perf5::C2Fold,io.prover() && inputs && !round);
+   if(io.prover()){if(inputs && !round && perf5::context){perf5::context->c2_fold_calls+=2;perf5::context->c2_fold_pairs+=current;}
+    for(unsigned k=0;k<5;++k){if(!round){folded[k].resize(current/2);
+     auto at=[&](std::size_t i)->Fr{if(!inputs)return factors[k](i);if(!k)return (*inputs)[0].equality[i];return (*inputs)[(k-1)/2].children[2*i+(k-1)%2];};
+     for(std::size_t j=0;j<current/2;++j){auto a=at(2*j);folded[k][j]=a+challenge*(at(2*j+1)-a);}
+    }else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}
+   }}
   current/=2;++round;
  }
- perf5::Scope t(perf5::Endpoint);std::vector<Hidden>ends;
+ perf5::Scope t(perf5::Endpoint);perf5::Scope b2_time(perf5::B2Message,options.b2);std::vector<Hidden>ends;
  for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));
  // Preserve all five independent endpoint handles. Four multiplication
  // equations certify z_b=L_b*R_b and t_b=E*z_b; one explicit linear row binds
@@ -158,4 +195,11 @@ std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::ar
  {perf5::Scope check(perf5::BatchSigma);sigma(io,terminal,io.prover()?&w:nullptr,rng);}
  return {Reduction{initial[0],{ends[0],ends[1],ends[2]},point},Reduction{initial[1],{ends[0],ends[3],ends[4]},point}};
 }
+std::array<Reduction,2> batchedProductSumcheck(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const std::vector<Fr>*equality_point){
+ return batchedProductSumcheckImpl(io,n,initial,factors,rng,role,nullptr,equality_point);
+}
+std::array<Reduction,2> detail::batchedProductSumcheckContiguous(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const std::array<ProductInputs,2>&inputs,const std::vector<Fr>*equality_point){
+ return batchedProductSumcheckImpl(io,n,initial,factors,rng,role,&inputs,equality_point);
+}
+
 }

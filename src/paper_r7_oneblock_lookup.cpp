@@ -1,4 +1,5 @@
 #include "paper_r7_oneblock_lookup.hpp"
+#include "paper_r7_product_polynomial.hpp"
 #include "paper_r7_perf4_profile.hpp"
 #include "paper_r7_perf5_profile.hpp"
 #include "paper_r7_perf6_options.hpp"
@@ -26,9 +27,8 @@ Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prove
 void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
 }
 void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const LeafAuthenticator&auth,Random*rng,const std::string&role,const std::shared_ptr<std::vector<Fr>>&prepared_leaves,bool allow_specialized){
- const auto*b2=std::getenv("ZKGPT_PERF6_B2");
- perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
- bool contiguous=false;if(io.prover() && allow_specialized){const auto*c2=std::getenv("ZKGPT_PERF6_C2");contiguous=c2 && std::string(c2)=="1";}
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
+ const bool contiguous=io.prover() && allow_specialized && options.c2;
  perf4::Scope native_scope("Native/Product",role,n);
  perf5::Product product_profile(role,n,io.prover());perf5::Scope product_total(perf5::Total);
  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"lookup Product domain/authenticator");validate(root.handle,io.session(),root.handle.role);
@@ -43,7 +43,7 @@ void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const Leaf
   Reduction end;
   if(contiguous){
    std::optional<ProductInputs>inputs;
-   {perf5::Scope construct(perf5::InputsConstruct);inputs.emplace(ProductInputs{*w,*tree.at(d-layer-1)});if(perf5::context)++perf5::context->input_constructions;}
+   {perf5::Scope construct(perf5::InputsConstruct);perf5::Scope c2_time(perf5::C2Input);inputs.emplace(ProductInputs{*w,*tree.at(d-layer-1)});if(perf5::context)++perf5::context->input_constructions;}
    end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&*inputs,allow_specialized);
   }else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",nullptr,allow_specialized);
   need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
@@ -56,7 +56,7 @@ void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const Leaf
  evidence(io,role+"/root");}
 }
 void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,const std::shared_ptr<std::vector<Fr>>&base,const BatchedLeafAuthenticator&auth,Random*rng,const std::string&role){
- const auto*b2=std::getenv("ZKGPT_PERF6_B2");perf6::ScopedMessages message_options(b2 && std::string(b2)=="1");
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
  perf4::Scope native_scope("Native/Product01",role,n);auto batch=role+"/01";
  perf5::Product profile(batch,n,io.prover());perf5::Scope total(perf5::Total);
  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"Product01 domain/authenticator");
@@ -71,13 +71,21 @@ void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,c
  }
  auto carry=roots;std::vector<Fr>row;auto d=r1::log2exact(n);
  for(unsigned layer=0;layer<d;++layer){
-  auto width=std::size_t(1)<<layer;auto name=batch+"/level/"+std::to_string(layer);std::vector<Value>f;
+  auto width=std::size_t(1)<<layer;auto name=batch+"/level/"+std::to_string(layer);std::vector<Value>f;std::shared_ptr<std::vector<Fr>>weights;
   if(io.prover()){
-   std::shared_ptr<std::vector<Fr>>weights;{perf5::Scope t(perf5::Weights);perf5::weights(width);weights=std::make_shared<std::vector<Fr>>(r1::weights(row));}
+   {perf5::Scope t(perf5::Weights);perf5::weights(width);weights=std::make_shared<std::vector<Fr>>(polynomial::mode()>=2?polynomial::weights(row):r1::weights(row));if(polynomial::mode()>=2 && perf5::context)perf5::context->weight_muls-=width-1;}
    f.push_back([weights](std::size_t j){return weights->at(j);});
    for(unsigned b=0;b<2;++b){auto child=tree[b].at(d-layer-1);f.push_back([child](std::size_t j){return child->at(2*j);});f.push_back([child](std::size_t j){return child->at(2*j+1);});}
   }
-  auto end=batchedProductSumcheck(io,width,carry,f,rng,name+"/sumcheck");
+  std::array<Reduction,2>end;
+  if(io.prover() && options.c2){
+   std::optional<std::array<ProductInputs,2>>inputs;
+   {perf5::Scope construct(perf5::InputsConstruct);perf5::Scope c2_time(perf5::C2Input);
+    inputs.emplace(std::array<ProductInputs,2>{{{*weights,*tree[0].at(d-layer-1)},{*weights,*tree[1].at(d-layer-1)}}});
+    if(perf5::context)perf5::context->input_constructions+=2;
+   }
+   end=detail::batchedProductSumcheckContiguous(io,width,carry,f,rng,name+"/sumcheck",*inputs,&row);
+  }else end=batchedProductSumcheck(io,width,carry,f,rng,name+"/sumcheck",&row);
   need(end[0].point==end[1].point,"Product01 point mismatch");
   {perf5::Scope t(perf5::Equality);constant(io,end[0].endpoints[0],r1::equality(row,end[0].point),rng,name+"/equality");}
   {perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");for(unsigned b=0;b<2;++b){auto label=name+"/instance/"+std::to_string(b)+"/carry";carry[b]=combine(io.session(),label,{end[b].endpoints[1],end[b].endpoints[2]},{Fr(1)-r,r});bindPublic(io,label,encode(carry[b].handle));}row=end[0].point;row.insert(row.begin(),r);}
@@ -121,7 +129,7 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
  LeafAuthenticator final_auth=[&,g,g2,tau](IO&live,const Query&q,const Hidden*leaf,Random*random,std::string name){
   auto c=evaluate(live,final,q.point,random,name+"/final");Fr address=0,scale=1;for(auto&bit:q.point){address+=scale*bit;scale*=Fr(2);}auto expected=g2*address+g*r1::mle(table,q.point)-tau;Hidden l;if(live.prover())l=*leaf;else l.handle=q.evaluation;linear(live,name+"/fingerprint",{l,c,known(live,name+"/public",expected)},{Fr(1),Fr(-1),Fr(-1)},random);evidence(live,name+"/final");
  };
- hiddenProduct(io,table.size(),roots[2],leaves[2],final_auth,rng,role+"/product/2",{},false);
+ hiddenProduct(io,table.size(),roots[2],leaves[2],final_auth,rng,role+"/product/2");
  evidence(io,role+"/multiset");
 }
 void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){

@@ -1,5 +1,6 @@
 #include "paper_r7_oneblock_gkr.hpp"
 #include "paper_r7_oneblock_sumcheck.hpp"
+#include "paper_r7_perf6_options.hpp"
 #include <prover.hpp>
 #include <gkr_protocol.hpp>
 #include <host_safety.hpp>
@@ -164,6 +165,7 @@ MatrixResult matrix(IO&io,const layer&l,const std::vector<Fr>&parent,const Hidde
 }
 
 PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t sequence_length,Random*rng){
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
  need(graph.size>=2 && graph.circuit.size()==graph.size,"Oneblock GKR public circuit shape");
  need(io.prover()?(p && rng):(!p && !rng),"Oneblock GKR P/V private boundary");
  const unsigned sequence_bits=bits(sequence_length);

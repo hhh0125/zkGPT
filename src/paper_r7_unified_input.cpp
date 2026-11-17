@@ -1,3 +1,4 @@
+#include "paper_r7_perf6_options.hpp"
 #include "paper_r7_u_fold_state.hpp"
 #include "paper_r7_unified_input.hpp"
 #include "paper_r7_public_k.hpp"
@@ -69,6 +70,7 @@ Round quadraticRound(std::size_t n,const std::vector<Segment>&s,const std::vecto
 Round quadraticRoundFolded(std::size_t n,const std::vector<Segment>&s,const std::vector<Fr>&p,const Factors&f){return quadraticRoundImpl(n,s,p,f,true);}
 Reduction reduce(IO&io,std::size_t n,const std::vector<Segment>&segments,const Hidden&initial,
  const Factors&factors,const std::function<Fr(const std::vector<Fr>&)>&kernel_at,Random*rng,const std::string&role,PublicK*state,const Inputs&inputs){
+ const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
  auto started=std::chrono::steady_clock::now();auto cpu=crypto::processCPU();
  validate(n,segments);need(kernel_at && (io.prover()?bool(factors)&&rng:!factors&&!rng),"unified private prover/verifier boundary");
  need(io.prover() || !state,"unified verifier cannot use prover K cache");
