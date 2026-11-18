@@ -40,7 +40,6 @@ add_library(paper_r2 STATIC
     paper_r2_model_queries.cpp
     paper_r2_model_resources.cpp
     paper_r2_r5b_trust.cpp
-    paper_r2_r6_mapping.cpp
     paper_r2_r6_model.cpp
     paper_r2_r6_trust.cpp
 )
@@ -184,4 +183,12 @@ if(ZKGPT_MASKED_TESTS)
  target_link_options(r7_masked_tests PRIVATE -Wl,--gc-sections)
  add_test(NAME r7_masked_input_guards COMMAND r7_masked_tests shape)
  add_test(NAME r7_masked_full_proofs COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/r7_masked_smoke.py $<TARGET_FILE:r7_masked_tests>)
+endif()
+
+if(ZKGPT_KIND01_TESTS)
+ add_executable(r7_metadata_tests paper_r7_metadata_tests.cpp)
+ target_link_libraries(r7_metadata_tests PRIVATE paper_r7)
+ target_compile_options(r7_metadata_tests PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_metadata_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_incremental_metadata COMMAND r7_metadata_tests)
 endif()

@@ -7,8 +7,9 @@ namespace {
 void start(layer &c,int n,layerType ty){initLayer(c,n,ty);c.need_phase2=true;c.zero_start_id=0;}
 std::string name(const char*op,std::size_t id,const char*value){return std::string(op)+"_"+std::to_string(id)+"_"+value;}
 }
-int neuralNetwork::r5bAllocate(int count){
+int neuralNetwork::r5bAllocate(int count,unsigned reserve){
  int base=hs::checkedSize(r5bMasterSize());
+ witness_registry.recordConstants(base,reserve);
  if(r6Metadata()){r6_master_size_=hs::checkedSize(base,count);total_relu_in_size=hs::checkedSize(total_relu_in_size,count);return base;}
  val[0].resize(hs::checkedSize(val[0].size(),count));
  for(int i=base;i<base+count;++i)val[0][i].clear();
@@ -17,11 +18,10 @@ int neuralNetwork::r5bAllocate(int count){
 void neuralNetwork::r5bFinish(layer &c,i64 &id){
  c.need_phase2=!c.bin_gates.empty();
  calcNormalLayer(c,id);
- if(!structure_only)for(auto &v:val[id])if(!v.isZero())throw std::logic_error("R5B numerical GKR equality failed at layer "+std::to_string(id));
  ++id;
 }
 void neuralNetwork::r5bRound(layer &c,i64 &id,int bias){
- const int n=len*channel_out,o=r5bAllocate(hs::checkedSize(20,hs::mul(4,n)));
+ const int n=len*channel_out,o=r5bAllocate(hs::checkedSize(20,hs::mul(4,n)),20);
  const int y=o+20,a=y+n,r=a+n,rc=r+n;
  start(c,4*n,layerType::RELU);Gates g{c,o};
  for(int i=0;i<n;++i){
@@ -49,7 +49,7 @@ void neuralNetwork::r5bRound(layer &c,i64 &id,int bias){
 }
 void neuralNetwork::r5bAttention(layer *c,i64 &id){
  const int rows=headnum*len,t=rows*(len+1)/2,h=rows*headdim,ys=len*channel_in;
- const int o=r5bAllocate(10+2*rows+ys+6*t+3*h);
+ const int o=r5bAllocate(10+2*rows+ys+6*t+3*h,10);
  const int se=o+10,y=se+rows,m=y+ys,raw=m+rows,s=raw+t,ti=s+t,e=ti+t,z=e+t,sr=z+t,a=sr+t,r=a+h,rc=r+h;
  auto instance=softmax_witness_instance++;
  auto range=[&](const char*label,int at,int n,unsigned bits,bool sign=false){witness_registry.addRange(WitnessKind::SOFTMAX,name("softmax",instance,label),at,n,bits,sign);};

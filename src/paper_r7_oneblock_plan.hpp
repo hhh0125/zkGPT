@@ -10,6 +10,6 @@ struct Coverage {
 };
 Coverage discover(unsigned blocks=1);
 Coverage discover(const R6PublicArtifacts&);
-void requireCoverage(const Coverage&);std::string identity(const Coverage&);
+std::string identity(const Coverage&);
 void writeCoverage(std::ostream&,const Coverage&);
 }

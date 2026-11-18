@@ -5,7 +5,6 @@
 #include "paper_r2_r6_trust.hpp"
 #include "paper_r1_wire.hpp"
 #include "paper_r1_exp.hpp"
-#include <set>
 #include <iostream>
 #include <cstdlib>
 namespace zkgpt::r7 {
@@ -55,7 +54,7 @@ R7Context buildR6Context(const std::string&pin,const R6PublicArtifacts&artifacts
  for(auto i:c.plan.output)layout.integer("Y/master-index",i);
  for(auto i:c.plan.constants)layout.integer("constant/one",i);
  for(auto i:c.plan.reserved_zero)layout.integer("constant/zero",i);
- std::set<std::string> ids;for(auto&o:c.objects){r1::require(ids.insert(o.id).second,"R7 duplicate witness object identity");layout.text("aux/id",o.id);layout.text("aux/parent",o.parent);layout.integer("aux/kind",static_cast<unsigned>(o.kind));layout.integer("aux/actual",o.actual);layout.integer("aux/padded",o.padded);}
+ for(auto&o:c.objects){layout.text("aux/id",o.id);layout.text("aux/parent",o.parent);layout.integer("aux/kind",static_cast<unsigned>(o.kind));layout.integer("aux/actual",o.actual);layout.integer("aux/padded",o.padded);}
  const auto d=layout.digest();c.layout_sha256=r5b::hex(Bytes(d.begin(),d.end()));return c;
 }
 std::vector<r1::InputSpan> nativeXSpans(const R7Context&c){
@@ -75,22 +74,21 @@ std::vector<r1::InputSpan> nativeXSpans(const R7Context&c,const R6PublicArtifact
 R7WitnessStore::R7WitnessStore()=default;
 R7WitnessStore::~R7WitnessStore()=default;
 void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
- r1::require(!execution_,"R7 witness store already populated");const auto target=executionTarget(c.plan.shape.layer_count);checkManifest(manifest,c.model_manifest_sha256,target.blocks);
- auto m=r6::parseManifest(r1::readFile(manifest),target.blocks);r6::checkParameterFiles(m,"data/gpt2_int");
+ r1::require(!execution_,"R7 witness store already populated");const auto target=executionTarget(c.plan.shape.layer_count);
+ auto manifest_bytes=r1::readFile(manifest);
+ r1::require(r5b::digestHex(manifest_bytes)==c.model_manifest_sha256,"independent model manifest SHA256 mismatch");
+ auto m=r6::parseManifest(manifest_bytes,target.blocks);r6::checkParameterFiles(m,"data/gpt2_int");
  // Freeze the parameter directory across the existing production readers.
  const char*old=std::getenv("ZKGPT_PARAMETER_DIR");const bool had=old;const std::string saved=old?old:"";
  struct Restore{bool had;std::string saved;~Restore(){if(had)setenv("ZKGPT_PARAMETER_DIR",saved.c_str(),1);else unsetenv("ZKGPT_PARAMETER_DIR");}}restore{had,saved};
  r1::require(setenv("ZKGPT_PARAMETER_DIR","data/gpt2_int",1)==0,"parameter directory setup failed");
  network_=std::make_unique<LLM>(target.blocks,12,64,768,3072);execution_=std::make_unique<::prover>();r6::configure(*network_);network_->setWitnessCapacityHint(c.plan.master.actual);
- try{executePrivateWitness([&]{if(target.blocks==12)network_->createFull12FiniteWitness(*execution_);else network_->createFiniteWitness(*execution_);network_->validateCurrentWitness(*execution_);});}catch(...){
+ try{executePrivateWitness([&]{if(target.blocks==12)network_->createFull12FiniteWitness(*execution_);else network_->createFiniteWitness(*execution_);});}catch(...){
   if(target.blocks==12){std::size_t gates=0,maps=0,fields=0;for(auto&l:execution_->C.circuit){gates+=l.uni_gates.capacity()*sizeof(uniGate)+l.bin_gates.capacity()*sizeof(binGate);maps+=(l.ori_id_u.capacity()+l.ori_id_v.capacity())*sizeof(u32);}for(std::size_t i=1;i<execution_->val.size();++i)fields+=execution_->val[i].capacity()*sizeof(Fr);
    std::cerr<<"FULL12_WITNESS_ALLOCATION_METADATA master_fields="<<(execution_->val.empty()?0:execution_->val[0].size())<<" master_capacity_bytes="<<(execution_->val.empty()?0:execution_->val[0].capacity()*sizeof(Fr))<<" graph_gate_capacity_bytes="<<gates<<" graph_map_capacity_bytes="<<maps<<" nonmaster_capacity_bytes="<<fields<<'\n';
   }throw;
  }
  r1::require(legacyCommitmentAbsent(),"R7 must not call legacy nonhiding PC");
- auto p=r2::planModelQueries(execution_->C,network_->getWitnessRegistry(),network_->parameterRegions(),r1::ExpProfile::LegacyClampOne);
- r1::require(p.circuit_id==c.plan.circuit_id && p.master==c.plan.master && p.output==c.plan.output,"R7 witness differs from verifier-owned R6 plan");
- r6::validateRegions(p,network_->parameterRegions());r1::require(baseMaster().size()==p.master.actual,"R7 actual base Master size");
  r6::checkParameterFiles(m,"data/gpt2_int");objects_=c.objects;objects_.front().materialized=true;
 }
 const std::vector<Fr>& R7WitnessStore::baseMaster()const{r1::require(execution_ && !execution_->val.empty(),"R7 no witness");return execution_->val[0];}

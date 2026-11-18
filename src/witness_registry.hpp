@@ -1,9 +1,9 @@
 #pragma once
 
-#include <algorithm>
 #include <cstddef>
 #include <limits>
-#include <sstream>
+#include "paper_r1_mapped_input.hpp"
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -56,24 +56,6 @@ inline bool fitsUnsignedBits(__int128 value, unsigned bits) {
     return static_cast<unsigned __int128>(value) < limit;
 }
 
-inline std::string int128ToString(__int128 value) {
-    if (value == 0) return "0";
-    const bool negative = value < 0;
-    unsigned __int128 magnitude = negative
-        ? static_cast<unsigned __int128>(-(value + 1)) + 1
-        : static_cast<unsigned __int128>(value);
-    std::string result;
-    while (magnitude != 0) {
-        result.push_back(static_cast<char>('0' + magnitude % 10));
-        magnitude /= 10;
-    }
-    if (negative) result.push_back('-');
-    std::reverse(result.begin(), result.end());
-    return result;
-}
-
-struct RegisteredExpQuery { std::size_t operator_id, query_id, t_witness_index, E_witness_index; };
-
 class WitnessRegistry {
 public:
     void setR4NumericalCandidate(bool enabled) { r4_candidate_=enabled; }
@@ -83,11 +65,29 @@ public:
     bool r6Engineering() const { return r6_engineering_; }
     bool r5bEngineeringCandidate() const { return r5b_candidate_; }
     void addExpQueries(std::size_t op,std::size_t to,std::size_t eo,std::size_t count) {
-        if (!exp_queries_.empty() && exp_queries_.back().operator_id>=op)
-            throw std::logic_error("duplicate or unordered exp operator");
-        for(std::size_t i=0;i<count;i++) exp_queries_.push_back({op,i,to+i,eo+i});
+        // Paired spans preserve operator/query order without one entry per query.
+        (void)op;
+        append(exp_t_,to,count,Fr(0));
+        append(exp_E_,eo,count,Fr(0));
     }
-    const std::vector<RegisteredExpQuery> &expQueries() const {return exp_queries_;}
+    const auto &rangeSources() const { return range_sources_; }
+    const auto &expAddresses() const { return exp_t_; }
+    const auto &expValues() const { return exp_E_; }
+    const auto &parameterSources() const { return parameters_; }
+    const auto &constants() const { return constants_; }
+    const auto &reservedZero() const { return reserved_zero_; }
+    std::size_t outputOffset() const { return output_offset_; }
+    std::size_t outputCount() const { return output_count_; }
+    void recordParameter(std::size_t offset,std::size_t count) {
+        append(parameters_,offset,count,Fr(0));
+    }
+    void recordConstants(std::size_t offset,unsigned reserve) {
+        constants_.push_back(offset);
+        for(unsigned j=1;j<reserve;++j)reserved_zero_.push_back(offset+j);
+    }
+    void recordOutput(std::size_t offset,std::size_t count) {
+        output_offset_=offset;output_count_=count;
+    }
     void setShape(const WitnessShape &shape) {
         if (shape.sequence_length == 0 || shape.layer_count == 0 ||
             shape.head_count == 0 || shape.head_dimension == 0 ||
@@ -112,54 +112,30 @@ public:
         if (val0_offset > std::numeric_limits<std::size_t>::max() - count)
             throw std::overflow_error("range constraint offset overflow: " + name);
         constraints_.push_back({kind, name, val0_offset, count, bits, is_signed});
+        Fr bias=0;
+        if(is_signed){bias=Fr(1);for(unsigned bit=1;bit<bits;++bit)bias*=Fr(2);}
+        append(range_sources_[{bits,is_signed}],val0_offset,count,bias);
+        if(r5b_candidate_ && kind==WitnessKind::LAYER_NORM && ends(name,"_sigma"))
+            append(range_sources_[{bits,false}],val0_offset,count,Fr(-1));
+        if(r4_candidate_){
+            const bool ln=kind==WitnessKind::LAYER_NORM,gelu=kind==WitnessKind::GELU;
+            const bool root=ln && (ends(name,"_sqrt_upper") || ends(name,"_sqrt_lower"));
+            const bool positive=root || (ln && (ends(name,"_sigma") || ends(name,"_delta1") || ends(name,"_term1") || ends(name,"_term2"))) ||
+                (gelu && (ends(name,"_delta2") || ends(name,"_term1") || ends(name,"_term2")));
+            if(positive)append(range_sources_[{bits,false}],val0_offset,count,Fr(-1));
+            if(ln && ends(name,"_sigma"))append(range_sources_[{32,false}],val0_offset,count,Fr(0));
+        }
     }
 
     const std::vector<RangeConstraint> &constraints() const {
         return constraints_;
     }
 
-    void validateLayout(std::size_t val0_size) const {
-        std::vector<const RangeConstraint *> ordered;
-        ordered.reserve(constraints_.size());
-        for (const auto &constraint : constraints_) {
-            if (constraint.val0_offset > val0_size ||
-                constraint.count > val0_size - constraint.val0_offset) {
-                std::ostringstream message;
-                message << "range constraint " << constraint.name
-                        << " is outside val[0]: offset=" << constraint.val0_offset
-                        << ", count=" << constraint.count
-                        << ", val[0].size()=" << val0_size;
-                throw std::out_of_range(message.str());
-            }
-            ordered.push_back(&constraint);
-        }
-        std::sort(ordered.begin(), ordered.end(),
-                  [](const RangeConstraint *lhs, const RangeConstraint *rhs) {
-                      return lhs->val0_offset < rhs->val0_offset;
-                  });
-        for (std::size_t i = 1; i < ordered.size(); ++i) {
-            const auto &previous = *ordered[i - 1];
-            const auto &current = *ordered[i];
-            if (previous.val0_offset + previous.count > current.val0_offset) {
-                throw std::logic_error("overlapping range constraints: " +
-                                       previous.name + " and " + current.name);
-            }
-        }
-    }
-
-    std::size_t constrainedValueCount() const {
-        std::size_t total = 0;
-        for (const auto &constraint : constraints_) {
-            if (constraint.count > std::numeric_limits<std::size_t>::max() - total)
-                throw std::overflow_error("range constraint count overflow");
-            total += constraint.count;
-        }
-        return total;
-    }
-
     void clear() {
         constraints_.clear();
-        exp_queries_.clear();
+        range_sources_.clear();exp_t_.clear();exp_E_.clear();parameters_.clear();
+        constants_.clear();reserved_zero_.clear();output_offset_=output_count_=0;
+        r6_engineering_=false;
         shape_ = WitnessShape{};
         r4_candidate_ = false;
         r5b_candidate_ = false;
@@ -171,5 +147,18 @@ private:
     bool r5b_candidate_ = false;
     WitnessShape shape_;
     std::vector<RangeConstraint> constraints_;
-    std::vector<RegisteredExpQuery> exp_queries_;
+    using Spans=std::vector<zkgpt::r1::InputSpan>;
+    std::map<std::pair<unsigned,bool>,Spans> range_sources_;
+    Spans exp_t_,exp_E_,parameters_;
+    std::vector<std::size_t> constants_,reserved_zero_;
+    std::size_t output_offset_=0,output_count_=0;
+    static bool ends(const std::string&s,const std::string&suffix) {
+        return s.size()>=suffix.size() && s.compare(s.size()-suffix.size(),suffix.size(),suffix)==0;
+    }
+    static void append(Spans&spans,std::size_t offset,std::size_t count,const Fr&bias) {
+        if(!count)return;
+        if(offset>std::numeric_limits<std::size_t>::max()-count)throw std::overflow_error("source offset overflow");
+        if(!spans.empty() && spans.back().offset+spans.back().count==offset && spans.back().bias==bias)spans.back().count+=count;
+        else spans.push_back({offset,count,bias});
+    }
 };

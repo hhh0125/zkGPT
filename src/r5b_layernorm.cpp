@@ -5,7 +5,7 @@ using namespace zkgpt::r5b;
 namespace hs=host_safety;
 void neuralNetwork::r5bLayerNorm(layer *c,i64 &id,int ln_id,int real){
  if(real!=768 || channel_in!=1024)throw std::invalid_argument("R5B LN requires 768 real/1024 padded channels");
- const int count=len*channel_in,o=r5bAllocate(10+4*count+6*len);
+ const int count=len*channel_in,o=r5bAllocate(10+4*count+6*len,10);
  const int y=o+10,a=y+count,r=a+count,rc=r+count,sum=rc+count,B=sum+len,D=B+len,sigma=D+len,lo=sigma+len,hi=lo+len;
  const int gamma=layer_norm_w_q_start[ln_id],beta=layer_norm_b_q_start[ln_id];
  auto instance=layer_norm_witness_instance++;

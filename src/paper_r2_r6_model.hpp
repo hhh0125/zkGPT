@@ -5,9 +5,7 @@
 #include <ostream>
 namespace zkgpt::r6 {
 inline void configure(LLM &n){n.setR6EngineeringCandidate();}
-void auditGraph(const layeredCircuit&,const LLM&,const r2::ModelQueryPlan&);
-// Owns one fully audited public build. No mutable aliases or copies of the
-// network/graph escape, so serialization can rely on constructor validation.
+// Owns one public graph and the metadata recorded while building it.
 class PublicCircuit final {
  LLM network_;
  layeredCircuit graph_;

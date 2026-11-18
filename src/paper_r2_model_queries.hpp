@@ -3,7 +3,7 @@
 #include <neuralNetwork.hpp>
 namespace zkgpt::r2 {
 struct ModelQuerySource {r1::PCSpec spec;std::vector<r1::InputSpan> spans;};
-// Construct only from the verifier's own public model builder/registry.
+// Each builder records its own metadata; finalize once after construction.
 // This adapter is a legacy numerical-profile source plan, not its approval.
 struct ModelQueryPlan {
     bool r4_candidate=false;
@@ -17,8 +17,7 @@ struct ModelQueryPlan {
     std::vector<r1::ExpLookup> exps;
     std::vector<std::size_t> constants,reserved_zero,output;
 };
-ModelQueryPlan planModelQueries(const layeredCircuit &c,const WitnessRegistry &registry,
-    const std::vector<neuralNetwork::ParameterRegion> &parameters,
+ModelQueryPlan finalizeModelQueries(const layeredCircuit &c,const WitnessRegistry &registry,
     r1::ExpProfile exp_profile=r1::ExpProfile::Unclamped);
 r1::LookupBatchSpec makeModelQueryStatement(const ModelQueryPlan &plan,
     const r1::Commitment &master,const std::vector<r1::Commitment> &children,

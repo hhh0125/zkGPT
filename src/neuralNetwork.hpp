@@ -89,7 +89,6 @@ public:
     std::size_t metadataWitnessElements() const { return r6_metadata_witness_elements_; }
     void logPrivateMemory(const std::string &stage) const;
     layeredCircuit buildPublicCircuit();
-    void validateCurrentWitness(const prover &pr) const;
     const WitnessRegistry &getWitnessRegistry() const { return witness_registry; }
     int getSequenceLength() const { return len; }
     int getLayerCount() const { return layer_num; }
@@ -138,7 +137,6 @@ protected:
 
     void calcNormalLayer(const layer &circuit, i64 layer_id,bool output=false);
     void merge_layer(prover &pr,i64 layer_id) ;
-    void checkNormalLayer(const layer &circuit, i64 layer_id,const vector<vector<F> > & vvv);
 
     void calcDotProdLayer(const layer &circuit, i64 layer_id);
 
@@ -178,7 +176,7 @@ protected:
     std::vector<BlockConnection> r6_connections_;
     bool r6Metadata() const { return r6_engineering_ && structure_only; }
     std::size_t r5bMasterSize() const { return r6Metadata()?r6_master_size_:val[0].size(); }
-    int r5bAllocate(int count);
+    int r5bAllocate(int count,unsigned reserve);
     void r5bFinish(layer &c,i64 &id);
     void r5bRound(layer &c,i64 &id,int bias_offset);
     void r5bAttention(layer *c,i64 &id);
@@ -254,8 +252,6 @@ protected:
     void writeScalarDumpFiles() const;
     static string input0SegmentMapPath();
     static string sourceModuleOutputPath(const string &filename);
-    void validateWitnessRegistry(const vector<F> &val0) const;
-    void validateMappedCircuitWitness(const prover &pr) const;
 
     vector<Input0Segment> input0_segments;
     vector<uint64_t> gelu_delta3_limbs;

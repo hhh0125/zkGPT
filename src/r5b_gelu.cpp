@@ -4,7 +4,7 @@
 using namespace zkgpt::r5b;
 namespace hs=host_safety;
 void neuralNetwork::r5bGelu(layer *c,i64 &id,int real){
- const int count=len*channel_out,o=r5bAllocate(hs::checkedSize(10,hs::mul(9,count)));
+ const int count=len*channel_out,o=r5bAllocate(hs::checkedSize(10,hs::mul(9,count)),10);
  const int y=o+10,u=y+count,sign=u+count,t=sign+count,branch=t+count,tu=branch+count,u2=tu+count,u3=u2+count,r=u3+count;
  auto instance=gelu_witness_instance++;
  auto range=[&](const char*label,int at,unsigned bits,bool signed_value=false){witness_registry.addRange(WitnessKind::GELU,"gelu_"+std::to_string(instance)+"_"+label,at,count,bits,signed_value);};
