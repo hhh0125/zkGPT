@@ -1,3 +1,4 @@
+#include "paper_r7_lasso_masked.hpp"
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include "paper_r7_perf5_profile.hpp"
 #include "paper_r7_product_polynomial.hpp"
@@ -20,6 +21,7 @@ void endpoint(IO&io,const Hidden&claim,const std::vector<Hidden>&x,const Express
  terms.push_back(claim);coeff.push_back(Fr(-1));Relations r;r.role=role+"/expression";for(auto&t:terms)r.handles.push_back(t.handle);r.linear={coeff};sigma(io,r,io.prover()?&terms:nullptr,rng);
 }
 }
+void masked::originalSingleTerminal(IO&io,const Hidden&claim,const std::vector<Hidden>&ends,Random*rng,const std::string&role){endpoint(io,claim,ends,Expression{3,{{Fr(1),{0,1,2}}}},rng,role);}
 namespace detail {
 namespace {
 void inputShape(const ProductInputs&input){auto n=input.equality.size();need(n>=2 && n<=(1u<<24) && !(n&(n-1)) && input.children.size()==2*n,"Product contiguous input shape");}
@@ -109,6 +111,7 @@ Reduction productSumcheck(IO&io,std::size_t n,const Hidden&initial,const std::ve
  const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
  perf5::Scope independent_time(perf5::IndependentProduct);
  const bool candidate=io.prover() && allow_specialized && options.a2;
+ if(masked::singleEnabled())return masked::single(io,n,initial,factors,rng,role,options.c2 && allow_specialized?inputs:nullptr,allow_specialized && options.a2);
  return expressionSumcheckImpl(io,n,initial,factors,Expression{3,{{Fr(1),{0,1,2}}}},rng,role,candidate,options.c2 && allow_specialized?inputs:nullptr,true);
 }
 static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const std::array<ProductInputs,2>*inputs,const std::vector<Fr>*equality_point){
@@ -121,6 +124,7 @@ static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,co
  if(!options.c2)inputs=nullptr;
  if(inputs){need(io.prover(),"Product01 continuous prover only");for(const auto&input:*inputs)need(input.equality.size()==n && input.children.size()==2*n,"Product01 continuous dimensions");need(&(*inputs)[0].equality==&(*inputs)[1].equality,"Product01 shared equality");}
  need(n && n<=(1u<<24) && !(n&(n-1)),"Product01 sumcheck domain");
+ if(masked::batchEnabled())return masked::batch(io,n,initial,factors,rng,role,inputs,equality_point);
  Writer statement;statement.text("R7-PRODUCT01-LASSO-BATCH-v2");statement.number(n,8);
  for(const auto&h:initial){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}
  bindPublic(io,role+"/statement",statement.b);

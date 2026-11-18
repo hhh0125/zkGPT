@@ -4,6 +4,7 @@
 #include "paper_r7_fs_io.hpp"
 #include "paper_r7_perf6_options.hpp"
 #include "paper_r7_unified_input.hpp"
+#include "paper_r2_range_split.hpp"
 #include <cstring>
 #include <random>
 #include <chrono>
@@ -133,6 +134,17 @@ struct Counted {
  friend Counted operator-(const Counted&a,const Counted&b){++add;return Counted(a.value-b.value);}
  Counted&operator+=(const Counted&b){++add;value+=b.value;return *this;}
 };
+void rangeSplitTest(){
+ using namespace zkgpt::r2;
+ for(auto pair:std::vector<std::pair<std::size_t,std::vector<std::size_t>>>{{5,{5}},{1048576,{1048576}},{1048577,{1048577}},{1572864,{1572864}},{4194305,{4194304,1}},{4875264,{4194304,680960}},{5309952,{4194304,1115648}},{7864320,{7864320}},{8370944,{8370944}},{8388608,{8388608}}}){
+  need(rangeSplitSizes(pair.first,true)==pair.second,"large split sizes");need(rangeSplitSizes(pair.first,false)==std::vector<std::size_t>{pair.first},"baseline split disabled");
+ }
+ std::vector<r1::InputSpan>spans{{13,3000000,Fr(1)},{5000000,1875264,Fr(-3)}};
+ auto parts=splitRangeSpans(spans,{4194304,680960});need(parts.size()==2 && parts[0].size()==2 && parts[1].size()==1,"span crossing shape");
+ need(parts[0][1].offset==5000000 && parts[0][1].count==1194304 && parts[1][0].offset==6194304 && parts[1][0].count==680960 && parts[1][0].bias==Fr(-3),"span coverage/bias");
+ bool rejected=false;try{(void)splitRangeSpans(spans,{4194304,680959});}catch(...){rejected=true;}need(rejected,"omitted source element accepted");
+ std::cout<<"PASS large range split threshold, exact contiguous coverage and bias\n";
+}
 void arithmeticTest(){
  std::mt19937_64 gen(20261117);auto random=[&]{Fr x=0;for(unsigned k=0;k<9;++k)x=x*Fr(2147483647)+Fr(gen()%2147483647);return x;};
  std::size_t checks=0;
@@ -304,6 +316,7 @@ void direct(const std::filesystem::path&dir,std::size_t n,const std::string&faul
 int main(int argc,char**argv){try{
  r1::init();std::string mode=argc>1?argv[1]:"shared";std::size_t n=argc>2?std::stoull(argv[2]):8,actual=argc>3 && mode!="productbench" && mode!="productverify"?std::stoull(argv[3]):n;
  if(mode=="productbench" || mode=="productverify"){need(argc==4,"productbench/productverify n proof-path");productBench(n,argv[3],mode=="productverify");return 0;}
+ if(mode=="rangesplit"){rangeSplitTest();return 0;}
  if(mode=="arithmetic"){arithmeticTest();return 0;}
  if(mode=="config"){configTest();return 0;}
  if(mode=="equivalence"){equivalenceTest();return 0;}

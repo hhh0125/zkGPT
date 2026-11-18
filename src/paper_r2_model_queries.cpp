@@ -1,4 +1,5 @@
 #include "paper_r2_model_queries.hpp"
+#include "paper_r2_range_split.hpp"
 #include <gkr_protocol.hpp>
 #include "paper_r1_wire.hpp"
 #include <map>
@@ -50,7 +51,14 @@ ModelQueryPlan planModelQueries(const layeredCircuit &c,const WitnessRegistry &r
     }
     p.constants.assign(constants.begin(),constants.end());
     r1::require(p.constants.size()==8*p.shape.layer_count,"model constant coverage");
-    for(const auto &group:groups){auto id="r2/model/range/"+std::to_string(p.ranges.size());auto child=addSource(p,id,group.second);p.ranges.push_back({child,id,group.first.first});}
+    std::size_t range_group=0;
+    for(const auto &group:groups){
+        const auto parent="r2/model/range/"+std::to_string(range_group++);
+        std::size_t actual=0;for(const auto&span:group.second)actual+=span.count;
+        const auto sizes=rangeSplitSizes(actual,largeRangeSplitEnabled());
+        const auto pieces=sizes.size()==1?std::vector<std::vector<r1::InputSpan>>{group.second}:splitRangeSpans(group.second,sizes);
+        for(std::size_t part=0;part<pieces.size();++part){auto id=pieces.size()==1?parent:parent+"/part/"+std::to_string(part);auto child=addSource(p,id,pieces[part]);if(pieces.size()>1 && sizes[part]==1)p.sources[child].spec=r1::PCSpec::make(id,1,2,r1::Layout::RowMajor);p.ranges.push_back({child,id,group.first.first});}
+    }
     std::vector<r1::InputSpan> addresses,values;
     for(const auto &q:registry.expQueries()){push(addresses,q.t_witness_index,1,Fr(0));push(values,q.E_witness_index,1,Fr(0));}
     auto ti=addSource(p,"r2/model/Exp-t",addresses),ei=addSource(p,"r2/model/Exp-E",values);

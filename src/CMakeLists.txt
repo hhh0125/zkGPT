@@ -48,6 +48,7 @@ add_library(paper_r2 STATIC
 target_include_directories(paper_r2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
 add_library(paper_r7 STATIC
+    paper_r7_lasso_masked.cpp
     paper_r7_category_auth.cpp
     paper_r7_category_commitments.cpp
     paper_r7_category_layout.cpp
@@ -134,6 +135,7 @@ if(ZKGPT_KIND01_TESTS)
  target_link_libraries(r7_kind01_tests PRIVATE paper_r7)
  target_compile_options(r7_kind01_tests PRIVATE -ffunction-sections -fdata-sections)
  target_link_options(r7_kind01_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_range_large_split COMMAND r7_kind01_tests rangesplit)
  add_test(NAME r7_product_polynomial_arithmetic COMMAND r7_kind01_tests arithmetic)
  add_test(NAME r7_perf6_config COMMAND r7_kind01_tests config)
  add_test(NAME r7_perf6_equivalence COMMAND r7_kind01_tests equivalence)
@@ -166,3 +168,20 @@ foreach(entry r7_full12_preprocess r7_full12_witness r7_full12_statement r7_fs_f
  target_compile_options(${entry} PRIVATE -ffunction-sections -fdata-sections)
  target_link_options(${entry} PRIVATE -Wl,--gc-sections "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${entry}.map")
 endforeach()
+
+if(ZKGPT_KIND01_TESTS)
+ add_executable(r7_range_split_plan_tests paper_r7_range_split_plan_tests.cpp)
+ target_link_libraries(r7_range_split_plan_tests PRIVATE paper_r7)
+ target_compile_options(r7_range_split_plan_tests PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_range_split_plan_tests PRIVATE -Wl,--gc-sections)
+endif()
+
+option(ZKGPT_MASKED_TESTS "Build local Lasso masked research tests" OFF)
+if(ZKGPT_MASKED_TESTS)
+ add_executable(r7_masked_tests paper_r7_masked_tests.cpp)
+ target_link_libraries(r7_masked_tests PRIVATE paper_r7)
+ target_compile_options(r7_masked_tests PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_masked_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_masked_input_guards COMMAND r7_masked_tests shape)
+ add_test(NAME r7_masked_full_proofs COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/r7_masked_smoke.py $<TARGET_FILE:r7_masked_tests>)
+endif()
