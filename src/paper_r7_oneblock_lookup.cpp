@@ -9,7 +9,16 @@
 namespace zkgpt::r7::oneblock {
 namespace {
 void evidence(IO&io,const std::string&id){if(!io.prover())checked(io,id);}
-Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"lookup entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/handle",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
+Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;
+ if(io.prover()){
+  need(rng,"lookup entropy required");
+  h=hide(io.session(),role,value,*rng);
+  io.message(role+"/handle",encode(h.handle));
+ }else{
+  h.handle=decodeHandle(io.message(role+"/handle"));
+  validate(h.handle,io.session(),role);
+ }
+ return h;}
 Hidden known(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
 void linear(IO&io,const std::string&role,const std::vector<Hidden>&h,const std::vector<Fr>&a,Random*rng){need(h.size()==a.size(),"lookup linear shape");Relations r;r.role=role;for(auto&v:h)r.handles.push_back(v.handle);r.linear={a};sigma(io,r,io.prover()?&h:nullptr,rng);}
 void constant(IO&io,const Hidden&h,const Fr&v,Random*rng,const std::string&role){linear(io,role,{h,known(io,role+"/public",v)},{Fr(1),Fr(-1)},rng);}

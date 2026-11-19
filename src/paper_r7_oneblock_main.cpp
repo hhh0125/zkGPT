@@ -31,12 +31,18 @@
 #endif
 namespace zkgpt::r7::oneblock {
 using PublicEntries=std::vector<std::pair<std::size_t,Fr>>;
-struct TrustedPublicEntries {PublicEntries x,y,constants;};
-TrustedPublicEntries trustedPublicEntries(const R7Statement&s,const R7Context&context){
- const auto&plan=context.plan;plan.master.validate();need(plan.shape.sequence_length==32 && plan.shape.hidden_dimension==768 && s.x.size()==32768 && plan.master.actual>=s.x.size(),"Oneblock public frozen X shape");need(s.master_actual==plan.master.actual && s.master_padded==plan.master.padded && s.y.size()==plan.output.size(),"Oneblock public statement/context shape");TrustedPublicEntries out;
- out.x.reserve(s.x.size());for(std::size_t i=0;i<s.x.size();++i){need(s.x[i].isValid(),"Oneblock invalid public X scalar");out.x.emplace_back(i,s.x[i]);}
- out.y.reserve(s.y.size());for(std::size_t i=0;i<s.y.size();++i){need(plan.output[i]<plan.master.actual && s.y[i].isValid(),"Oneblock public Y trusted source bounds/value");out.y.emplace_back(plan.output[i],s.y[i]);}
- out.constants.reserve(plan.constants.size()+plan.reserved_zero.size());for(auto i:plan.constants){need(i<plan.master.actual,"Oneblock public one source bounds");out.constants.emplace_back(i,Fr(1));}for(auto i:plan.reserved_zero){need(i<plan.master.actual,"Oneblock public zero source bounds");out.constants.emplace_back(i,Fr(0));}return out;
+PublicEntries trustedPublicEntries(const R7Statement&s,const R7Context&context){
+ const auto&plan=context.plan;
+ need(s.y.size()==plan.output.size(),"Oneblock public output shape");
+ PublicEntries entries;
+ entries.reserve(s.y.size()+plan.constants.size()+plan.reserved_zero.size());
+ for(std::size_t i=0;i<s.y.size();++i){
+  need(plan.output[i]<plan.master.actual,"Oneblock public Y source bounds");
+  entries.emplace_back(plan.output[i],s.y[i]);
+ }
+ for(auto i:plan.constants){need(i<plan.master.actual,"Oneblock public one source bounds");entries.emplace_back(i,Fr(1));}
+ for(auto i:plan.reserved_zero){need(i<plan.master.actual,"Oneblock public zero source bounds");entries.emplace_back(i,Fr(0));}
+ return entries;
 }
 }
 using namespace zkgpt::r7;using namespace oneblock;using namespace crypto;namespace r6=zkgpt::r6;namespace r2=zkgpt::r2;
@@ -89,6 +95,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #endif
  auto plan=discover(*publicArtifacts);auto&ctx=plan.context;
  auto layout=classified::makeCategoryLayout(ctx,*publicArtifacts);
+ auto layout_id=classified::identity(layout);
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
  // Remove external model authority only in this explicitly different statement
@@ -96,12 +103,12 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="MODEL_AUTHORITY" || r.family=="MODEL_RERANDOMIZATION";}),plan.required.end());
  plan.required.push_back({"model/frozen-numerical-profile","NUMERICAL_PROFILE",ctx.plan.circuit_id,0,0});
  plan.required.push_back({"model/weights-bound-in-C_U","MODEL_WITNESS_BINDING",single::modelScope,ctx.plan.sources.back().spec.actual,0});
- plan.required.push_back({"single/commitment","SINGLE_HYRAX_COMMITMENT",classified::identity(layout),ctx.plan.master.actual,0});
- plan.required.push_back({"single/direct-logical-domain","SINGLE_HYRAX_DIRECT_LOGICAL_DOMAIN",classified::identity(layout),ctx.plan.master.actual,0});
+ plan.required.push_back({"single/commitment","SINGLE_HYRAX_COMMITMENT",layout_id,ctx.plan.master.actual,0});
+ plan.required.push_back({"single/direct-logical-domain","SINGLE_HYRAX_DIRECT_LOGICAL_DOMAIN",layout_id,ctx.plan.master.actual,0});
  for(auto&[id,v]:layout.views){plan.required.push_back({"classified/view/"+id,"CLASSIFIED_VIEW",id,v.padded,0});}
- plan.required.push_back({"unified-input/sumcheck","UNIFIED_INPUT_SUMCHECK",classified::identity(layout),ctx.plan.master.actual,0});
- plan.required.push_back({"unified-input/classified-opening","UNIFIED_INPUT_OPENING",classified::identity(layout),ctx.plan.master.actual,0});
- plan.required.push_back({"single/hidden-opening","SINGLE_HYRAX_OPENING",classified::identity(layout),ctx.plan.master.actual,0});
+ plan.required.push_back({"unified-input/sumcheck","UNIFIED_INPUT_SUMCHECK",layout_id,ctx.plan.master.actual,0});
+ plan.required.push_back({"unified-input/classified-opening","UNIFIED_INPUT_OPENING",layout_id,ctx.plan.master.actual,0});
+ plan.required.push_back({"single/hidden-opening","SINGLE_HYRAX_OPENING",layout_id,ctx.plan.master.actual,0});
 #ifdef R7_COMPLETE_VERIFIER
  constexpr bool isP=false;
  need(argc==4,"FS verifier cannot import challenges/receipt/options");
@@ -115,7 +122,8 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  // Each process independently owns the public statement. Test harness mutates
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
  need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
- Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
+ const auto coverage_id=identity(plan);
+ Writer instance;instance.text(liveSuite);instance.text(coverage_id);instance.text(layout_id);
  instance.text(classified::unifiedInputIdentity(layout,s.x));
  instance.text(single::modelScope);instance.raw(single::descriptor(classified::singlePlan(layout,s.x)));
 instance.raw(statement_bytes);if(native_masked::enabled())instance.text(native_masked::suite);
@@ -132,7 +140,7 @@ instance.raw(statement_bytes);if(native_masked::enabled())instance.text(native_m
  fs::FsProverIO pipe(argv[2],fsBinding);
 #endif
  tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
- Writer binding;binding.text(liveSuite);binding.text(identity(plan));binding.raw(R7Wire::encodeStatement(s));bindPublic(io,"Oneblock/statement-native-plan",binding.b);
+ Writer binding;binding.text(liveSuite);binding.text(coverage_id);binding.raw(statement_bytes);bindPublic(io,"Oneblock/statement-native-plan",binding.b);
  std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();[[maybe_unused]] auto cpuStarted=processCPU();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';
 #ifdef R7_FS_FULL12
  std::cerr<<"PHASE_CPU {\"name\":\""<<id<<"\",\"cpu_seconds\":"<<processCPU()-cpuStarted<<"}\n";

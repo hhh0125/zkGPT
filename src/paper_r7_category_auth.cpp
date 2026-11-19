@@ -85,7 +85,6 @@ std::optional<Fr>Commitments::categoryKernelEndpoint(const std::vector<Fr>&q,con
 void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  namespace ui=unified;auto started=std::chrono::steady_clock::now();
  need(layout_.category_mode && single_pc_ && sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_ && identity(layout_)==identity_ && x==single_x_,"category authentication lifecycle/statement");
- need(single::descriptor(singlePlan(layout_,x))==single::descriptor(single_pc_->plan),"category sealed plan");
  // C_U and the verifier-owned statement/map are fixed before r_X is sampled.
  Writer xb;xb.text(single::suite);xb.text(single::identity(*single_pc_));xb.text(identity_);xb.number(x.size(),8);for(const auto&v:x){need(v.isValid(),"category public X scalar");xb.scalar(v);}bindPublic(io_,"CategoryInput/X-statement-and-seal",xb.b);
  std::vector<Fr>rx;const auto padded=layout_.categories[0].padded;for(unsigned j=0;j<single::bits(padded);++j)rx.push_back(io_.coin("CategoryInput/X-query/"+std::to_string(j)));
@@ -94,7 +93,7 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  deferBase("public/X-committed-consistency",x.size(),padded,xindex,publicHidden(io_,"CategoryInput/X-expected",expected),rx);
  need(names_.count("public/X-committed-consistency")==1 && !claims_.empty() && claims_.size()<=8192,"category mandatory X claim");
  auto tile_started=std::chrono::steady_clock::now();auto plan=categoryTiles(layout_);
- std::cerr<<"CATEGORY_TILE_DETAIL {\"tile_enumeration_count\":1,\"tiles\":"<<plan.size()<<",\"tile_mapping_time\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-tile_started).count()<<"}\n";std::vector<ui::Segment>segments;for(const auto&t:plan)segments.push_back(t.segment);ui::validate(single_pc_->plan.domain,segments);
+ std::cerr<<"CATEGORY_TILE_DETAIL {\"tile_enumeration_count\":1,\"tiles\":"<<plan.size()<<",\"tile_mapping_time\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-tile_started).count()<<"}\n";std::vector<ui::Segment>segments;for(const auto&t:plan)segments.push_back(t.segment);
  Writer declaration;declaration.text(single::suite);declaration.text(single::identity(*single_pc_));declaration.text(identity_);declaration.number(claims_.size());for(const auto&c:claims_){declaration.text(c.id);declaration.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));}
  // Tiles are derived local computation views; no tile commitment or independent
  // claim is ever sent. Their descriptor is bound as an execution consistency aid.

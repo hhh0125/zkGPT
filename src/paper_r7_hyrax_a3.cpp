@@ -27,11 +27,14 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const 
   rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
   masks.point(wideMSM(g,d)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
  }
- auto b=exchange(io,"A3/knowledge/masks",masks.b,false);Reader mr{b};auto D=mr.point(),B=mr.point();mr.end();auto c=challenge(io,"A3/knowledge/c");
+ auto b=exchange(io,"A3/knowledge/masks",masks.b,false);
+ G1 D,B;if(!io.prover()){Reader mr{b};D=mr.point();B=mr.point();mr.end();}
+ auto c=challenge(io,"A3/knowledge/c");
  Writer response;
  if(io.prover()){for(std::size_t i=0;i<g.size();++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
- b=exchange(io,"A3/knowledge/responses",response.b,false);Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
+ b=exchange(io,"A3/knowledge/responses",response.b,false);
  if(!io.prover()){
+  Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
   need(wideMSM(g,z)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
   need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
  }
@@ -39,8 +42,8 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const 
 // Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
 void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const std::vector<G1>&bases,const DotWitness*w,Random*rng){
  perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
- const auto p=parameters(1);auto U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
- {perf4::Scope copy("IPA/input-copy",io.prover()?"P":"V",a.size(),bases.size()*sizeof(G1)+a.size()*sizeof(Fr)+(io.prover()?a.size()*sizeof(Fr):0));g=bases;aa=a;if(io.prover())x=w->values;}
+ const auto p=parameters(1);G1 U;if(!io.prover())U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
+ if(io.prover()){perf4::Scope copy("IPA/input-copy","P",a.size(),bases.size()*sizeof(G1)+2*a.size()*sizeof(Fr));g=bases;aa=a;x=w->values;}
  if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
  std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
  while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
@@ -50,7 +53,7 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
    rl=rng->scalar();rr=rng->scalar();{perf4::Scope dot("IPA/inner-product","cross",width);left=r1::dot(xl,ar);right=r1::dot(xr,al);}
    cross.point(wideMSM(gr,xl)+p.scalar*left+p.hiding*rl);cross.point(wideMSM(gl,xr)+p.scalar*right+p.hiding*rr);
   }
-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);Reader lr{b};auto L=lr.point(),R=lr.point();lr.end();Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);folds.push_back(c);c2=c*c;i2=inv*inv;}U+=L*c2+R*i2;
+  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover())folds.push_back(c);c2=c*c;i2=inv*inv;}if(!io.prover())U+=L*c2+R*i2;
   if(io.prover()){
    {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
    {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
@@ -70,10 +73,10 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
  need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
  Writer masks;Fr d=0,rd=0,rb=0;
  if(io.prover()){d=rng->scalar();rd=rng->scalar();rb=rng->scalar();masks.point(ghat*d+p.hiding*rd);masks.point(p.scalar*d+p.hiding*rb);}
- auto b=exchange(io,"A3/final/delta-beta",masks.b,true);Reader mr{b};auto delta=mr.point(),beta=mr.point();mr.end();auto c=challenge(io,"A3/final/c");Writer response;
+ auto b=exchange(io,"A3/final/delta-beta",masks.b,true);G1 delta,beta;if(!io.prover()){Reader mr{b};delta=mr.point();beta=mr.point();mr.end();}auto c=challenge(io,"A3/final/c");Writer response;
  if(io.prover()){response.scalar(d+c*y);response.scalar(ahat*(c*blind+rb)+rd);}
- b=exchange(io,"A3/final/z1-z2",response.b,true);Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();
- if(!io.prover())need((U*c+beta)*ahat+delta==(ghat+p.scalar*ahat)*z1+p.hiding*z2,"A3 Schnorr equation failed");
+ b=exchange(io,"A3/final/z1-z2",response.b,true);
+ if(!io.prover()){Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();need((U*c+beta)*ahat+delta==(ghat+p.scalar*ahat)*z1+p.hiding*z2,"A3 Schnorr equation failed");}
 }
 }
 Measurement& measurement(){static Measurement m;return m;}

@@ -20,10 +20,6 @@ Hidden known(IO&io,const std::string&role,const Fr&value){
  Hidden h;h.handle.session=io.session();h.handle.role=role;h.value=value;h.handle.point=scalarCommit(value,Fr(0));
  bindPublic(io,role+"/public-handle",encode(h.handle));return h;
 }
-Hidden exchange(IO&io,const std::string&role,const Fr&value,Random*rng){
- Hidden h;Bytes bytes;if(io.prover()){h=hide(io.session(),role,value,*rng);bytes=encode(h.handle);}
- bytes=io.message(role+"/commitment",bytes);h.handle=decodeHandle(bytes);validate(h.handle,io.session(),role);return h;
-}
 Hidden derived(IO&io,const std::string&role,const std::vector<Hidden>&h,const std::vector<Fr>&coeff){
  auto result=combine(io.session(),role,h,coeff);bindPublic(io,role+"/derived",encode(result.handle));return result;
 }
@@ -33,7 +29,7 @@ Hidden derived(IO&io,const std::string&role,const std::vector<Hidden>&h,const st
 std::pair<Hidden,Fr> round(IO&io,const Hidden&previous,const quadratic_poly&p,Random*rng,const std::string&role,double&recurrence_seconds){
  std::vector<Hidden>h{previous};
  const std::array<Fr,3>coeff{p.c,p.b,p.a};
- for(unsigned j=0;j<3;++j)h.push_back(exchange(io,role+"/c/"+std::to_string(j),coeff[j],rng));
+ for(unsigned j=0;j<3;++j)h.push_back(exchangeHidden(io,role+"/c/"+std::to_string(j),coeff[j],rng));
  Relations recurrence;recurrence.role=role+"/recurrence";for(auto&x:h)recurrence.handles.push_back(x.handle);
  recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};
  auto recurrence_start=std::chrono::steady_clock::now();sigma(io,recurrence,io.prover()?&h:nullptr,rng);recurrence_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-recurrence_start).count();
@@ -121,7 +117,7 @@ void finalRelation(IO&io,const Hidden&previous,const std::array<Hidden,4>&end,co
  std::vector<Hidden>h{previous,end[0],end[1],end[2],end[3]};
  const std::array<std::array<std::size_t,2>,3>pairs{{{{1,3}},{{2,4}},{{2,3}}}};
  Relations relation;relation.role=role+"/predicate";
- for(unsigned j=0;j<3;++j){auto a=pairs[j][0],b=pairs[j][1];h.push_back(exchange(io,role+"/product/"+std::to_string(j),io.prover()?h[a].value*h[b].value:Fr(0),rng));relation.products.push_back({a,b,5+j});}
+ for(unsigned j=0;j<3;++j){auto a=pairs[j][0],b=pairs[j][1];h.push_back(exchangeHidden(io,role+"/product/"+std::to_string(j),io.prover()?h[a].value*h[b].value:Fr(0),rng));relation.products.push_back({a,b,5+j});}
  for(auto&x:h)relation.handles.push_back(x.handle);
  relation.linear={{Fr(-1),uni[0],uni[1],Fr(0),Fr(0),bin[0],bin[1],bin[2]}};
  sigma(io,relation,io.prover()?&h:nullptr,rng);
@@ -174,7 +170,7 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
  domain(int(sequence_bits));domain(graph.circuit.back().bit_length);
  const auto fingerprint=fingerprintCircuit(graph);Writer binding;binding.text(native_masked::enabled()?native_masked::suite:"R7-ONEBLOCK-HIDDEN-GKR-v1");binding.raw(Bytes(fingerprint.begin(),fingerprint.end()));binding.number(sequence_length,8);
  bindPublic(io,"Oneblock/GKR/public-circuit",binding.b);
- if(io.prover())need(fingerprintCircuit(p->C)==fingerprint && p->val.size()==graph.size,"Oneblock GKR private/public circuit identity");
+ if(io.prover())need(p->val.size()==graph.size && (&p->C==&graph || fingerprintCircuit(p->C)==fingerprint),"Oneblock GKR private/public circuit identity");
  std::vector<std::vector<Fr>>u(graph.size+1),v(graph.size+1);
  u[graph.size].resize(unsigned(graph.circuit.back().bit_length));
  for(std::size_t j=0;j<u.back().size();++j)u.back()[j]=io.coin("Oneblock/GKR/output-point/"+std::to_string(j));
@@ -229,8 +225,8 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
    if(mask)previous=mask->finish(io,rng);
    }
    Fr u0=0,u1=0;if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize1(last,u0,u1);});
-   end[0]=l.bit_length_u[0]>=0?exchange(io,role+"/final/u0",u0,rng):known(io,role+"/final/u0",Fr(0));
-   end[1]=l.bit_length_u[1]>=0?exchange(io,role+"/final/u1",u1,rng):known(io,role+"/final/u1",Fr(0));
+   end[0]=l.bit_length_u[0]>=0?exchangeHidden(io,role+"/final/u0",u0,rng):known(io,role+"/final/u0",Fr(0));
+   end[1]=l.bit_length_u[1]>=0?exchangeHidden(io,role+"/final/u1",u1,rng):known(io,role+"/final/u1",Fr(0));
    Fr v0=0,v1=0;
    if(l.need_phase2){
     native_masked::PhaseMeasure measure{role+"/phase2",io.prover(),native_masked::enabled()};
@@ -245,8 +241,8 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
     if(mask)previous=mask->finish(io,rng);
     if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize2(last,v0,v1);});
    }
-   end[2]=l.need_phase2 && l.bit_length_v[0]>=0?exchange(io,role+"/final/v0",v0,rng):known(io,role+"/final/v0",Fr(0));
-   end[3]=l.need_phase2 && l.bit_length_v[1]>=0?exchange(io,role+"/final/v1",v1,rng):known(io,role+"/final/v1",Fr(0));
+   end[2]=l.need_phase2 && l.bit_length_v[0]>=0?exchangeHidden(io,role+"/final/v0",v0,rng):known(io,role+"/final/v0",Fr(0));
+   end[3]=l.need_phase2 && l.bit_length_v[1]>=0?exchangeHidden(io,role+"/final/v1",v1,rng):known(io,role+"/final/v1",Fr(0));
    std::array<Fr,2>uni;std::array<Fr,3>bin;predicates(graph,id,g0,g1,alpha,weight_beta,zero_scale,u[id],l.need_phase2?&v[id]:nullptr,uni,bin);
    finalRelation(io,previous,end,uni,bin,rng,role);
    checked(io,"gkr/layer/"+std::to_string(id)+"/phase1");

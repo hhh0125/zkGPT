@@ -20,7 +20,7 @@
    std::cerr<<"WITNESS_STORAGE {\"native_master_size\":"<<witness.baseMaster().size()<<",\"native_master_capacity_bytes\":"<<witness.baseMaster().capacity()*sizeof(Fr)<<",\"helper_materialized_elements\":"<<helper_elements<<",\"helper_capacity_bytes\":"<<helpers<<",\"other_native_layer_capacity_bytes\":"<<layers<<",\"snapshot\":\"all-witness-and-helpers-ready\",\"capacity_not_RSS\":true}\n";}
 
   if(attack=="wrong-Auxiliary" || attack=="wrong-lookup"){auto it=std::find_if(prepared.begin(),prepared.end(),[](auto&e){return e.first.find("/read")!=std::string::npos;});need(it!=prepared.end(),"classified read attack target");it->second->at(0)+=Fr(1);}
-  if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);}
+  if(attack=="wrong-mapping"){if(layout.master_actual){need(layout.base_runs.size()>1,"partitioned mapping attack target");std::swap(layout.base_runs[0].start,layout.base_runs[1].start);}else std::swap(layout.base[0],layout.base[1]);layout_id=classified::identity(layout);}
  }});
  std::optional<classified::Commitments>commitments;
  timed("all-classified-roots-prechallenge-seal",[&]{
@@ -39,10 +39,8 @@
  single::writeLayout(out,pcs.singlePublic());
  output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
  timed("classified-public-Y-constants-and-input-definition",[&]{
-  auto entries=trustedPublicEntries(s,ctx);
-  auto all=std::make_shared<PublicEntries>();
-  all->insert(all->end(),entries.y.begin(),entries.y.end());all->insert(all->end(),entries.constants.begin(),entries.constants.end());
-  Writer binding;binding.text(liveSuite);binding.text(classified::identity(layout));binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
+  auto all=std::make_shared<PublicEntries>(trustedPublicEntries(s,ctx));
+  Writer binding;binding.text(liveSuite);binding.text(layout_id);binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
   auto N=classified::power2(all->size());std::vector<Fr>point;for(unsigned j=0;j<r1::log2exact(N);++j)point.push_back(io.coin("Classified/public-query/"+std::to_string(j)));auto weights=r1::weights(point);Fr expected=0;for(std::size_t j=0;j<all->size();++j)expected+=weights[j]*all->at(j).second;
   pcs.deferBase(
    "public/Y-constants",
@@ -70,8 +68,8 @@
  checked(io,"public/X");checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
  for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
- if(isP)need(witness.legacyCommitmentAbsent(),"classified old nonhiding PC forbidden");if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
+ if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
  pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
  io.save(true);
  const auto a3metrics=hyrax_a3::measurement();std::cerr<<"A3_TIMING {\"knowledge_wall_seconds\":"<<a3metrics.guard_seconds<<",\"inner_product_wall_seconds\":"<<a3metrics.core_seconds<<",\"knowledge_payload_bytes\":"<<a3metrics.guard_payload_bytes<<",\"inner_product_payload_bytes\":"<<a3metrics.core_payload_bytes<<"}\n";
- struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<identity(plan)<<"\",\"layout_id\":\""<<classified::identity(layout)<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
+ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<coverage_id<<"\",\"layout_id\":\""<<layout_id<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;

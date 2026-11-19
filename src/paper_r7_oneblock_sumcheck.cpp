@@ -6,7 +6,16 @@
 #include <array>
 namespace zkgpt::r7::oneblock {
 Hidden publicHidden(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
-Hidden exchangeHidden(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;Bytes b;if(io.prover()){need(rng,"Oneblock entropy required");h=hide(io.session(),role,value,*rng);b=encode(h.handle);}b=io.message(role+"/commitment",b);h.handle=decodeHandle(b);validate(h.handle,io.session(),role);return h;}
+Hidden exchangeHidden(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;
+ if(io.prover()){
+  need(rng,"Oneblock entropy required");
+  h=hide(io.session(),role,value,*rng);
+  io.message(role+"/commitment",encode(h.handle));
+ }else{
+  h.handle=decodeHandle(io.message(role+"/commitment"));
+  validate(h.handle,io.session(),role);
+ }
+ return h;}
 void equalHidden(IO&io,const Hidden&h,const Fr&value,Random*rng,const std::string&role){auto c=publicHidden(io,role+"/public",value);std::vector<Hidden>w{h,c};Relations r;r.role=role;r.handles={h.handle,c.handle};r.linear={{Fr(1),Fr(-1)}};sigma(io,r,io.prover()?&w:nullptr,rng);}
 namespace {
 

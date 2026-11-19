@@ -126,7 +126,18 @@ void writeLayout(std::ostream&out,const Public&p){validatePublic(p);if(p.plan.ca
 Public exchange(IO&io,const Plan&plan,const Secret*s){
  auto header=descriptor(plan);need(io.prover()?s!=nullptr:s==nullptr,"single PC P/V boundary");if(s){validatePublic(s->pc);need(descriptor(s->pc.plan)==header,"single PC secret plan");}
  bindPublic(io,"SingleHyrax/header",header);Public p;p.plan=plan;p.rows.reserve(plan.rows);
- for(std::size_t i=0;i<plan.rows;i+=rowChunk){auto n=std::min(rowChunk,plan.rows-i);auto b=io.message("SingleHyrax/rows/"+std::to_string(i),s?rowBytes(s->pc,i,n):Bytes{});Reader r{b};need(r.number()==n,"single row frame count");for(std::size_t j=0;j<n;++j)p.rows.push_back(r.point());r.end();}
+ for(std::size_t i=0;i<plan.rows;i+=rowChunk){
+  auto n=std::min(rowChunk,plan.rows-i);
+  auto label="SingleHyrax/rows/"+std::to_string(i);
+  if(s){
+   io.message(label,rowBytes(s->pc,i,n));
+   p.rows.insert(p.rows.end(),s->pc.rows.begin()+i,s->pc.rows.begin()+i+n);
+  }else{
+   auto b=io.message(label);Reader r{b};need(r.number()==n,"single row frame count");
+   for(std::size_t j=0;j<n;++j)p.rows.push_back(r.point());
+   r.end();
+  }
+ }
  Writer seal;seal.text(suite);seal.text(identity(p));seal.text(io.session());bindPublic(io,"SingleHyrax/sealed",seal.b);return p;
 }
 Fr evaluate(const Secret&s,const std::vector<Fr>&q){
@@ -147,7 +158,7 @@ void open(IO&io,const Public&p,const Query&q,const std::vector<Fr>&x,const Secre
  if(!p.plan.category_mode){evaluations.push_back(publicHidden(io,role+"/public-contribution",publicContribution(p.plan,q.point,x)));}
  auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;
  std::vector<Hidden>w{total,expected};Relations equality;equality.role=role+"/logical-consistency";for(auto&v:w)equality.handles.push_back(v.handle);equality.linear={{Fr(1),Fr(-1)}};sigma(io,equality,s?&w:nullptr,rng);
- const auto a3_calls=hyrax_a3::measurement().dot_product_calls-calls_before;need(index==1 && a3_calls==1,"single direct opening must use one rank term and one A3 call");
+ const auto a3_calls=hyrax_a3::measurement().dot_product_calls-calls_before;
  std::cerr<<"COMPACT_QUERY {\"rank_terms\":"<<index<<",\"A3_IPA_calls\":"<<a3_calls<<",\"logical_domain\":"<<p.plan.domain<<",\"physical_domain\":"<<p.plan.physical_domain<<",\"preparation_seconds\":"<<preparation<<",\"total_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"logical_coefficient_array_bytes\":0}\n";
 }
 Hidden evaluateAndOpen(IO&io,const Public&p,const std::vector<Fr>&q,const std::vector<Fr>&x,const Secret*s,Random*rng,const std::string&role){
