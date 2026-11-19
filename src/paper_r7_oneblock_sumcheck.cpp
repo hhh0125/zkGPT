@@ -23,6 +23,7 @@ void endpoint(IO&io,const Hidden&claim,const std::vector<Hidden>&x,const Express
 }
 void masked::originalSingleTerminal(IO&io,const Hidden&claim,const std::vector<Hidden>&ends,Random*rng,const std::string&role){endpoint(io,claim,ends,Expression{3,{{Fr(1),{0,1,2}}}},rng,role);}
 namespace detail {
+void nativeMatrixTerminal(IO&io,const Hidden&claim,const std::vector<Hidden>&ends,Random*rng,const std::string&role){endpoint(io,claim,ends,Expression{2,{{Fr(1),{0,1}}}},rng,role);}
 namespace {
 void inputShape(const ProductInputs&input){auto n=input.equality.size();need(n>=2 && n<=(1u<<24) && !(n&(n-1)) && input.children.size()==2*n,"Product contiguous input shape");}
 }

@@ -1,4 +1,5 @@
 #include "paper_r7_wire.hpp"
+#include "paper_r7_native_masked.hpp"
 #include "paper_r7_source_mle.hpp"
 #include "paper_r7_oneblock_plan.hpp"
 #include "paper_r7_classified_commitments.hpp"
@@ -78,6 +79,7 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #ifndef R7_FS_FULL12
  alarm(21600);
 #endif
+ native_masked::ScopedMode native_mode(native_masked::configuredMode());
  r1::init();auto started=std::chrono::steady_clock::now();
  need(argc>=4 && argc<=5,"FS usage prove|verify PROOF_PATH CONTEXT [P_ATTACK]");
  #ifdef R7_FS_FULL12
@@ -116,12 +118,12 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  Writer instance;instance.text(liveSuite);instance.text(identity(plan));instance.text(classified::identity(layout));
  instance.text(classified::unifiedInputIdentity(layout,s.x));
  instance.text(single::modelScope);instance.raw(single::descriptor(classified::singlePlan(layout,s.x)));
-instance.raw(statement_bytes);
+instance.raw(statement_bytes);if(native_masked::enabled())instance.text(native_masked::suite);
  fs::Binding fsBinding{
 #ifdef R7_FS_FULL12
- "Full12SingleHyrax",
+ native_masked::enabled()?"Full12NativeMasked":"Full12SingleHyrax",
 #else
- "OneblockSingleHyrax",
+ native_masked::enabled()?"OneblockNativeMasked":"OneblockSingleHyrax",
 #endif
  argv[3],fs::generatorIdentity({},true),instance.b};
 #ifdef R7_COMPLETE_VERIFIER

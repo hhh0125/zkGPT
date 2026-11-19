@@ -9,6 +9,8 @@ inline constexpr const char* unifiedSuite="R7-ONEBLOCK-PROTOCOL1-INDEPENDENT-REG
 inline constexpr const char* unifiedFull12Suite="R7-FULL12-PROTOCOL1-INDEPENDENT-REGIONS-HIDDEN-FS-CANDIDATE-v2";
 inline constexpr const char* singleSuite="R7-ONEBLOCK-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-COMMITTED-X-FS-CANDIDATE-v5";
 inline constexpr const char* singleFull12Suite="R7-FULL12-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-COMMITTED-X-FS-CANDIDATE-v5";
+inline constexpr const char* nativeMaskedSuite="R7-ONEBLOCK-NATIVE-GKR-MASKED-HIDDEN-A3-RESEARCH-v1";
+inline constexpr const char* nativeMaskedFull12Suite="R7-FULL12-NATIVE-GKR-MASKED-HIDDEN-A3-RESEARCH-v1";
 inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
 inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
 struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};

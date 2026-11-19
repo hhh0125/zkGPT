@@ -47,6 +47,7 @@ add_library(paper_r2 STATIC
 target_include_directories(paper_r2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CNPY_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd/mcl/include)
 
 add_library(paper_r7 STATIC
+    paper_r7_native_masked.cpp
     paper_r7_lasso_masked.cpp
     paper_r7_category_auth.cpp
     paper_r7_category_commitments.cpp
@@ -191,4 +192,26 @@ if(ZKGPT_KIND01_TESTS)
  target_compile_options(r7_metadata_tests PRIVATE -ffunction-sections -fdata-sections)
  target_link_options(r7_metadata_tests PRIVATE -Wl,--gc-sections)
  add_test(NAME r7_incremental_metadata COMMAND r7_metadata_tests)
+endif()
+
+option(ZKGPT_NATIVE_MASKED_TESTS "Build Native GKR masking research tests" OFF)
+if(ZKGPT_NATIVE_MASKED_TESTS)
+ add_executable(r7_native_masked_tests paper_r7_native_masked_tests.cpp)
+ target_link_libraries(r7_native_masked_tests PRIVATE paper_r7)
+ target_compile_options(r7_native_masked_tests PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_native_masked_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_native_masked_full_proofs COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/r7_native_masked_smoke.py $<TARGET_FILE:r7_native_masked_tests>)
+endif()
+
+if(ZKGPT_NATIVE_MASKED_TESTS)
+ add_executable(r7_fs_oneblock_prover paper_r7_oneblock_main.cpp)
+ target_link_libraries(r7_fs_oneblock_prover PRIVATE paper_r7)
+ target_compile_definitions(r7_fs_oneblock_prover PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_UNIFIED_INPUT1=1 R7_SINGLE_HYRAX=1)
+ add_executable(r7_fs_oneblock_verifier paper_r7_oneblock_main.cpp)
+ target_link_libraries(r7_fs_oneblock_verifier PRIVATE paper_r7)
+ target_compile_definitions(r7_fs_oneblock_verifier PRIVATE R7_CLASSIFIED_V2=1 R7_FS_ONEBLOCK=1 R7_UNIFIED_INPUT1=1 R7_SINGLE_HYRAX=1 R7_COMPLETE_VERIFIER=1)
+ target_compile_options(r7_fs_oneblock_prover PRIVATE -ffunction-sections -fdata-sections)
+ target_compile_options(r7_fs_oneblock_verifier PRIVATE -ffunction-sections -fdata-sections)
+ target_link_options(r7_fs_oneblock_prover PRIVATE -Wl,--gc-sections)
+ target_link_options(r7_fs_oneblock_verifier PRIVATE -Wl,--gc-sections)
 endif()

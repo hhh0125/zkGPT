@@ -1,4 +1,5 @@
 #include "paper_r7_oneblock_gkr.hpp"
+#include "paper_r7_native_masked.hpp"
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include "paper_r7_perf6_options.hpp"
 #include <prover.hpp>
@@ -29,13 +30,13 @@ Hidden derived(IO&io,const std::string&role,const std::vector<Hidden>&h,const st
 
 // p returns a*x^2+b*x+c. Coefficients are committed in constant-first order.
 // Only the live V coin following all three commitments defines the next point.
-std::pair<Hidden,Fr> round(IO&io,const Hidden&previous,const quadratic_poly&p,Random*rng,const std::string&role){
+std::pair<Hidden,Fr> round(IO&io,const Hidden&previous,const quadratic_poly&p,Random*rng,const std::string&role,double&recurrence_seconds){
  std::vector<Hidden>h{previous};
  const std::array<Fr,3>coeff{p.c,p.b,p.a};
  for(unsigned j=0;j<3;++j)h.push_back(exchange(io,role+"/c/"+std::to_string(j),coeff[j],rng));
  Relations recurrence;recurrence.role=role+"/recurrence";for(auto&x:h)recurrence.handles.push_back(x.handle);
  recurrence.linear={{Fr(-1),Fr(2),Fr(1),Fr(1)}};
- sigma(io,recurrence,io.prover()?&h:nullptr,rng);
+ auto recurrence_start=std::chrono::steady_clock::now();sigma(io,recurrence,io.prover()?&h:nullptr,rng);recurrence_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-recurrence_start).count();
  auto r=io.coin(role+"/r");std::vector<Hidden>c(h.begin()+1,h.end());
  return {derived(io,role+"/evaluation",c,{Fr(1),r,r*r}),r};
 }
@@ -156,7 +157,8 @@ MatrixResult matrix(IO&io,const layer&l,const std::vector<Fr>&parent,const Hidde
   factors.push_back([p,&l,m,columns](std::size_t s){Fr sum=0;for(std::size_t j=0;j<columns.size();++j)sum+=columns[j]*p->val[0].at(l.ori_id_v.at(s+(j<<m)));return sum;});
  }
  Expression expression;expression.factor_count=2;expression.terms.push_back({Fr(1),{0,1}});
- auto reduction=expressionSumcheck(io,domain(int(m)),initial,factors,expression,rng,role);
+ std::unique_ptr<native_masked::PhaseMeasure> matrix_measure;if(!native_masked::enabled()){matrix_measure=std::make_unique<native_masked::PhaseMeasure>(role,io.prover(),false);matrix_measure->rounds=m;}
+ auto reduction=native_masked::enabled()?native_masked::matrix(io,domain(int(m)),initial,factors,rng,role):expressionSumcheck(io,domain(int(m)),initial,factors,expression,rng,role);
  need(reduction.endpoints.size()==2 && reduction.point.size()==m,"Oneblock GKR FC reduction endpoints");
  MatrixResult result;result.x=reduction.endpoints[0];result.w=reduction.endpoints[1];result.x_point=reduction.point;result.w_point=reduction.point;
  result.x_point.insert(result.x_point.end(),row_point.begin(),row_point.end());result.w_point.insert(result.w_point.end(),column_point.begin(),column_point.end());
@@ -170,7 +172,7 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
  need(io.prover()?(p && rng):(!p && !rng),"Oneblock GKR P/V private boundary");
  const unsigned sequence_bits=bits(sequence_length);
  domain(int(sequence_bits));domain(graph.circuit.back().bit_length);
- const auto fingerprint=fingerprintCircuit(graph);Writer binding;binding.text("R7-ONEBLOCK-HIDDEN-GKR-v1");binding.raw(Bytes(fingerprint.begin(),fingerprint.end()));binding.number(sequence_length,8);
+ const auto fingerprint=fingerprintCircuit(graph);Writer binding;binding.text(native_masked::enabled()?native_masked::suite:"R7-ONEBLOCK-HIDDEN-GKR-v1");binding.raw(Bytes(fingerprint.begin(),fingerprint.end()));binding.number(sequence_length,8);
  bindPublic(io,"Oneblock/GKR/public-circuit",binding.b);
  if(io.prover())need(fingerprintCircuit(p->C)==fingerprint && p->val.size()==graph.size,"Oneblock GKR private/public circuit identity");
  std::vector<std::vector<Fr>>u(graph.size+1),v(graph.size+1);
@@ -214,21 +216,33 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
    std::unique_ptr<NativeLayerOracle>view;::prover*arithmetic=nullptr;
    if(io.prover())executePrivateWitness([&]{view=std::make_unique<NativeLayerOracle>(*p,graph,id);arithmetic=&view->start(g0,g1,alpha,weight_beta);});
    Fr last=0;u[id].resize(unsigned(l.max_bl_u));
+   {
+   native_masked::PhaseMeasure measure{role+"/phase1",io.prover(),native_masked::enabled()};
+   std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_u),previous,rng,role+"/phase1/masked",measure);
    if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckInitPhase1(zero_scale);});
    for(unsigned j=0;j<unsigned(l.max_bl_u);++j){
     quadratic_poly polynomial;if(io.prover())executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate1(last);});
-    auto step=round(io,previous,polynomial,rng,role+"/phase1/round/"+std::to_string(j));previous=step.first;last=u[id][j]=step.second;++pending.rounds;
+    if(mask)last=u[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});
+    else{auto step=round(io,previous,polynomial,rng,role+"/phase1/round/"+std::to_string(j),measure.seconds[4]);previous=step.first;last=u[id][j]=step.second;++measure.rounds;}
+    ++pending.rounds;
+   }
+   if(mask)previous=mask->finish(io,rng);
    }
    Fr u0=0,u1=0;if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize1(last,u0,u1);});
    end[0]=l.bit_length_u[0]>=0?exchange(io,role+"/final/u0",u0,rng):known(io,role+"/final/u0",Fr(0));
    end[1]=l.bit_length_u[1]>=0?exchange(io,role+"/final/u1",u1,rng):known(io,role+"/final/u1",Fr(0));
    Fr v0=0,v1=0;
    if(l.need_phase2){
+    native_masked::PhaseMeasure measure{role+"/phase2",io.prover(),native_masked::enabled()};
+    std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_v),previous,rng,role+"/phase2/masked",measure);
     v[id].resize(unsigned(l.max_bl_v));last=0;if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckInitPhase2();});
     for(unsigned j=0;j<unsigned(l.max_bl_v);++j){
      quadratic_poly polynomial;if(io.prover())executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate2(last);});
-     auto step=round(io,previous,polynomial,rng,role+"/phase2/round/"+std::to_string(j));previous=step.first;last=v[id][j]=step.second;++pending.rounds;
+     if(mask)last=v[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});
+     else{auto step=round(io,previous,polynomial,rng,role+"/phase2/round/"+std::to_string(j),measure.seconds[4]);previous=step.first;last=v[id][j]=step.second;++measure.rounds;}
+     ++pending.rounds;
     }
+    if(mask)previous=mask->finish(io,rng);
     if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize2(last,v0,v1);});
    }
    end[2]=l.need_phase2 && l.bit_length_v[0]>=0?exchange(io,role+"/final/v0",v0,rng):known(io,role+"/final/v0",Fr(0));

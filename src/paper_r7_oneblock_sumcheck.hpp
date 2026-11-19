@@ -17,6 +17,7 @@ struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelatio
 inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
 struct ProductInputs {const std::vector<Fr>&equality;const std::vector<Fr>&children;};
 namespace detail {
+void nativeMatrixTerminal(IO&,const Hidden&,const std::vector<Hidden>&,Random*,const std::string&);
 // Internal borrowed pair: shared equality, independent interleaved child arrays.
 std::array<Reduction,2> batchedProductSumcheckContiguous(IO&,std::size_t,const std::array<Hidden,2>&,const std::vector<Value>&,Random*,const std::string&,const std::array<ProductInputs,2>&,const std::vector<Fr>* equality_point=nullptr);
 std::vector<Fr>productPolynomialContiguous(const ProductInputs&);
