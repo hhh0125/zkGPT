@@ -539,7 +539,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     zkgpt::memory_diagnostics::logProcess("circuit_build_begin");
 
     // 计算指数表格
-    compute_e_table();
+    if (!r6Metadata()) compute_e_table();
 
     if(layer_num<1 || layer_num>12 || len!=32 || headnum<=0 || headdim<=0 ||
        attn_dim<=0 || attn_dim>1024 || linear_dim<=0 || linear_dim>4096 ||

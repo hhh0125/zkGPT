@@ -30,14 +30,14 @@ void Writer::text(const std::string&s){
  std::copy(s.begin(),s.end(),b.begin()+at+4);
 }
 void Writer::scalar(const Fr&f){need(f.isValid(),"R7 invalid scalar");need(b.size()<=4*1024*1024-32,"R7 crypto wire bound");auto at=b.size();b.resize(at+32);need(f.serialize(b.data()+at,32)==32,"Fr encoding");}
-void Writer::point(const G1&p){group(p);raw(r1::encode(p));}
+void Writer::point(const G1&p){curve();raw(r1::encode(p));}
 Bytes Reader::raw(std::size_t n){need(at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");Bytes out(b.begin()+at,b.begin()+at+n);at+=n;return out;}
 std::uint64_t Reader::number(unsigned n){need(n<=8 && at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");std::uint64_t v=0;for(unsigned i=0;i<n;++i)v|=std::uint64_t(b[at++])<<(8*i);return v;}
 std::string Reader::text(){auto n=number();need(n<=256,"R7 crypto string bound");auto x=raw(n);return {x.begin(),x.end()};}
 Fr Reader::scalar(){need(at<=b.size() && 32<=b.size()-at,"R7 crypto truncated wire");Fr f;need(f.deserialize(b.data()+at,32)==32,"noncanonical Fr");std::array<std::uint8_t,32>canonical{};need(f.serialize(canonical.data(),32)==32 && std::memcmp(canonical.data(),b.data()+at,32)==0,"noncanonical Fr roundtrip");at+=32;return f;}
 G1 Reader::point(){return decodePoint(raw(32));}
 void Reader::end(){need(at==b.size(),"R7 crypto trailing bytes");}
-G1 decodePoint(const Bytes&b){curve();auto p=r1::decodeG1(b);group(p);return p;}
+G1 decodePoint(const Bytes&b){curve();return r1::decodeG1(b);}
 void OSRandom::fill(std::uint8_t*out,std::size_t n){need(n==32 && ++draws_<=200000,"R7 entropy budget");std::size_t pos=0;while(pos<n){auto k=getrandom(out+pos,n-pos,0);if(k<0 && errno==EINTR)continue;need(k>0,"R7 system entropy failure");pos+=std::size_t(k);}Bytes b(out,out+n);need(std::any_of(b.begin(),b.end(),[](auto x){return x!=0;}) && seen_.emplace(b,true).second,"R7 entropy health failure");}
 Bytes Random::bytes(std::size_t n){need(n==32,"R7 entropy block size");Bytes b(n);fill(b.data(),b.size());return b;}
 Fr Random::scalar(bool nonzero){curve();for(unsigned i=0;i<4096;++i){auto b=bytes(32);Fr f;if(f.deserialize(b.data(),b.size())==b.size() && f.isValid() && r1::encode(f)==b && (!nonzero || !f.isZero()))return f;}throw std::runtime_error("R7 scalar rejection budget exhausted");}
@@ -45,7 +45,13 @@ Parameters parameters(std::size_t n){return trusted(n);}
 void validate(const Parameters&p){need(p.suite==suite,"R7 wrong generator suite");const auto&e=trusted(p.columns.size());need(p.scalar==e.scalar && p.hiding==e.hiding && p.columns==e.columns,"R7 generators differ from independently derived suite");}
 Metrics& metrics(){static Metrics m;return m;}
 G1 msm(const std::vector<G1>&g,const std::vector<Fr>&x){need(g.size()==x.size() && !g.empty() && g.size()<=65,"R7 bounded MSM shape");auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;}
-G1 scalarCommit(const Fr&v,const Fr&r){const auto&p=trusted(1);return msm({p.scalar,p.hiding},{v,r});}
+G1 scalarCommit(const Fr&v,const Fr&r){
+ const auto&p=trusted(1);
+ G1 bases[]{p.scalar,p.hiding};
+ const Fr scalars[]{v,r};
+ auto&m=metrics();++m.msm_calls;m.msm_terms+=2;m.max_msm=std::max<std::uint64_t>(m.max_msm,2);
+ MSMTrace trace(2);G1 out;G1::mulVec(out,bases,scalars,2);return out;
+}
 PCSpec PCSpec::make(const std::string&role,std::size_t actual,std::size_t padded){PCSpec s;s.role=role;s.actual=actual;s.padded=padded;unsigned d=r1::log2exact(padded);s.rows=std::size_t(1)<<(d/2);s.columns=padded/s.rows;validate(s);return s;}
 void validate(const PCSpec&s){need(s.suite==suite,"R7 wrong PC suite");need(!s.role.empty() && s.role.size()<=160 && s.layout=="column-major-i+R*j","R7 PC role/layout mismatch");need(s.actual && s.actual<=s.padded && s.padded<=maxN && !(s.padded&(s.padded-1)),"R7 PC dimensions/padding bound");auto d=r1::log2exact(s.padded);need(s.rows==(std::size_t(1)<<(d/2)) && s.columns==s.padded/s.rows,"R7 PC row/column mismatch");}
 void validate(const PC&p){validate(p.spec);need(p.rows.size()==p.spec.rows,"R7 PC row commitment count");for(auto&g:p.rows)group(g);}

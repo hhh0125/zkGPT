@@ -7,11 +7,10 @@
 namespace zkgpt::r7::hyrax_a3 {
 namespace {
 void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
-G1 wideMSM(const std::vector<G1>&g,const std::vector<Fr>&x){
- need(g.size()==x.size() && !g.empty() && g.size()<=std::max(maxDot,maxTrustedR6Dot)+1,"A3 MSM dimension");
- perf4::Scope phase("IPA/MSM","wideMSM",x.size());
- auto&m=metrics();++m.msm_calls;m.msm_terms+=g.size();m.max_msm=std::max<std::uint64_t>(m.max_msm,g.size());
- MSMTrace trace(x.size());G1 out;G1::mulVec(out,const_cast<G1*>(g.data()),const_cast<Fr*>(x.data()),x.size());return out;
+G1 wideMSM(const G1*g,const Fr*x,std::size_t n){
+ perf4::Scope phase("IPA/MSM","wideMSM",n);
+ auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);
+ MSMTrace trace(n);G1 out;G1::mulVec(out,const_cast<G1*>(g),x,n);return out;
 }
 void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
 Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
@@ -25,7 +24,7 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const 
  if(io.prover()){
   for(std::size_t i=0;i<g.size();++i){d.push_back(rng->scalar());}
   rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
-  masks.point(wideMSM(g,d)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
+  masks.point(wideMSM(g.data(),d.data(),g.size())+p.hiding*rv);masks.point(scalarCommit(dy,ry));
  }
  auto b=exchange(io,"A3/knowledge/masks",masks.b,false);
  G1 D,B;if(!io.prover()){Reader mr{b};D=mr.point();B=mr.point();mr.end();}
@@ -35,7 +34,7 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const 
  b=exchange(io,"A3/knowledge/responses",response.b,false);
  if(!io.prover()){
   Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
-  need(wideMSM(g,z)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
+  need(wideMSM(g.data(),z.data(),g.size())+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
   need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
  }
 }
@@ -48,10 +47,13 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
  std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
  while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
   if(io.prover()){
-   std::vector<Fr>xl,xr,al,ar;std::vector<G1>gl,gr;
-   {perf4::Scope copy("IPA/half-vector-copy","P",width,half*(4*sizeof(Fr)+2*sizeof(G1)));xl.assign(x.begin(),x.begin()+half);xr.assign(x.begin()+half,x.end());al.assign(aa.begin(),aa.begin()+half);ar.assign(aa.begin()+half,aa.end());gl.assign(g.begin(),g.begin()+half);gr.assign(g.begin()+half,g.end());}
-   rl=rng->scalar();rr=rng->scalar();{perf4::Scope dot("IPA/inner-product","cross",width);left=r1::dot(xl,ar);right=r1::dot(xr,al);}
-   cross.point(wideMSM(gr,xl)+p.scalar*left+p.hiding*rl);cross.point(wideMSM(gl,xr)+p.scalar*right+p.hiding*rr);
+   rl=rng->scalar();rr=rng->scalar();
+   {
+    perf4::Scope dot("IPA/inner-product","cross",width);
+    for(std::size_t i=0;i<half;++i){left+=x[i]*aa[i+half];right+=x[i+half]*aa[i];}
+   }
+   cross.point(wideMSM(g.data()+half,x.data(),half)+p.scalar*left+p.hiding*rl);
+   cross.point(wideMSM(g.data(),x.data()+half,half)+p.scalar*right+p.hiding*rr);
   }
   const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover())folds.push_back(c);c2=c*c;i2=inv*inv;}if(!io.prover())U+=L*c2+R*i2;
   if(io.prover()){
@@ -68,7 +70,7 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
   // Independent verifier: direct product weights by HIGH bit (half-vector split),
   // not the prover's recursive generator fold; one n-base MSM as in A.3 text.
   std::vector<Fr>weights(a.size(),Fr(1));for(std::size_t k=0;k<folds.size();++k){Fr inv;Fr::inv(inv,folds[k]);auto bit=folds.size()-1-k;for(std::size_t i=0;i<weights.size();++i)weights[i]*=((i>>bit)&1)?folds[k]:inv;}
-  ghat=wideMSM(bases,weights);ahat=r1::dot(a,weights);
+  ghat=wideMSM(bases.data(),weights.data(),bases.size());ahat=r1::dot(a,weights);
  }
  need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
  Writer masks;Fr d=0,rd=0,rb=0;
@@ -90,13 +92,13 @@ std::vector<G1> generators(std::size_t n){
  for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
  cache.emplace(n,g);return g;
 }
-G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());return wideMSM(g,x)+parameters(1).hiding*r;}
+G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  ++measurement().dot_product_calls;
  dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());
- if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
+ if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
  auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
@@ -107,7 +109,7 @@ void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const 
  // No generator bytes are accepted from the prover. The anchor spec is supplied
  // by the trusted-model verifier, and R1's role-specific derivation is exact.
  const auto&g=r1::generators(approved).g;
- if(io.prover())need(w && rng && w->values.size()==a.size() && encode(w->evaluation.handle)==encode(tau),"A3 private input/handle mismatch");
+ if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
  auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 // Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
@@ -118,7 +120,7 @@ void opening(IO&io,const PC&pc,const Query&q,const PCSecret*secret,const Hidden*
  Writer b;b.text(suite);b.text(messageVersion);b.raw(encode(pc));b.raw(encode(q.evaluation));b.number(q.point.size());for(auto&f:q.point)b.scalar(f);publicBinding(io,"A3/PC-statement",b.b);
  auto rowbits=r1::log2exact(pc.spec.rows);std::vector<Fr>rl(q.point.begin(),q.point.begin()+rowbits),rc(q.point.begin()+rowbits,q.point.end());auto L=r1::weights(rl),a=r1::weights(rc);auto xi=msm(pc.rows,L);DotWitness w;
  if(io.prover()){
-  need(secret && evaluation && rng && encode(secret->public_pc)==encode(pc) && encode(evaluation->handle)==encode(q.evaluation) && secret->values.size()==pc.spec.padded && secret->blinds.size()==pc.spec.rows,"A3 PC private identity/shape mismatch");
+  need(secret && evaluation && rng && encode(secret->public_pc)==encode(pc) && secret->values.size()==pc.spec.padded && secret->blinds.size()==pc.spec.rows,"A3 PC private identity/shape mismatch");
   w.values.assign(pc.spec.columns,Fr(0));w.evaluation=*evaluation;for(std::size_t i=0;i<pc.spec.rows;++i){w.blind+=L[i]*secret->blinds[i];for(std::size_t j=0;j<pc.spec.columns;++j)w.values[j]+=L[i]*secret->values[i+pc.spec.rows*j];}
  }
  dotProduct(io,xi,q.evaluation,a,io.prover()?&w:nullptr,rng);

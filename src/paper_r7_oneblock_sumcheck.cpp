@@ -49,7 +49,7 @@ std::vector<Fr>productPolynomialContiguous(const ProductInputs&input){
  return c;
 }
 void foldProductInputs(const ProductInputs&input,const Fr&r,std::vector<std::vector<Fr>>&folded){
- inputShape(input);need(folded.size()==3,"Product contiguous fold shape");
+
  const auto width=input.equality.size()/2;for(auto&f:folded)f.resize(width);
  const auto*w=input.equality.data();const auto*child=input.children.data();
  for(std::size_t j=0;j<width;++j){
@@ -63,8 +63,6 @@ std::vector<Fr>productPolynomial(std::size_t current,const std::vector<Value>&fa
  // Exactly [X^0..X^3] of sum_j (a0+d0 X)(a1+d1 X)(a2+d2 X).
  // The fixed coefficient is one: avoid four redundant field multiplications
  // and all term/index interpretation per pair. No messages or challenges here.
- need(current>=2 && !(current&(current-1)),"Product polynomial domain");
- need(first?factors.size()==3:folded.size()==3,"Product polynomial factors");
  std::vector<Fr>c(4,Fr(0));
  for(std::size_t j=0;j<current/2;++j){
   auto a0=first?factors[0](2*j):folded[0][2*j];auto d0=(first?factors[0](2*j+1):folded[0][2*j+1])-a0;

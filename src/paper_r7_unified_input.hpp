@@ -23,7 +23,7 @@ using Consume=std::function<void(const Value&,const Value&)>;
 // A provider invokes consume exactly once with a borrowed sealed input oracle
 // and its public kernel. At most one physical-root kernel is live at a time.
 using Factors=std::function<void(std::size_t,const Consume&)>;
-struct Round {std::array<Fr,3>coefficients{Fr(0),Fr(0),Fr(0)};std::array<Fr,2>input_pair{Fr(0),Fr(0)},kernel_pair{Fr(0),Fr(0)};};
+struct Round {std::array<Fr,3>coefficients{Fr(0),Fr(0),Fr(0)};std::array<Fr,2>input_pair{Fr(0),Fr(0)};};
 Round quadraticRound(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&prefix,const Factors&);
 // Kernel oracle is already low-bit folded; sealed input oracle is unchanged.
 Round quadraticRoundFolded(std::size_t,const std::vector<Segment>&,const std::vector<Fr>&prefix,const Factors&);

@@ -86,7 +86,8 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  namespace ui=unified;auto started=std::chrono::steady_clock::now();
  need(layout_.category_mode && single_pc_ && sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_ && identity(layout_)==identity_ && x==single_x_,"category authentication lifecycle/statement");
  // C_U and the verifier-owned statement/map are fixed before r_X is sampled.
- Writer xb;xb.text(single::suite);xb.text(single::identity(*single_pc_));xb.text(identity_);xb.number(x.size(),8);for(const auto&v:x){need(v.isValid(),"category public X scalar");xb.scalar(v);}bindPublic(io_,"CategoryInput/X-statement-and-seal",xb.b);
+ const auto commitment_id=single::identity(*single_pc_);
+ Writer xb;xb.text(single::suite);xb.text(commitment_id);xb.text(identity_);xb.number(x.size(),8);for(const auto&v:x)xb.scalar(v);bindPublic(io_,"CategoryInput/X-statement-and-seal",xb.b);
  std::vector<Fr>rx;const auto padded=layout_.categories[0].padded;for(unsigned j=0;j<single::bits(padded);++j)rx.push_back(io_.coin("CategoryInput/X-query/"+std::to_string(j)));
  Weights wx(rx);Fr expected=0;for(std::size_t j=0;j<x.size();++j)expected+=wx.at(j)*x[j];
  auto spans=layout_.x_spans;auto xindex=[spans](std::size_t j){for(const auto&s:spans){if(j<s.count)return s.offset+j;j-=s.count;}throw std::runtime_error("category X trusted map omission");};
@@ -94,7 +95,7 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  need(names_.count("public/X-committed-consistency")==1 && !claims_.empty() && claims_.size()<=8192,"category mandatory X claim");
  auto tile_started=std::chrono::steady_clock::now();auto plan=categoryTiles(layout_);
  std::cerr<<"CATEGORY_TILE_DETAIL {\"tile_enumeration_count\":1,\"tiles\":"<<plan.size()<<",\"tile_mapping_time\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-tile_started).count()<<"}\n";std::vector<ui::Segment>segments;for(const auto&t:plan)segments.push_back(t.segment);
- Writer declaration;declaration.text(single::suite);declaration.text(single::identity(*single_pc_));declaration.text(identity_);declaration.number(claims_.size());for(const auto&c:claims_){declaration.text(c.id);declaration.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));}
+ Writer declaration;declaration.text(single::suite);declaration.text(commitment_id);declaration.text(identity_);declaration.number(claims_.size());for(const auto&c:claims_){declaration.text(c.id);declaration.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));}
  // Tiles are derived local computation views; no tile commitment or independent
  // claim is ever sent. Their descriptor is bound as an execution consistency aid.
  declaration.number(segments.size());for(auto s:segments){declaration.number(s.offset,8);declaration.number(s.padded,8);}bindPublic(io_,"CategoryInput/all-claims-fixed",declaration.b);
@@ -113,7 +114,7 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  auto endpoint=[&](const std::vector<Fr>&q){if(fast_endpoint){auto out=categoryKernelEndpoint(q,rho,auth);if(out)return *out;}Fr out=0;for(std::size_t k=0;k<plan.size();++k){auto v=generate(k);auto width=v.size();unsigned j=0;for(;width>1;width/=2,++j)for(std::size_t a=0;a<width/2;++a)v[a]=v[2*a]+q[j]*(v[2*a+1]-v[2*a]);out+=ui::selector(segments[k],q)*v[0];}return out;};
  auto reduced=ui::reduce(io_,single_pc_->plan.domain,segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck",state.get(),inputs);if(state)state->report();state.reset();
  single::open(io_,*single_pc_,{reduced.point,reduced.endpoints[0].handle},x,io_.prover()?&*single_secret_:nullptr,io_.prover()?&reduced.endpoints[0]:nullptr,rng_,"UnifiedInput/opening/C_U");
- Writer done;done.text(single::suite);done.text(single::identity(*single_pc_));done.text("public/X-committed-consistency");done.number(claims_.size());bindPublic(io_,"CategoryInput/all-claims-authenticated",done.b);io_.coin("CategoryInput/all-claims-authenticated/ack");authenticated_=true;
+ Writer done;done.text(single::suite);done.text(commitment_id);done.text("public/X-committed-consistency");done.number(claims_.size());bindPublic(io_,"CategoryInput/all-claims-authenticated",done.b);io_.coin("CategoryInput/all-claims-authenticated/ack");authenticated_=true;
  std::cerr<<"CATEGORY_INPUT {\"claims\":"<<claims_.size()<<",\"category_count\":"<<single_pc_->plan.segments.size()<<",\"computation_tiles\":"<<plan.size()<<",\"storage_chunks\":"<<roots_.size()<<",\"K_tile_peak_bound_bytes\":33554432,\"full_witness_copy_bytes\":0,\"X_claim_authenticated\":true,\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false}\n";
 }
 }

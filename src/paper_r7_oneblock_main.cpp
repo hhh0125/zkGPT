@@ -93,7 +93,13 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #else
  auto publicArtifacts=buildR6PublicArtifacts();
 #endif
- auto plan=discover(*publicArtifacts);auto&ctx=plan.context;
+#ifdef R7_COMPLETE_VERIFIER
+ constexpr bool isP=false;
+ need(argc==4,"FS verifier cannot import challenges/receipt/options");
+#else
+ constexpr bool isP=true;
+#endif
+ auto plan=discover(*publicArtifacts,!isP);auto&ctx=plan.context;
  auto layout=classified::makeCategoryLayout(ctx,*publicArtifacts);
  auto layout_id=classified::identity(layout);
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
@@ -109,12 +115,6 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  plan.required.push_back({"unified-input/sumcheck","UNIFIED_INPUT_SUMCHECK",layout_id,ctx.plan.master.actual,0});
  plan.required.push_back({"unified-input/classified-opening","UNIFIED_INPUT_OPENING",layout_id,ctx.plan.master.actual,0});
  plan.required.push_back({"single/hidden-opening","SINGLE_HYRAX_OPENING",layout_id,ctx.plan.master.actual,0});
-#ifdef R7_COMPLETE_VERIFIER
- constexpr bool isP=false;
- need(argc==4,"FS verifier cannot import challenges/receipt/options");
-#else
- constexpr bool isP=true;
-#endif
  need(std::string(argv[1])==(isP?"prove":"verify"),"FS role/mode mismatch");
  std::string attack=isP && argc==5?argv[4]:"";
  [[maybe_unused]] const char*successStatus=isP?"FS_PROOF_CREATED_CANDIDATE":fs::verifiedStatus;

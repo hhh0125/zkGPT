@@ -59,7 +59,6 @@ void neuralNetwork::r5bAttention(layer *c,i64 &id){
  witness_registry.addExpQueries(instance,ti,e,t);
  // Existing production table and tail policy, unchanged.
  if(!structure_only){
-  compute_e_table();
   for(int head=0;head<headnum;++head)for(int i=0;i<len;++i){
    int row=head*len+i,base=head*len*(len+1)/2+i*(i+1)/2;I maximum=0;
    for(int j=0;j<=i;++j){int k=base+j;I d=convert(val[id-1][k]),scaled=zkgpt::r5b::round(hs::mul(25,d),4096);val[0][raw+k]=hs::field(d);val[0][s+k]=hs::field(scaled);val[0][sr+k]=hs::field(remainder(hs::mul(25,d),4096,scaled));if(!j || scaled>maximum)maximum=scaled;}

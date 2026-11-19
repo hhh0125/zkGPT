@@ -9,7 +9,7 @@ struct Coverage {
  std::uint64_t object_padded_coordinates=0,full_representation_response_bytes=0;
 };
 Coverage discover(unsigned blocks=1);
-Coverage discover(const R6PublicArtifacts&);
+Coverage discover(const R6PublicArtifacts&,bool include_native_report=true);
 std::string identity(const Coverage&);
 void writeCoverage(std::ostream&,const Coverage&);
 }

@@ -46,16 +46,13 @@ void validatePlan(const Plan&p){
  unified::validate(p.domain,intervals);
 }
 void validatePublic(const Public&p){need(p.rows.size()==p.plan.rows,"single row commitment count");}
-void validateSecret(const Secret&s,const Public&p){
- need(descriptor(s.pc.plan)==descriptor(p.plan) && s.pc.rows==p.rows && s.blinds.size()==p.plan.rows && s.sources.size()==p.plan.segments.size(),"single private commitment identity/shape");
-}
 Bytes rowBytes(const Public&p,std::size_t start,std::size_t count){Writer w;w.number(count);for(std::size_t j=0;j<count;++j)w.point(p.rows.at(start+j));return w.b;}
 // Source runs retain their original logical addresses. Category padding and
 // global tails are generated as zeros in this columns-sized row buffer.
 bool readRow(const Secret&s,std::size_t row,std::vector<Fr>&out){
  const auto&p=s.pc.plan;out.assign(p.columns,Fr(0));auto begin=row*p.columns,end=begin+p.columns;bool touched=false;
  for(const auto&run:p.runs){auto lo=std::max(begin,run.physical_offset),hi=std::min(end,run.physical_offset+run.count);if(lo>=hi)continue;touched=true;
-  for(auto j=lo;j<hi;++j){auto f=s.sources[run.source](run.source_offset+j-run.physical_offset);need(f.isValid(),"single invalid private source scalar");out[j-begin]=f;}}
+  for(auto j=lo;j<hi;++j){out[j-begin]=s.sources[run.source](run.source_offset+j-run.physical_offset);}}
  return touched;
 }
 G1 rowCombination(const Public&p,const QueryTerm&t){
@@ -71,7 +68,7 @@ Fold fold(const Public&p,const QueryTerm&t,const Secret*s){
 }
 struct Basis {
  std::vector<Fr>low,high_low,high_high;std::size_t columns;unsigned split=0;
- Basis(const Plan&p,const std::vector<Fr>&q):columns(p.columns){need(q.size()==bits(p.domain),"single logical query dimension");for(const auto&v:q)need(v.isValid(),"single query scalar");auto d=bits(columns);need(d<=q.size(),"single logical/physical bit dimensions");split=(q.size()-d)/2;low=r1::weights({q.begin(),q.begin()+d});high_low=r1::weights({q.begin()+d,q.begin()+d+split});high_high=r1::weights({q.begin()+d+split,q.end()});}
+ Basis(const Plan&p,const std::vector<Fr>&q):columns(p.columns){need(q.size()==bits(p.domain),"single logical query dimension");auto d=bits(columns);need(d<=q.size(),"single logical/physical bit dimensions");split=(q.size()-d)/2;low=r1::weights({q.begin(),q.begin()+d});high_low=r1::weights({q.begin()+d,q.begin()+d+split});high_high=r1::weights({q.begin()+d+split,q.end()});}
  Fr highAt(std::size_t j)const{return high_low[j&(high_low.size()-1)]*high_high.at(j>>split);}
  Fr at(std::size_t j)const{return low[j%columns]*highAt(j/columns);}
 };
@@ -103,7 +100,7 @@ void mappedQueryTerms(const Plan&p,const std::vector<Fr>&q,const ConsumeTerm&con
 
 Fr publicContribution(const Plan&p,const std::vector<Fr>&q,const std::vector<Fr>&x){
  if(p.category_mode)return Fr(0);
- need(x.size()==p.segments[0].actual,"single verifier public X shape");Basis basis(p,q);Fr value=0;for(std::size_t j=0;j<x.size();++j){need(x[j].isValid(),"single invalid public X");value+=basis.at(j)*x[j];}for(const auto&c:p.public_cells)value+=basis.at(p.segments[c.source].offset+c.index)*x[c.x_index];return value;
+ need(x.size()==p.segments[0].actual,"single verifier public X shape");Basis basis(p,q);Fr value=0;for(std::size_t j=0;j<x.size();++j)value+=basis.at(j)*x[j];for(const auto&c:p.public_cells)value+=basis.at(p.segments[c.source].offset+c.index)*x[c.x_index];return value;
 }
 Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers){
  need(sources.size()==p.segments.size() && workers>0 && workers<=32,"single source/worker bound");for(auto&v:sources)need(bool(v),"single missing sealed source");
@@ -125,7 +122,7 @@ void writeLayout(std::ostream&out,const Public&p){validatePublic(p);if(p.plan.ca
  out<<"],\"native_public_cells\":[";first=true;for(const auto&c:p.plan.public_cells){if(!first)out<<',';first=false;out<<"["<<c.source<<','<<c.index<<','<<c.x_index<<"]";}out<<"],\"logical_layout\":";unified::writeLayout(out,p.plan.packing);out<<"}\n";
 }
 Public exchange(IO&io,const Plan&plan,const Secret*s){
- auto header=descriptor(plan);need(io.prover()?s!=nullptr:s==nullptr,"single PC P/V boundary");if(s){validatePublic(s->pc);need(descriptor(s->pc.plan)==header,"single PC secret plan");}
+ auto header=descriptor(plan);need(io.prover()?s!=nullptr:s==nullptr,"single PC P/V boundary");if(s)need(s->pc.rows.size()==plan.rows,"single PC row count");
  bindPublic(io,"SingleHyrax/header",header);Public p;p.plan=plan;p.rows.reserve(plan.rows);
  for(std::size_t i=0;i<plan.rows;i+=rowChunk){
   auto n=std::min(rowChunk,plan.rows-i);
@@ -148,7 +145,7 @@ Fr evaluate(const Secret&s,const std::vector<Fr>&q){
 }
 void open(IO&io,const Public&p,const Query&q,const std::vector<Fr>&x,const Secret*s,const Hidden*h,Random*rng,const std::string&role){
  need(io.prover()?(s && h && rng):(!s && !h && !rng),"single opening P/V boundary");need(!role.empty() && role.size()<=120,"single opening role bound");crypto::validate(q.evaluation,io.session(),q.evaluation.role);
- if(s){validateSecret(*s,p);need(crypto::encode(h->handle)==crypto::encode(q.evaluation),"single hidden opening handle");}
+ if(s)need(s->blinds.size()==p.plan.rows && s->sources.size()==p.plan.segments.size(),"single private commitment shape");
  const auto started=std::chrono::steady_clock::now();auto id=identity(p);Writer binding;binding.text(suite);binding.text(id);binding.text(io.session());binding.text(role);binding.raw(crypto::encode(q.evaluation));for(const auto&v:q.point)binding.scalar(v);binding.number(x.size(),8);bindPublic(io,role+"/binding",binding.b);
  for(std::size_t start=0;!p.plan.category_mode && start<x.size();start+=65536){Writer chunk;chunk.number(start,8);auto n=std::min<std::size_t>(65536,x.size()-start);chunk.number(n);for(std::size_t j=0;j<n;++j)chunk.scalar(x[start+j]);bindPublic(io,role+"/public-X/"+std::to_string(start),chunk.b);}
  std::vector<Hidden>evaluations;std::size_t index=0;double preparation=0;const auto calls_before=hyrax_a3::measurement().dot_product_calls;

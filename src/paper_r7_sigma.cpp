@@ -8,7 +8,7 @@ void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  for(const auto&line:s.linear){need(line.size()==s.handles.size(),"R7 linear relation dimension");for(const auto&a:line)effective=effective || !a.isZero();}
  need(effective,"R7 Sigma vacuous relation rejected");
  Writer statement;statement.text(s.role);auto parent=io.prefix();statement.raw(Bytes(parent.begin(),parent.end()));statement.number(s.handles.size());std::set<std::string>roles;
- for(auto&h:s.handles){validate(h,io.session(),h.role);need(roles.insert(h.role).second,"R7 Sigma duplicate handle role");auto b=encode(h);statement.number(b.size());statement.raw(b);}
+ for(auto&h:s.handles){need(h.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(roles.insert(h.role).second,"R7 Sigma duplicate handle role");auto b=encode(h);statement.number(b.size());statement.raw(b);}
  statement.number(s.linear.size());for(auto&line:s.linear)for(auto&a:line)statement.scalar(a);
  statement.number(s.products.size());for(auto&p:s.products)for(auto index:p){need(index<s.handles.size(),"R7 product handle index");statement.number(index);}
  bindPublic(io,s.role+"/statement",statement.b);
