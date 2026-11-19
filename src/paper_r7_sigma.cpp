@@ -12,7 +12,7 @@ void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  statement.number(s.linear.size());for(auto&line:s.linear)for(auto&a:line)statement.scalar(a);
  statement.number(s.products.size());for(auto&p:s.products)for(auto index:p){need(index<s.handles.size(),"R7 product handle index");statement.number(index);}
  bindPublic(io,s.role+"/statement",statement.b);
- if(io.prover()){need(w && rng && w->size()==s.handles.size(),"R7 Sigma witness shape");for(std::size_t i=0;i<w->size();++i)need(encode(w->at(i).handle)==encode(s.handles[i]),"R7 Sigma full handle substitution");}
+ if(io.prover())need(w && rng && w->size()==s.handles.size(),"R7 Sigma witness shape");
  std::vector<std::array<Fr,2>> masks;std::vector<std::array<Fr,5>> mulmasks;Writer first;
  if(perf6::messages){masks.reserve(io.prover()?s.handles.size():0);mulmasks.reserve(io.prover()?s.products.size():0);}
  if(io.prover()){

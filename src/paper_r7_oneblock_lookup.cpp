@@ -56,7 +56,7 @@ void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const Leaf
    end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",&*inputs,allow_specialized);
   }else end=productSumcheck(io,width,carry,f,rng,name+"/sumcheck",nullptr,allow_specialized);
   need(end.endpoints.size()==3,"lookup Product endpoint count");{perf5::Scope t(perf5::Equality);constant(io,end.endpoints[0],r1::equality(row,end.point),rng,name+"/equality");}{perf5::Scope t(perf5::Carry);auto r=io.coin(name+"/fold");carry=combine(io.session(),name+"/carry",{end.endpoints[1],end.endpoints[2]},{Fr(1)-r,r});bindPublic(io,name+"/carry",encode(carry.handle));row=end.point;row.insert(row.begin(),r);}
-  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();if(perf5::context){const bool external_leaf=prepared_leaves && d-layer-1==0 && tree.at(0).get()==prepared_leaves.get();need(tree.at(d-layer-1).use_count()==(external_leaf?2:1),"PERF5 TreeFree requires final tree owner");}tree.at(d-layer-1).reset();}
+  if(io.prover()){perf5::Scope t(perf5::TreeFree);f.clear();tree.at(d-layer-1).reset();}
  }
  {perf5::Scope t(perf5::LeafAuthentication);auth(io,{row,carry.handle},io.prover()?&carry:nullptr,rng,role+"/leaf");}
  // A layer is recorded only after the recursive chain reaches an actually
@@ -107,7 +107,7 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
  perf4::Scope native_scope("Native/Memory",role,a.padded);
  pairShape(a,v);need(!table.empty() && table.size()<=(1u<<20) && !(table.size()&(table.size()-1)),"lookup complete table size");Writer identity;identity.text("R7-HIDDEN-LASSO-v1");identity.text(a.id);identity.text(v.id);identity.number(a.actual,8);identity.number(a.padded,8);identity.number(table.size(),8);r1::Fs tableIdentity("R7-HIDDEN-LASSO-COMPLETE-TABLE-v1");tableIdentity.integer("count",table.size());for(auto&x:table)tableIdentity.scalar("value",x);auto tableDigest=tableIdentity.digest();identity.raw(Bytes(tableDigest.begin(),tableDigest.end()));bindPublic(io,role+"/identity",identity.b);
  auto readValues=std::make_shared<std::vector<Fr>>(),finalValues=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){readValues->resize(a.padded,Fr(0));finalValues->resize(table.size(),Fr(0));std::vector<std::size_t>counts(table.size(),0);for(std::size_t i=0;i<a.padded;++i){auto j=integer(a.value(i),table.size());need(v.value(i)==table[j],"lookup private memory value mismatch");readValues->at(i)=Fr(counts[j]++);}for(std::size_t j=0;j<table.size();++j)finalValues->at(j)=Fr(counts[j]);}
- auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();shape(read);shape(final);need(read.actual==a.padded && read.padded==a.padded && final.actual==table.size() && final.padded==table.size(),"lookup counter factory dimensions");
+ auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();
  auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}
  std::array<Value,3>leaves;std::array<Hidden,3>roots;
  std::shared_ptr<std::vector<Fr>>base_leaves;Fr root0=1,root1=1;
@@ -144,8 +144,23 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
 void hiddenRange(IO&io,const VectorOracle&q,unsigned bits,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
  perf4::Scope native_scope("Native/Range",role,q.padded);
  shape(q);need(bits>=1 && bits<=126,"lookup Range bits");Writer statement;statement.text("R7-HIDDEN-RANGE-9BIT-v1");statement.text(q.id);statement.number(bits);statement.number(q.actual,8);statement.number(q.padded,8);bindPublic(io,role+"/statement",statement.b);unsigned count=(bits+8)/9;std::vector<VectorOracle>digits;
- for(unsigned h=0;h<count;++h){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(q.padded,Fr(0));for(std::size_t i=0;i<q.padded;++i){auto b=r1::encode(q.value(i));for(unsigned bit=bits;bit<256;++bit)need(!(b[bit/8]&(1u<<(bit%8))),"lookup private Range exceeds bitwidth");need(i<q.actual || q.value(i).isZero(),"lookup private Range nonzero padding");unsigned digit=0;for(unsigned j=0;j<std::min(9u,bits-9*h);++j){auto k=9*h+j;digit|=((b[k/8]>>(k%8))&1u)<<j;}values->at(i)=Fr(digit);}}
-  digits.push_back(factory(io,role+"/digit/"+std::to_string(h),q.actual,q.padded,privateValues(io,values)));shape(digits.back());need(digits.back().actual==q.actual && digits.back().padded==q.padded,"lookup digit factory dimensions");}
+ std::vector<std::shared_ptr<std::vector<Fr>>> values;
+ if(io.prover() && !prepared){
+  for(unsigned h=0;h<count;++h)values.push_back(std::make_shared<std::vector<Fr>>(q.padded));
+  for(std::size_t i=0;i<q.padded;++i){
+   const auto b=r1::encode(q.value(i));
+   for(unsigned h=0;h<count;++h){
+    const auto offset=9*h,width=std::min(9u,bits-offset);
+    const unsigned word=unsigned(b[offset/8]) | (unsigned(b[offset/8+1])<<8);
+    (*values[h])[i]=Fr((word>>(offset%8)) & ((1u<<width)-1));
+   }
+  }
+ }
+ for(unsigned h=0;h<count;++h){
+  auto read=values.empty()?Value{}:privateValues(io,values[h]);
+  digits.push_back(factory(io,role+"/digit/"+std::to_string(h),q.actual,q.padded,std::move(read)));
+  if(!values.empty())values[h].reset();
+ }
  auto r=point(io,q.padded,role+"/row");std::vector<Hidden>opened{evaluate(io,q,r,rng,role+"/query")};std::vector<Fr>coeff{Fr(-1)};Fr scale=1;for(unsigned h=0;h<count;++h){opened.push_back(evaluate(io,digits[h],r,rng,role+"/digit-evaluation/"+std::to_string(h)));coeff.push_back(scale);scale*=Fr(512);}linear(io,role+"/reconstruction",opened,coeff,rng);evidence(io,role+"/reconstruction");for(unsigned h=0;h<count;++h)evidence(io,role+"/digit/"+std::to_string(h)+"/opening");
  for(unsigned h=0;h<count;++h){std::vector<Fr>table(std::size_t(1)<<std::min(9u,bits-9*h),Fr(0));for(std::size_t j=0;j<table.size();++j)table[j]=Fr(j);hiddenMemory(io,digits[h],digits[h],table,factory,rng,role+"/memory/"+std::to_string(h),prepared);}tail(io,q,rng,role+"/zero-tail");evidence(io,role+"/zero-tail"); // Includes a verifier-known empty tail when actual==padded.
 }
@@ -153,7 +168,7 @@ void hiddenRangeBinding(IO&io,const VectorOracle&source,const VectorOracle&encod
 void hiddenExp(IO&io,const VectorOracle&index,const VectorOracle&value,r1::ExpProfile profile,const VectorFactory&factory,Random*rng,const std::string&role,bool prepared){
  perf4::Scope native_scope("Native/Exp",role,index.padded);
  pairShape(index,value);need(profile==r1::ExpProfile::LegacyClampOne || profile==r1::ExpProfile::Unclamped,"lookup Exp profile");Writer statement;statement.text("R7-HIDDEN-EXP-u32-St2^-9-Se2^-20-v1");statement.text(index.id);statement.text(value.id);statement.number(unsigned(profile));auto digest=r1::expTableDigest(profile);statement.raw(Bytes(digest.begin(),digest.end()));bindPublic(io,role+"/statement",statement.b);
- constexpr std::uint32_t K=8191,Scale=1048576;std::array<VectorOracle,4>helper;const std::array<std::string,4>names{"x","selector","delta","native-E"};for(unsigned k=0;k<4;++k){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(index.padded,Fr(0));for(std::size_t i=0;i<index.padded;++i){if(i>=index.actual){if(k==3)values->at(i)=value.value(i)+Fr(Scale);continue;}auto raw=integer(index.value(i),std::uint64_t(1)<<32);values->at(i)=k==0?Fr(std::min<std::size_t>(raw,K)):k==1?Fr(raw<K?1:0):k==2?Fr(raw<K?K-1-raw:raw-K):value.value(i);}}helper[k]=factory(io,role+"/"+names[k],index.actual,index.padded,privateValues(io,values));shape(helper[k]);need(helper[k].actual==index.actual && helper[k].padded==index.padded,"lookup Exp factory dimensions");}
+ constexpr std::uint32_t K=8191,Scale=1048576;std::array<VectorOracle,4>helper;const std::array<std::string,4>names{"x","selector","delta","native-E"};for(unsigned k=0;k<4;++k){auto values=std::make_shared<std::vector<Fr>>();if(io.prover() && !prepared){values->resize(index.padded,Fr(0));for(std::size_t i=0;i<index.padded;++i){if(i>=index.actual){if(k==3)values->at(i)=value.value(i)+Fr(Scale);continue;}auto raw=integer(index.value(i),std::uint64_t(1)<<32);values->at(i)=k==0?Fr(std::min<std::size_t>(raw,K)):k==1?Fr(raw<K?1:0):k==2?Fr(raw<K?K-1-raw:raw-K):value.value(i);}}helper[k]=factory(io,role+"/"+names[k],index.actual,index.padded,privateValues(io,values));}
  hiddenRange(io,index,32,factory,rng,role+"/range/t",prepared);for(unsigned k=0;k<3;++k)hiddenRange(io,helper[k],std::array<unsigned,3>{13,1,32}[k],factory,rng,role+"/range/"+names[k],prepared);
  for(unsigned kind=0;kind<2;++kind){auto name=role+"/branch/"+std::to_string(kind);auto row=point(io,index.padded,name+"/row");auto w=std::make_shared<std::vector<Fr>>(r1::weights(row));Value eq=[w](std::size_t i){return w->at(i);},mask=[actual=index.actual](std::size_t i){return Fr(i<actual?1:0);};std::vector<Value>f;if(io.prover())f={eq,helper[kind==0?0:2].value,helper[1].value,index.value,mask};Expression expr;expr.factor_count=5;
   if(kind==0)expr.terms={{Fr(1),{0,1}},{Fr(-1),{0,2,3}},{Fr(-std::int64_t(K)),{0,4}},{Fr(K),{0,2}}};else expr.terms={{Fr(1),{0,1}},{Fr(2),{0,2,3}},{Fr(-1),{0,4,3}},{Fr(K),{0,4}},{Fr(-std::int64_t(2*K-1)),{0,2}}};

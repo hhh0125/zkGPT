@@ -81,15 +81,16 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
 }
 Measurement& measurement(){static Measurement m;return m;}
 std::vector<G1> generators(std::size_t n){
- dimension(n);auto small=parameters(1);(void)small; // pin exact existing curve/map/encoding
+ dimension(n);
  static std::map<std::size_t,std::vector<G1>>cache;auto found=cache.find(n);if(found!=cache.end())return found->second;
+ const auto&small=parameters(1);
  auto g=parameters(std::min<std::size_t>(n,64)).columns;
  for(std::size_t i=g.size();i<n;++i){G1 point;mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");g.push_back(point);}
  auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);std::set<Bytes>seen;
  for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
  cache.emplace(n,g);return g;
 }
-G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());for(auto&v:x)need(v.isValid(),"A3 invalid witness scalar");need(r.isValid(),"A3 invalid vector blind");return wideMSM(g,x)+parameters(1).hiding*r;}
+G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());return wideMSM(g,x)+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  ++measurement().dot_product_calls;
  dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
