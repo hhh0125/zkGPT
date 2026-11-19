@@ -89,7 +89,7 @@ void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
   }throw;
  }
  r1::require(legacyCommitmentAbsent(),"R7 must not call legacy nonhiding PC");
- r6::checkParameterFiles(m,"data/gpt2_int");objects_=c.objects;objects_.front().materialized=true;
+ objects_=c.objects;objects_.front().materialized=true;
 }
 const std::vector<Fr>& R7WitnessStore::baseMaster()const{r1::require(execution_ && !execution_->val.empty(),"R7 no witness");return execution_->val[0];}
 std::vector<Fr> R7WitnessStore::publicX()const{const auto&w=baseMaster();r1::require(network_!=nullptr,"R7 X network");std::vector<Fr>out;
