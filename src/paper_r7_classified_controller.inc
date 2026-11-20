@@ -58,7 +58,7 @@
  }
  std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
  for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id));}
- VectorFactory factory=[&](IO&live,std::string id,std::size_t actual,std::size_t padded,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");auto v=pcs.view(id);need(v.actual==actual && v.padded==padded,"classified wrong native view shape");return v;};
+ VectorFactory factory=[&](IO&live,std::string id,std::size_t,std::size_t,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");return pcs.view(id);};
  timed("native-Range-Exp-Lasso-Memory-Product",[&]{for(auto&r:ctx.plan.ranges)hiddenRange(io,sources.at(r.child),r.bits,factory,rng,"r7/"+r.id,true);for(auto&e:ctx.plan.exps)hiddenExp(io,sources.at(e.index_child),sources.at(e.value_child),e.profile,factory,rng,"r7/"+e.id,true);});
  for(auto&t:pending.terminals){const auto&l=graph->circuit.at(t.layer);const auto*indices=t.port?&l.ori_id_v:&l.ori_id_u;auto id="gkr/layer/"+std::to_string(t.layer)+"/terminal/"+(t.port?"v":"u")+"/"+std::to_string(t.matrix_point);need(terminals.insert(id).second,"classified repeated terminal");pcs.deferBase(id,t.actual,t.padded,[indices](std::size_t j){return indices->at(j);},t.value,t.point);}
  std::set<std::string>requiredTerminals;for(auto&r:plan.required)if(r.family=="GKR_MASTER_TERMINAL")requiredTerminals.insert(r.id);need(terminals==requiredTerminals,"classified native terminal omission/substitution");

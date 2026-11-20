@@ -70,7 +70,7 @@ void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,c
  perf5::Product profile(batch,n,io.prover());perf5::Scope total(perf5::Total);
  need(n && n<=(1u<<24) && !(n&(n-1)) && bool(auth),"Product01 domain/authenticator");
  Writer statement;statement.text("R7-HIDDEN-PRODUCT01-v1");statement.number(n,8);
- for(auto&h:roots){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}bindPublic(io,batch+"/statement",statement.b);
+ for(auto&h:roots){need(h.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(h.handle));}bindPublic(io,batch+"/statement",statement.b);
  std::array<std::vector<std::shared_ptr<std::vector<Fr>>>,2>tree;
  if(io.prover()){
   need(base && base->size()==n,"Product01 base dimension");

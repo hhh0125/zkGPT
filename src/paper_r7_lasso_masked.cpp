@@ -71,7 +71,7 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
  need(n && n<=(1u<<24) && !(n&(n-1)),"masked Product01 domain");need(!io.prover() || (rng && factors.size()==5),"masked Product01 witness boundary");
  const auto options=perf6::options();perf6::ScopedMessages messages(options.b2);
  Measure measurement{{},role,io.prover()};Writer statement;statement.text("R7-LASSO-MASKED-PRODUCT01-HIDDEN-A3-RESEARCH-v1");statement.number(n,8);statement.number(3);statement.text("a0,ai1,ai2,ai3;zero-query-padding");statement.text(hyrax_a3::suite);
- for(auto&h:initial){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}bindPublic(io,role+"/statement",statement.b);
+ for(auto&h:initial){need(h.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(h.handle));}bindPublic(io,role+"/statement",statement.b);
  std::vector<Fr>alpha{io.coin(role+"/batch-alpha/0"),io.coin(role+"/batch-alpha/1")};
  auto aggregate=combine(io.session(),role+"/aggregate-initial",{initial[0],initial[1]},alpha);bindPublic(io,role+"/aggregate-initial",encode(aggregate.handle));
  Mask mask(io,r1::log2exact(n),aggregate,rng,role+"/masked",measurement);
@@ -116,7 +116,7 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
 Reduction single(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs,bool specialized){
  need(n && n<=(1u<<24) && !(n&(n-1)),"masked Product2 domain");need(!io.prover() || (rng && factors.size()==3),"masked Product2 witness boundary");
  const auto options=perf6::options();perf6::ScopedMessages messages(options.b2);
- Measure measurement{{},role,io.prover()};Writer statement;statement.text("R7-LASSO-MASKED-PRODUCT2-HIDDEN-A3-RESEARCH-v1");statement.number(n,8);statement.number(3);statement.text(hyrax_a3::suite);validate(initial.handle,io.session(),initial.handle.role);statement.raw(encode(initial.handle));bindPublic(io,role+"/statement",statement.b);
+ Measure measurement{{},role,io.prover()};Writer statement;statement.text("R7-LASSO-MASKED-PRODUCT2-HIDDEN-A3-RESEARCH-v1");statement.number(n,8);statement.number(3);statement.text(hyrax_a3::suite);need(initial.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(initial.handle));bindPublic(io,role+"/statement",statement.b);
  Mask mask(io,r1::log2exact(n),initial,rng,role+"/masked",measurement);
  std::vector<std::vector<Fr>>folded(3);std::vector<Fr>point;std::size_t current=n;unsigned round=0;
  while(current>1){

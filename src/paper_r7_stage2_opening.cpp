@@ -8,7 +8,11 @@ void MaskLedger::observe(const std::string&label,const Bytes&b){
  need(seen_.size()<512,"S2 mask ledger budget");auto key=hex(r1::hash(b));need(seen_.insert(key).second,"S2 repeated public protocol masks rejected");
 }
 std::vector<Phase>&openingMeasurements(){static std::vector<Phase>v;return v;}
-Bytes ScopedIO::message(const std::string&label,const Bytes&b){auto name=scope_+"/"+label;auto out=io_.message(name,b);if(prover())sent_+=R7Wire::encodeLocalRecord({session(),name,0,out}).size()+4;if(!prover() && ledger_)ledger_->observe(label,out);return out;}
+Bytes ScopedIO::message(const std::string&label,const Bytes&b){auto name=scope_+"/"+label;auto out=io_.message(name,b);if(prover()){
+ // Three text lengths, sequence, payload length and the outer length prefix.
+ constexpr std::size_t overhead=3*4+8+4+4+sizeof("R7-LOCAL-INTERACTIVE-v1")-1;
+ sent_+=overhead+session().size()+name.size()+out.size();
+ }if(!prover() && ledger_)ledger_->observe(label,out);return out;}
 RegisteredCW RegisteredCW::verifier(IO&io,const TrustedRegistry&r){need(!io.prover(),"S2 verifier context role");registration(io,r.value(),nullptr,nullptr);return RegisteredCW(io,r.value());}
 RegisteredCW RegisteredCW::prover(IO&io,const Registry&r,const PCSecret&s,Random&rng){need(io.prover(),"S2 prover context role");registration(io,r,&s,&rng);return RegisteredCW(io,r);}
 void RegisteredCW::open(const PC&pc,const std::string&batch,const std::vector<Query>&queries,const PCSecret*secret,const std::vector<Hidden>*hidden,Random*rng,bool fixed){

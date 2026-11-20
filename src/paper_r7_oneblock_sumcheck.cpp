@@ -98,7 +98,7 @@ static std::vector<Fr>expressionPolynomialContiguous(const Expression&e,const Pr
 }
 static Reduction expressionSumcheckImpl(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,const Expression&e,Random*rng,const std::string&role,bool product,const ProductInputs*inputs=nullptr,bool product_reduction=false){
  const auto options=perf6::options();perf6::ScopedMessages message_options(options.b2);
- unsigned degree=0;{perf5::Scope t(perf5::ExpressionInit);need(n && n<=(1u<<24) && !(n&(n-1)) && e.factor_count>0 && e.factor_count<=8 && !e.terms.empty() && e.terms.size()<=16,"Oneblock expression bounds");validate(initial.handle,io.session(),initial.handle.role);Writer statement;statement.text("R7-ONEBLOCK-HIDDEN-EXPRESSION-SUMCHECK-v1");statement.number(n,8);statement.number(e.factor_count);statement.raw(encode(initial.handle));statement.number(e.terms.size());for(auto&t:e.terms){need(t.factors.size()<=3,"Oneblock expression degree");degree=std::max(degree,unsigned(t.factors.size()));statement.scalar(t.coefficient);statement.number(t.factors.size());for(auto i:t.factors){need(i<e.factor_count,"Oneblock expression factor index");statement.number(i);}}bindPublic(io,role+"/statement",statement.b);if(io.prover())need(factors.size()==e.factor_count && rng,"Oneblock expression witness shape");}
+ unsigned degree=0;{perf5::Scope t(perf5::ExpressionInit);need(n && n<=(1u<<24) && !(n&(n-1)) && e.factor_count>0 && e.factor_count<=8 && !e.terms.empty() && e.terms.size()<=16,"Oneblock expression bounds");need(initial.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");Writer statement;statement.text("R7-ONEBLOCK-HIDDEN-EXPRESSION-SUMCHECK-v1");statement.number(n,8);statement.number(e.factor_count);statement.raw(encode(initial.handle));statement.number(e.terms.size());for(auto&t:e.terms){need(t.factors.size()<=3,"Oneblock expression degree");degree=std::max(degree,unsigned(t.factors.size()));statement.scalar(t.coefficient);statement.number(t.factors.size());for(auto i:t.factors){need(i<e.factor_count,"Oneblock expression factor index");statement.number(i);}}bindPublic(io,role+"/statement",statement.b);if(io.prover())need(factors.size()==e.factor_count && rng,"Oneblock expression witness shape");}
  std::vector<std::vector<Fr>>folded(e.factor_count);Hidden previous=initial;std::vector<Fr>point;std::size_t current=n;unsigned round=0;
  while(current>1){auto name=role+"/round/"+std::to_string(round);std::vector<Fr>coeff(degree+1,Fr(0));if(io.prover()){
    perf5::Scope t(perf5::Polynomial);
@@ -134,7 +134,7 @@ static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,co
  need(n && n<=(1u<<24) && !(n&(n-1)),"Product01 sumcheck domain");
  if(masked::batchEnabled())return masked::batch(io,n,initial,factors,rng,role,inputs,equality_point);
  Writer statement;statement.text("R7-PRODUCT01-LASSO-BATCH-v2");statement.number(n,8);
- for(const auto&h:initial){validate(h.handle,io.session(),h.handle.role);statement.raw(encode(h.handle));}
+ for(const auto&h:initial){need(h.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(h.handle));}
  bindPublic(io,role+"/statement",statement.b);
  if(io.prover())need(factors.size()==5 && rng,"Product01 witness shape");
  // Both original carries are bound above. Fresh weights once per layer,

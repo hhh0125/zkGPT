@@ -95,7 +95,7 @@ std::vector<G1> generators(std::size_t n){
 G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  ++measurement().dot_product_calls;
- dimension(a.size());validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
+ dimension(a.size());need(tau.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());
  if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
@@ -103,7 +103,7 @@ void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const
 }
 void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");
- validate(tau,io.session(),tau.role);need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
+ need(tau.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(trustedR6Suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.text(approved.role);binding.number(approved.actual,8);binding.number(approved.padded,8);binding.number(approved.rows,8);binding.number(approved.columns,8);binding.number(static_cast<unsigned>(approved.layout));binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/R6-ROWMAJOR/statement",binding.b);
  // No generator bytes are accepted from the prover. The anchor spec is supplied

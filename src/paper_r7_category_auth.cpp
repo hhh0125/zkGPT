@@ -41,11 +41,11 @@ std::vector<Fr>Commitments::categoryKernel(std::size_t root,std::size_t begin,st
    auto at=first+std::int64_t(a)*r.stride;w.scaled(r.begin+a*r.logical_step,b-a,rho[i],[&](const Fr&value){need(at>=lo && at<hi,"category K clipped map");out[std::size_t(at-lo)]+=value;at+=r.stride;},r.logical_step);auth_metrics_.kernel_coordinates+=b-a;
   });
   else{
-   // The canonical map digest was rebuilt by prepareClaim immediately before
-   // rho. A callback fallback retains the same bounds and map obligations.
-   ConsumedMapDigest digest;
-   for(std::size_t j=0;j<c.padded;++j){auto at=c.map(j);digest.append(at);if(!at.constant && at.coordinate.root==root && at.coordinate.index>=begin && at.coordinate.index-begin<count)out[at.coordinate.index-begin]+=rho[i]*w.at(j);}
-   need(digest.finish()==c.map_digest,"category callback source map changed after defer");
+   // Callback-backed sources still have to match the digest bound before rho.
+   std::optional<ConsumedMapDigest> digest;
+   if(!c.static_locator || c.map_id.rfind("native-base/",0)==0)digest.emplace();
+   for(std::size_t j=0;j<c.padded;++j){auto at=c.map(j);if(digest)digest->append(at);if(!at.constant && at.coordinate.root==root && at.coordinate.index>=begin && at.coordinate.index-begin<count)out[at.coordinate.index-begin]+=rho[i]*w.at(j);}
+   if(digest)need(digest->finish()==c.map_digest,"category callback source map changed after defer");
   }
  }
  return out;
@@ -78,7 +78,7 @@ std::optional<Fr>Commitments::categoryKernelEndpoint(const std::vector<Fr>&q,con
    if(use){bool simple=r.logical_step==1 && (r.stride==0 || (r.stride==1 && !(z&(length-1))));out+=rho[i]*(simple?aligned.block(j,z,bits,r.stride==0):carry.block(j,z,bits,r.logical_step,r.stride));fast+=length;++blocks;}
    else{std::int64_t index=std::int64_t(z);w.scaled(j,length,rho[i],[&](const Fr&value){out+=value*global.at(std::size_t(index));index+=r.stride;},r.logical_step);enumerated+=length;}
   });});
-  else{ConsumedMapDigest digest;for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);digest.append(l);if(l.constant)continue;need(l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual,"category endpoint callback bounds");out+=rho[i]*w.at(j)*global.at(base(l.coordinate.root)+l.coordinate.index);++enumerated;}need(digest.finish()==c.map_digest,"category endpoint source map changed after defer");}
+  else{std::optional<ConsumedMapDigest> digest;if(!c.static_locator || c.map_id.rfind("native-base/",0)==0)digest.emplace();for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);if(digest)digest->append(l);if(l.constant)continue;need(l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual,"category endpoint callback bounds");out+=rho[i]*w.at(j)*global.at(base(l.coordinate.root)+l.coordinate.index);++enumerated;}if(digest)need(digest->finish()==c.map_digest,"category endpoint source map changed after defer");}
  }
  need(weight_peak<=8u<<20,"category endpoint public weight tables bound");auth_metrics_.endpoint_fast_coordinates+=fast;auth_metrics_.endpoint_fast_blocks+=blocks;std::cerr<<"CATEGORY_K_ENDPOINT {\"admitted\":true,\"basis\":\"POWER_STRIDE_CARRY_BORROW-v2\",\"eligible_coordinates\":"<<eligible<<",\"map_coordinates\":"<<total<<",\"fast_coordinates\":"<<fast<<",\"enumerated_coordinates\":"<<enumerated<<",\"blocks\":"<<blocks<<",\"additional_endpoint_weight_table_peak_bytes\":"<<weight_peak<<",\"K_dense_array_bytes\":0,\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<"}\n";return out;
 }

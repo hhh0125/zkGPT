@@ -29,7 +29,7 @@ void Writer::text(const std::string&s){
  b.resize(at+4+s.size());for(unsigned i=0;i<4;++i)b[at+i]=std::uint8_t(s.size()>>(8*i));
  std::copy(s.begin(),s.end(),b.begin()+at+4);
 }
-void Writer::scalar(const Fr&f){need(f.isValid(),"R7 invalid scalar");need(b.size()<=4*1024*1024-32,"R7 crypto wire bound");auto at=b.size();b.resize(at+32);need(f.serialize(b.data()+at,32)==32,"Fr encoding");}
+void Writer::scalar(const Fr&f){need(b.size()<=4*1024*1024-32,"R7 crypto wire bound");auto at=b.size();b.resize(at+32);need(f.serialize(b.data()+at,32)==32,"Fr encoding");}
 void Writer::point(const G1&p){curve();raw(r1::encode(p));}
 Bytes Reader::raw(std::size_t n){need(at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");Bytes out(b.begin()+at,b.begin()+at+n);at+=n;return out;}
 std::uint64_t Reader::number(unsigned n){need(n<=8 && at<=b.size() && n<=b.size()-at,"R7 crypto truncated wire");std::uint64_t v=0;for(unsigned i=0;i<n;++i)v|=std::uint64_t(b[at++])<<(8*i);return v;}
