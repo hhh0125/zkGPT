@@ -68,6 +68,7 @@ class Commitments {
  void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
  void initializeCategory(Value,Prepared*,const std::vector<Fr>&);
  void authenticateCategoryInput(const std::vector<Fr>&);
+ void categoryKernelInto(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&,Fr*out)const;
  std::vector<Fr>categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&)const;
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;

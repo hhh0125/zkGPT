@@ -17,6 +17,9 @@ struct KMetrics {
  bool resident_measurement_available=true;
  std::uint64_t initial_builds=0,fallback_rebuild_calls=0,fold_coordinates=0,state_read_coordinates=0;
  std::uint64_t builder_peak_bytes=0;
+ std::uint64_t direct_build_calls=0,direct_build_elements=0,vector_builder_calls=0,vector_to_mmap_copy_bytes=0;
+ std::uint64_t build_marker_write_bytes=0,build_validation_elements=0;
+ double direct_build_seconds=0,build_marker_seconds=0,build_validation_seconds=0,vector_to_mmap_copy_seconds=0;
  double initial_build_seconds=0,fold_cpu_seconds=0,fold_wall_seconds=0;
  double mmap_allocation_seconds=0,unmap_wall_seconds=0;
  // Deprecated cache-only counters. Always zero for anonymous mmap storage.
@@ -30,7 +33,12 @@ struct KMetrics {
 class PublicK {
  struct Impl;std::unique_ptr<Impl>p_;
  public:
+ // Explicit compatibility path for non-category callers; never a failure fallback.
  using Build=std::function<std::vector<Fr>(std::size_t)>;
+ // Synchronous borrowed output: Fr lifetimes already started. Assign every
+ // element before arithmetic, obey count, and never retain the pointer.
+ using BuildInto=std::function<void(std::size_t,Fr*,std::size_t)>;
+ PublicK(const std::vector<Segment>&,BuildInto,KBudget,const std::string&session,std::size_t domain=0);
  PublicK(const std::vector<Segment>&,Build,KBudget,const std::string&session,std::size_t domain=0);
  ~PublicK();PublicK(const PublicK&)=delete;PublicK&operator=(const PublicK&)=delete;
  void withRoot(std::size_t,const std::string&session,const std::function<void(const Value&)>&);

@@ -30,12 +30,12 @@ void add(std::uint64_t&value,std::uint64_t increment){
 KBudget KBudget::environment(){return {};}
 struct PublicK::Impl {
  struct Root {detail::KFrBuffer values;bool built=false,touched=false;};
- std::vector<Segment>segments;Build build;std::string session;
+ std::vector<Segment>segments;BuildInto build_into;Build legacy_build;bool direct_build;std::string session;
  std::vector<Fr>point;std::vector<Root>roots;unsigned bits=0;
  bool ended=false,failed=false;KMetrics metrics;
- Impl(const std::vector<Segment>&s,Build b,KBudget,const std::string&id,std::size_t domain)
- :segments(s),build(std::move(b)),session(id),roots(s.size()){
-  need(build && !session.empty() && !segments.empty() && segments.size()<=8193,"public K constructor bound");
+ Impl(const std::vector<Segment>&s,BuildInto b,Build legacy,KBudget,const std::string&id,std::size_t domain)
+ :segments(s),build_into(std::move(b)),legacy_build(std::move(legacy)),direct_build(bool(build_into)),session(id),roots(s.size()){
+  need((build_into || legacy_build) && !session.empty() && !segments.empty() && segments.size()<=8193,"public K constructor bound");
   std::size_t end=0;
   for(auto segment:segments){
    need(segment.padded && !(segment.padded&(segment.padded-1)) &&
@@ -45,6 +45,14 @@ struct PublicK::Impl {
   }
   if(!domain){domain=1;while(domain<end)domain*=2;}
   validate(domain,segments);while(domain>1){++bits;domain/=2;}point.reserve(bits);
+  if(!direct_build)build_into=[this](std::size_t k,Fr*out,std::size_t count){
+   ++metrics.vector_builder_calls;auto original=legacy_build(k);
+   need(original.size()==count,"public K builder shape");
+   metrics.builder_peak_bytes=std::max<std::uint64_t>(metrics.builder_peak_bytes,original.capacity()*sizeof(Fr));
+   auto start=Clock::now();std::copy(original.begin(),original.end(),out);
+   metrics.vector_to_mmap_copy_seconds+=seconds(start);
+   add(metrics.vector_to_mmap_copy_bytes,count*sizeof(Fr));
+  };
  }
  void check(const std::string&id)const{need(id==session,"public K foreign authentication session");}
  void poison()noexcept{
@@ -78,18 +86,40 @@ struct PublicK::Impl {
   auto&root=roots.at(k);root.touched=true;
   if(!root.built){
    need(point.empty(),"public K unbuilt root after challenge");
-   auto start=Clock::now();auto original=build(k);
-   need(original.size()==segments[k].padded,"public K builder shape");
-   metrics.initial_build_seconds+=seconds(start);
-   metrics.builder_peak_bytes=std::max<std::uint64_t>(metrics.builder_peak_bytes,original.capacity()*sizeof(Fr));
-   start=Clock::now();detail::KFrBuffer next(original.size());
-   std::copy(original.begin(),original.end(),next.data());
+   const auto count=segments[k].padded;
+   auto start=Clock::now();detail::KFrBuffer next(count);
    metrics.mmap_allocation_seconds+=seconds(start);
-   add(metrics.mmap_live_bytes,next.size()*sizeof(Fr));
-   add(metrics.mapped_bytes,next.mappedBytes());peak();
+   if(direct_build){
+    start=Clock::now();
+    // MCL exposes its unsigned limb storage. All-ones is >= the field
+    // modulus, hence invalid; no field arithmetic is performed on markers.
+    // A raw Fr* cannot otherwise distinguish an omitted write from zero.
+    using Unit=std::remove_const_t<std::remove_pointer_t<decltype(next[0].getUnit())>>;
+    const auto units=Fr::getUnitSize();
+    for(std::size_t j=0;j<count;++j)
+     std::fill_n(const_cast<Unit*>(next[j].getUnit()),units,std::numeric_limits<Unit>::max());
+    metrics.build_marker_seconds+=seconds(start);
+    add(metrics.build_marker_write_bytes,count*sizeof(Fr));
+    ++metrics.direct_build_calls;add(metrics.direct_build_elements,count);
+   }
+   start=Clock::now();
+   try{build_into(k,next.data(),count);}
+   catch(...){
+    auto elapsed=seconds(start);metrics.initial_build_seconds+=elapsed;
+    if(direct_build)metrics.direct_build_seconds+=elapsed;
+    throw;
+   }
+   auto elapsed=seconds(start);metrics.initial_build_seconds+=elapsed;
+   if(direct_build)metrics.direct_build_seconds+=elapsed;
+   start=Clock::now();
+   for(std::size_t j=0;j<count;++j)if(!next[j].isValid()){
+    metrics.build_validation_seconds+=seconds(start);
+    throw std::runtime_error("public K uninitialized or invalid K output: root="+std::to_string(k)+" index="+std::to_string(j));
+   }
+   metrics.build_validation_seconds+=seconds(start);add(metrics.build_validation_elements,count);
+   add(metrics.mmap_live_bytes,count*sizeof(Fr));add(metrics.mapped_bytes,next.mappedBytes());
    root.values=std::move(next);root.built=true;
-   ++metrics.unique_root_builds;++metrics.initial_builds;
-   // The vector is released before the consumer, avoiding a borrowed temporary.
+   ++metrics.unique_root_builds;++metrics.initial_builds;peak();
   }
   consume([this,k](std::size_t j){return at(k,j);});
  }
@@ -127,7 +157,9 @@ struct PublicK::Impl {
  }
 };
 PublicK::PublicK(const std::vector<Segment>&s,Build b,KBudget cap,const std::string&id,std::size_t domain)
- :p_(std::make_unique<Impl>(s,std::move(b),cap,id,domain)){}
+ :p_(std::make_unique<Impl>(s,BuildInto{},std::move(b),cap,id,domain)){}
+PublicK::PublicK(const std::vector<Segment>&s,BuildInto b,KBudget cap,const std::string&id,std::size_t domain)
+ :p_(std::make_unique<Impl>(s,std::move(b),Build{},cap,id,domain)){}
 PublicK::~PublicK()=default;
 void PublicK::withRoot(std::size_t k,const std::string&id,const std::function<void(const Value&)>&consume){
  try{p_->check(id);need(!p_->ended && !p_->failed && bool(consume),"public K closed/failed state or missing consumer");p_->with(k,consume);}
@@ -164,6 +196,12 @@ void PublicK::report()const{
  K_METRIC("K_mmap_allocation_seconds",mmap_allocation_seconds) K_METRIC("K_unmap_wall_seconds",unmap_wall_seconds)
  K_METRIC("K_file_read_bytes",file_read_bytes) K_METRIC("K_file_write_bytes",file_write_bytes)
  K_METRIC("K_builder_peak_bytes",builder_peak_bytes)
+ K_METRIC("K_direct_build_calls",direct_build_calls) K_METRIC("K_direct_build_elements",direct_build_elements)
+ K_METRIC("K_direct_build_seconds",direct_build_seconds)
+ K_METRIC("K_vector_builder_calls",vector_builder_calls) K_METRIC("K_vector_to_mmap_copy_bytes",vector_to_mmap_copy_bytes)
+ K_METRIC("K_vector_to_mmap_copy_seconds",vector_to_mmap_copy_seconds)
+ K_METRIC("K_build_marker_seconds",build_marker_seconds) K_METRIC("K_build_marker_write_bytes",build_marker_write_bytes)
+ K_METRIC("K_build_validation_seconds",build_validation_seconds) K_METRIC("K_build_validation_elements",build_validation_elements)
  K_METRIC("K_initial_builds",initial_builds) K_METRIC("fallback_rebuild_calls",fallback_rebuild_calls)
 #undef K_METRIC
  std::cerr<<"\"K_resident_measurement_available\":"<<(m.resident_measurement_available?"true":"false")

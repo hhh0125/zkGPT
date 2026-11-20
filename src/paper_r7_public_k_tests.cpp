@@ -1,10 +1,15 @@
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_k_mmap_buffer.hpp"
 #include <cerrno>
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <type_traits>
 #include <sys/mman.h>
+#include <sys/wait.h>
+#include <sys/resource.h>
+#include <map>
+#include <csignal>
 using namespace zkgpt;
 using namespace zkgpt::r7;
 using namespace zkgpt::r7::oneblock;
@@ -12,7 +17,8 @@ using namespace zkgpt::r7::oneblock::unified;
 using namespace zkgpt::r7::crypto;
 namespace {
 std::size_t mapped_live=0,map_calls=0,unmaps=0;
-int fail_map_after=-1;bool fail_unmap_once=false;
+int fail_map_after=-1;bool fail_unmap_once=false,guard_mapping=false;
+std::map<void*,std::pair<void*,std::size_t>>guarded;
 void check(bool b,const char*text){need(b,text);}
 template<class F>std::string rejects(F f){
  try{f();}catch(const std::exception&e){return e.what();}
@@ -28,11 +34,22 @@ Fr reference(const std::vector<Fr>&original,std::size_t j,const std::vector<Fr>&
  }
  return result;
 }
+void invalidOutput(){
+ PublicK state({{0,8}},[](std::size_t){
+  std::vector<Fr> values(8,Fr(3));
+  using Unit=std::remove_const_t<std::remove_pointer_t<decltype(values.back().getUnit())>>;
+  std::fill_n(const_cast<Unit*>(values.back().getUnit()),Fr::getUnitSize(),std::numeric_limits<Unit>::max());
+  return values;
+ },{},"invalid-output",8);
+ auto error=rejects([&]{state.withRoot(0,"invalid-output",[](const Value&){});});
+ check(error.find("uninitialized or invalid K output")!=std::string::npos,"missing output completion validation");
+}
 void once(){
  unsigned builds=0;
- PublicK state({{0,8}},[&](std::size_t){++builds;return std::vector<Fr>{Fr(1),Fr(2),Fr(3),Fr(4),Fr(5),Fr(6),Fr(7),Fr(8)};},KBudget{0,0},"test",8);
+ PublicK state({{0,8}},[&](std::size_t,Fr*out,std::size_t n){++builds;for(std::size_t j=0;j<n;++j)out[j]=Fr(j+1);},KBudget{0,0},"test",8);
  for(unsigned read=0;read<2;++read)state.withRoot(0,"test",[](const Value&v){check(v(3)==Fr(4),"first K values changed");});
  check(builds==1,"PublicK must build each root once even with zero legacy cache budget");
+ const auto&m=state.metrics();check(m.direct_build_calls==1 && m.direct_build_elements==8 && m.vector_builder_calls==0 && m.vector_to_mmap_copy_bytes==0 && m.builder_peak_bytes==0,"direct path used a temporary vector");
 }
 void buffer(){
  using Buffer=zkgpt::r7::oneblock::unified::detail::KFrBuffer;
@@ -67,7 +84,7 @@ void folded(){
  std::vector<Segment>segments{{0,8192},{8192,4},{12288,1}};
  std::vector<std::vector<Fr>>original(3);std::vector<unsigned>builds(3);
  for(std::size_t k=0;k<3;++k)for(std::size_t j=0;j<segments[k].padded;++j)original[k].push_back(Fr(13*(k+1)+j%17));
- PublicK state(segments,[&](std::size_t k){++builds.at(k);return original.at(k);},KBudget{0,0},"fold",16384);
+ PublicK state(segments,[&](std::size_t k,Fr*out,std::size_t n){++builds.at(k);check(n==original.at(k).size(),"direct shape");for(std::size_t j=0;j<n;++j)out[j]=original[k][j];},KBudget{0,0},"fold",16384);
  std::vector<Fr>point;auto before_maps=map_calls;std::uint64_t previous=std::numeric_limits<std::uint64_t>::max();
  for(unsigned t=0;t<14;++t){
   for(std::size_t k=0;k<3;++k)for(unsigned repeat=0;repeat<2;++repeat)state.withRoot(k,"fold",[&](const Value&v){
@@ -97,12 +114,12 @@ void folded(){
 }
 void failures(){
  for(auto fault:{"builder","shape","consumer","index"}){
-  PublicK state({{0,8},{8,8}},[&](std::size_t k){if(k==1 && std::string(fault)=="builder")throw std::runtime_error("builder failure");return std::vector<Fr>(k==1 && std::string(fault)=="shape"?4:8,Fr(3));},{},"poison",16);
+  PublicK state({{0,8},{8,8}},[&](std::size_t k,Fr*out,std::size_t n){if(k==1 && std::string(fault)=="builder")throw std::runtime_error("builder failure");std::fill_n(out,k==1 && std::string(fault)=="shape"?n/2:n,Fr(3));},{},"poison",16);
   state.withRoot(0,"poison",[](const Value&){});
   auto error=rejects([&]{state.withRoot(std::string(fault)=="index"?2:1,"poison",[&](const Value&){if(std::string(fault)=="consumer")throw std::runtime_error("consumer failure");});});
   check(!error.empty() && mapped_live==0 && state.metrics().mapped_bytes==0,"builder/consumer/index failure leaked state");
  }
- auto builder=[](std::size_t){return std::vector<Fr>(8192,Fr(7));};
+ auto builder=[](std::size_t,Fr*out,std::size_t n){std::fill_n(out,n,Fr(7));};
  {
   PublicK state({{0,8192},{8192,8192}},builder,{},"fail",16384);
   state.withRoot(0,"fail",[](const Value&v){check(v(0)==Fr(7),"first root failed");});
@@ -132,9 +149,49 @@ void failures(){
   check(mapped_live==0,"incomplete-round failure leaked state");
  }
  {
-  PublicK state({{0,1}},[](std::size_t){return std::vector<Fr>{Fr(19)};},{},"scalar",1);
+  PublicK state({{0,1}},[](std::size_t,Fr*out,std::size_t n){check(n==1,"scalar shape");out[0]=Fr(19);},{},"scalar",1);
   check(state.endpoint("scalar",{})==Fr(19),"zero-round scalar endpoint");
  }
+}
+void directCompletion(){
+ for(std::size_t missing:{0u,3u,7u}){
+  PublicK state({{0,8},{8,8}},[&](std::size_t k,Fr*out,std::size_t n){
+   for(std::size_t j=0;j<n;++j)if(!k || j!=missing)out[j]=Fr(11+j);
+  },{},"incomplete",16);
+  state.withRoot(0,"incomplete",[](const Value&){});
+  auto error=rejects([&]{state.withRoot(1,"incomplete",[](const Value&){});});
+  check(error.find("uninitialized or invalid K output")!=std::string::npos,"incomplete direct builder accepted");
+  check(mapped_live==0 && state.metrics().unique_root_builds==1,"incomplete builder leaked or was marked built");
+ }
+ {
+  unsigned calls=0;
+  PublicK state({{0,8}},[&](std::size_t,Fr*,std::size_t){++calls;},{},"alloc",8);
+  fail_map_after=0;
+  check(rejects([&]{state.withRoot(0,"alloc",[](const Value&){});}).find("mmap allocation failed")!=std::string::npos,"allocation failure hidden");
+  check(calls==0 && mapped_live==0,"builder called before mmap succeeded");
+ }
+ {
+  PublicK state({{0,8}},[](std::size_t){return std::vector<Fr>(8,Fr(7));},{},"legacy",8);
+  state.withRoot(0,"legacy",[](const Value&v){check(v(7)==Fr(7),"legacy adapter changed output");});
+  check(state.metrics().vector_builder_calls==1 && state.metrics().vector_to_mmap_copy_bytes==8*sizeof(Fr) && state.metrics().direct_build_calls==0,"legacy adapter counters mixed with direct");
+ }
+}
+void guardedBounds(){
+ const auto count=std::size_t(sysconf(_SC_PAGESIZE))/sizeof(Fr);
+ guard_mapping=true;
+ {
+  PublicK state({{0,count}},[](std::size_t,Fr*out,std::size_t n){for(std::size_t j=0;j<n;++j)out[j]=Fr(j);},{},"bounds",count);
+  state.withRoot(0,"bounds",[&](const Value&v){check(v(count-1)==Fr(count-1),"last direct element missing");});
+ }
+ check(mapped_live==0 && guarded.empty(),"guarded direct mapping leaked");
+ auto pid=fork();check(pid>=0,"guard test fork failed");
+ if(!pid){
+  signal(SIGSEGV,SIG_DFL);
+  PublicK state({{0,count}},[](std::size_t,Fr*out,std::size_t n){for(std::size_t j=0;j<=n;++j)out[j]=Fr(1);},{},"bad-bounds",count);
+  state.withRoot(0,"bad-bounds",[](const Value&){});_exit(1);
+ }
+ int status=0;check(waitpid(pid,&status,0)==pid && WIFSIGNALED(status) && WTERMSIG(status)==SIGSEGV,"guard page did not catch test-only overrun");
+ guard_mapping=false;
 }
 }
 extern "C" void*__real_mmap(void*,std::size_t,int,int,int,off_t);
@@ -142,16 +199,21 @@ extern "C" int __real_munmap(void*,std::size_t);
 extern "C" void*__wrap_mmap(void*p,std::size_t n,int prot,int flags,int fd,off_t offset){
  if(fail_map_after==0){fail_map_after=-1;errno=ENOMEM;return MAP_FAILED;}
  if(fail_map_after>0)--fail_map_after;
- auto result=__real_mmap(p,n,prot,flags,fd,offset);
+ void*result;
+ if(guard_mapping){auto page=std::size_t(sysconf(_SC_PAGESIZE));auto raw=__real_mmap(nullptr,n+2*page,PROT_NONE,flags,fd,offset);result=raw==MAP_FAILED?raw:static_cast<char*>(raw)+page;
+  if(raw!=MAP_FAILED){check(mprotect(result,n,prot)==0,"guard mapping protection");guarded[result]={raw,n+2*page};}
+ }else result=__real_mmap(p,n,prot,flags,fd,offset);
  if(result!=MAP_FAILED){check((flags&(MAP_PRIVATE|MAP_ANONYMOUS))==(MAP_PRIVATE|MAP_ANONYMOUS) && fd==-1,"K mapping must be anonymous/private");mapped_live+=n;++map_calls;}
  return result;
 }
 extern "C" int __wrap_munmap(void*p,std::size_t n){
  if(fail_unmap_once){fail_unmap_once=false;errno=EINTR;return -1;}
- int result=__real_munmap(p,n);if(result==0){check(n<=mapped_live,"mapping accounting underflow");mapped_live-=n;++unmaps;}return result;
+ auto it=guarded.find(p);int result;
+ if(it!=guarded.end()){auto entry=it->second;result=__real_munmap(entry.first,entry.second);if(!result)guarded.erase(it);}
+ else result=__real_munmap(p,n);if(result==0){check(n<=mapped_live,"mapping accounting underflow");mapped_live-=n;++unmaps;}return result;
 }
 int main(){try{
- r1::init();once();check(mapped_live==0,"build-once leak");buffer();folded();failures();
+ struct rlimit core{0,0};setrlimit(RLIMIT_CORE,&core);r1::init();invalidOutput();once();directCompletion();guardedBounds();check(mapped_live==0,"build-once leak");buffer();folded();failures();
  check(mapped_live==0,"final mapping leak");
  std::cout<<"PASS PublicK build-once, legacy fold/endpoint oracle, isolated roots, move/shrink/overflow, tail reclamation, allocation/unmap/session/order failures; mmap calls="<<map_calls<<" unmaps="<<unmaps<<'\n';
  return 0;

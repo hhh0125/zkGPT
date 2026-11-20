@@ -27,9 +27,9 @@ std::vector<CategoryTile>categoryTiles(const Layout&l){
  }
  std::sort(out.begin(),out.end(),[](const CategoryTile&a,const CategoryTile&b){return a.segment.offset<b.segment.offset;});return out;
 }
-std::vector<Fr>Commitments::categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&rho,const Authentication&auth)const{
+void Commitments::categoryKernelInto(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&rho,const Authentication&auth,Fr*out)const{
  need(root<roots_.size() && begin<=roots_[root].spec.actual && count<=roots_[root].spec.actual-begin && count<=(1u<<20),"category bounded K tile");
- ++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,count*sizeof(Fr));std::vector<Fr>out(count,Fr(0));
+ ++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,count*sizeof(Fr));need(out || !count,"category K missing output buffer");if(count)std::fill(out,out+count,Fr(0));
  for(std::size_t i=0;i<claims_.size();++i){const auto&c=claims_[i];const auto&p=auth.claims[i];if(c.only_root>=0 && std::size_t(c.only_root)!=root)continue;if(p.frozen && !p.hasRoot(root))continue;
   std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);const auto&w=p.weights?*p.weights:*scratch;
   if(p.frozen)p.forRoot(root,auth.store,[&](const mapping::Run&r){
@@ -48,6 +48,12 @@ std::vector<Fr>Commitments::categoryKernel(std::size_t root,std::size_t begin,st
    if(digest)need(digest->finish()==c.map_digest,"category callback source map changed after defer");
   }
  }
+
+}
+std::vector<Fr>Commitments::categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&rho,const Authentication&auth)const{
+ need(root<roots_.size() && begin<=roots_[root].spec.actual && count<=roots_[root].spec.actual-begin && count<=(1u<<20),"category bounded K tile");
+ std::vector<Fr>out(count);categoryKernelInto(root,begin,count,rho,auth,out.data());
+ if(crypto::opt2MetricsEnabled())std::cerr<<"CATEGORY_K_VECTOR_WRAPPER {\"elements\":"<<count<<",\"bytes\":"<<count*sizeof(Fr)<<",\"PublicK_initial_builder\":false}\n";
  return out;
 }
 std::optional<Fr>Commitments::categoryKernelEndpoint(const std::vector<Fr>&q,const std::vector<Fr>&rho,const Authentication&auth,bool require_profitable)const{
@@ -104,14 +110,14 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
  std::vector<Fr>rho;std::vector<Hidden>values;Fr bias=0;
  for(std::size_t i=0;i<claims_.size();++i){rho.push_back(io_.coin("CategoryInput/rho/"+std::to_string(i)));need(!rho.back().isZero(),"category zero aggregation");values.push_back(claims_[i].value);bias+=rho.back()*biases[i];}
  auto initial=combine(session_,"CategoryInput/initial",values,rho);initial.value-=bias;initial.handle.point-=scalarCommit(bias,Fr(0));bindPublic(io_,"CategoryInput/initial",encode(initial.handle));
- auto generate=[&](std::size_t k){const auto&t=plan.at(k);return categoryKernel(t.root,t.begin,t.segment.padded,rho,auth);};
+ auto generate=[&](std::size_t k,Fr*out,std::size_t count){const auto&t=plan.at(k);need(count==t.segment.padded,"category K direct builder shape");categoryKernelInto(t.root,t.begin,count,rho,auth,out);};
  std::unique_ptr<ui::PublicK>state;if(io_.prover())state=std::make_unique<ui::PublicK>(segments,generate,ui::KBudget::environment(),session_,single_pc_->plan.domain);
  ui::Factors factors;ui::Inputs inputs;if(io_.prover()){
   factors=[&](std::size_t k,const ui::Consume&consume){const auto&t=plan.at(k);auto a=[&,root=t.root,begin=t.begin](std::size_t j){return roots_[root].value(begin+j);};state->withRoot(k,session_,[&](const Value&b){consume(a,b);});};
   inputs=[&](std::size_t k){const auto&t=plan.at(k);ui::InputSpan s;s.stored=s.padded=t.segment.padded;s.storage_identity=&roots_[t.root];s.storage_offset=t.begin;s.read=[&,root=t.root,begin=t.begin](std::size_t j){return roots_[root].value(begin+j);};return s;};
  }
  bool fast_endpoint=true;if(const auto*v=std::getenv("ZKGPT_CATEGORY_K_ENDPOINT")){std::string text(v);need(text=="0" || text=="1","category K endpoint switch");fast_endpoint=text=="1";}
- auto endpoint=[&](const std::vector<Fr>&q){if(fast_endpoint){auto out=categoryKernelEndpoint(q,rho,auth);if(out)return *out;}Fr out=0;for(std::size_t k=0;k<plan.size();++k){auto v=generate(k);auto width=v.size();unsigned j=0;for(;width>1;width/=2,++j)for(std::size_t a=0;a<width/2;++a)v[a]=v[2*a]+q[j]*(v[2*a+1]-v[2*a]);out+=ui::selector(segments[k],q)*v[0];}return out;};
+ auto endpoint=[&](const std::vector<Fr>&q){if(fast_endpoint){auto out=categoryKernelEndpoint(q,rho,auth);if(out)return *out;}Fr out=0;for(std::size_t k=0;k<plan.size();++k){const auto&t=plan.at(k);auto v=categoryKernel(t.root,t.begin,t.segment.padded,rho,auth);auto width=v.size();unsigned j=0;for(;width>1;width/=2,++j)for(std::size_t a=0;a<width/2;++a)v[a]=v[2*a]+q[j]*(v[2*a+1]-v[2*a]);out+=ui::selector(segments[k],q)*v[0];}return out;};
  auto reduced=ui::reduce(io_,single_pc_->plan.domain,segments,initial,factors,endpoint,rng_,"UnifiedInput/sumcheck",state.get(),inputs);if(state)state->report();state.reset();
  single::open(io_,*single_pc_,{reduced.point,reduced.endpoints[0].handle},x,io_.prover()?&*single_secret_:nullptr,io_.prover()?&reduced.endpoints[0]:nullptr,rng_,"UnifiedInput/opening/C_U");
  Writer done;done.text(single::suite);done.text(commitment_id);done.text("public/X-committed-consistency");done.number(claims_.size());bindPublic(io_,"CategoryInput/all-claims-authenticated",done.b);io_.coin("CategoryInput/all-claims-authenticated/ack");authenticated_=true;
