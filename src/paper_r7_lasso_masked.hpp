@@ -1,7 +1,15 @@
 #pragma once
 #include "paper_r7_oneblock_sumcheck.hpp"
+#include <cstdlib>
 namespace zkgpt::r7::oneblock::masked {
+inline constexpr const char* suite="R7-LASSO-PRODUCT01-PRODUCT2-MASKED-HIDDEN-A3-RESEARCH-v1";
 enum class Mode { Sigma, Product01Research, AllProductsResearch };
+inline Mode configuredMode(){
+ const auto*value=std::getenv("ZKGPT_LASSO_SUMCHECK");
+ if(!value || std::string(value)=="sigma")return Mode::Sigma;
+ crypto::need(std::string(value)=="masked-research-v1","unknown Lasso sumcheck version");
+ return Mode::AllProductsResearch;
+}
 inline thread_local Mode active=Mode::Sigma;
 class ScopedMode {
  Mode previous_;

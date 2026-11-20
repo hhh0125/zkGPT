@@ -11,6 +11,8 @@ inline constexpr const char* singleSuite="R7-ONEBLOCK-SINGLE-HYRAX-DIRECT-LOGICA
 inline constexpr const char* singleFull12Suite="R7-FULL12-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-COMMITTED-X-FS-CANDIDATE-v5";
 inline constexpr const char* nativeMaskedSuite="R7-ONEBLOCK-NATIVE-GKR-MASKED-HIDDEN-A3-RESEARCH-v1";
 inline constexpr const char* nativeMaskedFull12Suite="R7-FULL12-NATIVE-GKR-MASKED-HIDDEN-A3-RESEARCH-v1";
+inline constexpr const char* allMaskedSuite="R7-ONEBLOCK-NATIVE-AND-LASSO-MASKED-HIDDEN-A3-RESEARCH-v1";
+inline constexpr const char* allMaskedFull12Suite="R7-FULL12-NATIVE-AND-LASSO-MASKED-HIDDEN-A3-RESEARCH-v1";
 inline constexpr const char* hashSuite="SHA256-REJECT-LE32-NONZERO-v1";
 inline constexpr const char* verifiedStatus="FS_NIZK_CANDIDATE_VERIFIED";
 struct Binding {std::string proof_type,context,parameter_id;Bytes public_instance;};
