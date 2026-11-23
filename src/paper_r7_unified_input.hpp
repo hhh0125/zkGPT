@@ -1,6 +1,7 @@
 #pragma once
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include <array>
+#include <memory>
 #include <ostream>
 namespace zkgpt::r7::oneblock::unified {
 class PublicK;
@@ -9,12 +10,30 @@ inline constexpr const char*suite="R7-PROTOCOL1-HIDDEN-INDEPENDENT-REGIONS-INPUT
 struct Block {unsigned category;std::size_t padded;};
 struct Segment {std::size_t offset,padded;};
 struct Region {std::size_t used=0,capacity=0,alignment=1,base=0;};
-struct Packing {std::size_t domain=0;std::vector<Segment>segments;std::array<Region,4>regions{};std::vector<unsigned>categories;};
+// The empty state is used by Category plans. Only pack() can create a layout.
+class Packing {
+ struct Data {
+  std::size_t domain=0;
+  std::vector<Segment>segments;
+  std::array<Region,4>regions{};
+  std::vector<unsigned>categories;
+ };
+ std::shared_ptr<const Data> data_;
+ explicit Packing(Data&&data):data_(std::make_shared<const Data>(std::move(data))){}
+ const Data&data()const{need(bool(data_),"unified packing missing");return *data_;}
+ friend Packing pack(const std::vector<Block>&,std::size_t);
+ public:
+ Packing()=default;
+ explicit operator bool()const{return bool(data_);}
+ std::size_t domain()const{return data().domain;}
+ const std::vector<Segment>&segments()const{return data().segments;}
+ const std::array<Region,4>&regions()const{return data().regions;}
+ const std::vector<unsigned>&categories()const{return data().categories;}
+};
 // Legacy pack only: segment 0 is public X. Category callers instead supply
 // aligned computational tiles, including the physically committed X.
 Packing pack(const std::vector<Block>&,std::size_t public_padded);
 std::array<std::size_t,4>independentCapacities(const std::array<std::size_t,4>&);
-void validate(const Packing&);
 Bytes descriptor(const Packing&);
 void writeLayout(std::ostream&,const Packing&);
 void validate(std::size_t,const std::vector<Segment>&);

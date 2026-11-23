@@ -27,7 +27,7 @@ std::vector<PhysicalRun>deriveRuns(const Plan&p){
 void validatePlan(const Plan&p){
  if(p.category_mode){validateCategoryPlan(p);return;}
  need(power(p.domain) && p.domain<=maxDomain && !p.segments.empty() && p.segments.size()<=8193,"single logical domain/segments");
- unified::validate(p.packing);need(p.domain==p.packing.domain && p.segments.size()==p.packing.segments.size(),"single logical packing identity");
+ need(p.packing && p.domain==p.packing.domain() && p.segments.size()==p.packing.segments().size(),"single logical packing identity");
  const auto shape=matrixShape(p.domain);
  need(p.physical_domain==shape.physical_domain && p.rows==shape.rows && p.columns==shape.columns,"single noncanonical balanced physical shape");
  need(p.source_identity.size()==64 && std::all_of(p.source_identity.begin(),p.source_identity.end(),[](char c){return (c>='0' && c<='9') || (c>='a' && c<='f');}),"single source identity");
@@ -36,7 +36,7 @@ void validatePlan(const Plan&p){
  std::vector<unified::Segment>intervals;std::size_t actual=0,physical=0;std::set<std::string>ids;
  for(std::size_t k=0;k<p.segments.size();++k){const auto&s=p.segments[k];
   need(s.actual && s.actual<=s.padded && s.actual<=p.domain && actual<=p.domain-s.actual,"single segment actual/overflow");
-  need(s.offset==p.packing.segments[k].offset && s.padded==p.packing.segments[k].padded,"single source logical mapping mismatch");
+  need(s.offset==p.packing.segments()[k].offset && s.padded==p.packing.segments()[k].padded,"single source logical mapping mismatch");
   std::size_t private_count=0;for(const auto&run:runs)if(run.source==k)private_count+=run.count;
   need(s.is_public==(k==0) && s.physical_offset==s.offset && s.physical_length==private_count,"single noncanonical logical/physical mapping");
   need(!s.source_id.empty() && s.source_id.size()<=160 && ids.insert(s.source_id).second,"single unique source ID");
@@ -80,8 +80,8 @@ PhysicalCommitmentLayout matrixShape(std::size_t actual){
  auto k=bits(out.physical_domain);out.rows=std::size_t(1)<<(k/2);out.columns=std::size_t(1)<<((k+1)/2);need(out.rows<=maxRows && out.columns<=hyrax_a3::maxDot,"single balanced implementation dimension");return out;
 }
 Plan makePlan(const unified::Packing&packing,const std::vector<std::size_t>&actual,const std::string&source,const std::vector<std::string>&ids,const std::vector<PublicCell>&native_public){
- unified::validate(packing);need(actual.size()==packing.segments.size() && (ids.empty() || ids.size()==actual.size()),"single source/actual/ID count");Plan p;p.source_identity=source;p.domain=packing.domain;p.packing=packing;
- for(std::size_t k=0;k<actual.size();++k){auto s=packing.segments[k];need(actual[k] && actual[k]<=s.padded && actual[k]<=p.domain && p.logical_values<=p.domain-actual[k],"single logical length overflow");
+ need(packing && actual.size()==packing.segments().size() && (ids.empty() || ids.size()==actual.size()),"single source/actual/ID count");Plan p;p.source_identity=source;p.domain=packing.domain();p.packing=packing;
+ for(std::size_t k=0;k<actual.size();++k){auto s=packing.segments()[k];need(actual[k] && actual[k]<=s.padded && actual[k]<=p.domain && p.logical_values<=p.domain-actual[k],"single logical length overflow");
   p.segments.push_back({s.offset,actual[k],s.padded,s.offset,k?actual[k]:0,k==0,ids.empty()?"source/"+std::to_string(k):ids[k]});p.logical_values+=actual[k];if(k){need(actual[k]<=maxDomain-p.physical_values,"single physical length overflow");p.physical_values+=actual[k];}}
  p.public_cells=native_public;std::sort(p.public_cells.begin(),p.public_cells.end(),[](const PublicCell&a,const PublicCell&b){return std::tie(a.source,a.index)<std::tie(b.source,b.index);});p.runs=deriveRuns(p);p.physical_values=0;
  for(std::size_t k=0;k<p.segments.size();++k){auto&s=p.segments[k];s.physical_offset=s.offset;s.physical_length=0;for(const auto&run:p.runs)if(run.source==k)s.physical_length+=run.count;p.physical_values+=s.physical_length;}

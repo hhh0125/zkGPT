@@ -1,3 +1,4 @@
+#include "paper_r7_validated_layout.hpp"
 #include "paper_r7_u_fold_state.hpp"
 #include <algorithm>
 #include <chrono>
@@ -62,9 +63,9 @@ void shape(InputSpan s,std::size_t padded,bool callbacks){need(s.padded==padded 
 struct FoldedU::Impl {
  struct Root {InputSpan original;FrBuffer values;bool seen=false;};
  std::size_t n;unsigned bits=0;bool enabled=true,failed=false,consuming=false,ready=false;
- std::string session;std::vector<Segment>segments;std::vector<Root>roots;std::vector<Fr>point;UFoldMetrics m;
- Impl(std::size_t domain,const std::vector<Segment>&s,const Inputs&input,const std::string&id):n(domain),session(id),segments(s){
-  validate(n,s);need(input && !id.empty() && id.size()<=4096,"U constructor bounds");for(auto width=n;width>1;width/=2)++bits;
+ std::string session;detail::ValidatedLayout layout;std::vector<Root>roots;std::vector<Fr>point;UFoldMetrics m;
+ Impl(const detail::ValidatedLayout&fixed,const Inputs&input,const std::string&id):n(fixed.domain()),session(id),layout(fixed){
+  const auto&s=layout.segments();need(input && !id.empty() && id.size()<=4096,"U constructor bounds");for(auto width=n;width>1;width/=2)++bits;
   roots.resize(s.size());point.reserve(bits);
   for(std::size_t k=0;k<s.size();++k){auto original=input(k);shape(original,s[k].padded,true);
    if(original.read)original.read=[](std::size_t)->Fr{throw std::runtime_error("U descriptor marker cannot read");};
@@ -73,14 +74,16 @@ struct FoldedU::Impl {
  }
  void check(const std::string&id,const std::vector<Fr>*prefix=nullptr)const{need(enabled && !failed && id==session && (!prefix || *prefix==point),"PERF4 U session/prefix/failed state");}
 };
-FoldedU::FoldedU(std::size_t n,const std::vector<Segment>&s,const Inputs&i,const std::string&id):p_(std::make_unique<Impl>(n,s,i,id)){}
+FoldedU::FoldedU(std::size_t n,const std::vector<Segment>&s,const Inputs&i,const std::string&id):FoldedU(detail::ValidatedLayout(n,s),i,id){}
+FoldedU::FoldedU(const detail::ValidatedLayout&fixed,const Inputs&i,const std::string&id):p_(std::make_unique<Impl>(fixed,i,id)){}
 FoldedU::~FoldedU()=default;
 bool FoldedU::enabled()const{return p_->enabled && !p_->failed;}
 bool FoldedU::cached()const{return enabled() && !p_->point.empty();}
 std::size_t FoldedU::domain()const{return p_->n;}
 void FoldedU::beginRound(const std::string&id,const std::vector<Fr>&prefix,const std::vector<Segment>&s){try{
- p_->check(id,&prefix);need(!p_->consuming && !p_->ready && prefix.size()<p_->bits && s.size()==p_->segments.size(),"PERF4 U round order");
- for(std::size_t k=0;k<s.size();++k)need(s[k].offset==p_->segments[k].offset && s[k].padded==p_->segments[k].padded,"PERF4 U segment drift");
+ const auto&fixed=p_->layout.segments();
+ p_->check(id,&prefix);need(!p_->consuming && !p_->ready && prefix.size()<p_->bits && s.size()==fixed.size(),"PERF4 U round order");
+ if(&s!=&fixed)for(std::size_t k=0;k<s.size();++k)need(s[k].offset==fixed[k].offset && s[k].padded==fixed[k].padded,"PERF4 U segment drift");
  for(auto&r:p_->roots){r.seen=false;}
  p_->consuming=true;
 }catch(...){poison();throw;}}

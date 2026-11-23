@@ -1,3 +1,4 @@
+#include "paper_r7_validated_layout.hpp"
 #include "paper_r7_unified_input.hpp"
 #include "paper_r7_u_fold_state.hpp"
 #include "paper_r7_opt2_metrics.hpp"
@@ -67,12 +68,13 @@ struct Weights {
 Fr fixed(const Segment&s,const std::vector<Fr>&p,unsigned begin){Fr w=1;for(unsigned j=begin;j<p.size();++j)w*=((s.offset>>j)&1)?p[j]:Fr(1)-p[j];return w;}
 }
 UOptions UOptions::environment(){UOptions out;auto budget=zkgpt::workerThreadCount();out.threads=budget>=4?4:budget>=2?2:1;if(const auto*v=std::getenv("ZKGPT_U_THREADS")){std::string s(v);need(s=="1" || s=="2" || s=="4","OPT3D thread budget");out.threads=unsigned(s[0]-'0');need(out.threads<=budget,"OPT3D cannot exceed existing worker budget");}if(const auto*v=std::getenv("ZKGPT_PERF3_U_DOT")){std::string s(v);need(s=="0" || s=="1","PERF3 dot mode");out.striped_dot=s=="1";}if(const auto*v=std::getenv("ZKGPT_U_PROFILE_READ")){std::string text(v);need(text=="0" || text=="1","U read profiler switch");out.profile_reads=text=="1";}return out;}
-Round quadraticRoundStreaming(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session){
+static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session,bool validated){
  try{
  if(folded){need(folded->domain()==n && bool(inputs),"PERF4 U domain/storage boundary");folded->beginRound(session,prefix,segments);}
  const bool cached=folded && folded->cached();
  need(!folded || (!options.elide_zero_suffix && !options.striped_dot),"PERF4 U cannot combine experimental scan/dot modes");
- validate(n,segments);need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4) && options.tile_pairs && options.tile_pairs<=4096,"OPT3D bounded tile/thread options");
+ if(!validated){validate(n,segments);}
+ need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4) && options.tile_pairs && options.tile_pairs<=4096,"OPT3D bounded tile/thread options");
  crypto::AllocationTrace allocation;UMetrics m;m.read_profile_enabled=options.profile_reads;std::set<const void*>source_chunks;Round out;const auto t=unsigned(prefix.size());
  // Check public allocation sizes BEFORE allocating any new private tile/pool.
  std::array<bool,33>seen{};std::array<bool,17>splits{};std::size_t planned=options.threads*1024*sizeof(Fr)+segments.size()*192+16384+(2*options.tile_pairs+4)*sizeof(Fr)+(inputs?options.threads-1:0)*((1u<<20)+4096);
@@ -150,6 +152,12 @@ Round quadraticRoundStreaming(std::size_t n,const std::vector<Segment>&segments,
  m.storage_chunks_touched=source_chunks.size();if(metrics){*metrics=m;}
  return out;
  }catch(...){if(folded)folded->poison();throw;}
+}
+Round quadraticRoundStreaming(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session){
+ return quadraticRoundStreamingImpl(n,segments,prefix,provider,inputs,std::move(options),metrics,folded,session,false);
+}
+Round detail::ValidatedLayout::streamingRound(const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session)const{
+ return quadraticRoundStreamingImpl(domain(),segments(),prefix,provider,inputs,std::move(options),metrics,folded,session,true);
 }
 std::string scanMetricsJSON(unsigned round,const UMetrics&m){std::ostringstream out;
  out<<"{\"round\":"<<round<<",\"u_scan_call_count\":"<<m.scan_calls<<",\"u_scan_total_elements\":"<<m.read_elements<<",\"u_scan_total_bytes\":"<<m.read_elements*sizeof(Fr)<<",\"original_source_read_elements\":"<<m.original_read_elements<<",\"original_source_scalar_payload_bytes\":"<<m.original_read_elements*sizeof(Fr)<<",\"retained_state_read_elements\":"<<m.retained_read_elements<<",\"retained_state_payload_bytes\":"<<m.retained_read_elements*sizeof(Fr)<<",\"u_scan_wall_time\":"<<m.scan_wall<<",\"u_scan_cpu_time\":"<<m.scan_cpu<<",\"coordinate_mapping_calls\":"<<m.mapping_calls<<",\"original_storage_chunks_touched\":";

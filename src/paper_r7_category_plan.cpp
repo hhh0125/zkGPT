@@ -15,7 +15,7 @@ Plan makeCategoryPlan(const std::array<std::size_t,5>&actual,const std::string&i
  static_cast<PhysicalCommitmentLayout&>(p)=matrixShape(p.domain);p.physical_values=actual_values;validateCategoryPlan(p);return p;
 }
 void validateCategoryPlan(const Plan&p){
- need(p.category_mode && p.public_cells.empty() && p.segments.size() && p.segments.size()<=5 && p.packing.segments.empty(),"category plan mode/holes/count");
+ need(p.category_mode && p.public_cells.empty() && p.segments.size() && p.segments.size()<=5 && !p.packing,"category plan mode/holes/count");
  need(p.source_identity.size()==64 && p.source_identity.find_first_not_of("0123456789abcdef")==std::string::npos,"category source identity");
  std::size_t logical=0,actual_values=0,next=0;need(p.runs.size()==p.segments.size(),"category runs count");
  for(std::size_t i=0;i<p.segments.size();++i){const auto&s=p.segments[i];while(next<5 && s.source_id!=names[next])++next;need(next<5,"category order/duplicate/identity");++next;
