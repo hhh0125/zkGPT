@@ -3,6 +3,7 @@
 #include "paper_r7_opt2_metrics.hpp"
 #include <map>
 #include <functional>
+#include <memory>
 namespace zkgpt::r7::crypto {
 namespace r1=zkgpt::r1;
 using r1::Fr;using r1::G1;using r1::Bytes;using r1::Digest;
@@ -35,7 +36,12 @@ G1 scalarCommit(const Fr&,const Fr&);
 Hidden combine(const std::string&session,const std::string&role,const std::vector<Hidden>&,const std::vector<Fr>&);
 std::string hex(const Digest&);
 // Only a live verifier-side implementation may generate coins. No receipt import.
-class IO{public:virtual ~IO()=default;virtual bool prover()const=0;virtual std::string session()const=0;virtual Bytes message(const std::string&,const Bytes& = {})=0;virtual Fr coin(const std::string&)=0;virtual Digest prefix()const=0;};
+class IO{
+ const std::shared_ptr<const void>transcript_owner_=std::make_shared<const int>(0);
+ public:
+ IO()=default;IO(const IO&)=delete;IO&operator=(const IO&)=delete;
+ virtual std::shared_ptr<const void>transcriptOwner()const{return transcript_owner_;}
+virtual ~IO()=default;virtual bool prover()const=0;virtual std::string session()const=0;virtual Bytes message(const std::string&,const Bytes& = {})=0;virtual Fr coin(const std::string&)=0;virtual Digest prefix()const=0;};
 void bindPublic(IO&,const std::string&,const Bytes&);
 struct Query{std::vector<Fr>point;Handle evaluation;};
 // Each call binds all PC/query/handle bytes before one audit and K<=4 cores.

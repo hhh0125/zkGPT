@@ -36,7 +36,7 @@
  timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
  checked(io,"single/direct-logical-domain");
  if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;
- single::writeLayout(out,pcs.singlePublic());
+ single::writeCategoryLayout(out,pcs.singlePublic());
  output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
  timed("classified-public-Y-constants-and-input-definition",[&]{
   auto all=std::make_shared<PublicEntries>(trustedPublicEntries(s,ctx));

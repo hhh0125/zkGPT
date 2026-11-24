@@ -56,9 +56,9 @@ struct Plan {
  }
 };
 // Construction remains bounded even for arbitrary fragmented callbacks. Only
-// the complete canonical digest check in prepareClaim publishes frozen=true.
+// the caller authenticates the consumed canonical stream before using the plan.
 class Builder {
- Plan&plan_;Store&store_;const std::size_t available_,roots_,maximum_;std::vector<std::size_t>last_;bool fits_;
+ Plan&plan_;Store&store_;const std::size_t available_,roots_,maximum_;std::vector<std::size_t>last_;bool fits_;bool appended_=false;
  void discard(const char*why){fits_=false;plan_.reason=why;std::vector<Run>().swap(plan_.runs);std::vector<RootSpan>().swap(plan_.disk_roots);}
  bool flush(){
   if(plan_.disk_roots.empty())plan_.disk_roots.resize(roots_);
@@ -69,7 +69,10 @@ class Builder {
  }
  public:
  Builder(Plan&p,Store&s,std::size_t available,std::size_t roots):plan_(p),store_(s),available_(available),roots_(roots),maximum_(available>roots*(sizeof(RootSpan)+sizeof(std::size_t))?std::min(block_runs,(available-roots*(sizeof(RootSpan)+sizeof(std::size_t)))/sizeof(Run)):0),last_(maximum_?roots:0,std::size_t(-1)),fits_(maximum_>0){if(!fits_)plan_.reason="RAM_METADATA_BUDGET_EXHAUSTED";}
+ bool failed()const{return !fits_;}
+ std::size_t workingBytes()const{return plan_.bytes()+last_.capacity()*sizeof(std::size_t);}
  void append(std::size_t j,Coordinate coordinate){
+  appended_=true;
   if(!fits_){return;}
   auto k=coordinate.root;need(k<roots_,"classified mapping plan root bounds");auto index=last_[k];
   if(index!=std::size_t(-1)){auto&r=plan_.runs[index];auto logical=j-r.begin;auto delta=std::int64_t(coordinate.index)-r.first.index;
@@ -80,7 +83,8 @@ class Builder {
   if(plan_.runs.size()==plan_.runs.capacity())plan_.runs.reserve(std::min(maximum_,std::max<std::size_t>(8,plan_.runs.capacity()*2)));
   last_[k]=plan_.runs.size();plan_.runs.push_back({j,1,coordinate});++plan_.run_count;
  }
- void finish(){
+ void finish(bool allow_empty=false){
+  if(allow_empty && !appended_){plan_.reason="FROZEN_ROOT_RAM";plan_.frozen=true;return;}
   if(!fits_)return;
   if(!plan_.disk_roots.empty()){if(!plan_.runs.empty() && !flush())return;std::vector<Run>().swap(plan_.runs);plan_.reason="FROZEN_ROOT_FILE";}
   else{std::sort(plan_.runs.begin(),plan_.runs.end(),[](const Run&a,const Run&b){return a.first.root<b.first.root || (a.first.root==b.first.root && a.begin<b.begin);});plan_.reason="FROZEN_ROOT_RAM";}

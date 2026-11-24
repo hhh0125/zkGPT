@@ -26,8 +26,8 @@ void validateCategoryPlan(const Plan&p){
  auto shape=matrixShape(p.domain);need(p.domain==pow2(logical) && p.logical_values==actual_values && p.physical_values==actual_values && p.physical_domain==shape.physical_domain && p.rows==shape.rows && p.columns==shape.columns,"category global shape");
 }
 void writeCategoryLayout(std::ostream&o,const Public&p){
- validateCategoryPlan(p.plan);const auto&q=p.plan;
- o<<"{\"suite\":\""<<suite<<"\",\"layout\":\""<<layout<<"\",\"model_scope\":\""<<modelScope<<"\",\"logical_commitments\":1,\"identity\":\""<<identity(p)<<"\",\"source_layout_identity\":\""<<q.source_identity<<"\",\"rows\":"<<q.rows<<",\"columns\":"<<q.columns<<",\"domain\":"<<q.domain<<",\"logical_values\":"<<q.logical_values<<",\"physical_values\":"<<q.physical_values<<",\"physical_domain\":"<<q.physical_domain<<",\"logical_gap\":"<<q.domain-q.logical_values<<",\"physical_padding\":"<<q.physical_domain-q.physical_values<<",\"source_segments\":[";
+ validateCategoryPlan(p.plan());const auto&q=p.plan();
+ o<<"{\"suite\":\""<<suite<<"\",\"layout\":\""<<layout<<"\",\"model_scope\":\""<<modelScope<<"\",\"logical_commitments\":1,\"source_layout_identity\":\""<<q.source_identity<<"\",\"rows\":"<<q.rows<<",\"columns\":"<<q.columns<<",\"domain\":"<<q.domain<<",\"logical_values\":"<<q.logical_values<<",\"physical_values\":"<<q.physical_values<<",\"physical_domain\":"<<q.physical_domain<<",\"logical_gap\":"<<q.domain-q.logical_values<<",\"physical_padding\":"<<q.physical_domain-q.physical_values<<",\"source_segments\":[";
  for(std::size_t k=0;k<q.segments.size();++k){if(k)o<<',';const auto&s=q.segments[k];o<<"{\"category\":\""<<s.source_id<<"\",\"actual\":"<<s.actual<<",\"padded\":"<<s.padded<<",\"logical_offset\":"<<s.offset<<",\"physical_offset\":"<<s.physical_offset<<",\"physical_length\":"<<s.physical_length<<",\"witness_source\":\"sealed-native-source\"}";}
  o<<"],\"native_public_cells\":[],\"category_alignment_gap\":0,\"root_padding\":0}\n";
 }

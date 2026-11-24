@@ -3,7 +3,7 @@
 #include "paper_r7_hyrax_a3.hpp"
 #include <ostream>
 namespace zkgpt::r7::oneblock::single {
-inline constexpr const char*suite="R7-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-HIDDEN-v5";
+inline constexpr const char*suite="R7-SINGLE-HYRAX-DIRECT-LOGICAL-FIVE-CATEGORIES-HIDDEN-v6";
 inline constexpr const char*layout="direct-logical-five-categories-committed-X-v5";
 inline constexpr const char*modelScope="PROVER_SELECTED_WEIGHTS_BOUND_IN_C_U-v1";
 inline constexpr std::size_t maxDomain=std::size_t(1)<<32;
@@ -35,7 +35,21 @@ void validateCategoryPlan(const Plan&);
 PhysicalCommitmentLayout matrixShape(std::size_t actual);
 unsigned bits(std::size_t);
 Bytes descriptor(const Plan&);
-struct Public {Plan plan;std::vector<G1>rows;};
+struct Secret;
+struct Public {
+ Public()=default;
+ Public(Plan plan,std::vector<G1> rows):plan_(std::move(plan)),rows_(std::move(rows)){}
+ const Plan& plan()const{return plan_;}
+ const std::vector<G1>& rows()const{return rows_;}
+ private:
+ Plan plan_;std::vector<G1>rows_;
+ // Only exchange can seal an immutable commitment to a live transcript.
+ std::weak_ptr<const void>sealed_transcript_;std::string sealed_session_;
+ friend Secret commit(const Plan&,std::vector<Value>,Random&,unsigned);
+ friend Public exchange(IO&,const Plan&,const Secret*);
+ friend void open(IO&,const Public&,const Query&,const std::vector<Fr>&,const Secret*,const Hidden*,Random*,const std::string&);
+ friend Hidden evaluateAndOpen(IO&,const Public&,const std::vector<Fr>&,const std::vector<Fr>&,const Secret*,Random*,const std::string&);
+};
 void writeCategoryLayout(std::ostream&,const Public&);
 struct Secret {Public pc;std::vector<Fr>blinds;std::vector<Value>sources;};
 // Callbacks borrow immutable sealed source storage, and may be read in parallel.
@@ -43,7 +57,6 @@ struct Secret {Public pc;std::vector<Fr>blinds;std::vector<Value>sources;};
 Secret commit(const Plan&,std::vector<Value>,Random&,unsigned workers=1);
 Bytes encode(const Public&);Public decode(const Bytes&,const Plan&expected);
 std::string identity(const Public&);
-void writeLayout(std::ostream&,const Public&);
 // One header and bounded row chunks belong to ONE commitment identity.
 Public exchange(IO&,const Plan&,const Secret*onlyP);
 // One rank-one logical MLE query over the identical commitment coordinates.

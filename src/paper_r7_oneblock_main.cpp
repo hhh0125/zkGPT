@@ -62,6 +62,7 @@ class Tracked final:public IO,public EvidenceSink {
  IO&base_;std::function<std::uint64_t()>frames_;const Coverage&plan_;std::set<std::string>expected_,done_;std::map<std::string,std::pair<std::uint64_t,std::string>>evidence_;std::string last_,attack_;bool changed_=false;mutable bool saved_=false;
  bool authenticated_=false;
  public:Tracked(IO&b,const Coverage&p,std::string attack,std::function<std::uint64_t()>frames):base_(b),frames_(std::move(frames)),plan_(p),attack_(std::move(attack)){for(auto&r:p.required)expected_.insert(r.id);}
+ std::shared_ptr<const void>transcriptOwner()const override{return base_.transcriptOwner();}
  bool prover()const override{return base_.prover();}std::string session()const override{return base_.session();}Digest prefix()const override{return base_.prefix();}
  Bytes message(const std::string&label,const Bytes&v={})override{last_=label;if(!prover() || attack_.empty() || changed_)return base_.message(label,v);auto b=v;if(prover() && !changed_){
   if(attack_=="wrong-commitment" && label=="SingleHyrax/rows/0"){Reader rows{b};auto n=rows.number();Writer out;out.number(n);for(std::size_t j=0;j<n;++j){auto a=rows.point();if(!j)a+=parameters(1).scalar;out.point(a);}rows.end();b=out.b;changed_=true;}

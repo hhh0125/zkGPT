@@ -24,6 +24,7 @@ struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,k
  std::uint64_t endpoint_calls=0,endpoint_fast_coordinates=0,endpoint_fast_blocks=0,endpoint_dense_coordinates=0,endpoint_dense_bytes=0,endpoint_fold_coordinates=0;
  std::uint64_t endpoint_allocations=0,endpoint_allocated_bytes=0;
  double endpoint_seconds=0,endpoint_build_seconds=0,endpoint_fold_seconds=0;
+ std::uint64_t frozen_ram_claims=0,frozen_file_claims=0,mapping_ram_peak=0,mapping_file_peak=0;
  double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0,kernel_wall=0,partial_wall=0,map_wall=0;};
 std::string unifiedInputIdentity(const Layout&,const std::vector<Fr>&public_x);
 single::Plan singlePlan(const Layout&,const std::vector<Fr>&public_x);
@@ -45,15 +46,20 @@ class Commitments {
  };
  struct Authentication {
  using Run=mapping::Run;
- struct Prepared:mapping::Plan {std::unique_ptr<Weights>weights;};
+ struct Prepared:mapping::Plan {std::unique_ptr<Weights>weights;Fr bias=0;Digest digest{};bool ready=false;std::uint64_t callback_calls=0,full_scans=0;};
  static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
  const std::size_t map_budget,weight_budget;
  std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
  mapping::Store store;
- explicit Authentication(std::size_t n,bool full12=false):map_budget(full12?256u<<20:map_limit),weight_budget(full12?256u<<20:weight_limit),claims(n),store(4*map_budget){}
+ std::string session;std::weak_ptr<const void>transcript;
+ explicit Authentication(std::size_t n,bool full12=false):Authentication(n,full12?256u<<20:map_limit,full12?256u<<20:weight_limit,4*(full12?256u<<20:map_limit)){}
+ Authentication(std::size_t n,std::size_t maps,std::size_t weights,std::size_t files):map_budget(maps),weight_budget(weights),claims(n),store(files){}
 };
  bool usesBaseCoordinates(const Claim&)const;
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
+ void prepareCategoryClaim(Claim&,Authentication&,std::size_t)const;
+ void deferTrusted(Claim);
+ std::unique_ptr<Authentication>category_auth_;bool category_failed_=false;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
  std::optional<Fr>categoryKernelEndpoint(const std::vector<Fr>&,const std::vector<Fr>&,const Authentication&,bool require_profitable=true)const;
  Fr kernelEndpoint(std::size_t,const std::vector<Fr>&,const Authentication&,const std::vector<Fr>&)const;
@@ -83,6 +89,8 @@ class Commitments {
  void constrainBaseTails();
  VectorOracle view(const std::string&);
  void defer(Claim);
+ // index is a verifier-local authoritative rule, never a prover-supplied map.
+ // Category freezes its consumed result immediately, then releases the callback.
  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);
  // Protocol1(6),(7) candidate; real Oneblock replacement gate passed.
  void authenticateUnifiedInput(const std::vector<Fr>&public_x);

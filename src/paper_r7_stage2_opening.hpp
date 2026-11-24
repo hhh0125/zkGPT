@@ -10,6 +10,7 @@ class MaskLedger {
 class ScopedIO final:public IO {
  IO&io_;std::string scope_;MaskLedger*ledger_;std::uint64_t sent_=0;
  public:ScopedIO(IO&i,std::string scope,MaskLedger*ledger=nullptr):io_(i),scope_(std::move(scope)),ledger_(ledger){}
+ std::shared_ptr<const void>transcriptOwner()const override{return io_.transcriptOwner();}
  bool prover()const override{return io_.prover();}std::string session()const override{return io_.session();}Digest prefix()const override{return io_.prefix();}
  Bytes message(const std::string&,const Bytes& = {})override;Fr coin(const std::string&label)override{return io_.coin(scope_+"/"+label);}
  std::uint64_t sent()const{return sent_;}

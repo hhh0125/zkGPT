@@ -90,16 +90,6 @@ struct PublicK::Impl {
    auto start=Clock::now();detail::KFrBuffer next(count);
    metrics.mmap_allocation_seconds+=seconds(start);
    if(direct_build){
-    start=Clock::now();
-    // MCL exposes its unsigned limb storage. All-ones is >= the field
-    // modulus, hence invalid; no field arithmetic is performed on markers.
-    // A raw Fr* cannot otherwise distinguish an omitted write from zero.
-    using Unit=std::remove_const_t<std::remove_pointer_t<decltype(next[0].getUnit())>>;
-    const auto units=Fr::getUnitSize();
-    for(std::size_t j=0;j<count;++j)
-     std::fill_n(const_cast<Unit*>(next[j].getUnit()),units,std::numeric_limits<Unit>::max());
-    metrics.build_marker_seconds+=seconds(start);
-    add(metrics.build_marker_write_bytes,count*sizeof(Fr));
     ++metrics.direct_build_calls;add(metrics.direct_build_elements,count);
    }
    start=Clock::now();
