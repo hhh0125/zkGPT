@@ -24,7 +24,8 @@
  }});
  std::optional<classified::Commitments>commitments;
  timed("all-classified-roots-prechallenge-seal",[&]{
- commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,s.x);
+ commitments.emplace(io,layout,master,isP?&prepared:nullptr,rng,nullptr,nullptr,nullptr,nullptr,&s.x,
+                     isP && layout.category_mode?&witness.baseMaster():nullptr);
 });
  auto&pcs=*commitments;
  need(pcs.logicalCommitments()==1,"production single Hyrax identity count");checked(io,"single/commitment");checked(io,"model/frozen-numerical-profile");

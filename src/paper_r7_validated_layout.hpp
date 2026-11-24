@@ -11,6 +11,6 @@ class ValidatedLayout {
  std::size_t domain()const{return domain_;}
  ValidatedLayout(const ValidatedLayout&)=default;
  const std::vector<Segment>&segments()const{return *segments_;}
- Round streamingRound(const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics*,FoldedU*,const std::string&)const;
+ Round streamingRound(const std::vector<Fr>&,const Factors&,const Inputs&,UOptions,UMetrics*,FoldedU*,const std::string&,PublicK*,Workers*)const;
 };
 }

@@ -1,8 +1,12 @@
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_k_mmap_buffer.hpp"
+#include "paper_r7_u_fold_state.hpp"
+#include "paper_r7_unified_workers.hpp"
+#include <thread>
 #include <cerrno>
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <limits>
 #include <type_traits>
 #include <sys/mman.h>
@@ -112,6 +116,108 @@ void folded(){
  check(!rejects([&]{state.withRoot(0,"fold",[](const Value&){});}).empty(),"ended state readable");
  check(state.metrics().mapped_bytes==0,"poison did not release mappings");
 }
+void parallelFolds(){
+ const std::vector<Segment> segments{{0,65536},{65536,32768},{98304,4},{98308,1}};
+ const std::size_t domain=131072;
+ std::vector<std::vector<Fr>> original;
+ for(std::size_t k=0;k<segments.size();++k){
+  auto&values=original.emplace_back();
+  for(std::size_t j=0;j<segments[k].padded;++j)values.emplace_back(3+(j*101+k*17)%113);
+ }
+ const auto caller=std::this_thread::get_id();
+ std::size_t callback_reads=0;
+ int storage_identity=0;
+ const Inputs input=[&](std::size_t k)->InputSpan{
+  const auto&values=original.at(k);
+  if(k==2)return {nullptr,3,values.size(),[&](std::size_t j){
+   check(std::this_thread::get_id()==caller,"original callback escaped caller");
+   ++callback_reads;
+   return original[2].at(j);
+  },&storage_identity};
+  return {values.data(),values.size()-(k==0?3:0),values.size()};
+ };
+ const auto build=[&](std::size_t k,Fr*out,std::size_t n){std::copy_n(original.at(k).data(),n,out);};
+ PublicK serial_k(segments,PublicK::BuildInto(build),{},"serial-k",domain);
+ PublicK parallel_k(segments,PublicK::BuildInto(build),{},"parallel-k",domain);
+ FoldedU serial_u(domain,segments,input,"serial-u");
+ FoldedU parallel_u(domain,segments,input,"parallel-u");
+ zkgpt::r7::oneblock::unified::detail::Workers workers(4);
+ std::vector<Fr> point;
+ for(unsigned t=0;t<17;++t){
+  serial_u.beginRound("serial-u",point,segments);
+  parallel_u.beginRound("parallel-u",point,segments);
+  for(std::size_t k=0;k<segments.size();++k){
+   const auto n=std::max<std::size_t>(1,segments[k].padded>>t);
+   auto serial_span=serial_u.span(k,"serial-u",point,input(k));
+   auto parallel_span=parallel_u.span(k,"parallel-u",point,input(k));
+   if(t)for(std::size_t j=0;j<n;++j)check(serial_span.data[j]==parallel_span.data[j],"parallel U differs from serial fold");
+   serial_k.withRoot(k,"serial-k",[&](const Value&serial_values){
+    parallel_k.withRoot(k,"parallel-k",[&](const Value&parallel_values){
+     for(std::size_t j=0;j<n;++j)check(serial_values(j)==parallel_values(j),"parallel K differs from serial fold");
+    });
+   });
+  }
+  serial_u.completeRound("serial-u",point);
+  parallel_u.completeRound("parallel-u",point);
+  // Keep the first cross-task fold nontrivial, and exercise challenges 0 and 1.
+  const Fr challenge=t==1?Fr(0):t==2?Fr(1):Fr(t+11);
+  serial_u.advance("serial-u",challenge,input);
+  parallel_u.advance("parallel-u",challenge,input,&workers);
+  serial_k.advance("serial-k",challenge);
+  parallel_k.advance("parallel-k",challenge,&workers);
+  point.push_back(challenge);
+ }
+ check(serial_k.endpoint("serial-k",point)==parallel_k.endpoint("parallel-k",point),"parallel K endpoint differs");
+ check(parallel_u.metrics().parallel_materialization_jobs>1 && parallel_u.metrics().parallel_fold_jobs>1 &&
+       parallel_k.metrics().parallel_fold_jobs>1,"test did not exercise both parallel fold paths");
+ check(callback_reads==6,"callback materialization read count drift");
+ check(parallel_u.metrics().live_bytes==serial_u.metrics().live_bytes &&
+       parallel_u.metrics().unmapped_tail_bytes==serial_u.metrics().unmapped_tail_bytes &&
+       parallel_k.metrics().mmap_live_bytes==serial_k.metrics().mmap_live_bytes &&
+       parallel_k.metrics().unmapped_tail_bytes==serial_k.metrics().unmapped_tail_bytes,"parallel fold reclamation differs");
+}
+void foldBenchmark(){
+ std::cout<<"layout,coordinates,mode,threads,repetition,U_materialization_seconds,U_later_fold_seconds,K_first_fold_seconds,K_later_fold_seconds,U_materialization_jobs,U_later_jobs,K_first_jobs,K_later_jobs\n";
+ for(std::size_t n:{1u<<16,1u<<20})for(bool split:{false,true}){
+  const std::vector<Segment> segments=split?std::vector<Segment>{{0,n/2},{n/2,n/2}}:std::vector<Segment>{{0,n}};
+  std::vector<Fr> original;original.reserve(n);
+  for(std::size_t j=0;j<n;++j)original.emplace_back(7+(j*101)%113);
+  const Inputs input=[&](std::size_t k)->InputSpan{
+   const auto&segment=segments[k];return {original.data()+segment.offset,segment.padded,segment.padded};
+  };
+  const PublicK::BuildInto build=[&](std::size_t k,Fr*out,std::size_t count){std::copy_n(input(k).data,count,out);};
+  for(unsigned threads:{0u,1u,2u,4u,8u,16u}){
+   zkgpt::r7::oneblock::unified::detail::Workers workers(std::max(1u,threads));
+   auto*pool=threads?&workers:nullptr;
+   for(unsigned repeat=0;repeat<4;++repeat){
+    FoldedU u(n,segments,input,"bench-u");
+    PublicK k(segments,build,{},"bench-k",n);
+    std::vector<Fr> point;
+    std::array<double,2> u_time{},k_time{};
+    std::array<std::uint64_t,2> u_jobs{},k_jobs{};
+    for(unsigned round=0;round<2;++round){
+     u.beginRound("bench-u",point,segments);
+     for(std::size_t r=0;r<segments.size();++r){
+      u.span(r,"bench-u",point,input(r));
+      k.withRoot(r,"bench-k",[](const Value&){});
+     }
+     u.completeRound("bench-u",point);
+     const Fr challenge(round+17);
+     u.advance("bench-u",challenge,input,pool);
+     k.advance("bench-k",challenge,pool);
+     point.push_back(challenge);
+     u_time[round]=u.metrics().fold_wall_seconds;
+     k_time[round]=k.metrics().fold_wall_seconds;
+     u_jobs[round]=round?u.metrics().parallel_fold_jobs:u.metrics().parallel_materialization_jobs;
+     k_jobs[round]=k.metrics().parallel_fold_jobs;
+    }
+    if(repeat)std::cout<<(split?"two_equal":"single")<<','<<n<<','<<(threads?"F1":"baseline")<<','<<std::max(1u,threads)<<','<<repeat
+     <<std::setprecision(9)<<','<<u_time[0]<<','<<u_time[1]-u_time[0]<<','<<k_time[0]<<','<<k_time[1]-k_time[0]
+     <<','<<u_jobs[0]<<','<<u_jobs[1]<<','<<k_jobs[0]<<','<<k_jobs[1]-k_jobs[0]<<'\n';
+   }
+  }
+ }
+}
 void failures(){
  for(auto fault:{"builder","shape","consumer","index"}){
   PublicK state({{0,8},{8,8}},[&](std::size_t k,Fr*out,std::size_t n){if(k==1 && std::string(fault)=="builder")throw std::runtime_error("builder failure");std::fill_n(out,k==1 && std::string(fault)=="shape"?n/2:n,Fr(3));},{},"poison",16);
@@ -212,8 +318,16 @@ extern "C" int __wrap_munmap(void*p,std::size_t n){
  if(it!=guarded.end()){auto entry=it->second;result=__real_munmap(entry.first,entry.second);if(!result)guarded.erase(it);}
  else result=__real_munmap(p,n);if(result==0){check(n<=mapped_live,"mapping accounting underflow");mapped_live-=n;++unmaps;}return result;
 }
-int main(){try{
- struct rlimit core{0,0};setrlimit(RLIMIT_CORE,&core);r1::init();invalidOutput();once();directCompletion();guardedBounds();check(mapped_live==0,"build-once leak");buffer();folded();failures();
+int main(int argc,char**argv){try{
+ struct rlimit core{0,0};setrlimit(RLIMIT_CORE,&core);r1::init();
+ if(argc==2 && std::string(argv[1])=="--f1-microbench"){foldBenchmark();return 0;}
+ if(argc==2 && std::string(argv[1])=="--f1-differential"){
+  parallelFolds();
+  check(mapped_live==0,"parallel fold leaked mappings");
+  std::cout<<"PASS F1 serial/parallel U/K state and endpoint differential\n";
+  return 0;
+ }
+ invalidOutput();once();directCompletion();guardedBounds();check(mapped_live==0,"build-once leak");buffer();folded();parallelFolds();failures();
  check(mapped_live==0,"final mapping leak");
  std::cout<<"PASS PublicK build-once, legacy fold/endpoint oracle, isolated roots, move/shrink/overflow, tail reclamation, allocation/unmap/session/order failures; mmap calls="<<map_calls<<" unmaps="<<unmaps<<'\n';
  return 0;

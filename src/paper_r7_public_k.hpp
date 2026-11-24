@@ -1,6 +1,7 @@
 #pragma once
 #include "paper_r7_unified_input.hpp"
 namespace zkgpt::r7::oneblock::unified {
+namespace detail {class Workers;}
 // Deprecated compatibility argument. Anonymous mmap state is never admitted,
 // evicted or rebuilt according to these values or legacy budget environment.
 struct KBudget {
@@ -22,6 +23,8 @@ struct KMetrics {
  double direct_build_seconds=0,build_marker_seconds=0,build_validation_seconds=0,vector_to_mmap_copy_seconds=0;
  double initial_build_seconds=0,fold_cpu_seconds=0,fold_wall_seconds=0;
  double mmap_allocation_seconds=0,unmap_wall_seconds=0;
+ double fold_arithmetic_wall_seconds=0,resident_sampling_seconds=0;
+ std::uint64_t fold_write_coordinates=0,parallel_fold_jobs=0;
  // Deprecated cache-only counters. Always zero for anonymous mmap storage.
  std::uint64_t file_read_bytes=0,file_write_bytes=0,ram_peak_bytes=0,file_peak_bytes=0;
  std::uint64_t ram_compactions=0,ram_released_bytes=0,compaction_copy_bytes=0;
@@ -42,7 +45,10 @@ class PublicK {
  PublicK(const std::vector<Segment>&,Build,KBudget,const std::string&session,std::size_t domain=0);
  ~PublicK();PublicK(const PublicK&)=delete;PublicK&operator=(const PublicK&)=delete;
  void withRoot(std::size_t,const std::string&session,const std::function<void(const Value&)>&);
- void advance(const std::string&session,const Fr&challenge);
+ // The consumer borrows a validated, immutable root until it returns.
+ // Any worker using the pointer must complete inside the consumer.
+ void withRootSpan(std::size_t,const std::string&,const std::function<void(const Fr*,std::size_t)>&);
+ void advance(const std::string&session,const Fr&challenge,detail::Workers*workers=nullptr);
  Fr endpoint(const std::string&session,const std::vector<Fr>&point);
  const KMetrics&metrics()const;
  void report()const;

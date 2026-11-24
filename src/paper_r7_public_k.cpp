@@ -1,5 +1,6 @@
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_k_mmap_buffer.hpp"
+#include "paper_r7_parallel_fold.hpp"
 #include "paper_r7_opt2_metrics.hpp"
 #include <algorithm>
 #include <chrono>
@@ -7,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <sys/resource.h>
+#include <type_traits>
 
 namespace zkgpt::r7::oneblock::unified {
 namespace {
@@ -32,7 +34,7 @@ struct PublicK::Impl {
  struct Root {detail::KFrBuffer values;bool built=false,touched=false;};
  std::vector<Segment>segments;BuildInto build_into;Build legacy_build;bool direct_build;std::string session;
  std::vector<Fr>point;std::vector<Root>roots;unsigned bits=0;
- bool ended=false,failed=false;KMetrics metrics;
+ bool ended=false,failed=false,borrowed=false;KMetrics metrics;
  Impl(const std::vector<Segment>&s,BuildInto b,Build legacy,KBudget,const std::string&id,std::size_t domain)
  :segments(s),build_into(std::move(b)),legacy_build(std::move(legacy)),direct_build(bool(build_into)),session(id),roots(s.size()){
   need((build_into || legacy_build) && !session.empty() && !segments.empty() && segments.size()<=8193,"public K constructor bound");
@@ -82,7 +84,7 @@ struct PublicK::Impl {
   auto&root=roots.at(k);need(j<root.values.size(),"public K read index");
   ++metrics.state_read_coordinates;return root.values[j];
  }
- void with(std::size_t k,const std::function<void(const Value&)>&consume){
+ Root&ensureRoot(std::size_t k){
   auto&root=roots.at(k);root.touched=true;
   if(!root.built){
    need(point.empty(),"public K unbuilt root after challenge");
@@ -91,6 +93,14 @@ struct PublicK::Impl {
    metrics.mmap_allocation_seconds+=seconds(start);
    if(direct_build){
     ++metrics.direct_build_calls;add(metrics.direct_build_elements,count);
+    // Anonymous mmap bytes initially look like canonical zero. Mark each Fr
+    // noncanonical so validation can distinguish an omitted write from zero.
+    auto marker_start=Clock::now();Fr marker;
+    using Unit=std::remove_const_t<std::remove_pointer_t<decltype(marker.getUnit())>>;
+    std::fill_n(const_cast<Unit*>(marker.getUnit()),Fr::getUnitSize(),std::numeric_limits<Unit>::max());
+    std::fill_n(next.data(),count,marker);
+    metrics.build_marker_seconds+=seconds(marker_start);
+    add(metrics.build_marker_write_bytes,count*sizeof(Fr));
    }
    start=Clock::now();
    try{build_into(k,next.data(),count);}
@@ -111,20 +121,43 @@ struct PublicK::Impl {
    root.values=std::move(next);root.built=true;
    ++metrics.unique_root_builds;++metrics.initial_builds;peak();
   }
+  return root;
+ }
+ void with(std::size_t k,const std::function<void(const Value&)>&consume){
+  ensureRoot(k);
   consume([this,k](std::size_t j){return at(k,j);});
  }
- void advance(const Fr&challenge){
+ void advance(const Fr&challenge,detail::Workers*workers){
   // Validate every root before changing any value or reclaiming a page.
   for(const auto&root:roots)need(root.built && root.touched,"public K incomplete round state");
-  resident();auto start=Clock::now();auto cpu=crypto::processCPU();
+  auto sample_start=Clock::now();resident();metrics.resident_sampling_seconds+=seconds(sample_start);
+  auto start=Clock::now();auto cpu=crypto::processCPU();
   auto released_before=metrics.unmapped_tail_bytes;
-  for(auto&root:roots){
-   root.touched=false;auto n=root.values.size();if(n<=1)continue;
-   for(std::size_t j=0;j<n/2;++j){
-    auto left=root.values[2*j],right=root.values[2*j+1];
-    root.values[j]=left+challenge*(right-left);
+  const bool parallel=workers && workers->count()>1;
+  auto fold=[&](std::size_t k,std::size_t first,std::size_t end){
+   auto*values=roots[k].values.data();
+   for(std::size_t j=first;j<end;++j){
+    auto left=values[2*j],right=values[2*j+1];values[j]=left+challenge*(right-left);
+   }
+  };
+  if(parallel){
+   std::vector<std::size_t>counts;
+   counts.reserve(roots.size());
+   for(const auto&root:roots)counts.push_back(root.values.size()/2);
+   auto arithmetic_start=Clock::now();
+   add(metrics.parallel_fold_jobs,detail::foldInPlace(counts,*workers,fold));
+   metrics.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
+  }
+  for(std::size_t k=0;k<roots.size();++k){
+   auto&root=roots[k];
+   root.touched=false;const auto n=root.values.size();if(n<=1)continue;
+   if(!parallel){
+    auto arithmetic_start=Clock::now();fold(k,0,n/2);
+    metrics.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
    }
    add(metrics.fold_coordinates,n);
+   add(metrics.fold_write_coordinates,n/2);
+   // This barrier is implicit in foldInPlace returning after the last wave.
    auto before=root.values.mappedBytes();auto unmap_start=Clock::now();
    root.values.shrinkTo(n/2);
    metrics.unmap_wall_seconds+=seconds(unmap_start);
@@ -134,7 +167,7 @@ struct PublicK::Impl {
   }
   point.push_back(challenge);
   metrics.fold_cpu_seconds+=crypto::processCPU()-cpu;metrics.fold_wall_seconds+=seconds(start);
-  resident();
+  sample_start=Clock::now();resident();metrics.resident_sampling_seconds+=seconds(sample_start);
   if(crypto::opt2MetricsEnabled())
    std::cerr<<"K_MMAP_ROUND {\"round\":"<<point.size()-1
     <<",\"K_effective_elements\":"<<metrics.mmap_live_bytes/sizeof(Fr)
@@ -152,15 +185,30 @@ PublicK::PublicK(const std::vector<Segment>&s,BuildInto b,KBudget cap,const std:
  :p_(std::make_unique<Impl>(s,std::move(b),Build{},cap,id,domain)){}
 PublicK::~PublicK()=default;
 void PublicK::withRoot(std::size_t k,const std::string&id,const std::function<void(const Value&)>&consume){
+ need(!p_->borrowed,"public K active span borrow");
  try{p_->check(id);need(!p_->ended && !p_->failed && bool(consume),"public K closed/failed state or missing consumer");p_->with(k,consume);}
  catch(...){p_->poison();throw;}
 }
-void PublicK::advance(const std::string&id,const Fr&challenge){
+void PublicK::withRootSpan(std::size_t k,const std::string&id,const std::function<void(const Fr*,std::size_t)>&consume){
+ need(!p_->borrowed,"public K active span borrow");
+ try{
+  p_->check(id);need(!p_->ended && !p_->failed && bool(consume),"public K closed/failed state or missing consumer");
+  auto&root=p_->ensureRoot(k);
+  auto count=root.values.size();
+  p_->borrowed=true;
+  consume(root.values.data(),count);
+  p_->borrowed=false;
+  add(p_->metrics.state_read_coordinates,count);
+ }catch(...){p_->borrowed=false;p_->poison();throw;}
+}
+void PublicK::advance(const std::string&id,const Fr&challenge,detail::Workers*workers){
+ need(!p_->borrowed,"public K active span borrow");
  try{p_->check(id);need(!p_->ended && !p_->failed && challenge.isValid() && p_->point.size()<p_->bits,
-                      "public K challenge/phase bound");p_->advance(challenge);}
+                      "public K challenge/phase bound");p_->advance(challenge,workers);}
  catch(...){p_->poison();throw;}
 }
 Fr PublicK::endpoint(const std::string&id,const std::vector<Fr>&point){
+ need(!p_->borrowed,"public K active span borrow");
  try{
   p_->check(id);need(!p_->ended && !p_->failed && point==p_->point && point.size()==p_->bits,
                     "public K endpoint state order/terminal dimension");
@@ -181,6 +229,8 @@ void PublicK::report()const{
  K_METRIC("K_resident_bytes",resident_bytes) K_METRIC("K_resident_peak_bytes",resident_peak_bytes)
  K_METRIC("K_unmapped_tail_bytes",unmapped_tail_bytes) K_METRIC("K_unmap_calls",unmap_calls)
  K_METRIC("K_fold_coordinates",fold_coordinates) K_METRIC("K_state_read_coordinates",state_read_coordinates)
+ K_METRIC("K_fold_write_coordinates",fold_write_coordinates) K_METRIC("K_parallel_fold_jobs",parallel_fold_jobs)
+ K_METRIC("K_fold_arithmetic_wall_seconds",fold_arithmetic_wall_seconds) K_METRIC("K_resident_sampling_seconds",resident_sampling_seconds)
  K_METRIC("K_initial_build_seconds",initial_build_seconds)
  K_METRIC("K_fold_wall_seconds",fold_wall_seconds) K_METRIC("K_fold_cpu_seconds",fold_cpu_seconds)
  K_METRIC("K_mmap_allocation_seconds",mmap_allocation_seconds) K_METRIC("K_unmap_wall_seconds",unmap_wall_seconds)
