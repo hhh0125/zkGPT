@@ -1,6 +1,7 @@
 #include "paper_r7_classified_commitments.hpp"
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 namespace zkgpt::r7::oneblock::classified {
 namespace {
 struct Borrow {std::size_t begin,count;Value value;};
@@ -9,7 +10,7 @@ void Commitments::initializeCategory(Value base,Prepared*prepared,const std::vec
  need(io_.prover()?(bool(base) && prepared && rng_):(!base && !prepared && !rng_),"category P/V private boundary");
  need(layout_.category_mode && !x.empty() && x.size()==layout_.categories[0].actual,"category X dimensions");
  single_x_=x;auto plan=singlePlan(layout_,x);roots_.resize(layout_.roots.size());std::set<std::string>used;
- for(std::size_t k=0;k<roots_.size();++k){auto&root=roots_[k];root.spec=layout_.roots[k];need(root.spec.actual && root.spec.padded==root.spec.actual,"category chunks cannot carry root padding");if(!io_.prover())continue;
+ for(std::size_t k=0;k<roots_.size();++k){auto&root=roots_[k];root.spec=layout_.roots[k];need(root.spec.actual && root.spec.padded==root.spec.actual,"category roots cannot carry root padding");need(root.spec.actual-1<=std::numeric_limits<std::uint32_t>::max(),"category root uint32 index overflow");if(!io_.prover())continue;
   auto spans=std::make_shared<std::vector<Borrow>>();
   if(root.spec.registered){
    for(const auto&r:layout_.base_runs)if(r.start.root==k)spans->push_back({r.start.index,r.count,[base,at=r.begin](std::size_t j){return base(at+j);}});

@@ -3,12 +3,18 @@
 #include <algorithm>
 #include <limits>
 namespace zkgpt::r7::oneblock::classified {
+Coordinate offsetCoordinate(const Layout&p,Coordinate start,std::size_t delta){
+ need(start.root<p.roots.size(),"classified root index bounds");
+ const auto n=p.roots[start.root].actual;
+ need(start.index<n && delta<n-start.index && delta<=std::numeric_limits<std::uint32_t>::max()-start.index,"classified root coordinate overflow/bounds");
+ return {start.root,std::uint32_t(start.index+delta)};
+}
 std::size_t baseSize(const Layout&p){return p.master_actual?p.master_actual:p.base.size();}
 Coordinate baseCoordinate(const Layout&p,std::size_t at){
  need(at<baseSize(p),"partitioned base bounds");if(!p.master_actual)return p.base.at(at);
  auto it=std::upper_bound(p.base_runs.begin(),p.base_runs.end(),at,[](std::size_t i,const Piece&r){return i<r.begin;});
  need(it!=p.base_runs.begin(),"partitioned base prefix omission");--it;need(at-it->begin<it->count,"partitioned base gap");
- return {it->start.root,std::uint32_t(it->start.index+at-it->begin)};
+ return offsetCoordinate(p,it->start,at-it->begin);
 }
 namespace {
 struct Span {std::size_t begin,end,logical;};

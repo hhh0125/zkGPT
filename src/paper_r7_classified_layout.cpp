@@ -25,7 +25,7 @@ Layout makeLayout(const R7Context&c,std::size_t cap){
  for(std::size_t k=3;k<p.roots.size();++k)p.roots[k].padded=power2(p.roots[k].actual);
  return p;
 }
-Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"classified view query bounds");if(!v.mapped && !v.pieces.empty()){for(auto&part:v.pieces)if(j>=part.begin && j-part.begin<part.count)return {{part.start.root,std::uint32_t(part.start.index+j-part.begin)},Fr(0),false};throw std::runtime_error("partitioned helper map omission");}if(!v.mapped)return {{v.start.root,std::uint32_t(v.start.index+j)},Fr(0),false};if(j>=v.actual)return {{},Fr(0),true};for(auto&s:v.spans){if(j<s.count){need(s.offset+j<baseSize(p),"classified trusted map bounds");return {baseCoordinate(p,s.offset+j),s.bias,false};}j-=s.count;}throw std::runtime_error("classified missing source span");}
+Located locate(const Layout&p,const View&v,std::size_t j){need(j<v.padded,"classified view query bounds");if(!v.mapped && !v.pieces.empty()){for(auto&part:v.pieces)if(j>=part.begin && j-part.begin<part.count)return {offsetCoordinate(p,part.start,j-part.begin),Fr(0),false};throw std::runtime_error("partitioned helper map omission");}if(!v.mapped)return {offsetCoordinate(p,v.start,j),Fr(0),false};if(j>=v.actual)return {{},Fr(0),true};for(auto&s:v.spans){if(j<s.count){need(s.offset+j<baseSize(p),"classified trusted map bounds");return {baseCoordinate(p,s.offset+j),s.bias,false};}j-=s.count;}throw std::runtime_error("classified missing source span");}
 // Logical packing/map identity is also pinned inside the existing model bundle.
 // Ordinary matrix wire/version is bound separately; never rewrite model authority.
 std::string identity(const Layout&p){
@@ -38,7 +38,7 @@ std::string identity(const Layout&p){
  if(used)need(EVP_DigestUpdate(ctx.get(),b.data(),used)==1,"classified digest final maps");
  Digest out{};unsigned n=0;need(EVP_DigestFinal_ex(ctx.get(),out.data(),&n)==1 && n==32,"classified digest end");return hex(out);
 }
-void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=p.category_mode?makeCategoryLayout(c,cap):makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
+void validate(const Layout&p,const R7Context&c,std::size_t cap){auto expected=p.category_mode?makeCategoryLayout(c):makeLayout(c,cap);need(identity(p)==identity(expected),"classified untrusted layout/map");}
 void writeLayout(std::ostream&o,const Layout&p){
  if(p.category_mode){writeCategoryLayout(o,p);return;}
  if(p.master_actual){writePartitionedLayout(o,p);return;}

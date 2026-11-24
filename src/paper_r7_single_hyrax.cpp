@@ -105,12 +105,15 @@ Fr publicContribution(const Plan&p,const std::vector<Fr>&q,const std::vector<Fr>
 Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers){
  need(sources.size()==p.segments.size() && workers>0 && workers<=32,"single source/worker bound");for(auto&v:sources)need(bool(v),"single missing sealed source");
  const auto started=std::chrono::steady_clock::now();Secret s;s.pc.plan_=p;s.sources=std::move(sources);s.pc.rows_.resize(p.rows);s.blinds.reserve(p.rows);for(std::size_t i=0;i<p.rows;++i)s.blinds.push_back(rng.scalar());
- auto bases=hyrax_a3::generators(p.columns);auto H=parameters(1).hiding;workers=std::min<std::size_t>(workers,p.rows);
+ auto bases=hyrax_a3::generators(p.columns);
+ // mulVec's fallback normalizes in place. Pre-normalized points are read-only
+ // even on that path, so all row workers can safely share this single array.
+ G1::normalizeVec(bases.data(),bases.data(),bases.size());auto H=parameters(1).hiding;workers=std::min<std::size_t>(workers,p.rows);
  std::atomic<std::size_t>next{0};std::atomic<bool>stop{false};std::exception_ptr failure;std::mutex failure_mutex;std::vector<std::uint64_t>calls(workers,0),terms(workers,0);
- auto work=[&](unsigned worker){try{std::vector<Fr>row;std::vector<G1>scratch(std::min<std::size_t>(1024,p.columns));for(;;){auto i=next.fetch_add(1);if(i>=p.rows || stop.load())break;G1 value;value.clear();if(readRow(s,i,row))for(std::size_t j=0;j<p.columns;j+=1024){auto n=std::min<std::size_t>(1024,p.columns-j);std::copy_n(bases.begin()+j,n,scratch.begin());G1 part;G1::mulVec(part,scratch.data(),row.data()+j,n);value+=part;++calls[worker];terms[worker]+=n;}s.pc.rows_[i]=value+H*s.blinds[i];}}
+ auto work=[&](unsigned worker){try{std::vector<Fr>row;for(;;){auto i=next.fetch_add(1);if(i>=p.rows || stop.load())break;G1 value;value.clear();readRow(s,i,row);G1::mulVec(value,bases.data(),row.data(),p.columns);++calls[worker];terms[worker]+=p.columns;s.pc.rows_[i]=value+H*s.blinds[i];}}
  catch(...){stop.store(true);std::lock_guard<std::mutex>lock(failure_mutex);if(!failure)failure=std::current_exception();}};
  std::vector<std::thread>pool;try{for(unsigned j=1;j<workers;++j)pool.emplace_back(work,j);work(0);}catch(...){stop.store(true);for(auto&t:pool)t.join();throw;}for(auto&t:pool)t.join();if(failure)std::rethrow_exception(failure);
- auto&m=metrics();for(unsigned j=0;j<workers;++j){m.msm_calls+=calls[j];m.msm_terms+=terms[j];}m.max_msm=std::max<std::uint64_t>(m.max_msm,std::min<std::size_t>(1024,p.columns));
+ auto&m=metrics();for(unsigned j=0;j<workers;++j){m.msm_calls+=calls[j];m.msm_terms+=terms[j];}if(std::any_of(calls.begin(),calls.end(),[](auto n){return n!=0;}))m.max_msm=std::max<std::uint64_t>(m.max_msm,p.columns);
  std::cerr<<"SINGLE_HYRAX_COMMIT {\"logical_roots\":1,\"rows\":"<<p.rows<<",\"columns\":"<<p.columns<<",\"domain\":"<<p.domain<<",\"physical_domain\":"<<p.physical_domain<<",\"physical_values\":"<<p.physical_values<<",\"logical_values\":"<<p.logical_values<<",\"logical_gap\":"<<p.domain-p.logical_values<<",\"physical_padding\":"<<p.physical_domain-p.physical_values<<",\"workers\":"<<workers<<",\"row_scalar_scratch_bound_bytes\":"<<workers*p.columns*sizeof(Fr)<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<"}\n";return s;
 }
 Bytes encode(const Public&p){need(p.rows().size()==p.plan().rows,"single row commitment count");Writer w;auto header=descriptor(p.plan());w.number(header.size());w.raw(header);auto out=std::move(w.b);out.reserve(out.size()+32*p.rows().size());for(std::size_t i=0;i<p.rows().size();i+=rowChunk){auto chunk=rowBytes(p,i,std::min(rowChunk,p.rows().size()-i));out.insert(out.end(),chunk.begin()+4,chunk.end());}return out;}
