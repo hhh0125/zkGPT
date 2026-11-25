@@ -1,6 +1,7 @@
 #include "paper_r7_single_hyrax.hpp"
 #include "paper_r7_streaming_master.hpp"
 #include "paper_r7_stage2_opening.hpp"
+#include "paper_r7_unified_workers.hpp"
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -47,23 +48,155 @@ void validatePlan(const Plan&p){
  unified::validate(p.domain,intervals);
 }
 Bytes rowBytes(const Public&p,std::size_t start,std::size_t count){Writer w;w.number(count);for(std::size_t j=0;j<count;++j)w.point(p.rows().at(start+j));return w.b;}
-// Source runs retain their original logical addresses. Category padding and
-// global tails are generated as zeros in this columns-sized row buffer.
-bool readRow(const Secret&s,std::size_t row,std::vector<Fr>&out){
- const auto&p=s.pc.plan();out.assign(p.columns,Fr(0));auto begin=row*p.columns,end=begin+p.columns;bool touched=false;
- for(const auto&run:p.runs){auto lo=std::max(begin,run.physical_offset),hi=std::min(end,run.physical_offset+run.count);if(lo>=hi)continue;touched=true;
-  for(auto j=lo;j<hi;++j){out[j-begin]=s.sources[run.source](run.source_offset+j-run.physical_offset);}}
- return touched;
+using Clock=std::chrono::steady_clock;
+double seconds(Clock::time_point start){return std::chrono::duration<double>(Clock::now()-start).count();}
+using Runs=std::vector<PhysicalRun>;
+Runs sortedRuns(const Plan&p){
+ auto runs=p.runs;
+ std::sort(runs.begin(),runs.end(),[](const auto&a,const auto&b){return a.physical_offset<b.physical_offset;});
+ return runs;
+}
+// Read only occupied coordinates, preserving their original column indices.
+// A null window points to a source that still needs its scalar accessor.
+template<class F>void visitRow(const Secret&s,const Runs&runs,std::size_t row,F&&consume){
+ const auto columns=s.pc.plan().columns;
+ const auto begin=row*columns,end=begin+columns;
+ auto it=std::lower_bound(runs.begin(),runs.end(),begin,[](const auto&run,std::size_t at){return run.physical_offset+run.count<=at;});
+ for(;it!=runs.end() && it->physical_offset<end;++it){
+  auto at=std::max(begin,it->physical_offset);
+  const auto last=std::min(end,it->physical_offset+it->count);
+  auto source=it->source_offset+at-it->physical_offset;
+  const auto&window=s.windows[it->source];
+  while(at<last){
+   auto part=window?window(source,last-at):unified::InputWindow{nullptr,last-at};
+   need(part.count && part.count<=last-at,"single sealed window bound");
+   consume(at-begin,source,part,s.sources[it->source]);
+   at+=part.count;
+   source+=part.count;
+  }
+ }
+}
+struct alignas(64) RowStats {
+ std::uint64_t calls=0,terms=0,max_terms=0,empty=0,full=0,direct=0,copied=0,callbacks=0,compacted=0,base_copies=0;
+ double msm_seconds=0;
+};
+G1 commitRow(const Secret&s,const Runs&runs,std::size_t row,const G1*bases,std::vector<Fr>&scratch,std::vector<G1>&compact,RowStats&stats){
+ std::size_t first=0,count=0,last=0;
+ const Fr*direct=nullptr;
+ compact.clear();
+ visitRow(s,runs,row,[&](std::size_t column,std::size_t source,unified::InputWindow part,const Value&read){
+  if(!count){
+   first=column;
+   if(part.data){
+    direct=part.data;
+    count=part.count;
+    last=column+part.count;
+    stats.direct+=part.count;
+    return;
+   }
+  }else if(column!=last && compact.empty()){
+   // Disjoint public extents use a single MSM over the matching bases.
+   // A full row never copies its bases, including rows crossing windows.
+   compact.reserve(s.pc.plan().columns);
+   compact.insert(compact.end(),bases+first,bases+last);
+  }
+  if(!compact.empty())compact.insert(compact.end(),bases+column,bases+column+part.count);
+  if(scratch.empty())scratch.resize(s.pc.plan().columns);
+  if(direct){
+   std::copy_n(direct,count,scratch.data());
+   stats.copied+=count;
+   direct=nullptr;
+  }
+  if(part.data){
+   std::copy_n(part.data,part.count,scratch.data()+count);
+   stats.direct+=part.count;
+   stats.copied+=part.count;
+  }else{
+   for(std::size_t j=0;j<part.count;++j)scratch[count+j]=read(source+j);
+   stats.callbacks+=part.count;
+  }
+  count+=part.count;
+  last=column+part.count;
+ });
+ G1 result;
+ if(!count){++stats.empty;result.clear();return result;}
+ if(!compact.empty()){
+  ++stats.compacted;
+  stats.base_copies+=compact.size();
+ }
+ const auto start=Clock::now();
+ // The bundled MCL mulVec's GLV and fallback routines borrow these inputs.
+ // GLV normalizes private tables and the scalar input is const.
+ G1::mulVec(result,compact.empty()?const_cast<G1*>(bases+first):compact.data(),direct?direct:scratch.data(),count);
+ stats.msm_seconds+=seconds(start);
+ if(count==s.pc.plan().columns)++stats.full;
+ ++stats.calls;stats.terms+=count;stats.max_terms=std::max<std::uint64_t>(stats.max_terms,count);
+ return result;
 }
 G1 rowCombination(const Public&p,const QueryTerm&t){
  need(!t.left.empty() && t.first_row<=p.rows().size() && t.left.size()<=p.rows().size()-t.first_row,"single folded row dimensions");G1 out;out.clear();
  for(std::size_t at=0;at<t.left.size();at+=16384){auto n=std::min<std::size_t>(16384,t.left.size()-at);out+=master3::masterMSM(p.rows().data()+t.first_row+at,t.left.data()+at,n);}return out;
 }
+struct alignas(64) FoldPart {
+ hyrax_a3::DotWitness witness;
+ std::uint64_t direct=0,callbacks=0;
+};
+hyrax_a3::DotWitness foldRows(const Secret&s,const QueryTerm&t,unsigned requested,std::ostream*log){
+ const auto&plan=s.pc.plan();
+ need(t.first_row<=plan.rows && !t.left.empty() && t.left.size()<=plan.rows-t.first_row && s.blinds.size()==plan.rows,"single witness fold shape");
+ const auto started=Clock::now();
+ const auto runs=sortedRuns(plan);
+ const auto workers=t.left.size()*plan.columns>=65536?std::min<std::size_t>({16,requested,t.left.size()}):1;
+ std::vector<FoldPart>partials(workers);
+ auto job=[&](std::size_t worker){
+  auto&part=partials[worker];
+  auto&out=part.witness;
+  out.values.assign(plan.columns,Fr(0));
+  for(auto i=t.left.size()*worker/workers;i<t.left.size()*(worker+1)/workers;++i){
+   const auto index=t.first_row+i;
+   const auto&weight=t.left[i];
+   out.blind+=weight*s.blinds[index];
+   if(weight.isZero())continue;
+   visitRow(s,runs,index,[&](std::size_t column,std::size_t source,unified::InputWindow input,const Value&read){
+    auto*dest=out.values.data()+column;
+    if(input.data){
+     for(std::size_t j=0;j<input.count;++j)dest[j]+=weight*input.data[j];
+     part.direct+=input.count;
+    }else{
+     for(std::size_t j=0;j<input.count;++j)dest[j]+=weight*read(source+j);
+     part.callbacks+=input.count;
+    }
+   });
+  }
+ };
+ {
+  unified::detail::Workers pool(workers);
+  pool.run(workers,job,workers>1);
+ }
+ const auto reduction=Clock::now();
+ auto result=std::move(partials[0].witness);
+ std::uint64_t direct=partials[0].direct,callbacks=partials[0].callbacks;
+ for(std::size_t w=1;w<workers;++w){
+  const auto&part=partials[w];
+  result.blind+=part.witness.blind;
+  for(std::size_t j=0;j<plan.columns;++j)result.values[j]+=part.witness.values[j];
+  direct+=part.direct;
+  callbacks+=part.callbacks;
+ }
+ const auto reduction_seconds=seconds(reduction);
+ if(log)*log<<"SINGLE_HYRAX_FOLD {\"workers\":"<<workers<<",\"rows\":"<<t.left.size()<<",\"columns\":"<<plan.columns
+            <<",\"direct_scalars\":"<<direct<<",\"callback_scalars\":"<<callbacks
+            <<",\"local_vector_bytes\":"<<workers*plan.columns*sizeof(Fr)<<",\"reduction_seconds\":"<<reduction_seconds
+            <<",\"seconds\":"<<seconds(started)<<"}\n";
+ return result;
+}
 struct Fold {hyrax_a3::DotWitness witness;G1 commitment;};
 Fold fold(const Public&p,const QueryTerm&t,const Secret*s){
- Fold out;out.commitment=rowCombination(p,t);
- if(s){out.witness.values.assign(p.plan().columns,Fr(0));std::vector<Fr>row;
-  for(std::size_t i=0;i<t.left.size();++i){auto index=t.first_row+i;out.witness.blind+=t.left[i]*s->blinds[index];if(t.left[i].isZero() || !readRow(*s,index,row))continue;for(std::size_t j=0;j<row.size();++j)out.witness.values[j]+=t.left[i]*row[j];}}
+ Fold out;
+ const auto start=Clock::now();
+ out.commitment=rowCombination(p,t);
+ std::cerr<<"SINGLE_HYRAX_ROW_COMBINATION {\"rows\":"<<t.left.size()<<",\"seconds\":"<<seconds(start)<<"}\n";
+ if(s)out.witness=foldRows(*s,t,s->workers,&std::cerr);
  return out;
 }
 struct Basis {
@@ -102,19 +235,59 @@ Fr publicContribution(const Plan&p,const std::vector<Fr>&q,const std::vector<Fr>
  if(p.category_mode)return Fr(0);
  need(x.size()==p.segments[0].actual,"single verifier public X shape");Basis basis(p,q);Fr value=0;for(std::size_t j=0;j<x.size();++j)value+=basis.at(j)*x[j];for(const auto&c:p.public_cells)value+=basis.at(p.segments[c.source].offset+c.index)*x[c.x_index];return value;
 }
-Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers){
+hyrax_a3::DotWitness foldWitness(const Secret&s,const QueryTerm&t,unsigned workers){
+ need(workers>0 && workers<=32,"single witness fold worker bound");
+ return foldRows(s,t,workers,nullptr);
+}
+Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers){return commit(p,std::move(sources),rng,workers,{});}
+Secret commit(const Plan&p,std::vector<Value>sources,Random&rng,unsigned workers,std::vector<SourceWindow>windows){
+ validatePlan(p);
  need(sources.size()==p.segments.size() && workers>0 && workers<=32,"single source/worker bound");for(auto&v:sources)need(bool(v),"single missing sealed source");
- const auto started=std::chrono::steady_clock::now();Secret s;s.pc.plan_=p;s.sources=std::move(sources);s.pc.rows_.resize(p.rows);s.blinds.reserve(p.rows);for(std::size_t i=0;i<p.rows;++i)s.blinds.push_back(rng.scalar());
- auto bases=hyrax_a3::generators(p.columns);
- // mulVec's fallback normalizes in place. Pre-normalized points are read-only
- // even on that path, so all row workers can safely share this single array.
- G1::normalizeVec(bases.data(),bases.data(),bases.size());auto H=parameters(1).hiding;workers=std::min<std::size_t>(workers,p.rows);
- std::atomic<std::size_t>next{0};std::atomic<bool>stop{false};std::exception_ptr failure;std::mutex failure_mutex;std::vector<std::uint64_t>calls(workers,0),terms(workers,0);
- auto work=[&](unsigned worker){try{std::vector<Fr>row;for(;;){auto i=next.fetch_add(1);if(i>=p.rows || stop.load())break;G1 value;value.clear();readRow(s,i,row);G1::mulVec(value,bases.data(),row.data(),p.columns);++calls[worker];terms[worker]+=p.columns;s.pc.rows_[i]=value+H*s.blinds[i];}}
- catch(...){stop.store(true);std::lock_guard<std::mutex>lock(failure_mutex);if(!failure)failure=std::current_exception();}};
+ const auto started=Clock::now();
+ const auto runs=sortedRuns(p);
+ if(windows.empty())windows.resize(sources.size());
+ need(windows.size()==sources.size(),"single source window count");
+ Secret s;s.pc.plan_=p;s.sources=std::move(sources);s.windows=std::move(windows);s.pc.rows_.resize(p.rows);
+ s.workers=workers;
+ const auto blind_start=Clock::now();
+ s.blinds.reserve(p.rows);for(std::size_t i=0;i<p.rows;++i)s.blinds.push_back(rng.scalar());
+ const auto blind_seconds=seconds(blind_start);
+ const auto base_start=Clock::now();
+ const auto bases=hyrax_a3::generatorView(p.columns);
+ const auto H=parameters(1).hiding;
+ const auto base_seconds=seconds(base_start);
+ workers=std::min<std::size_t>(workers,p.rows);
+ std::atomic<std::size_t>next{0};std::atomic<bool>stop{false};std::exception_ptr failure;std::mutex failure_mutex;std::vector<RowStats>stats(workers);
+ const auto worker_start=Clock::now();
+ auto work=[&](unsigned worker){try{
+  std::vector<Fr>scratch;std::vector<G1>compact;
+  for(;;){
+   auto i=next.fetch_add(1);
+   if(i>=p.rows || stop.load())break;
+   auto value=commitRow(s,runs,i,bases.data(),scratch,compact,stats[worker]);
+   s.pc.rows_[i]=value+H*s.blinds[i];
+  }
+ }catch(...){stop.store(true);std::lock_guard<std::mutex>lock(failure_mutex);if(!failure)failure=std::current_exception();}};
  std::vector<std::thread>pool;try{for(unsigned j=1;j<workers;++j)pool.emplace_back(work,j);work(0);}catch(...){stop.store(true);for(auto&t:pool)t.join();throw;}for(auto&t:pool)t.join();if(failure)std::rethrow_exception(failure);
- auto&m=metrics();for(unsigned j=0;j<workers;++j){m.msm_calls+=calls[j];m.msm_terms+=terms[j];}if(std::any_of(calls.begin(),calls.end(),[](auto n){return n!=0;}))m.max_msm=std::max<std::uint64_t>(m.max_msm,p.columns);
- std::cerr<<"SINGLE_HYRAX_COMMIT {\"logical_roots\":1,\"rows\":"<<p.rows<<",\"columns\":"<<p.columns<<",\"domain\":"<<p.domain<<",\"physical_domain\":"<<p.physical_domain<<",\"physical_values\":"<<p.physical_values<<",\"logical_values\":"<<p.logical_values<<",\"logical_gap\":"<<p.domain-p.logical_values<<",\"physical_padding\":"<<p.physical_domain-p.physical_values<<",\"workers\":"<<workers<<",\"row_scalar_scratch_bound_bytes\":"<<workers*p.columns*sizeof(Fr)<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<"}\n";return s;
+ const auto worker_seconds=seconds(worker_start);
+ RowStats total;
+ for(const auto&stat:stats){
+  total.calls+=stat.calls;total.terms+=stat.terms;total.max_terms=std::max(total.max_terms,stat.max_terms);
+  total.empty+=stat.empty;total.full+=stat.full;total.direct+=stat.direct;total.copied+=stat.copied;total.callbacks+=stat.callbacks;total.msm_seconds+=stat.msm_seconds;
+  total.compacted+=stat.compacted;total.base_copies+=stat.base_copies;
+ }
+ auto&m=metrics();m.msm_calls+=total.calls;m.msm_terms+=total.terms;m.max_msm=std::max(m.max_msm,total.max_terms);
+ std::cerr<<"SINGLE_HYRAX_COMMIT {\"logical_roots\":1,\"rows\":"<<p.rows<<",\"columns\":"<<p.columns<<",\"domain\":"<<p.domain
+  <<",\"physical_domain\":"<<p.physical_domain<<",\"physical_values\":"<<p.physical_values<<",\"logical_values\":"<<p.logical_values
+  <<",\"logical_gap\":"<<p.domain-p.logical_values<<",\"physical_padding\":"<<p.physical_domain-p.physical_values<<",\"workers\":"<<workers
+  <<",\"msm_calls\":"<<total.calls<<",\"msm_terms\":"<<total.terms<<",\"empty_rows\":"<<total.empty<<",\"full_rows\":"<<total.full<<",\"partial_rows\":"<<total.calls-total.full
+  <<",\"public_padding_skipped\":"<<p.physical_domain-total.terms<<",\"callback_scalars\":"<<total.callbacks
+  <<",\"direct_scalars\":"<<total.direct<<",\"copied_scalar_bytes\":"<<total.copied*sizeof(Fr)
+  <<",\"compacted_rows\":"<<total.compacted<<",\"copied_generator_bytes\":"<<total.base_copies*sizeof(G1)
+  <<",\"row_scalar_scratch_bound_bytes\":"<<workers*p.columns*sizeof(Fr)
+  <<",\"worker_wall_seconds\":"<<worker_seconds<<",\"msm_worker_seconds\":"<<total.msm_seconds
+  <<",\"blind_rng_seconds\":"<<blind_seconds<<",\"generator_seconds\":"<<base_seconds<<",\"seconds\":"<<seconds(started)<<"}\n";
+ return s;
 }
 Bytes encode(const Public&p){need(p.rows().size()==p.plan().rows,"single row commitment count");Writer w;auto header=descriptor(p.plan());w.number(header.size());w.raw(header);auto out=std::move(w.b);out.reserve(out.size()+32*p.rows().size());for(std::size_t i=0;i<p.rows().size();i+=rowChunk){auto chunk=rowBytes(p,i,std::min(rowChunk,p.rows().size()-i));out.insert(out.end(),chunk.begin()+4,chunk.end());}return out;}
 Public decode(const Bytes&b,const Plan&expected){validatePlan(expected);auto header=descriptor(expected);Reader r{b};need(r.number()==header.size() && r.raw(header.size())==header,"single untrusted suite/layout/shape");need(b.size()-r.at==expected.rows*32,"single encoded row bytes/EOF");std::vector<G1>rows;rows.reserve(expected.rows);for(std::size_t i=0;i<expected.rows;++i)rows.push_back(r.point());r.end();return Public(expected,std::move(rows));}

@@ -5,6 +5,7 @@
 #include <prover.hpp>
 #include "paper_r1_wire.hpp"
 #include "paper_r7_native_masked.hpp"
+#include "paper_r7_matrix_arithmetic.hpp"
 #include "paper_r7_hyrax_a3.hpp"
 #include "paper_r7_stage2_opening.hpp"
 #include <chrono>
@@ -36,7 +37,78 @@ struct Observe:IO{
   return mutate?b:out;
  }
 };
+// A deterministic stream is limited to this fixed fixture. Production uses OS entropy.
+class MatrixFixtureRandom final:public Random {
+ std::uint64_t state_=0xbeaed02fc309baed;
+ public:void fill(std::uint8_t*data,std::size_t length)override{
+  for(std::size_t i=0;i<length;++i){state_^=state_<<13;state_^=state_>>7;state_^=state_<<17;data[i]=std::uint8_t(state_);}
+ }
+};
+struct MatrixTraceIO final:IO {
+ std::vector<std::pair<std::string,Bytes>>messages;
+ bool prover()const override{return true;}
+ std::string session()const override{return std::string(64,'a');}
+ Digest prefix()const override{return {};}
+ Bytes message(const std::string&role,const Bytes&content={})override{messages.emplace_back(role,content);return content;}
+ Fr coin(const std::string&role)override{messages.emplace_back(role,Bytes{});return Fr(3);}
+};
+void matrixProtocolDifferential(){
+ constexpr std::size_t n=16;
+ for(bool masked:{false,true}){
+  const Value left=[](std::size_t j){return Fr(j+1);},right=[](std::size_t j){return Fr(j*j+2);};
+  MatrixTraceIO before,after;
+  MatrixFixtureRandom first,second;
+  detail::MatrixArithmetic candidate;
+  Fr sum=0;
+  for(std::size_t j=0;j<n;++j){
+   sum+=left(j)*right(j);candidate.values[0].push_back(left(j));candidate.values[1].push_back(right(j));
+  }
+  auto lhs=exchangeHidden(before,"fixture/initial",sum,&first),rhs=exchangeHidden(after,"fixture/initial",sum,&second);
+  const auto a=masked?native_masked::matrix(before,n,lhs,{left,right},&first,"fixture/matrix"):expressionSumcheck(before,n,lhs,{left,right},Expression{2,{{Fr(1),{0,1}}}},&first,"fixture/matrix");
+  const auto b=masked?native_masked::matrix(after,n,rhs,{},&second,"fixture/matrix",&candidate):detail::matrixExpressionSumcheck(after,n,rhs,&candidate,&second,"fixture/matrix");
+  need(a.point==b.point && a.endpoints[0].value==b.endpoints[0].value && a.endpoints[1].value==b.endpoints[1].value && before.messages==after.messages,"fixed-random matrix transcript and endpoints differ");
+ }
+}
+void matrixArithmeticTest(bool bench){
+ constexpr std::size_t n=1u<<14;
+ const std::size_t rows=bench?192:7;
+ std::vector<Fr>source(n*rows),weights(rows);
+ std::vector<std::uint32_t>indices(n*rows);
+ for(std::size_t j=0;j<source.size();++j){
+  source[j]=Fr(int(j%257)-128);
+  const auto s=j%n;
+  indices[j]=std::uint32_t(j-s+((j/n)%2?(s*17)%n:s));
+ }
+ for(std::size_t j=0;j<rows;++j)weights[j]=Fr(j+1);
+ std::vector<Fr>expected(n,Fr(0));
+ const auto started=std::chrono::steady_clock::now();
+ for(std::size_t s=0;s<n;++s)for(std::size_t j=0;j<rows;++j)expected[s]+=weights[j]*source.at(indices[j*n+s]);
+ const double reference=std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();
+ detail::MatrixArithmetic matrix;
+ const auto candidateStart=std::chrono::steady_clock::now();
+ matrix.materialize(n,source,indices,weights,indices,weights);
+ const double candidate=std::chrono::duration<double>(std::chrono::steady_clock::now()-candidateStart).count();
+ need(matrix.values[0]==expected && matrix.values[1]==expected,"matrix gather/tile factor differential");
+ auto other=expected;
+ for(std::size_t j=0;j<n;++j)other[j]+=Fr(j%13);
+ matrix.values[1]=other;
+ for(std::size_t size=n,round=0;size>1;size/=2,++round){
+  std::array<Fr,3>coeff{Fr(0),Fr(0),Fr(0)};
+  for(std::size_t j=0;j<size/2;++j){
+   const auto a=expected[2*j],b=other[2*j];
+   const auto da=expected[2*j+1]-a,db=other[2*j+1]-b;
+   coeff[0]+=a*b;coeff[1]+=a*db+da*b;coeff[2]+=da*db;
+  }
+  need(matrix.polynomial()==coeff,"matrix coefficients differ");
+  const Fr challenge(round%3==2?1234567:round%3);
+  auto fold=[&](std::vector<Fr>&v){for(std::size_t j=0;j<size/2;++j)v[j]=v[2*j]+challenge*(v[2*j+1]-v[2*j]);v.resize(size/2);};
+  fold(expected);fold(other);matrix.fold(challenge);
+  need(matrix.values[0]==expected && matrix.values[1]==other,"matrix fold/endpoint differential");
+ }
+ std::cout<<"MATRIX_ARITHMETIC PASS "<<rows<<' '<<n<<' '<<reference<<' '<<candidate<<'\n';
+}
 int main(int argc,char**argv){try{
+ if(argc==2){r1::init();const bool bench=std::string(argv[1])=="microbench";matrixArithmeticTest(bench);if(!bench)matrixProtocolDifferential();return 0;}
  need(argc==7 || argc==8,"prove|verify matrix|native sigma|masked n proof fault [attack]");
  r1::init();std::string action=argv[1],kind=argv[2],mode=argv[3],path=argv[5],fault=argv[6];auto n=std::stoull(argv[4]);
  need(n && !(n&(n-1)) && n<=(1u<<20),"test domain");need(mode=="masked" || mode=="sigma","mode");

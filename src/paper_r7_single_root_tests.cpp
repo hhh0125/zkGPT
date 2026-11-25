@@ -1,7 +1,11 @@
 #include "paper_r7_classified_commitments.hpp"
 #include "paper_r7_category_tiles.hpp"
 #include "paper_r7_fs_io.hpp"
+#include "paper_r7_unified_workers.hpp"
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <limits>
 #include <type_traits>
@@ -103,6 +107,170 @@ void benchmark(unsigned workers){
  auto after=metrics();Writer w;for(auto&point:s.pc.rows())w.point(point);
  std::cout<<"BENCH rows="<<p.rows<<" columns="<<p.columns<<" msm_calls="<<after.msm_calls-before.msm_calls<<" msm_terms="<<after.msm_terms-before.msm_terms<<" max_msm="<<after.max_msm<<" rows_sha256="<<hex(r1::hash(w.b))<<'\n';
 }
+void benchmarkWide(unsigned workers,const std::string&mode){
+ constexpr std::size_t columns=32768,rows=256;
+ using Clock=std::chrono::steady_clock;
+ auto elapsed=[](auto start){return std::chrono::duration<double>(Clock::now()-start).count();};
+ if(mode=="bench-a3"){
+  for(unsigned bits:{5u,15u}){
+   std::vector<Fr>challenges,inverses;
+   for(unsigned j=0;j<bits;++j){challenges.emplace_back(j+2);Fr i;Fr::inv(i,challenges.back());inverses.push_back(i);}
+   const auto n=std::size_t(1)<<bits;
+   const auto iterations=n>1000?64:8192;
+   auto reference=[&]{
+    std::vector<Fr>weights(n,Fr(1));
+    for(std::size_t k=0;k<challenges.size();++k){Fr inv;Fr::inv(inv,challenges[k]);const auto bit=challenges.size()-1-k;
+     for(std::size_t i=0;i<n;++i)weights[i]*=((i>>bit)&1)?challenges[k]:inv;
+    }
+    return weights;
+   };
+   Fr check=0;
+   const auto start=Clock::now();
+   for(int i=0;i<iterations;++i)check+=reference()[i%n];
+   const auto ref=elapsed(start);
+   const auto opt_start=Clock::now();
+   for(int i=0;i<iterations;++i)check-=hyrax_a3::verifierWeights(challenges,inverses)[i%n];
+   const auto opt=elapsed(opt_start);
+   need(check.isZero(),"A3 bench coefficient equality");
+   std::cout<<"HYRAX_BENCH A3,"<<n<<",1,"<<iterations<<','<<ref<<','<<opt<<'\n';
+  }
+  return;
+ }
+ std::vector<Fr>seeds(columns),input(columns*rows);
+ for(std::size_t col=0;col<columns;++col)seeds[col].setHashOf(&col,sizeof(col));
+ for(std::size_t row=0;row<rows;++row)std::copy_n(seeds.data(),columns,input.data()+row*columns);
+ if(mode=="bench-opening"){
+  auto p=sh::makeCategoryPlan({(1u<<28)+1,0,0,0,0},std::string(64,'a'));
+  need(p.columns==columns,"opening benchmark width");
+  sh::Secret secret;
+  secret.pc=sh::Public(p,{});
+  secret.blinds.assign(p.rows,Fr(7));
+  secret.sources.emplace_back([&](std::size_t i){return input.at(i);});
+  secret.windows.emplace_back([&](std::size_t i,std::size_t n){
+   need(i<=input.size() && n<=input.size()-i,"benchmark window extent");
+   return oneblock::unified::InputWindow{input.data()+i,n};
+  });
+  sh::QueryTerm t;t.left.resize(rows);
+  for(std::size_t i=0;i<rows;++i)t.left[i].setHashOf(&i,sizeof(i));
+  auto start=Clock::now();
+  auto fold=sh::foldWitness(secret,t,workers);
+  const auto row_seconds=elapsed(start);
+  start=Clock::now();
+  std::vector<Fr>striped(columns,Fr(0));
+  {
+   oneblock::unified::detail::Workers pool(workers);
+   pool.run(workers,[&](std::size_t w){
+    const auto begin=w*columns/workers,end=(w+1)*columns/workers;
+    for(std::size_t i=0;i<rows;++i)for(auto j=begin;j<end;++j)striped[j]+=t.left[i]*input[i*columns+j];
+   },workers>1);
+  }
+  const auto column_seconds=elapsed(start);
+  need(fold.values==striped,"opening benchmark column/row equality");
+  std::cout<<"HYRAX_BENCH OPENING,"<<columns<<','<<workers<<','<<rows<<','<<row_seconds<<','<<column_seconds<<'\n';
+  return;
+ }
+ auto bases=hyrax_a3::generatorView(columns);
+ auto msm=[&](const G1*g,const Fr*x,std::size_t n){G1 result;G1::mulVec(result,const_cast<G1*>(g),x,n);return result;};
+ if(mode=="bench-sparse"){
+  constexpr std::size_t a=10000,b=20000,active=a+columns-b;
+  auto zero=seeds;std::fill(zero.begin()+a,zero.begin()+b,Fr(0));
+  G1 split,compact,dense;
+  const auto begin=Clock::now();
+  for(unsigned i=0;i<32;++i)split=msm(bases.data(),seeds.data(),a)+msm(bases.data()+b,seeds.data()+b,columns-b);
+  const auto split_seconds=elapsed(begin);
+  const auto compact_start=Clock::now();
+  for(unsigned i=0;i<32;++i){
+   std::vector<G1>g(bases.data(),bases.data()+a);
+   std::vector<Fr>x(seeds.data(),seeds.data()+a);
+   g.insert(g.end(),bases.data()+b,bases.data()+columns);x.insert(x.end(),seeds.data()+b,seeds.data()+columns);
+   compact=msm(g.data(),x.data(),active);
+  }
+  const auto compact_seconds=elapsed(compact_start);
+  const auto dense_start=Clock::now();
+  for(unsigned i=0;i<32;++i)dense=msm(bases.data(),zero.data(),columns);
+  const auto dense_seconds=elapsed(dense_start);
+  need(split==compact && split==dense,"sparse benchmark MSM equality");
+  std::cout<<"HYRAX_BENCH SPARSE,"<<columns<<",1,32,"<<split_seconds<<','<<compact_seconds<<','<<dense_seconds<<'\n';
+  return;
+ }
+ std::vector<G1>decoded(rows);
+ std::vector<double>times(rows);
+ std::atomic<std::size_t>next{0};
+ std::vector<std::thread>pool;
+ const auto started=Clock::now();
+ auto worker=[&]{
+  for(auto row=next.fetch_add(1);row<rows;row=next.fetch_add(1)){
+   const auto start=Clock::now();
+   decoded[row]=msm(bases.data(),input.data()+row*columns,columns);
+   times[row]=elapsed(start);
+  }
+ };
+ for(unsigned i=1;i<workers;++i)pool.emplace_back(worker);
+ worker();
+ for(auto&t:pool)t.join();
+ const auto total=elapsed(started);
+ double average=0;
+ for(auto timing:times)average+=timing/rows;
+ need(decoded.front()==decoded.back(),"MSM identical representative rows");
+ std::cout<<"HYRAX_BENCH MSM,"<<columns<<','<<workers<<','<<rows<<','<<total<<','<<average<<','<<input.size()*sizeof(Fr)<<",0,"
+          <<2*columns*(sizeof(G1)+sizeof(Fr))<<','<<rows*columns<<",0\n";
+}
+
+void differential(){
+ auto p=sh::makeCategoryPlan({37,0,50001,0,0},std::string(64,'a'));
+ std::vector<std::vector<Fr>>data(2);
+ std::vector<oneblock::Value>sources;
+ std::vector<sh::SourceWindow>windows;
+ std::atomic<std::size_t>reads{0};
+ for(std::size_t k=0;k<data.size();++k){
+  for(std::size_t j=0;j<p.segments[k].actual;++j)data[k].emplace_back(Fr((k+1)*(j+1)));
+  sources.emplace_back([&,k](std::size_t j){++reads;return data[k].at(j);});
+  windows.emplace_back([&,k](std::size_t j,std::size_t n){
+   const auto count=std::min(n,std::size_t(103)-j%103);
+   return oneblock::unified::InputWindow{data[k].data()+j,count};
+  });
+ }
+ const auto original=data;
+ FixedRandom parallel_rng,serial_rng;
+ auto s=sh::commit(p,sources,parallel_rng,4,windows);
+ need(reads==0 && data==original,"bounded spans require no per-element callback or mutation");
+ auto serial=sh::commit(p,sources,serial_rng,1);
+ need(s.pc.rows()==serial.pc.rows() && s.blinds==serial.blinds,"segmented direct reads preserve row commitments");
+ for(const auto&point:std::vector<std::vector<Fr>>{std::vector<Fr>(sh::bits(p.domain),Fr(0)),std::vector<Fr>(sh::bits(p.domain),Fr(1)),std::vector<Fr>(sh::bits(p.domain),Fr(5))}){
+  sh::mappedQueryTerms(p,point,[&](const sh::QueryTerm&t){
+   auto old=sh::foldWitness(serial,t,1);
+   auto optimized=sh::foldWitness(s,t,4);
+   std::vector<Fr>reference(p.columns,Fr(0));Fr blind=0;
+   for(std::size_t i=0;i<t.left.size();++i)blind+=t.left[i]*s.blinds[t.first_row+i];
+   for(const auto&run:p.runs)for(std::size_t j=0;j<run.count;++j){
+    const auto coord=run.physical_offset+j;
+    reference[coord%p.columns]+=t.left[coord/p.columns]*data[run.source][run.source_offset+j];
+   }
+   need(optimized.blind==blind && optimized.values==reference && old.blind==blind && old.values==reference,"opening fold and blind differential");
+  });
+ }
+ need(data==original,"opening must preserve immutable witness");
+ const auto prefix=hyrax_a3::generatorView(8);
+ auto large=hyrax_a3::generatorView(4096);
+ auto smaller=hyrax_a3::generatorView(64);
+ need(large.data()==smaller.data() && smaller.size()==64,"A3 generator view reuses large immutable prefix");
+ for(std::size_t j=0;j<large.size();++j){
+  G1 old;mcl::bn::hashAndMapToG1(old,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(j));
+  need(large.data()[j]==old,"A3 generator derivation differential");
+  if(j<prefix.size())need(prefix.data()[j]==old,"extension preserves existing generator owners");
+ }
+ for(unsigned bits:{0u,1u,4u,15u}){
+  std::vector<Fr>c,inv;for(unsigned j=0;j<bits;++j){c.emplace_back(j+2);Fr i;Fr::inv(i,c.back());inv.push_back(i);}
+  const auto weights=hyrax_a3::verifierWeights(c,inv);
+  need(weights.size()==(std::size_t(1)<<bits),"A3 weight extent");
+  for(std::size_t i=0;i<weights.size();++i){Fr v=1;
+   for(unsigned j=0;j<bits;++j)v*=((i>>(bits-1-j))&1)?c[j]:inv[j];
+   need(weights[i]==v,"A3 high-bit verifier weight differential");
+  }
+ }
+ std::cout<<"PASS bounded span commitment, immutable Witness, parallel opening fold, exact A3 basis and weights\n";
+}
+
 void msm(){
  auto p=sh::makeCategoryPlan({3,0,(1u<<19)+1,0,0},std::string(64,'a'));need(p.columns==2048,"test crosses old 1024 MSM boundary");
  auto source=[](std::size_t j){if(j>=2048 && j<4096)return Fr(0);Fr v;v.setHashOf(&j,sizeof(j));return v;};
@@ -115,17 +283,17 @@ void msm(){
   G1 old;old.clear();if(active){++touched;for(std::size_t j=0;j<p.columns;j+=1024){auto n=std::min<std::size_t>(1024,p.columns-j);std::vector<G1>scratch(bases.begin()+j,bases.begin()+j+n);G1 part;G1::mulVec(part,scratch.data(),row.data()+j,n);old+=part;}}
   need(s.pc.rows()[i]==old+H*s.blinds[i],"full row equals previous chunked commitment");
  }
- need(after.msm_calls-before.msm_calls==p.rows && after.msm_terms-before.msm_terms==p.rows*p.columns && after.max_msm==p.columns,"actual full-row MSM metrics");
+ need(after.msm_calls-before.msm_calls==touched && after.msm_terms-before.msm_terms==p.physical_values && after.max_msm==p.columns,"actual full-row MSM metrics");
  FixedRandom rng2;auto serial=sh::commit(p,sources,rng2,1);need(serial.blinds==s.blinds && serial.pc.rows()==s.pc.rows(),"parallel/serial fixed blind commitment equality");
  need(bases==original,"reference bases unchanged");
  // A real all-zero source row still commits to its independent blind.
  auto zero=sh::makeCategoryPlan({8,0,0,0,0},std::string(64,'a'));FixedRandom zr;auto z=sh::commit(zero,{[](std::size_t){return Fr(0);}},zr,2);for(std::size_t i=0;i<zero.rows;++i)need(z.pc.rows()[i]==H*z.blinds[i],"all zero row Pedersen semantics");
  rejects([&]{sh::commit(zero,{[](std::size_t)->Fr{throw std::runtime_error("source failure");}},zr,2);},"source failure");
- std::cout<<"PASS full-row MSM columns="<<p.columns<<" calls="<<p.rows<<" terms="<<p.rows*p.columns<<" previous_calls="<<touched*2<<" fixed-blind reference, zero rows, parallelism, exceptions\n";
+ std::cout<<"PASS full-row MSM columns="<<p.columns<<" calls="<<touched<<" terms="<<p.physical_values<<" previous_calls="<<touched*2<<" fixed-blind reference, zero rows, parallelism, exceptions\n";
 }
 }
 int main(int argc,char**argv){try{r1::init();std::string mode=argc>1?argv[1]:"all";if(mode=="prove" || mode=="verify"){
  need(argc==3,"prove|verify PROOF");fs::Binding binding{"OneblockSingleHyrax","single-root-generated-layout",fs::generatorIdentity(),Bytes{1,2,3}};
  std::unique_ptr<fs::FsIO>io;if(mode=="prove")io=std::make_unique<fs::FsProverIO>(argv[2],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[2],binding);
  protocol(*io);io->finish();std::cout<<io->metadataJson()<<'\n';return 0;
- }if(mode=="bench"){benchmark(argc>2?unsigned(std::stoul(argv[2])):4);return 0;}if(mode=="all" || mode=="layout"){layout(8);layout(1u<<24);layout((1u<<24)+3);bounds();borrowed();}if(mode=="all" || mode=="msm")msm();return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+ }if(mode=="bench-wide" || mode=="bench-opening" || mode=="bench-a3" || mode=="bench-sparse"){benchmarkWide(argc>2?unsigned(std::stoul(argv[2])):4,mode);return 0;}if(mode=="bench"){benchmark(argc>2?unsigned(std::stoul(argv[2])):4);return 0;}if(mode=="all" || mode=="layout"){layout(8);layout(1u<<24);layout((1u<<24)+3);bounds();borrowed();}if(mode=="all" || mode=="msm"){msm();differential();}return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

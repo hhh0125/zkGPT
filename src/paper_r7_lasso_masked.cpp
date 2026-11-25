@@ -2,7 +2,7 @@
 #include "paper_r7_hyrax_a3.hpp"
 #include "paper_r7_stage2_opening.hpp"
 #include "paper_r7_perf5_profile.hpp"
-#include "paper_r7_product_polynomial.hpp"
+#include "paper_r7_product_kernels.hpp"
 #include <array>
 #include <chrono>
 #include <iomanip>
@@ -68,8 +68,10 @@ struct Mask {
 };
 }
 std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const std::array<ProductInputs,2>*inputs,const std::vector<Fr>*equality_point){
- need(n && n<=(1u<<24) && !(n&(n-1)),"masked Product01 domain");need(!io.prover() || (rng && factors.size()==5),"masked Product01 witness boundary");
- const auto options=perf6::options();perf6::ScopedMessages messages(options.b2);
+ need(n && n<=(1u<<24) && !(n&(n-1)),"masked Product01 domain");
+ if(equality_point)need(equality_point->size()==r1::log2exact(n),"masked equality metadata");
+ need(!io.prover() || (rng && factors.size()==5),"masked Product01 witness boundary");
+ perf6::ScopedMessages messages(perf6::enabled("ZKGPT_PERF6_B2"));
  Measure measurement{{},role,io.prover()};Writer statement;statement.text("R7-LASSO-MASKED-PRODUCT01-HIDDEN-A3-RESEARCH-v1");statement.number(n,8);statement.number(3);statement.text("a0,ai1,ai2,ai3;zero-query-padding");statement.text(hyrax_a3::suite);
  for(auto&h:initial){need(h.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(h.handle));}bindPublic(io,role+"/statement",statement.b);
  std::vector<Fr>alpha{io.coin(role+"/batch-alpha/0"),io.coin(role+"/batch-alpha/1")};
@@ -80,27 +82,13 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
   Timer timer(measurement.seconds[4]);std::vector<Fr>coeff(4,Fr(0));
   if(io.prover()){
    perf5::Scope polynomial_time(perf5::Polynomial);
-   auto load=[&](unsigned k,std::size_t j)->Fr{if(round)return folded[k][j];if(!inputs)return factors[k](j);if(!k)return (*inputs)[0].equality[j];return (*inputs)[(k-1)/2].children[2*j+(k-1)%2];};
-   const std::array<Fr,2>weights{alpha[0],alpha[1]};auto mode=polynomial::mode();
-   if(mode>=2){need(equality_point && equality_point->size()==r1::log2exact(n),"masked equality metadata");auto c=polynomial::equality<Fr>(current,load,weights,(*equality_point)[round],mode==3);std::copy(c.begin(),c.end(),coeff.begin());}
-   else if(mode==1){auto c=polynomial::bespoke<Fr>(current,load,weights);std::copy(c.begin(),c.end(),coeff.begin());}
-   else{
-    std::array<std::array<Fr,4>,2>partial{{{Fr(0),Fr(0),Fr(0),Fr(0)},{Fr(0),Fr(0),Fr(0),Fr(0)}}};
-    for(std::size_t j=0;j<current/2;++j){std::array<Fr,5>a,d;for(unsigned k=0;k<5;++k){a[k]=load(k,2*j);d[k]=load(k,2*j+1)-a[k];}
-     for(unsigned b=0;b<2;++b){auto l=1+2*b,r=l+1;auto x0=a[0]*a[l],x1=a[0]*d[l]+d[0]*a[l],x2=d[0]*d[l];auto&c=partial[b];
-      if(options.a2){c[0]+=x0*a[r];c[1]+=x0*d[r]+x1*a[r];c[2]+=x1*d[r]+x2*a[r];c[3]+=x2*d[r];}
-      else{Fr coefficient=1;c[0]+=coefficient*(x0*a[r]);c[1]+=coefficient*(x0*d[r]+x1*a[r]);c[2]+=coefficient*(x1*d[r]+x2*a[r]);c[3]+=coefficient*(x2*d[r]);}
-     }
-    }
-    {perf5::Scope aggregation_time(perf5::BatchAggregation);for(unsigned k=0;k<4;++k)coeff[k]=alpha[0]*partial[0][k]+alpha[1]*partial[1][k];}
-    if(auto*c=perf5::context){if(options.a2){c->a2_calls+=2;c->a2_pairs+=current;}else c->generic_product_calls+=2;}
-   }
+   perf5::Scope round_time(round?perf5::PolynomialLater:perf5::PolynomialFirst);
+   const auto values=detail::batchProductRound(current,round,factors,folded,inputs,{alpha[0],alpha[1]},
+                                              equality_point?&(*equality_point)[round]:nullptr);
+   std::copy(values.begin(),values.end(),coeff.begin());
   }
   auto challenge=mask.exchangeRound(io,coeff,round,point);
-  {perf5::Scope folding(perf5::Fold);if(io.prover())for(unsigned k=0;k<5;++k){
-   if(!round){folded[k].resize(current/2);auto load=[&](std::size_t j)->Fr{if(!inputs)return factors[k](j);return !k?(*inputs)[0].equality[j]:(*inputs)[(k-1)/2].children[2*j+(k-1)%2];};for(std::size_t j=0;j<current/2;++j){auto a=load(2*j);folded[k][j]=a+challenge*(load(2*j+1)-a);}}
-   else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}
-  }}
+  if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs);
   point.push_back(challenge);current/=2;++round;
  }
  auto previous=mask.endpoint(io,point,rng);
@@ -113,9 +101,9 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
  sigma(io,terminal,io.prover()?&w:nullptr,rng);
  return {Reduction{initial[0],{ends[0],ends[1],ends[2]},point},Reduction{initial[1],{ends[0],ends[3],ends[4]},point}};
 }
-Reduction single(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs,bool specialized){
+Reduction single(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,const ProductInputs*inputs,bool){
  need(n && n<=(1u<<24) && !(n&(n-1)),"masked Product2 domain");need(!io.prover() || (rng && factors.size()==3),"masked Product2 witness boundary");
- const auto options=perf6::options();perf6::ScopedMessages messages(options.b2);
+ perf6::ScopedMessages messages(perf6::enabled("ZKGPT_PERF6_B2"));
  Measure measurement{{},role,io.prover()};Writer statement;statement.text("R7-LASSO-MASKED-PRODUCT2-HIDDEN-A3-RESEARCH-v1");statement.number(n,8);statement.number(3);statement.text(hyrax_a3::suite);need(initial.handle.session==io.session(),"R7 HiddenScalar session/role identity mismatch");statement.raw(encode(initial.handle));bindPublic(io,role+"/statement",statement.b);
  Mask mask(io,r1::log2exact(n),initial,rng,role+"/masked",measurement);
  std::vector<std::vector<Fr>>folded(3);std::vector<Fr>point;std::size_t current=n;unsigned round=0;
@@ -123,21 +111,24 @@ Reduction single(IO&io,std::size_t n,const Hidden&initial,const std::vector<Valu
   Timer timer(measurement.seconds[4]);std::vector<Fr>coeff(4,Fr(0));
   if(io.prover()){
    perf5::Scope polynomial_time(perf5::Polynomial);
-   if(specialized)coeff=inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round);
-   else{
-    auto reads=factors;
-    if(inputs && !round)reads={[inputs](std::size_t i){return inputs->equality[i];},[inputs](std::size_t i){return inputs->children[2*i];},[inputs](std::size_t i){return inputs->children[2*i+1];}};
-    coeff=detail::expressionPolynomial(Expression{3,{{Fr(1),{0,1,2}}}},current,reads,folded,!round);
+   perf5::Scope round_time(round?perf5::PolynomialLater:perf5::PolynomialFirst);
+   coeff=inputs && !round?detail::productPolynomialContiguous(*inputs):detail::productPolynomial(current,factors,folded,!round);
+   if(auto*c=perf5::context){
+    ++c->a2_calls;c->a2_pairs+=current/2;
+    if(!round){if(inputs){++c->c2_polynomial_calls;c->c2_polynomial_pairs+=current/2;}else c->poly_callbacks+=3*current;}
    }
-   if(auto*c=perf5::context){if(specialized){++c->a2_calls;c->a2_pairs+=current/2;}else ++c->generic_product_calls;}
   }
   auto challenge=mask.exchangeRound(io,coeff,round,point);
-  {perf5::Scope folding(perf5::Fold);if(io.prover()){
-   if(inputs && !round)detail::foldProductInputs(*inputs,challenge,folded);
-   else for(unsigned k=0;k<3;++k){if(!round){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+challenge*(factors[k](2*j+1)-a);}}
-    else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+challenge*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}
+  if(io.prover()){
+   perf5::Scope folding(perf5::Fold);
+   perf5::Scope round_time(round?perf5::FoldLater:perf5::FoldFirst);
+   if(!round && perf5::context){
+    if(inputs){++perf5::context->c2_fold_calls;perf5::context->c2_fold_pairs+=current/2;}
+    else perf5::context->fold_callbacks+=3*current;
    }
-  }}
+   auto load=[&](unsigned k,std::size_t i){return inputs?detail::readProductInput(*inputs,k,i):factors[k](i);};
+   detail::foldNativeProduct(current,challenge,folded,!round,load,detail::nativeWorkers());
+  }
   point.push_back(challenge);current/=2;++round;
  }
  auto previous=mask.endpoint(io,point,rng);

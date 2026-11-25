@@ -82,7 +82,26 @@ class Tracked final:public IO,public EvidenceSink {
 Value masterValue(R7WitnessStore&w){return [&w](std::size_t i){return i<w.baseMaster().size()?w.baseMaster()[i]:Fr(0);};}
 Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){bool stream=true;if(const auto*p=std::getenv("ZKGPT_SOURCE_MLE_STREAM")){std::string text(p);need(text=="0" || text=="1","source MLE mode");stream=text=="1";}SourceMLEMetrics m;auto y=sourceMLE(v.padded,v.value,q,stream,&m);std::cerr<<"SOURCE_MLE {\"streamed\":"<<(stream?"true":"false")<<",\"padded\":"<<v.padded<<",\"weight_peak_bytes\":"<<m.weight_peak_bytes<<",\"values_read\":"<<m.values_read<<",\"Fr_multiplications\":"<<m.multiplications<<",\"Fr_additions\":"<<m.additions<<",\"weights_wall\":"<<m.weights_wall<<",\"dot_wall\":"<<m.dot_wall<<"}\n";return y;}
 }
-int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
+namespace {
+using PhaseClock = std::chrono::steady_clock;
+double phaseSeconds(PhaseClock::time_point started){
+ return std::chrono::duration<double>(PhaseClock::now()-started).count();
+}
+void phaseDetail(const char*phase,const char*detail,double seconds){
+ std::cerr<<"PHASE_DETAIL {\"phase\":\""<<phase<<"\",\"detail\":\""<<detail<<"\",\"seconds\":"<<seconds<<"}\n";
+}
+struct LifecycleTiming {
+ PhaseClock::time_point started=PhaseClock::now(), cleanup{};
+ ~LifecycleTiming(){
+  if(cleanup!=PhaseClock::time_point{}) {
+   phaseDetail("lifecycle","cleanup",phaseSeconds(cleanup));
+   phaseDetail("lifecycle","total",phaseSeconds(started));
+  }
+ }
+};
+}
+int main(int argc,char**argv){LifecycleTiming lifecycle;std::unique_ptr<Tracked>tracked;try{
+ auto startup=PhaseClock::now();
  need(prctl(PR_SET_DUMPABLE,0)==0,"Oneblock process isolation");
 #ifndef R7_FS_FULL12
  alarm(21600);
@@ -91,7 +110,9 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  masked::ScopedMode lasso_mode(masked::configuredMode());
  need(!masked::singleEnabled() || native_masked::enabled(),"combined masking requires Native masked mode");
  std::cerr<<"SUMCHECK_MODES {\"native_masked\":"<<(native_masked::enabled()?"true":"false")<<",\"lasso_masked\":"<<(masked::singleEnabled()?"true":"false")<<"}\n";
- r1::init();auto started=std::chrono::steady_clock::now();
+ r1::init();auto started=PhaseClock::now();
+ phaseDetail("startup","process-and-field-initialization",phaseSeconds(startup));
+ auto publicArtifactStart=PhaseClock::now();
  need(argc>=4 && argc<=5,"FS usage prove|verify PROOF_PATH CONTEXT [P_ATTACK]");
  #ifdef R7_FS_FULL12
  auto publicArtifacts=buildR6PublicArtifacts(12);
@@ -104,9 +125,15 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
 #else
  constexpr bool isP=true;
 #endif
+ phaseDetail("startup","public-artifacts",phaseSeconds(publicArtifactStart));
+ auto startupPhase=PhaseClock::now();
  auto plan=discover(*publicArtifacts,!isP);auto&ctx=plan.context;
+ phaseDetail("startup","public-plan-discovery",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  auto layout=classified::makeCategoryLayout(ctx,*publicArtifacts);
  auto layout_id=classified::identity(layout);
+ phaseDetail("startup","category-layout",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  plan.required.erase(std::remove_if(plan.required.begin(),plan.required.end(),[](auto&r){return r.family=="OBJECT_COMMITMENT" || r.family=="OBJECT_SOURCE" || r.family.rfind("MASTER_",0)==0;}),plan.required.end());
  for(auto&r:plan.required)if(r.family=="MODEL_MASTER_LINK")r.id="model/C_W_model-to-classified-input";
  // Remove external model authority only in this explicitly different statement
@@ -123,29 +150,41 @@ int main(int argc,char**argv){std::unique_ptr<Tracked>tracked;try{
  need(std::string(argv[1])==(isP?"prove":"verify"),"FS role/mode mismatch");
  std::string attack=isP && argc==5?argv[4]:"";
  [[maybe_unused]] const char*successStatus=isP?"FS_PROOF_CREATED_CANDIDATE":fs::verifiedStatus;
+ phaseDetail("startup","coverage-plan",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  auto statement_bytes=publicStatement(fd("R7_ONEBLOCK_STATEMENT_FD"));auto s=R7Wire::decodeStatement(statement_bytes);need(validateStatement(s,ctx).code==Code::Ok,"Oneblock invalid frozen public statement");
  // Each process independently owns the public statement. Test harness mutates
  // both public copies for wrong X/Y, rather than testing only byte mismatch.
  need(R7Wire::encodeStatement(s)==statement_bytes,"FS noncanonical external statement");
+ phaseDetail("startup","statement-read-validate",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  const auto coverage_id=identity(plan);
  Writer instance;instance.text(liveSuite);instance.text(coverage_id);instance.text(layout_id);
  instance.text(classified::unifiedInputIdentity(layout,s.x));
  instance.text(single::modelScope);instance.raw(single::descriptor(classified::singlePlan(layout,s.x)));
 instance.raw(statement_bytes);if(native_masked::enabled())instance.text(native_masked::suite);if(masked::singleEnabled())instance.text(masked::suite);
+ phaseDetail("startup","instance-and-layout-descriptor",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
+ auto generatorId=fs::generatorIdentity({},true);
+ phaseDetail("startup","generator-identity",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  fs::Binding fsBinding{
 #ifdef R7_FS_FULL12
  masked::singleEnabled()?"Full12AllMasked":native_masked::enabled()?"Full12NativeMasked":"Full12SingleHyrax",
 #else
  masked::singleEnabled()?"OneblockAllMasked":native_masked::enabled()?"OneblockNativeMasked":"OneblockSingleHyrax",
 #endif
- argv[3],fs::generatorIdentity({},true),instance.b};
+ argv[3],std::move(generatorId),instance.b};
 #ifdef R7_COMPLETE_VERIFIER
  fs::FsVerifierIO pipe(argv[2],fsBinding);
 #else
  fs::FsProverIO pipe(argv[2],fsBinding);
 #endif
+ phaseDetail("startup","proof-open-header-and-transcript-init",phaseSeconds(startupPhase));
+ startupPhase=PhaseClock::now();
  tracked=std::make_unique<Tracked>(pipe,plan,attack,[&pipe]{return pipe.frames();});auto&io=*tracked;struct EvidenceGuard{Tracked*t;~EvidenceGuard(){try{t->save(false);}catch(...){}}} guard{tracked.get()};SessionRandom random;Random*rng=isP?&random:nullptr;
  Writer binding;binding.text(liveSuite);binding.text(coverage_id);binding.raw(statement_bytes);bindPublic(io,"Oneblock/statement-native-plan",binding.b);
+ phaseDetail("startup","coverage-ledger-and-statement-binding",phaseSeconds(startupPhase));
  std::vector<stage2::Phase>phases;auto timed=[&](const std::string&id,const auto&fn){auto t=std::chrono::steady_clock::now();[[maybe_unused]] auto cpuStarted=processCPU();auto bytes=pipe.proofBytes(),calls=metrics().msm_calls;std::cerr<<"PHASE_BEGIN "<<id<<std::endl;fn();phases.push_back({id,std::chrono::duration<double>(std::chrono::steady_clock::now()-t).count(),pipe.proofBytes()-bytes,metrics().msm_calls-calls});struct rusage phaseUsage{};getrusage(RUSAGE_SELF,&phaseUsage);phases.back().peak_rss_kib=phaseUsage.ru_maxrss;std::ifstream statm("/proc/self/statm");std::uint64_t pages=0,resident=0;if(statm>>pages>>resident)phases.back().rss_kib=resident*std::uint64_t(sysconf(_SC_PAGESIZE))/1024;std::cerr<<"PHASE_COMPLETE "<<id<<'\n';
 #ifdef R7_FS_FULL12
  std::cerr<<"PHASE_CPU {\"name\":\""<<id<<"\",\"cpu_seconds\":"<<processCPU()-cpuStarted<<"}\n";

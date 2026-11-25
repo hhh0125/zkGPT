@@ -11,12 +11,16 @@ struct Reduction {Hidden initial;std::vector<Hidden>endpoints;std::vector<Fr>poi
 struct VectorOracle {
  std::size_t actual=0,padded=0;std::string id;Value value;
  std::function<void(IO&,const Query&,const Hidden*,Random*,std::string)>open;
+ // A full, immutable window is optional. Its owner lives through all queries.
+ const Fr* contiguous=nullptr;
 };
 using VectorFactory=std::function<VectorOracle(IO&,std::string,std::size_t,std::size_t,Value)>;
 struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelation(const std::string&)=0;};
 inline void checked(IO&io,std::string id){if(id.rfind("r7/",0)==0)id.erase(0,3);if(auto sink=dynamic_cast<EvidenceSink*>(&io))sink->checkedRelation(id);}
 struct ProductInputs {const std::vector<Fr>&equality;const std::vector<Fr>&children;};
 namespace detail {
+struct MatrixArithmetic;
+Reduction matrixExpressionSumcheck(IO&,std::size_t,const Hidden&,MatrixArithmetic*,Random*,const std::string&);
 void nativeMatrixTerminal(IO&,const Hidden&,const std::vector<Hidden>&,Random*,const std::string&);
 // Internal borrowed pair: shared equality, independent interleaved child arrays.
 std::array<Reduction,2> batchedProductSumcheckContiguous(IO&,std::size_t,const std::array<Hidden,2>&,const std::vector<Value>&,Random*,const std::string&,const std::array<ProductInputs,2>&,const std::vector<Fr>* equality_point=nullptr);

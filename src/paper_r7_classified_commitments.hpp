@@ -27,6 +27,9 @@ struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,k
  std::uint64_t endpoint_calls=0,endpoint_fast_coordinates=0,endpoint_fast_blocks=0,endpoint_dense_coordinates=0,endpoint_dense_bytes=0,endpoint_fold_coordinates=0;
  std::uint64_t endpoint_allocations=0,endpoint_allocated_bytes=0;
  double endpoint_seconds=0,endpoint_build_seconds=0,endpoint_fold_seconds=0;
+ struct MappingPhase {std::uint64_t claims=0,hits=0,scanned=0,avoided=0;double wall=0;};
+ std::array<MappingPhase,4>mapping_phases{};
+ std::uint64_t mapping_claims=0,template_hits=0,template_runs=0,template_cache_bytes=0,bias_descriptor_bytes=0;
  std::uint64_t frozen_ram_claims=0,frozen_file_claims=0,mapping_ram_peak=0,mapping_file_peak=0;
  double map_cpu=0,kernel_cpu=0,weights_cpu=0,partial_cpu=0,kernel_wall=0,partial_wall=0,map_wall=0;};
 std::string unifiedInputIdentity(const Layout&,const std::vector<Fr>&public_x);
@@ -57,19 +60,33 @@ class Commitments {
  class CategoryKernelPlan;
  struct Authentication {
  using Run=mapping::Run;
- struct Prepared:mapping::Plan {std::unique_ptr<Weights>weights;Fr bias=0;Digest digest{};bool ready=false;std::uint64_t callback_calls=0,full_scans=0;};
+ struct MappingTemplate:mapping::Plan {
+  struct BiasRun {std::size_t begin,count;Fr value;};
+  std::vector<BiasRun>bias_runs;
+  std::size_t padded=0;int only_root=-1;Digest digest{};
+ };
+ struct Prepared:mapping::Plan {
+  std::shared_ptr<const MappingTemplate>mapping;
+  std::unique_ptr<Weights>weights;
+  Fr bias=0;bool ready=false;std::uint64_t callback_calls=0,full_scans=0;
+  const mapping::Plan&plan()const{if(mapping)return *mapping;return *this;}
+ };
+ static constexpr std::size_t bias_budget=8u<<20;
  static constexpr std::size_t map_limit=16u<<20,weight_limit=32u<<20;
  const std::size_t map_budget,weight_budget;
- std::vector<Prepared>claims;std::size_t map_bytes=0,weight_bytes=0;
  mapping::Store store;
+ std::vector<Prepared>claims;
+ std::map<const void*,std::shared_ptr<const MappingTemplate>>templates;
+ std::size_t map_bytes=0,weight_bytes=0,bias_bytes=0;
  std::string session;std::weak_ptr<const void>transcript;
  explicit Authentication(std::size_t n,bool full12=false):Authentication(n,full12?256u<<20:map_limit,full12?256u<<20:weight_limit,4*(full12?256u<<20:map_limit)){}
- Authentication(std::size_t n,std::size_t maps,std::size_t weights,std::size_t files):map_budget(maps),weight_budget(weights),claims(n),store(files){}
+ Authentication(std::size_t n,std::size_t maps,std::size_t weights,std::size_t files):map_budget(maps),weight_budget(weights),store(files),claims(n){}
 };
  bool usesBaseCoordinates(const Claim&)const;
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
- void prepareCategoryClaim(Claim&,Authentication&,std::size_t)const;
- void deferTrusted(Claim);
+ void prepareCategoryClaim(Claim&,Authentication&,std::size_t,const void*descriptor)const;
+ void deferTrusted(Claim,const void*descriptor=nullptr);
+ void deferBaseMapped(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&,const void*descriptor);
  std::unique_ptr<Authentication>category_auth_;bool category_failed_=false;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
  std::optional<Fr>categoryKernelEndpoint(const std::vector<Fr>&,const std::vector<Fr>&,const Authentication&,bool require_profitable=true)const;
@@ -103,6 +120,9 @@ class Commitments {
  // index is a verifier-local authoritative rule, never a prover-supplied map.
  // Category freezes its consumed result immediately, then releases the callback.
  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);
+ // The caller borrows an index vector from the immutable verifier-local
+ // circuit for the entire authentication session.
+ void deferNativeTerminal(const std::string&,const std::vector<std::uint32_t>&,std::size_t padded,const Hidden&,const std::vector<Fr>&);
  // Protocol1(6),(7) candidate; real Oneblock replacement gate passed.
  void authenticateUnifiedInput(const std::vector<Fr>&public_x);
  bool authenticated()const{return authenticated_;}

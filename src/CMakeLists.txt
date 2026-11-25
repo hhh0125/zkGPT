@@ -200,6 +200,7 @@ if(ZKGPT_NATIVE_MASKED_TESTS)
  target_link_libraries(r7_native_masked_tests PRIVATE paper_r7)
  target_compile_options(r7_native_masked_tests PRIVATE -ffunction-sections -fdata-sections)
  target_link_options(r7_native_masked_tests PRIVATE -Wl,--gc-sections)
+ add_test(NAME r7_gkr_matrix_arithmetic COMMAND r7_native_masked_tests arithmetic)
  add_test(NAME r7_native_masked_full_proofs COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/r7_native_masked_smoke.py $<TARGET_FILE:r7_native_masked_tests>)
 endif()
 

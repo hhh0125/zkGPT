@@ -4,6 +4,7 @@
  const layeredCircuit*graph=&publicArtifacts->graph();
  classified::Prepared prepared;
  timed("frozen-witness-and-prechallenge-lookup",[&]{if(isP){
+  auto witnessStart=PhaseClock::now();
   {master3::QuietStdout quiet;
 #ifdef R7_FS_FULL12
  witness.generateR6(ctx,executionTarget(12).manifest_path);
@@ -11,9 +12,12 @@
  witness.generateR6(ctx,executionTarget(1).manifest_path);
 #endif
  }
+  phaseDetail("frozen-witness-and-prechallenge-lookup","generate-witness",phaseSeconds(witnessStart));
   graph=&witness.executionForR7().C;master=masterValue(witness);
   if(attack=="wrong-internal" || attack=="wrong-weight"){auto old=master3::trustedLayout(ctx,*publicArtifacts);auto it=std::find_if(old.regions.begin(),old.regions.end(),[&](auto&r){return attack=="wrong-internal"?r.id=="R6/witness/round_0_affine":r.kind=="W";});need(it!=old.regions.end(),"classified attack native region");witness.executionForR7().val[0].at(it->offset)+=Fr(1);}
+  auto lookupStart=PhaseClock::now();
   prepared=classified::prepareLookup(ctx,master);
+  phaseDetail("frozen-witness-and-prechallenge-lookup","prepare-lookup",phaseSeconds(lookupStart));
   {std::uint64_t helpers=0,helper_elements=0,layers=0;std::set<const void*>seen;
    for(const auto&entry:prepared)if(entry.second && seen.insert(entry.second.get()).second){helpers+=entry.second->capacity()*sizeof(Fr);helper_elements+=entry.second->size();}
    const auto&values=witness.executionForR7().val;for(std::size_t j=1;j<values.size();++j)layers+=values[j].capacity()*sizeof(Fr);
@@ -36,9 +40,11 @@
  }
  timed("classified-physical-zero-tails",[&]{pcs.constrainBaseTails();});
  checked(io,"single/direct-logical-domain");
- if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD")){std::ostringstream out;
- single::writeCategoryLayout(out,pcs.singlePublic());
- output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());}
+ if(!isP && std::getenv("R7_CLASSIFIED_LAYOUT_FD"))timed("serialize-category-layout",[&]{
+  std::ostringstream out;
+  single::writeCategoryLayout(out,pcs.singlePublic());
+  output(fd("R7_CLASSIFIED_LAYOUT_FD"),out.str());
+ });
  timed("classified-public-Y-constants-and-input-definition",[&]{
   auto all=std::make_shared<PublicEntries>(trustedPublicEntries(s,ctx));
   Writer binding;binding.text(liveSuite);binding.text(layout_id);binding.number(all->size());for(auto&e:*all){binding.number(e.first,8);binding.scalar(e.second);}bindPublic(io,"Classified/public-entries",binding.b);
@@ -49,6 +55,8 @@
  });
  for(auto id:{"public/Y","public/constants"})checked(io,id);
  std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;
+ std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
+ timed("release-native-values-and-build-source-views",[&]{
  // Every later private read is served by sealed classified roots/model W.
  // Terminal maps borrow graph wiring, never these native field arrays.
  if(isP){
@@ -57,20 +65,44 @@
  for(std::size_t k=1;k<witness.executionForR7().val.size();++k)std::vector<Fr>().swap(witness.executionForR7().val[k]);
  master={};
  }
- std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
  for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id));}
+ });
  VectorFactory factory=[&](IO&live,std::string id,std::size_t,std::size_t,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");return pcs.view(id);};
  timed("native-Range-Exp-Lasso-Memory-Product",[&]{for(auto&r:ctx.plan.ranges)hiddenRange(io,sources.at(r.child),r.bits,factory,rng,"r7/"+r.id,true);for(auto&e:ctx.plan.exps)hiddenExp(io,sources.at(e.index_child),sources.at(e.value_child),e.profile,factory,rng,"r7/"+e.id,true);});
- for(auto&t:pending.terminals){const auto&l=graph->circuit.at(t.layer);const auto*indices=t.port?&l.ori_id_v:&l.ori_id_u;auto id="gkr/layer/"+std::to_string(t.layer)+"/terminal/"+(t.port?"v":"u")+"/"+std::to_string(t.matrix_point);need(terminals.insert(id).second,"classified repeated terminal");pcs.deferBase(id,t.actual,t.padded,[indices](std::size_t j){return indices->at(j);},t.value,t.point);}
+ timed("register-native-GKR-terminal-claims",[&]{
+ for(auto&t:pending.terminals){const auto&l=graph->circuit.at(t.layer);const auto*indices=t.port?&l.ori_id_v:&l.ori_id_u;auto id="gkr/layer/"+std::to_string(t.layer)+"/terminal/"+(t.port?"v":"u")+"/"+std::to_string(t.matrix_point);need(terminals.insert(id).second,"classified repeated terminal");need(indices->size()==t.actual,"classified native terminal source shape");pcs.deferNativeTerminal(id,*indices,t.padded,t.value,t.point);}
  std::set<std::string>requiredTerminals;for(auto&r:plan.required)if(r.family=="GKR_MASTER_TERMINAL")requiredTerminals.insert(r.id);need(terminals==requiredTerminals,"classified native terminal omission/substitution");
- timed("all-source-original-handles",[&]{for(std::size_t j=0;j<sources.size();++j){auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);std::vector<Fr>point;for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));auto h=exchangeHidden(io,label+"/value",isP?evaluateOracle(v,point):Fr(0),rng);v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");}});
+ });
+ timed("all-source-original-handles",[&]{
+  double challengeSeconds=0,evaluationSeconds=0,handleSeconds=0,openingSeconds=0;
+  for(std::size_t j=0;j<sources.size();++j){
+   auto checkpoint=PhaseClock::now();auto&v=sources[j];auto label="Classified/source/"+std::to_string(j);
+   std::vector<Fr>point;
+   for(unsigned k=0;k<r1::log2exact(v.padded);++k)point.push_back(io.coin(label+"/query/"+std::to_string(k)));
+   challengeSeconds+=phaseSeconds(checkpoint);checkpoint=PhaseClock::now();
+   Fr value=isP?evaluateOracle(v,point):Fr(0);
+   evaluationSeconds+=phaseSeconds(checkpoint);checkpoint=PhaseClock::now();
+   auto h=exchangeHidden(io,label+"/value",value,rng);
+   handleSeconds+=phaseSeconds(checkpoint);checkpoint=PhaseClock::now();
+   v.open(io,{point,h.handle},isP?&h:nullptr,rng,label+"/opening");
+   openingSeconds+=phaseSeconds(checkpoint);
+  }
+  phaseDetail("all-source-original-handles","query-challenges",challengeSeconds);
+  phaseDetail("all-source-original-handles","source-MLE",evaluationSeconds);
+  phaseDetail("all-source-original-handles","exchange-handles",handleSeconds);
+  phaseDetail("all-source-original-handles","register-openings",openingSeconds);
+ });
  need(objects.size()==layout.views.size(),"classified unused/missing native view");
  timed("protocol1-unified-input-sumcheck-and-opening",[&]{pcs.authenticateUnifiedInput(s.x);});need(pcs.authenticated(),"unified input authentication INCOMPLETE");io.authenticationComplete();checked(io,"unified-input/sumcheck");checked(io,"unified-input/classified-opening");
+ timed("coverage-completion-and-acknowledgment",[&]{
  checked(io,"public/X");checked(io,"single/hidden-opening");checked(io,"model/weights-bound-in-C_U");
  for(auto&[id,v]:layout.views)checked(io,"classified/view/"+id);for(auto&id:terminals)checked(io,id);for(auto&source:ctx.plan.sources)checked(io,"mapped/"+source.spec.role);
  for(auto id:{"gkr/input-aggregation","gkr/input-aggregation-terminal","model/C_W_model-to-classified-input"})checked(io,id);for(auto&name:plan.model_regions)checked(io,"model/region/"+name);for(auto&r:plan.required)if(r.family=="CROSS_BLOCK_STATE")checked(io,r.id);
  if(!isP)io.complete();io.coin("Oneblock/all-mandatory-relations-verified/ack");
- pipe.finish();std::cerr<<pipe.metadataJson()<<'\n';
- io.save(true);
+ });
+ timed("proof-finalization",[&]{pipe.finish();});
+ std::cerr<<pipe.metadataJson()<<'\n';
+ timed("coverage-serialization",[&]{io.save(true);});
  const auto a3metrics=hyrax_a3::measurement();std::cerr<<"A3_TIMING {\"knowledge_wall_seconds\":"<<a3metrics.guard_seconds<<",\"inner_product_wall_seconds\":"<<a3metrics.core_seconds<<",\"knowledge_payload_bytes\":"<<a3metrics.guard_payload_bytes<<",\"inner_product_payload_bytes\":"<<a3metrics.core_payload_bytes<<"}\n";
- struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<coverage_id<<"\",\"layout_id\":\""<<layout_id<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";return 0;
+ hyrax_a3::writeOptimizationStats(std::cerr);
+ struct rusage usage{};getrusage(RUSAGE_SELF,&usage);auto m=metrics();std::cerr<<"{\"status\":\""<<successStatus<<"\",\"suite\":\""<<liveSuite<<"\",\"required_count\":"<<plan.required.size()<<",\"coverage_sha256\":\""<<coverage_id<<"\",\"layout_id\":\""<<layout_id<<"\",\"root_count\":"<<pcs.logicalCommitments()<<",\"source_segments\":"<<layout.roots.size()<<",\"claims\":"<<pcs.claims()<<",\"registered_rows\":"<<pcs.registered_rows<<",\"registration_response_bytes\":"<<pcs.registration_bytes<<",\"tail_rows\":"<<pcs.tail_rows<<",\"tail_response_bytes\":"<<pcs.tail_response_bytes<<",\"GKR_rounds\":"<<pending.rounds<<",\"seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<",\"wire_bytes\":"<<pipe.wireBytes()<<",\"P_wire_bytes\":"<<pipe.proofBytes()<<",\"frames\":"<<pipe.frames()<<",\"peak_rss_kib\":"<<usage.ru_maxrss<<",\"MSM_calls\":"<<m.msm_calls<<",\"MSM_terms\":"<<m.msm_terms<<",\"production_gate\":\"BLOCKED_CRYPTOGRAPHIC_DESIGN\",\"may_enter_stage2\":false,\"phases\":[";for(std::size_t j=0;j<phases.size();++j){if(j)std::cerr<<',';auto&p=phases[j];std::cerr<<"{\"name\":\""<<p.name<<"\",\"seconds\":"<<p.seconds<<",\"P_wire_bytes\":"<<p.p_wire_bytes<<",\"MSM_calls\":"<<p.msm_calls<<",\"rss_end_kib\":"<<p.rss_kib<<",\"cumulative_peak_rss_kib\":"<<p.peak_rss_kib<<'}';}std::cerr<<"]}\n";lifecycle.cleanup=PhaseClock::now();return 0;

@@ -1,6 +1,8 @@
 #pragma once
 #include "paper_r7_crypto.hpp"
 #include "paper_r1_pc.hpp"
+#include <iosfwd>
+#include <memory>
 namespace zkgpt::r7::hyrax_a3 {
 using namespace crypto;
 inline constexpr const char* suite="R7-MCL-BN254-HYRAX-A3-INTERACTIVE-v1";
@@ -13,7 +15,20 @@ inline constexpr std::size_t maxTrustedR6Dot=4096;
 struct DotWitness {std::vector<Fr>values;Fr blind=0;Hidden evaluation;};
 struct Measurement {std::uint64_t dot_product_calls=0;std::uint64_t guard_payload_bytes=0,core_payload_bytes=0,public_payload_bytes=0;double guard_seconds=0,core_seconds=0;};
 Measurement& measurement();
+class GeneratorView {
+public:
+ const G1* data()const{return storage_->data();}
+ std::size_t size()const{return size_;}
+private:
+ GeneratorView(std::shared_ptr<const std::vector<G1>> storage,std::size_t size):storage_(std::move(storage)),size_(size){}
+ std::shared_ptr<const std::vector<G1>>storage_;
+ std::size_t size_;
+ friend GeneratorView generatorView(std::size_t);
+};
+GeneratorView generatorView(std::size_t);
 std::vector<G1> generators(std::size_t);
+std::vector<Fr> verifierWeights(const std::vector<Fr>&challenges,const std::vector<Fr>&inverses);
+void writeOptimizationStats(std::ostream&);
 G1 vectorCommit(const std::vector<Fr>&,const Fr&);
 // Standard separate-input Schnorr knowledge guard, then PRIVATE literal Fig7–8.
 // Guard is linear communication, not part of the paper's logarithmic core.

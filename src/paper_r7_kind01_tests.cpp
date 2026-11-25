@@ -1,5 +1,9 @@
 #include "paper_r7_oneblock_lookup.hpp"
 #include "paper_r7_product_polynomial.hpp"
+#ifndef KIND01_REFERENCE
+#include "paper_r7_product_kernels.hpp"
+#include "paper_r7_lookup_prepare.hpp"
+#endif
 #include "paper_r7_oneblock_vectors.hpp"
 #include "paper_r7_fs_io.hpp"
 #include "paper_r7_fs_test_fixture.hpp"
@@ -190,6 +194,143 @@ void arithmeticTest(){
  }
  std::cout<<"PASS arithmetic seed=20261117 evaluation_checks="<<checks<<" coefficients/five-folds/weights BN254 Fr\n";
 }
+#ifndef KIND01_REFERENCE
+void lookupPrepareTest(unsigned width=32768){
+ R7Context context;
+ const auto actual=width-9;
+ const auto spec=r1::PCSpec::make("fixture",actual,width,r1::Layout::ColumnMajor);
+ context.plan.sources={{spec,{{0,actual,Fr(0)}}},{spec,{{actual,actual,Fr(0)}}}};
+ context.plan.ranges={{0,"range-1",32},{0,"range-2",13},{0,"range-3",13}};
+ context.plan.exps={{0,1,"exp",r1::ExpProfile::Unclamped}};
+ const std::array<unsigned,7> input{0,8190,8191,8192,2097151,1,512};
+ const Value base=[&](std::size_t j){return j<actual?Fr(input[j%input.size()]):Fr(j-actual);};
+ detail::NativeWorkers serial(1),parallel(4);
+ auto a=classified::prepareLookupWithWorkers(context,base,serial);
+ auto b=classified::prepareLookupWithWorkers(context,base,parallel);
+ need(a.size()==b.size(),"lookup prepared helper count");
+ for(const auto& [id,values]:a)need(*values==*b.at(id),("lookup helper parallel reference "+id).c_str());
+
+ const auto verifyRange=[&](const std::string& role,unsigned bits,const auto& value){
+  for(unsigned h=0;h*9<bits;++h){
+   const auto digits=b.at(role+"/digit/"+std::to_string(h));
+   const auto memory=role+"/memory/"+std::to_string(h);
+   const auto read=b.at(memory+"/read");
+   const auto final=b.at(memory+"/final");
+   std::vector<unsigned> counts(final->size());
+   for(unsigned i=0;i<width;++i){
+    const auto digit=(value(i)>>(h*9))&(counts.size()-1);
+    need((*digits)[i]==Fr(digit) && (*read)[i]==Fr(counts[digit]++),"lookup digit/read ordinal");
+   }
+   for(unsigned j=0;j<counts.size();++j)need((*final)[j]==Fr(counts[j]),"lookup final count");
+  }
+ };
+ auto raw=[&](std::size_t j){return j<actual?input[j%input.size()]:0u;};
+ verifyRange("r7/range-1",32,raw);
+ verifyRange("r7/exp/range/t",32,raw);
+ verifyRange("r7/exp/range/x",13,[&](std::size_t j){return std::min(8191u,raw(j));});
+ verifyRange("r7/exp/range/selector",1,[&](std::size_t j){return unsigned(j<actual && raw(j)<8191);});
+ verifyRange("r7/exp/range/delta",32,[&](std::size_t j){auto t=raw(j);return j>=actual?0u:t<8191?8190-t:t-8191;});
+ auto read=b.at("r7/exp/indexed/read"),final=b.at("r7/exp/indexed/final");
+ auto native=b.at("r7/exp/native-E");std::vector<unsigned> counts(final->size());
+ for(unsigned i=0;i<width;++i){
+  const auto j=std::min(8191u,raw(i));
+  need((*read)[i]==Fr(counts[j]++) && (*native)[i]==Fr(i<actual?i:1048576),"lookup indexed read/native E");
+ }
+ for(unsigned j=0;j<counts.size();++j)need((*final)[j]==Fr(counts[j]),"lookup indexed final");
+ std::cout<<"PASS Lookup Range/Exp digit, read, final and padding at one and four workers\n";
+}
+void parallelArithmeticTest(){
+ const std::size_t n=65536;
+ detail::NativeWorkers serial(1), parallel(4);
+ std::vector<Fr> rho(r1::log2exact(n),Fr(13));
+ rho[0]=0;rho[1]=1;
+ std::vector<std::vector<Fr>> data(5,std::vector<Fr>(n));
+ data[0]=r1::weights(rho);
+ for(unsigned k=1;k<5;++k)for(std::size_t j=0;j<n;++j)data[k][j]=Fr((k*61+j*117)%193);
+ const std::array<Fr,2> alpha{Fr(3),Fr(14)};
+ auto original=data;
+ const auto load=[&](unsigned k,std::size_t i){return original[k][i];};
+ const Expression expression{3,{{Fr(1),{0,1,2}}}};
+ for(std::size_t width=n,round=0;width>1;width/=2,++round){
+  auto current=[&](unsigned k,std::size_t i){return data[k][i];};
+  auto optimized=detail::batchProductCoefficients(width,current,alpha,&rho[round],parallel);
+  need(optimized==polynomial::equality<Fr>(width,current,alpha,rho[round],false),"parallel Equality coefficients");
+  need(detail::batchProductCoefficients(width,current,alpha,nullptr,parallel)==polynomial::bespoke<Fr>(width,current,alpha),"parallel ordinary cubic coefficients");
+  std::vector<Value> factors;
+  for(unsigned k=0;k<3;++k)factors.emplace_back([&,k](std::size_t j){return data[k][j];});
+  const auto expected=detail::expressionPolynomial(expression,width,factors,{},true);
+  const auto actual=detail::singleProductCoefficients(width,current,parallel);
+  need(std::vector<Fr>(actual.begin(),actual.end())==expected,"parallel standalone coefficients");
+  const Fr challenge=round%3==0?Fr(0):round%3==1?Fr(1):Fr(137);
+  auto next=data;
+  detail::foldNativeProduct(width,challenge,next,round==0,load,parallel);
+  detail::foldNativeProduct(width,challenge,data,round==0,load,serial);
+  need(next==data,"parallel Product fold mismatch");
+ }
+ std::array<std::vector<Fr>,2> child{original[1],original[2]};
+ for(std::size_t width=n;width>1;width/=2){
+  std::array<std::vector<Fr>,2> parents{std::vector<Fr>(width/2),std::vector<Fr>(width/2)};
+  detail::productTreeParents(width/2,{child[0].data(),child[1].data()},{parents[0].data(),parents[1].data()},parallel);
+  for(unsigned k=0;k<2;++k)for(std::size_t j=0;j<width/2;++j)
+   need(parents[k][j]==child[k][2*j]*child[k][2*j+1],"parallel Product tree node mismatch");
+  child=std::move(parents);
+ }
+ std::cout<<"PASS native Product tree, round coefficients and folds at one and four workers\n";
+}
+void kernelBenchmark(std::size_t n){
+ need(n>=65536 && n<=(1u<<22) && !(n&(n-1)),"kernelbench power-of-two domain bounds");
+ std::vector<Fr> rho(r1::log2exact(n),Fr(13));
+ const std::array<Fr,2> alpha{Fr(7),Fr(13)};
+ const Fr challenge=137;
+ std::vector<std::vector<Fr>> data(5,std::vector<Fr>(n));
+ data[0]=r1::weights(rho);
+ for(unsigned k=1;k<5;++k)for(std::size_t j=0;j<n;++j)data[k][j]=Fr((k*61+j*117)%193);
+ const auto load=[&](unsigned k,std::size_t i){return data[k][i];};
+ const auto expected=polynomial::equality<Fr>(n,load,alpha,rho.front(),true);
+ const std::array<Fr,3> expected_leaf{r1::dot(data[0],data[1]),r1::dot(data[0],data[2]),r1::dot(data[0],data[3])};
+ const auto lookup_n=std::min(n,std::size_t(1)<<18);
+ const auto spec=r1::PCSpec::make("bench",lookup_n,lookup_n,r1::Layout::ColumnMajor);
+ R7Context lookup;
+ lookup.plan.sources={{spec,{{0,lookup_n,Fr(0)}}},{spec,{{lookup_n,lookup_n,Fr(0)}}}};
+ lookup.plan.ranges={{0,"range",32}};
+ lookup.plan.exps={{0,1,"exp",r1::ExpProfile::Unclamped}};
+ const Value base=[&](std::size_t j){return Fr(j%10943);};
+ std::cout<<"kernel,width,workers,trial,wall_seconds\n";
+ for(unsigned workers:{1u,4u}){
+  detail::NativeWorkers pool(workers);
+  for(unsigned trial=1;trial<=3;++trial){
+   const auto report=[&](const char* kernel,std::size_t w,Clock::time_point start){
+    std::cout<<kernel<<','<<w<<','<<workers<<','<<trial<<','<<seconds(start)<<'\n';
+   };
+   auto start=Clock::now();
+   const auto poly=detail::batchProductCoefficients(n,load,alpha,&rho.front(),pool);
+   report("product-polynomial-equality",n,start);
+   need(poly==expected,"benchmark Product round differs");
+   std::array<std::vector<Fr>,2> parents{std::vector<Fr>(n/2),std::vector<Fr>(n/2)};
+   start=Clock::now();
+   detail::productTreeParents(n/2,{data[1].data(),data[2].data()},{parents[0].data(),parents[1].data()},pool);
+   report("product-tree-parent-level",n,start);
+   need(parents[0][10]==data[1][20]*data[1][21] && parents[1][10]==data[2][20]*data[2][21],"benchmark Product tree differs");
+   std::vector<std::vector<Fr>> folded(5);
+   start=Clock::now();
+   detail::foldNativeProduct(n,challenge,folded,true,load,pool);
+   report("product-first-fold",n,start);
+   start=Clock::now();
+   detail::foldNativeProduct(n/2,challenge,folded,false,load,pool);
+   report("product-in-place-fold",n/2,start);
+   need(folded[4].size()==n/4,"benchmark Product fold shape");
+   start=Clock::now();
+   const auto dots=detail::productLeafDots<3>(data[0],[&](unsigned k,std::size_t j){return data[k+1][j];},pool);
+   report("product-leaf-evaluation",n,start);
+   need(dots==expected_leaf,"benchmark Product Leaf Endpoint");
+   start=Clock::now();
+   const auto prepared=classified::prepareLookupWithWorkers(lookup,base,pool);
+   report("lookup-range-exp-prepare",lookup_n,start);
+   need(prepared.count("r7/exp/indexed/final"),"benchmark Lookup indexed helper missing");
+  }
+ }
+}
+#endif
 void setOptions(int mask){
  for(unsigned i=0;i<3;++i){const char*name=std::array<const char*,3>{"ZKGPT_PERF6_A2","ZKGPT_PERF6_C2","ZKGPT_PERF6_B2"}[i];
   if(mask<0)unsetenv(name);else setenv(name,mask&(1<<i)?"1":"0",1);
@@ -296,8 +437,17 @@ void direct(const std::filesystem::path&dir,std::size_t n,const std::string&faul
 int main(int argc,char**argv){try{
  r1::init();std::string mode=argc>1?argv[1]:"shared";std::size_t n=argc>2?std::stoull(argv[2]):8,actual=argc>3 && mode!="productbench" && mode!="productverify"?std::stoull(argv[3]):n;
  if(mode=="productbench" || mode=="productverify"){need(argc==4,"productbench/productverify n proof-path");productBench(n,argv[3],mode=="productverify");return 0;}
+#ifndef KIND01_REFERENCE
+ if(mode=="kernelbench"){kernelBenchmark(n);return 0;}
+#endif
  if(mode=="rangesplit"){rangeSplitTest();return 0;}
- if(mode=="arithmetic"){arithmeticTest();return 0;}
+ if(mode=="arithmetic"){arithmeticTest();
+#ifndef KIND01_REFERENCE
+ parallelArithmeticTest();
+ lookupPrepareTest();
+ lookupPrepareTest(8192);
+#endif
+ return 0;}
  if(mode=="config"){configTest();return 0;}
  if(mode=="equivalence"){equivalenceTest();return 0;}
  if(mode=="identity"){

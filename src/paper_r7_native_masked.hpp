@@ -30,5 +30,5 @@ class Mask {
  Fr round(IO&,const std::array<Fr,3>&);
  Hidden finish(IO&,Random*);
 };
-Reduction matrix(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&);
+Reduction matrix(IO&,std::size_t,const Hidden&,const std::vector<Value>&,Random*,const std::string&,detail::MatrixArithmetic* =nullptr);
 }

@@ -75,11 +75,15 @@ public:
         if(!expected || expected>(std::size_t(1)<<28))throw std::invalid_argument("witness capacity hint outside supported domain");
         witness_capacity_hint_=expected;
     }
-    void create(prover &pr, bool merge);
-    void createFiniteWitness(prover &pr);
+    struct WitnessTimings {
+        double setup = 0, initialAllocation = 0, input = 0;
+        double weights = 0, layerNormParameters = 0, layers = 0, finalize = 0;
+    };
+    void create(prover &pr, bool merge, WitnessTimings *timings = nullptr);
+    void createFiniteWitness(prover &pr, WitnessTimings *timings = nullptr);
     // Explicit R7 Full12 witness-only entry. Never calls the legacy PC.
     // The caller must enforce its memory/CPU budget and suppress private logs.
-    void createFull12FiniteWitness(prover &pr);
+    void createFull12FiniteWitness(prover &pr, WitnessTimings *timings = nullptr);
     // Opt-in partial engineering relation; unresolved paper semantics stay explicit.
     void setR4NumericalCandidate(bool enabled=true) { r4_numerical_candidate_=enabled; }
     void setR5BEngineeringCandidate(bool enabled=true) { r5b_numerical_candidate_=enabled; }

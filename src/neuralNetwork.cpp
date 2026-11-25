@@ -12,6 +12,7 @@
 #include <polynomial.h>
 #include <circuit.h>
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cerrno>
 #include <cstdio>
@@ -532,8 +533,17 @@ void neuralNetwork::merge_layer(prover &pr,i64 layer_id)
         initLayer(pr.C.circuit[i], pr.val[i].size(), pr.C.circuit[i].ty);
     }
 }
-void neuralNetwork::create(prover &pr, bool merge) 
+void neuralNetwork::create(prover &pr, bool merge, WitnessTimings *timings) 
 {
+    using Clock = std::chrono::steady_clock;
+    const auto start = Clock::now();
+    auto checkpoint = start;
+    auto measure = [&](double WitnessTimings::*field) {
+        if (!timings) return;
+        const auto now = Clock::now();
+        timings->*field += std::chrono::duration<double>(now - checkpoint).count();
+        checkpoint = now;
+    };
     timer circuit_build_timer;
     circuit_build_timer.start();
     zkgpt::memory_diagnostics::logProcess("circuit_build_begin");
@@ -568,6 +578,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     resetScalarDumpBuffers();
     //printf("Total layers num: %d\n", SIZE);
     // 初始化电路
+    measure(&WitnessTimings::setup);
     pr.C.init(Q_BIT_SIZE, SIZE);
     pr.val.resize(SIZE);
     if(!structure_only && witness_capacity_hint_){
@@ -579,8 +590,10 @@ void neuralNetwork::create(prover &pr, bool merge)
     val = pr.val.begin();
     i64 layer_id = 0;
     // 存储模型的输入数据
+    measure(&WitnessTimings::initialAllocation);
     inputLayer(pr.C.circuit[layer_id++]);
     if(r5b_numerical_candidate_)witness_registry.addRange(WitnessKind::ROUNDING,"r5b_input",0,32768,64,true);
+    measure(&WitnessTimings::input);
     for (int i = 0; i < full_conn.size(); ++i) 
     {
         auto &fc = full_conn[i];
@@ -590,6 +603,7 @@ void neuralNetwork::create(prover &pr, bool merge)
         readFconWeight(fc.weight_start_id,pr.fc_real_row[i],pr.fc_real_col[i],i);
         readFconBias(fc.bias_start_id, pr.fc_real_col[i], i);
     }
+    measure(&WitnessTimings::weights);
     // timer T;
     // int logn = pr.C.circuit[0].bit_length;
     // printf("before initiate circuit inputlayer lenth : 2^%d\n", logn);
@@ -619,8 +633,11 @@ void neuralNetwork::create(prover &pr, bool merge)
         const int block_id = i / 4;
         if(r6_engineering_ && i%4==0)r6_connections_.push_back({std::size_t(block_id),std::size_t(q_offset),0,0,std::size_t(layer_id),0});
         const int ln_id = 2 * block_id + ((i % 4 == 2) ? 1 : 0);
-        if (i % 4 == 0 || i % 4 == 2)
+        if (i % 4 == 0 || i % 4 == 2) {
+            measure(&WitnessTimings::layers);
             read_layer_norm(ln_id);
+            measure(&WitnessTimings::layerNormParameters);
+        }
         auto sparsity_storage=std::make_unique<bool[]>(pr.fc_input_row[i]*pr.fc_input_col[i]);
         bool *sparsity=sparsity_storage.get();
         memset(sparsity,0,sizeof(bool)*pr.fc_input_row[i]*pr.fc_input_col[i]);
@@ -691,6 +708,7 @@ void neuralNetwork::create(prover &pr, bool merge)
         }
     }
    
+    measure(&WitnessTimings::layers);
     if(merge)
     {
         merge_layer(pr,layer_id);
@@ -711,6 +729,7 @@ void neuralNetwork::create(prover &pr, bool merge)
     // writeScalarDumpFiles();
     
     pr.C.initSubset(r6Metadata());
+    measure(&WitnessTimings::finalize);
 
     circuit_build_timer.stop();
     std::cout << "Circuit Builder time (including " << (structure_only ? "structure-only witness" : "private witness/parameter")
@@ -2706,15 +2725,15 @@ void neuralNetwork::logPrivateMemory(const std::string &stage) const {
     logVector(stage,"round_scalar_dump",round_delta_limbs);
 }
 
-void neuralNetwork::createFiniteWitness(prover &pr){
+void neuralNetwork::createFiniteWitness(prover &pr, WitnessTimings *timings){
  if(!r6_engineering_ || layer_num>3 || structure_only || pr.cc.w)throw std::invalid_argument("finite R6 witness supports at most3 blocks and no existing commitment");
- r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
+ r6_skip_commit_=true;try{create(pr,false,timings);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
  if(pr.cc.w)throw std::logic_error("finite R6 witness unexpectedly committed");
 }
 
-void neuralNetwork::createFull12FiniteWitness(prover &pr){
+void neuralNetwork::createFull12FiniteWitness(prover &pr, WitnessTimings *timings){
  if(!r6_engineering_ || layer_num!=12 || structure_only || pr.cc.w)
   throw std::invalid_argument("R7 Full12 finite witness requires native12 blocks and no existing commitment");
- r6_skip_commit_=true;try{create(pr,false);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
+ r6_skip_commit_=true;try{create(pr,false,timings);r6_skip_commit_=false;}catch(...){r6_skip_commit_=false;throw;}
  if(pr.cc.w)throw std::logic_error("R7 Full12 witness unexpectedly committed");
 }

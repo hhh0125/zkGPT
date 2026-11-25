@@ -1,4 +1,5 @@
 #include "paper_r7_native_masked.hpp"
+#include "paper_r7_matrix_arithmetic.hpp"
 #include "paper_r7_hyrax_a3.hpp"
 #include "paper_r7_stage2_opening.hpp"
 #include <cstdlib>
@@ -56,18 +57,23 @@ Hidden Mask::finish(IO&io,Random*rng){
  auto result=combine(io.session(),role_+"/original-terminal",{publicHidden(io,role_+"/public-terminal",claim_),evaluation},{Fr(1),-rho_});
  bindPublic(io,role_+"/original-terminal",encode(result.handle));return result;
 }
-Reduction matrix(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role){
- need(n && n<=(1u<<24) && !(n&(n-1)),"Native Matrix domain");need(!io.prover() || (rng && factors.size()==2),"Native Matrix private shape");
+Reduction matrix(IO&io,std::size_t n,const Hidden&initial,const std::vector<Value>&factors,Random*rng,const std::string&role,detail::MatrixArithmetic*arithmetic){
+ need(n && n<=(1u<<24) && !(n&(n-1)),"Native Matrix domain");need(!io.prover() || (rng && (arithmetic || factors.size()==2)),"Native Matrix private shape");
  PhaseMeasure measure{role,io.prover(),true};Mask mask(io,r1::log2exact(n),initial,rng,role+"/masked",measure);
  Expression expression{2,{{Fr(1),{0,1}}}};std::vector<std::vector<Fr>>folded(2);std::vector<Fr>point;std::size_t current=n;
  while(current>1){
-  std::vector<Fr>c(3,Fr(0));if(io.prover())c=detail::expressionPolynomial(expression,current,factors,folded,point.empty());
-  auto r=mask.round(io,{c[0],c[1],c[2]});
-  if(io.prover())for(unsigned k=0;k<2;++k){if(point.empty()){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+r*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+r*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}
+  std::array<Fr,3>c{Fr(0),Fr(0),Fr(0)};
+  if(io.prover()){
+   if(arithmetic)c=arithmetic->polynomial();
+   else{const auto coefficients=detail::expressionPolynomial(expression,current,factors,folded,point.empty());std::copy(coefficients.begin(),coefficients.end(),c.begin());}
+  }
+  auto r=mask.round(io,c);
+  if(arithmetic)arithmetic->fold(r);
+  else if(io.prover())for(unsigned k=0;k<2;++k){if(point.empty()){folded[k].resize(current/2);for(std::size_t j=0;j<current/2;++j){auto a=factors[k](2*j);folded[k][j]=a+r*(factors[k](2*j+1)-a);}}else{for(std::size_t j=0;j<current/2;++j)folded[k][j]=folded[k][2*j]+r*(folded[k][2*j+1]-folded[k][2*j]);folded[k].resize(current/2);}}
   point.push_back(r);current/=2;
  }
  auto terminal=mask.finish(io,rng);std::vector<Hidden>ends;
- for(unsigned k=0;k<2;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));
+ for(unsigned k=0;k<2;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(arithmetic?arithmetic->values[k][0]:n==1?factors[k](0):folded[k][0]):Fr(0),rng));
  detail::nativeMatrixTerminal(io,terminal,ends,rng,role+"/terminal");
  return {initial,ends,point};
 }

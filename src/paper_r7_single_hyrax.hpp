@@ -35,6 +35,7 @@ void validateCategoryPlan(const Plan&);
 PhysicalCommitmentLayout matrixShape(std::size_t actual);
 unsigned bits(std::size_t);
 Bytes descriptor(const Plan&);
+using SourceWindow=std::function<unified::InputWindow(std::size_t,std::size_t)>;
 struct Secret;
 struct Public {
  Public()=default;
@@ -45,16 +46,23 @@ struct Public {
  Plan plan_;std::vector<G1>rows_;
  // Only exchange can seal an immutable commitment to a live transcript.
  std::weak_ptr<const void>sealed_transcript_;std::string sealed_session_;
- friend Secret commit(const Plan&,std::vector<Value>,Random&,unsigned);
+ friend Secret commit(const Plan&,std::vector<Value>,Random&,unsigned,std::vector<SourceWindow>);
  friend Public exchange(IO&,const Plan&,const Secret*);
  friend void open(IO&,const Public&,const Query&,const std::vector<Fr>&,const Secret*,const Hidden*,Random*,const std::string&);
  friend Hidden evaluateAndOpen(IO&,const Public&,const std::vector<Fr>&,const std::vector<Fr>&,const Secret*,Random*,const std::string&);
 };
 void writeCategoryLayout(std::ostream&,const Public&);
-struct Secret {Public pc;std::vector<Fr>blinds;std::vector<Value>sources;};
+struct Secret {
+ Public pc;
+ std::vector<Fr>blinds;
+ std::vector<Value>sources;
+ std::vector<SourceWindow>windows;
+ unsigned workers=1;
+};
 // Callbacks borrow immutable sealed source storage, and may be read in parallel.
 // Only one columns-sized scalar buffer per worker is required. No GPU residency.
 Secret commit(const Plan&,std::vector<Value>,Random&,unsigned workers=1);
+Secret commit(const Plan&,std::vector<Value>,Random&,unsigned workers,std::vector<SourceWindow> windows);
 Bytes encode(const Public&);Public decode(const Bytes&,const Plan&expected);
 std::string identity(const Public&);
 // One header and bounded row chunks belong to ONE commitment identity.
@@ -62,6 +70,7 @@ Public exchange(IO&,const Plan&,const Secret*onlyP);
 // One rank-one logical MLE query over the identical commitment coordinates.
 // Row/column weights only; no domain-sized coefficient array.
 struct QueryTerm {std::size_t first_row=0;std::vector<Fr>left,right;};
+hyrax_a3::DotWitness foldWitness(const Secret&,const QueryTerm&,unsigned workers);
 using ConsumeTerm=std::function<void(const QueryTerm&)>;
 void mappedQueryTerms(const Plan&,const std::vector<Fr>&logical_point,const ConsumeTerm&);
 Fr publicContribution(const Plan&,const std::vector<Fr>&logical_point,const std::vector<Fr>&public_x);

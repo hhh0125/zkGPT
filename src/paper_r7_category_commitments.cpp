@@ -2,8 +2,15 @@
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
+#include <sched.h>
 namespace zkgpt::r7::oneblock::classified {
 namespace {
+unsigned defaultCommitWorkers(){
+ cpu_set_t allowed;
+ CPU_ZERO(&allowed);
+ if(sched_getaffinity(0,sizeof(allowed),&allowed)!=0)return 4;
+ return unsigned(std::clamp(CPU_COUNT(&allowed),1,32));
+}
 struct Borrow {
  std::size_t begin,count;
  Value value;
@@ -51,14 +58,35 @@ void Commitments::initializeCategory(Value base,Prepared*prepared,const std::vec
  }
  if(io_.prover()){
   need(used.size()==prepared->size(),"category unused helper object");prepared->clear();
-  std::vector<Value>sources;for(const auto&s:plan.segments){
+  std::vector<Value>sources;std::vector<single::SourceWindow>windows;for(const auto&s:plan.segments){
    unsigned category=0;const char*names[]{"X","W","Aux","LookupQueries","LookupHelpers"};while(category<5 && s.source_id!=names[category])++category;need(category<5,"category source identity");
-   auto spans=std::make_shared<std::vector<Borrow>>();for(const auto&r:roots_)if(r.spec.category==category)spans->push_back({r.spec.category_offset,r.spec.actual,r.value});
-   std::sort(spans->begin(),spans->end(),[](const Borrow&a,const Borrow&b){return a.begin<b.begin;});std::size_t covered=0;for(const auto&r:*spans){need(r.begin==covered,"category storage gap/alias");covered+=r.count;}need(covered==s.actual,"category storage complete actual");
-   sources.push_back([spans,n=s.actual,padded=s.padded](std::size_t j){need(j<padded,"category logical source bound");if(j>=n)return Fr(0);auto it=std::upper_bound(spans->begin(),spans->end(),j,[](std::size_t at,const Borrow&r){return at<r.begin;});need(it!=spans->begin(),"category storage prefix");--it;return it->value(j-it->begin);});
+   std::vector<const Root*>pieces;
+   for(const auto&r:roots_)if(r.spec.category==category)pieces.push_back(&r);
+   std::sort(pieces.begin(),pieces.end(),[](const auto*a,const auto*b){return a->spec.category_offset<b->spec.category_offset;});
+   std::size_t covered=0;
+   for(const auto*r:pieces){need(r->spec.category_offset==covered,"category storage gap/alias");covered+=r->spec.actual;}
+   need(covered==s.actual,"category storage complete actual");
+   // Capture the sealed callbacks by value. Single Hyrax retains the same
+   // immutable source backing through both the commit and the final opening.
+   struct Piece {std::size_t begin,count;Value read;single::SourceWindow window;};
+   auto spans=std::make_shared<std::vector<Piece>>();
+   for(const auto*r:pieces)spans->push_back({r->spec.category_offset,r->spec.actual,r->value,r->sealed_span});
+   auto locate=[spans](std::size_t j)->const Piece&{
+    auto it=std::upper_bound(spans->begin(),spans->end(),j,[](std::size_t at,const Piece&r){return at<r.begin;});
+    need(it!=spans->begin(),"category storage prefix");return *--it;
+   };
+   sources.push_back([locate,n=s.actual,padded=s.padded](std::size_t j){
+    need(j<padded,"category logical source bound");if(j>=n)return Fr(0);
+    const auto&piece=locate(j);return piece.read(j-piece.begin);
+   });
+   windows.push_back([locate,n=s.actual](std::size_t j,std::size_t count){
+    need(count && j<n && count<=n-j,"category logical source window bound");
+    const auto&piece=locate(j);const auto at=j-piece.begin;
+    return piece.window(at,std::min(count,piece.count-at));
+   });
   }
-  unsigned workers=1;if(auto text=std::getenv("ZKGPT_SINGLE_COMMIT_THREADS")){std::string n(text);need(!n.empty() && n.find_first_not_of("0123456789")==std::string::npos,"category worker syntax");auto value=std::stoul(n);need(value && value<=32,"category worker count");workers=unsigned(value);}
-  single_secret_=single::commit(plan,std::move(sources),*rng_,workers);
+  unsigned workers=defaultCommitWorkers();if(auto text=std::getenv("ZKGPT_SINGLE_COMMIT_THREADS")){std::string n(text);need(!n.empty() && n.find_first_not_of("0123456789")==std::string::npos,"category worker syntax");auto value=std::stoul(n);need(value && value<=32,"category worker count");workers=unsigned(value);}
+  single_secret_=single::commit(plan,std::move(sources),*rng_,workers,std::move(windows));
  }
  single_pc_=single::exchange(io_,plan,io_.prover()?&*single_secret_:nullptr);sealed_=true;
 }

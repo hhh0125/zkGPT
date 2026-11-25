@@ -11,7 +11,9 @@ namespace zkgpt::r7::oneblock::classified {
 struct AuthenticationTestAccess {
  static void budget(Commitments&c,std::size_t ram,std::size_t file){need(c.claims_.empty(),"test budget before claims");c.category_auth_=std::make_unique<Commitments::Authentication>(0,ram,0,file);c.category_auth_->session=c.session_;c.category_auth_->transcript=c.io_.transcriptOwner();}
  static void add(Commitments&c,Claim claim){c.deferTrusted(std::move(claim));}
- static const mapping::Plan&plan(const Commitments&c,std::size_t i){return c.category_auth_->claims.at(i);}
+ static const mapping::Plan&plan(const Commitments&c,std::size_t i){return c.category_auth_->claims.at(i).plan();}
+ static bool shared(const Commitments&c,std::size_t i,std::size_t j){return &plan(c,i)==&plan(c,j);}
+ static const Digest&digest(const Commitments&c,std::size_t i){return c.claims_.at(i).map_digest;}
  static Fr bias(Commitments&c,std::size_t i){return c.prepareClaim(c.claims_.at(i),*c.category_auth_,i);}
  static std::vector<Fr>k(Commitments&c,std::size_t root,const std::vector<Fr>&rho){return c.categoryKernel(root,0,c.roots_[root].spec.actual,rho,*c.category_auth_);}
  static std::vector<Fr>tile(Commitments&c,std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&rho,
@@ -20,8 +22,8 @@ struct AuthenticationTestAccess {
  }
  static void expandFixtureRoot(Commitments&c,std::size_t n){need(c.claims_.empty(),"synthetic K bounds before claims");c.roots_.at(0).spec.actual=n;}
  static std::optional<Fr>endpoint(Commitments&c,const std::vector<Fr>&q,const std::vector<Fr>&rho,bool profitable){return c.categoryKernelEndpoint(q,rho,*c.category_auth_,profitable);}
- static void check(Commitments&c,std::size_t i,std::size_t n){const auto&p=c.category_auth_->claims.at(i);need(p.frozen && p.ready && p.callback_calls==n && p.full_scans==1 && !c.claims_.at(i).map,"test single scan and released callback");}
- static void invalidate(Commitments&c){c.category_auth_->claims[0].frozen=false;}
+ static void check(Commitments&c,std::size_t i,std::size_t n){const auto&p=c.category_auth_->claims.at(i);need(p.plan().frozen && p.ready && p.callback_calls==n && p.full_scans==1 && !c.claims_.at(i).map,"test single scan and released callback");}
+ static void invalidate(Commitments&c){c.category_auth_->claims[0].mapping.reset();}
  static void wrongSession(Commitments&c){c.category_auth_->session="other";}
 };
 }
@@ -82,6 +84,42 @@ void zeroStride(){
   need(Access::tile(*f.c,root,0,13,{Fr(11)},k_all)==expected[root],"test K4 zero/one challenges and unaligned stepped repeated target");
  }
  need(calls==2048,"test optimized K cannot rescan callback");
+}
+void sharedTemplate(bool file,bool bench=false){
+ const std::size_t n=bench?1u<<18:128;
+ LocalIO io;OSRandom rng;auto l=layout();cl::Prepared prepared;std::vector<Fr>x;
+ for(unsigned j=0;j<13;++j)x.emplace_back(j+1);
+ cl::View view{};view.id="repeat";view.mapped=true;view.actual=n;view.padded=n;
+ for(std::size_t i=0;i<n;++i)view.spans.push_back({(i*17+i*i)%39,1,Fr(int(i/32%3)-1)});
+ // Keep the fixture's descriptor traversal small at benchmark size.
+ if(bench){
+  view.spans.clear();view.actual=39;view.spans.push_back({0,39,Fr(3)});
+ }
+ l.views.emplace(view.id,view);view.id="distinct";for(auto&span:view.spans)span.bias+=Fr(2);l.views.emplace(view.id,view);
+ cl::Commitments c(io,l,[](std::size_t j){return Fr(j+1);},&prepared,&rng,x);c.constrainBaseTails();
+ Access::budget(c,file?480:1u<<20,4u<<20);
+ auto v=c.view("repeat"),v2=c.view("distinct");
+ std::vector<Fr>q1(r1::log2exact(n),Fr(2)),q2(q1.size(),Fr(3));
+ auto h=oneblock::publicHidden(io,"template/hidden",Fr(0));
+ auto issue=[&](const auto&oracle,const auto&point,const std::string&id){auto start=std::chrono::steady_clock::now();oracle.open(io,{point,h.handle},&h,&rng,id);return std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();};
+ auto cold=issue(v,q1,"template/first"),warm=issue(v,q2,"template/second");
+ issue(v2,q2,"template/third");
+ need(Access::shared(c,0,1) && !Access::shared(c,1,2),"trusted descriptors share only their own template");
+ need(std::string(Access::plan(c,0).reason)==(file?"FROZEN_ROOT_FILE":"FROZEN_ROOT_RAM"),"shared template storage mode");
+ auto weights1=r1::weights(q1),weights2=r1::weights(q2);Fr bias1=0,bias2=0,bias3=0;Bytes canonical;
+ std::array<std::vector<Fr>,3>expected={std::vector<Fr>(13,Fr(0)),std::vector<Fr>(13,Fr(0)),std::vector<Fr>(13,Fr(0))};
+ for(std::size_t j=0;j<n;++j){
+  auto loc=cl::locate(l,l.views.at("repeat"),j);
+  canonical.push_back(loc.constant?1:0);
+  for(auto coordinate:{loc.coordinate.root,loc.coordinate.index})for(unsigned byte=0;byte<4;++byte)canonical.push_back(std::uint8_t(coordinate>>(8*byte)));
+  const auto encoded=r1::encode(loc.bias);canonical.insert(canonical.end(),encoded.begin(),encoded.end());
+  bias1+=weights1[j]*loc.bias;bias2+=weights2[j]*loc.bias;bias3+=weights2[j]*(loc.bias+(j<view.actual?Fr(2):Fr(0)));
+  if(!loc.constant)expected[loc.coordinate.root][loc.coordinate.index]+=Fr(7)*weights1[j]+Fr(24)*weights2[j];
+ }
+ need(Access::digest(c,0)==r1::hash(canonical) && Access::digest(c,0)==Access::digest(c,1) && Access::digest(c,1)!=Access::digest(c,2),"cached map digest canonical and source-bound");
+ need(Access::bias(c,0)==bias1 && Access::bias(c,1)==bias2 && Access::bias(c,2)==bias3,"shared template independent biases");
+ for(unsigned k=0;k<3;++k)need(Access::tile(c,k,0,13,{Fr(7),Fr(11),Fr(13)},k_all)==expected[k],"shared template K differential");
+ if(bench)std::cout<<"MAPPING_TEMPLATE PASS "<<n<<' '<<cold<<' '<<warm<<'\n';
 }
 void microbench(){
  // A synthetic frozen map and public K output only. The tiny fixture seal is
@@ -157,4 +195,4 @@ void protocol(fs::FsIO&io,bool file){auto l=layout();cl::Prepared prepared;OSRan
  auto point=std::vector<Fr>(7,Fr(2));auto w=r1::weights(point);Fr value=0;for(std::size_t j=0;j<128;++j)value+=w[j]*Fr((j*17+j*j)%39+1);
  auto h=oneblock::exchangeHidden(io,"claim/evaluation",value,io.prover()?&rng:nullptr);std::size_t calls=0;c.deferBase("claim",128,128,[&](std::size_t j){++calls;return (j*17+j*j)%39;},h,point);need(calls==128,"protocol mapping initial scan");c.authenticateUnifiedInput(x);need(c.authenticated() && calls==128,"protocol no callbacks after freeze");Access::check(c,0,128);Access::check(c,1,16);need(std::string(Access::plan(c,0).reason)==(file?"FROZEN_ROOT_FILE":"FROZEN_ROOT_RAM"),"protocol RAM/file frozen");}
 }
-int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}if(std::string(argv[1])=="template-bench"){sharedTemplate(false,true);return 0;}sharedTemplate(false);sharedTemplate(true);compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

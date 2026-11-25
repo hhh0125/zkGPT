@@ -23,9 +23,9 @@ void Commitments::categoryKernelInto(std::size_t root,std::size_t begin,std::siz
  const auto kernel_started=std::chrono::steady_clock::now();
  need(root<roots_.size() && begin<=roots_[root].spec.actual && count<=roots_[root].spec.actual-begin && count<=(1u<<20),"category bounded K tile");
  ++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,count*sizeof(Fr));need(out || !count,"category K missing output buffer");if(count)std::fill(out,out+count,Fr(0));
- for(std::size_t i=0;i<claims_.size();++i){const auto&c=claims_[i];const auto&p=auth.claims[i];need(p.ready && p.frozen,"category K requires frozen mapping");if(c.only_root>=0 && std::size_t(c.only_root)!=root)continue;if(!p.hasRoot(root))continue;
+ for(std::size_t i=0;i<claims_.size();++i){const auto&c=claims_[i];const auto&p=auth.claims[i];need(p.ready && p.plan().frozen,"category K requires frozen mapping");if(c.only_root>=0 && std::size_t(c.only_root)!=root)continue;if(!p.plan().hasRoot(root))continue;
   std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point,&auth_metrics_);const auto&w=p.weights?*p.weights:*scratch;
-  p.forRoot(root,auth.store,[&](const mapping::Run&r){
+  p.plan().forRoot(root,auth.store,[&](const mapping::Run&r){
    ++auth_metrics_.kernel_run_visits;++auth_metrics_.kernel_run_clips;
    const auto actual=roots_[root].spec.actual;
    need(r.count && r.logical_step && r.begin<c.padded && r.count<=1+(c.padded-1-r.begin)/r.logical_step && r.first.root==root && r.first.index<actual && r.stride>=-std::int64_t(actual) && r.stride<=std::int64_t(actual),"category K frozen run bounds");
@@ -95,7 +95,7 @@ struct alignas(64) KernelLocal {KernelTasks stats;};
 class Commitments::CategoryKernelPlan {
  // Keep the compact representation; report unsupported coordinates explicitly.
  struct Entry {
-  std::uint32_t begin,count,index,step,claim;
+  std::uint32_t begin,count,index,step,group;
   std::int32_t stride;
  };
  static_assert(sizeof(Entry)==24,"category K compact entry size");
@@ -114,6 +114,10 @@ class Commitments::CategoryKernelPlan {
  std::vector<Range>roots_,buckets_by_tile_;
  std::vector<Bucket>buckets_;
  std::vector<WeightCache>weights_;
+ // Each spatial run belongs to one immutable mapping. Claim coefficients and
+ // MLE weights are still applied independently for every member.
+ std::vector<std::vector<std::size_t>>mapping_groups_;
+
  std::size_t active_root_=std::size_t(-1),index_bytes_=0,index_peak_=0,weight_bytes_=0;
  bool indexed_=false;
  std::uint64_t original_runs_=0,indexed_runs_=0,index_clips_=0,index_intersections_=0,index_entries_=0,index_fallbacks_=0;
@@ -127,7 +131,7 @@ class Commitments::CategoryKernelPlan {
  }
  bool onRoot(std::size_t i,std::size_t root)const{
   const auto&c=c_.claims_[i];const auto&p=auth_.claims[i];
-  return (c.only_root<0 || std::size_t(c.only_root)==root) && p.hasRoot(root);
+  return (c.only_root<0 || std::size_t(c.only_root)==root) && p.plan().hasRoot(root);
  }
  void clearIndex(){std::vector<Bucket>().swap(buckets_);index_bytes_=roots_.capacity()*sizeof(Range)+buckets_by_tile_.capacity()*sizeof(Range);indexed_=false;}
  void append(Bucket&bucket,const Entry&e){
@@ -165,7 +169,7 @@ class Commitments::CategoryKernelPlan {
    const auto*w=p.weights?p.weights.get():cache.weights.get();
    // Long, nearly contiguous claims already reuse each high factor within a
    // group. Admit aggregation when fragmented runs justify precomputation.
-   if(w && cache.aggregate.empty() && p.run_count>=2*w->highSize()
+   if(w && cache.aggregate.empty() && p.plan().run_count>=2*w->highSize()
       && w->highSize()*sizeof(Fr)<=category_weight_limit-weight_bytes_){
     auto scaled=w->aggregate(rho_[i]);aggregate_mul_+=scaled.size();
     const auto bytes=scaled.capacity()*sizeof(Fr);
@@ -192,10 +196,11 @@ class Commitments::CategoryKernelPlan {
   const auto actual=c_.roots_[root].spec.actual;
   const auto entries_before=index_entries_,runs_before=indexed_runs_;
   const auto root_base=index_bytes_;
-  for(std::size_t i=0;i<auth_.claims.size();++i){
+  for(std::size_t g=0;g<mapping_groups_.size();++g){
+   const auto i=mapping_groups_[g].front();
    if(!onRoot(i,root))continue;
    const auto&p=auth_.claims[i];const auto padded=c_.claims_[i].padded;
-   p.forRoot(root,auth_.store,[&](const mapping::Run&r){
+   p.plan().forRoot(root,auth_.store,[&](const mapping::Run&r){
     ++indexed_runs_;
     const auto last=validateRun(r,root,actual,padded);
     const auto first=std::size_t(r.first.index),minimum=std::min(first,last),maximum=std::max(first,last);
@@ -206,13 +211,13 @@ class Commitments::CategoryKernelPlan {
      ++index_intersections_;
      const auto begin=r.begin+slice.first*r.logical_step,count=slice.last-slice.first;
      constexpr auto u32=std::numeric_limits<std::uint32_t>::max();
-     if(begin>u32 || count>u32 || r.logical_step>u32 || i>u32
+     if(begin>u32 || count>u32 || r.logical_step>u32 || g>u32
         || r.stride<std::numeric_limits<std::int32_t>::min() || r.stride>std::numeric_limits<std::int32_t>::max()){
       throw std::runtime_error("category K noncompact index representation required: root="+std::to_string(root)+" claim="+std::to_string(i)+" begin="+std::to_string(begin)+" count="+std::to_string(count)+" step="+std::to_string(r.logical_step)+" stride="+std::to_string(r.stride));
      }
      const auto index=std::uint32_t(std::int64_t(r.first.index)+std::int64_t(slice.first)*r.stride);
      const Entry entry{std::uint32_t(begin),std::uint32_t(count),index,std::uint32_t(r.logical_step),
-                       std::uint32_t(i),std::int32_t(r.stride)};
+                       std::uint32_t(g),std::int32_t(r.stride)};
      append(*b,entry);
     }
    },&index_reads_);
@@ -287,13 +292,34 @@ class Commitments::CategoryKernelPlan {
    apply(r,i,*w,aggregate,lo,out,m);
   };
   if(bucket){
+   struct ClaimWeights {const Weights*source;const std::vector<Fr>*aggregate;std::unique_ptr<Weights>scratch;};
+   std::vector<ClaimWeights>group_weights;
+   std::size_t active_group=std::size_t(-1);
    auto remaining=bucket->count;
    for(const auto&page:bucket->pages){
     const auto n=std::min(remaining,entries_per_page);
     for(std::size_t j=0;j<n;++j){
      const auto&e=(*page)[j];
      ++m.visits;++m.intersections;
-     consume({e.begin,e.count,{std::uint32_t(root),e.index},e.stride,e.step},e.claim);
+     const mapping::Run run{e.begin,e.count,{std::uint32_t(root),e.index},e.stride,e.step};
+     const auto&group=mapping_groups_[e.group];
+     if(group.size()==1){consume(run,group.front());continue;}
+     if(active_group!=e.group){
+      active_group=e.group;group_weights.clear();group_weights.reserve(group.size());
+      for(auto i:group){
+       const auto&p=auth_.claims[i];const auto*cache=weights_.empty()?nullptr:&weights_[i];
+       const auto*source=p.weights.get();if(!source && cache)source=cache->weights.get();
+       if(source){++m.weight_cache_uses;group_weights.push_back({source,cache && !cache->aggregate.empty()?&cache->aggregate:nullptr,{}});}
+       else{
+        auto local=std::make_unique<Weights>(c_.claims_[i].point);
+        ++m.weight_rebuilds;group_weights.push_back({local.get(),nullptr,std::move(local)});
+       }
+      }
+     }
+     for(std::size_t k=0;k<group.size();++k){
+      const auto&local=group_weights[k];
+      apply(run,group[k],*local.source,local.aggregate,lo,out,m);
+     }
     }
     remaining-=n;
    }
@@ -303,7 +329,7 @@ class Commitments::CategoryKernelPlan {
   for(std::size_t i=0;i<auth_.claims.size();++i){
    if(!onRoot(i,root))continue;
    const auto&p=auth_.claims[i];const auto padded=c_.claims_[i].padded;
-   p.forRoot(root,auth_.store,[&](const mapping::Run&r){
+   p.plan().forRoot(root,auth_.store,[&](const mapping::Run&r){
     ++m.visits;++m.clips;validateRun(r,root,actual,padded);const auto slice=clipRun(r,lo,hi);
     if(slice.first>=slice.last)return;
     ++m.intersections;auto clipped=r;clipped.begin+=slice.first*r.logical_step;
@@ -319,9 +345,16 @@ class Commitments::CategoryKernelPlan {
   need(!c_.category_failed_ && auth_.session==c_.session_ && auth_.transcript.lock()==c_.io_.transcriptOwner()
        && c_.io_.session()==c_.session_ && auth_.claims.size()==c_.claims_.size()
        && rho_.size()==c_.claims_.size(),"category K prepared session/dimensions");
-  for(const auto&p:auth_.claims){need(p.ready && p.frozen,"category K requires frozen mapping");original_runs_+=p.run_count;}
+  for(const auto&p:auth_.claims){need(p.ready && p.plan().frozen,"category K requires frozen mapping");original_runs_+=p.plan().run_count;}
   if(options_&unified::K3){weights_.resize(rho_.size());weight_bytes_=weights_.capacity()*sizeof(WeightCache);need(weight_bytes_<=category_weight_limit,"category K weight cache metadata");}
   if(!(options_&unified::K1))return;
+  std::unordered_map<const mapping::Plan*,std::size_t>groups;
+  for(std::size_t i=0;i<auth_.claims.size();++i){
+   const auto&plan=auth_.claims[i].plan();
+   auto group=groups.emplace(&plan,mapping_groups_.size());
+   if(group.second)mapping_groups_.emplace_back();
+   mapping_groups_[group.first->second].push_back(i);
+  }
   roots_.resize(c_.roots_.size());buckets_by_tile_.resize(tiles_.size());
   for(std::size_t k=0;k<tiles_.size();++k){
    const auto&t=tiles_[k];auto&r=roots_.at(t.root);
@@ -377,7 +410,7 @@ class Commitments::CategoryKernelPlan {
   const auto file_reads=computed_.reads.blocks+index_reads_.blocks;
   const auto charged_products=computed_.products+aggregate_mul_;
   std::cerr<<"CATEGORY_K_OPT {\"mask\":"<<options_<<",\"original_runs\":"<<original_runs_
-   <<",\"visited_runs\":"<<computed_.visits<<",\"intersecting_runs\":"<<computed_.intersections
+   <<",\"unique_index_mapping_groups\":"<<mapping_groups_.size()<<",\"visited_runs\":"<<computed_.visits<<",\"intersecting_runs\":"<<computed_.intersections
    <<",\"clip_attempts\":"<<(computed_.clips+index_clips_)<<",\"indexed_runs\":"<<indexed_runs_
    <<",\"index_intersections\":"<<index_intersections_<<",\"index_entries\":"<<index_entries_
    <<",\"index_fallback_roots\":"<<index_fallbacks_<<",\"index_noncompact_roots\":"<<noncompact_roots_
@@ -416,7 +449,7 @@ std::optional<Fr>Commitments::categoryKernelEndpoint(const std::vector<Fr>&q,con
  auto started=std::chrono::steady_clock::now();std::uint64_t total=0,eligible=0,fast=0,enumerated=0,blocks=0;
  auto power=[](std::size_t n){return n && !(n&(n-1));};
  auto base=[&](std::size_t k){const auto&r=roots_.at(k).spec;need(r.category<5,"category endpoint root category");const auto&c=layout_.categories[r.category];need(r.category_offset<=c.actual && r.actual<=c.actual-r.category_offset,"category endpoint actual bounds");auto z=c.logical_offset+r.category_offset;need(z<=(std::size_t(1)<<q.size()) && r.actual<=(std::size_t(1)<<q.size())-z,"category endpoint global bounds");return z;};
- auto each=[&](std::size_t i,const auto&consume){const auto&c=claims_[i];const auto&p=auth.claims[i];for(std::size_t root=0;root<roots_.size();++root){if(c.only_root>=0 && std::size_t(c.only_root)!=root)continue;if(!p.hasRoot(root))continue;auto offset=base(root);p.forRoot(root,auth.store,[&](const mapping::Run&r){
+ auto each=[&](std::size_t i,const auto&consume){const auto&c=claims_[i];const auto&p=auth.claims[i];for(std::size_t root=0;root<roots_.size();++root){if(c.only_root>=0 && std::size_t(c.only_root)!=root)continue;if(!p.plan().hasRoot(root))continue;auto offset=base(root);p.plan().forRoot(root,auth.store,[&](const mapping::Run&r){
   const auto actual=roots_[root].spec.actual;need(r.count && r.logical_step && r.begin<c.padded && r.count<=1+(c.padded-1-r.begin)/r.logical_step && r.first.root==root && r.first.index<actual && r.stride>=-std::int64_t(actual) && r.stride<=std::int64_t(actual),"category endpoint frozen run bounds");
   auto last=std::int64_t(r.first.index)+std::int64_t(r.count-1)*r.stride;need(last>=0 && std::uint64_t(last)<actual,"category endpoint frozen run end");consume(r,offset);
  });}};
@@ -431,7 +464,7 @@ std::optional<Fr>Commitments::categoryKernelEndpoint(const std::vector<Fr>&q,con
    consume(j,offset+std::size_t(index),length,bits,length>=64);j+=length*r.logical_step;remaining-=length;index+=std::int64_t(length)*r.stride;
   }
  };
- for(std::size_t i=0;i<claims_.size();++i){need(auth.claims[i].ready && auth.claims[i].frozen,"category endpoint requires frozen mapping");each(i,[&](const mapping::Run&r,std::size_t offset){total+=r.count;chunks(r,offset,[&](std::size_t,std::size_t,std::size_t length,unsigned,bool use){if(use)eligible+=length;});});}
+ for(std::size_t i=0;i<claims_.size();++i){need(auth.claims[i].ready && auth.claims[i].plan().frozen,"category endpoint requires frozen mapping");each(i,[&](const mapping::Run&r,std::size_t offset){total+=r.count;chunks(r,offset,[&](std::size_t,std::size_t,std::size_t length,unsigned,bool use){if(use)eligible+=length;});});}
  if(require_profitable && (eligible<1024 || eligible*4<total*3)){std::cerr<<"CATEGORY_K_ENDPOINT {\"admitted\":false,\"basis\":\"POWER_STRIDE_CARRY_BORROW-v2\",\"eligible_coordinates\":"<<eligible<<",\"map_coordinates\":"<<total<<",\"wall_seconds\":"<<std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()<<"}\n";return std::nullopt;}
  Weights global(q);std::size_t weight_peak=global.bytes();Fr out=0;
  for(std::size_t i=0;i<claims_.size();++i){const auto&c=claims_[i];const auto&p=auth.claims[i];std::unique_ptr<Weights>scratch;if(!p.weights)scratch=std::make_unique<Weights>(c.point);const auto&w=p.weights?*p.weights:*scratch;weight_peak=std::max(weight_peak,global.bytes()+(scratch?scratch->bytes():0));TerminalBasis aligned(c.point,q);CarryTerminalBasis carry(c.point,q);

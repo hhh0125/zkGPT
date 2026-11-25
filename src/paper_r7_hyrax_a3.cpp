@@ -2,14 +2,26 @@
 #include "paper_r7_perf4_profile.hpp"
 #include <algorithm>
 #include <chrono>
-#include <map>
+#include <iostream>
+#include <mutex>
 #include <set>
 namespace zkgpt::r7::hyrax_a3 {
 namespace {
+using Clock=std::chrono::steady_clock;
+double seconds(Clock::time_point start){return std::chrono::duration<double>(Clock::now()-start).count();}
+struct DimensionStats {
+ std::size_t generator_requests=0,prefix_hits=0,derived=0,copy_bytes=0,weight_calls=0,weight_muls=0;
+ double generator_seconds=0,weights_seconds=0,terminal_seconds=0;
+};
+std::array<DimensionStats,17>&optimizationStats(){static std::array<DimensionStats,17>stats;return stats;}
+DimensionStats&statsFor(std::size_t n){unsigned bits=0;while(n>1){n>>=1;++bits;}return optimizationStats()[bits];}
+std::mutex&generatorMutex(){static std::mutex mutex;return mutex;}
 void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
 G1 wideMSM(const G1*g,const Fr*x,std::size_t n){
  perf4::Scope phase("IPA/MSM","wideMSM",n);
  auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);
+ // In the bundled MCL, both GLV paths build private tables. The fallback
+ // mulVecN also takes const point/scalar inputs despite mulVec's signature.
  MSMTrace trace(n);G1 out;G1::mulVec(out,const_cast<G1*>(g),x,n);return out;
 }
 void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
@@ -18,33 +30,33 @@ Fr challenge(IO&io,const std::string&label){auto c=io.coin(label);need(!c.isZero
 // Independent generalized Schnorr proofs for the TWO input commitments.
 // Not a modification of Fig7/8; without this precondition xi+tau cancellation
 // must not be interpreted as knowledge of the two original openings.
-void knowledge(IO&io,const G1&xi,const Handle&tau,const std::vector<G1>&g,const DotWitness*w,Random*rng){
- perf4::Scope guard("IPA/guard",io.prover()?"P":"V",g.size());
+void knowledge(IO&io,const G1&xi,const Handle&tau,const G1*g,std::size_t n,const DotWitness*w,Random*rng){
+ perf4::Scope guard("IPA/guard",io.prover()?"P":"V",n);
  auto p=parameters(1);std::vector<Fr>d;Fr rv=0,dy=0,ry=0;Writer masks;
  if(io.prover()){
-  for(std::size_t i=0;i<g.size();++i){d.push_back(rng->scalar());}
+  for(std::size_t i=0;i<n;++i){d.push_back(rng->scalar());}
   rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
-  masks.point(wideMSM(g.data(),d.data(),g.size())+p.hiding*rv);masks.point(scalarCommit(dy,ry));
+  masks.point(wideMSM(g,d.data(),n)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
  }
  auto b=exchange(io,"A3/knowledge/masks",masks.b,false);
  G1 D,B;if(!io.prover()){Reader mr{b};D=mr.point();B=mr.point();mr.end();}
  auto c=challenge(io,"A3/knowledge/c");
  Writer response;
- if(io.prover()){for(std::size_t i=0;i<g.size();++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
+ if(io.prover()){for(std::size_t i=0;i<n;++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
  b=exchange(io,"A3/knowledge/responses",response.b,false);
  if(!io.prover()){
-  Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<g.size();++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
-  need(wideMSM(g.data(),z.data(),g.size())+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
+  Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<n;++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
+  need(wideMSM(g,z.data(),n)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
   need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
  }
 }
 // Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
-void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const std::vector<G1>&bases,const DotWitness*w,Random*rng){
+void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G1*bases,const DotWitness*w,Random*rng){
  perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
  const auto p=parameters(1);G1 U;if(!io.prover())U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
- if(io.prover()){perf4::Scope copy("IPA/input-copy","P",a.size(),bases.size()*sizeof(G1)+2*a.size()*sizeof(Fr));g=bases;aa=a;x=w->values;}
+ if(io.prover()){perf4::Scope copy("IPA/input-copy","P",a.size(),a.size()*(sizeof(G1)+2*sizeof(Fr)));g.assign(bases,bases+a.size());aa=a;x=w->values;}
  if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
- std::vector<Fr>folds;std::size_t width=a.size();unsigned round=0;
+ std::vector<Fr>folds,inverses;std::size_t width=a.size();unsigned round=0;
  while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
   if(io.prover()){
    rl=rng->scalar();rr=rng->scalar();
@@ -55,7 +67,7 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
    cross.point(wideMSM(g.data()+half,x.data(),half)+p.scalar*left+p.hiding*rl);
    cross.point(wideMSM(g.data(),x.data()+half,half)+p.scalar*right+p.hiding*rr);
   }
-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover())folds.push_back(c);c2=c*c;i2=inv*inv;}if(!io.prover())U+=L*c2+R*i2;
+  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover()){folds.push_back(c);inverses.push_back(inv);}c2=c*c;i2=inv*inv;}if(!io.prover())U+=L*c2+R*i2;
   if(io.prover()){
    {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
    {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
@@ -67,10 +79,18 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
  G1 ghat;Fr ahat;
  if(io.prover()){ghat=g[0];ahat=aa[0];}
  else{
-  // Independent verifier: direct product weights by HIGH bit (half-vector split),
-  // not the prover's recursive generator fold; one n-base MSM as in A.3 text.
-  std::vector<Fr>weights(a.size(),Fr(1));for(std::size_t k=0;k<folds.size();++k){Fr inv;Fr::inv(inv,folds[k]);auto bit=folds.size()-1-k;for(std::size_t i=0;i<weights.size();++i)weights[i]*=((i>>bit)&1)?folds[k]:inv;}
-  ghat=wideMSM(bases.data(),weights.data(),bases.size());ahat=r1::dot(a,weights);
+  // Independent verifier: expand the high-bit product weights and use a
+  // single MSM over the original bases.
+  auto start=Clock::now();
+  auto weights=verifierWeights(folds,inverses);
+  const auto weight_seconds=seconds(start);
+  start=Clock::now();
+  ghat=wideMSM(bases,weights.data(),a.size());ahat=r1::dot(a,weights);
+  const auto terminal_seconds=seconds(start);
+  const std::lock_guard<std::mutex>lock(generatorMutex());
+  auto&stats=statsFor(a.size());
+  ++stats.weight_calls;stats.weight_muls+=2*(a.size()-1);
+  stats.weights_seconds+=weight_seconds;stats.terminal_seconds+=terminal_seconds;
  }
  need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
  Writer masks;Fr d=0,rd=0,rb=0;
@@ -82,24 +102,87 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const s
 }
 }
 Measurement& measurement(){static Measurement m;return m;}
-std::vector<G1> generators(std::size_t n){
- dimension(n);
- static std::map<std::size_t,std::vector<G1>>cache;auto found=cache.find(n);if(found!=cache.end())return found->second;
- const auto&small=parameters(1);
- auto g=parameters(std::min<std::size_t>(n,64)).columns;
- for(std::size_t i=g.size();i<n;++i){G1 point;mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");g.push_back(point);}
- auto all=g;all.push_back(small.scalar);all.push_back(small.hiding);std::set<Bytes>seen;
- for(const auto&point:all){G1 opposite=-point;need(!seen.count(r1::encode(opposite)) && seen.insert(r1::encode(point)).second,"A3 generator collision");}
- cache.emplace(n,g);return g;
+std::vector<Fr> verifierWeights(const std::vector<Fr>&challenges,const std::vector<Fr>&inverses){
+ need(challenges.size()==inverses.size() && challenges.size()<=16,"A3 weight challenge dimensions");
+ std::vector<Fr>weights(std::size_t(1)<<challenges.size());
+ weights[0]=Fr(1);
+ std::size_t width=1;
+ for(std::size_t k=0;k<challenges.size();++k){
+  for(std::size_t i=width;i-- >0;){
+   const Fr prefix=weights[i];
+   weights[2*i]=prefix*inverses[k];
+   weights[2*i+1]=prefix*challenges[k];
+  }
+  width*=2;
+ }
+ return weights;
 }
-G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generators(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
+GeneratorView generatorView(std::size_t n){
+ dimension(n);
+ const auto start=Clock::now();
+ const std::lock_guard<std::mutex>lock(generatorMutex());
+ // The exact original BN254 suite, mode and index identify every generator.
+ // A shorter dimension binds less of the same sequence.
+ const auto small=parameters(1);
+ static std::shared_ptr<const std::vector<G1>>cache;
+ static std::set<Bytes>seen;
+ auto&stats=statsFor(n);
+ ++stats.generator_requests;
+ if(cache && n<=cache->size()){
+  ++stats.prefix_hits;stats.generator_seconds+=seconds(start);
+  return GeneratorView(cache,n);
+ }
+ auto points=std::make_shared<std::vector<G1>>();
+ auto encodings=seen;
+ points->reserve(n);
+ if(cache)points->assign(cache->begin(),cache->end());
+ auto addIdentity=[&](const G1&point){
+  need(!encodings.count(r1::encode(-point)) && encodings.insert(r1::encode(point)).second,"A3 generator collision");
+ };
+ if(!cache){addIdentity(small.scalar);addIdentity(small.hiding);}
+ auto existing=points->size();
+ for(std::size_t i=existing;i<n;++i){
+  G1 point;
+  if(i==0)point=small.columns[0];
+  else mcl::bn::hashAndMapToG1(point,std::string(crypto::suite)+"/mcl-hashAndMapToG1/MCL_MAP_TO_MODE_ORIGINAL/column/"+std::to_string(i));
+  need(point.isValid() && point.isValidOrder() && !point.isZero(),"A3 derived generator invalid");
+  addIdentity(point);
+  points->push_back(point);
+ }
+ G1::normalizeVec(points->data()+existing,points->data()+existing,n-existing);
+ seen.swap(encodings);
+ cache=std::move(points);
+ stats.derived+=n-existing;
+ stats.generator_seconds+=seconds(start);
+ return GeneratorView(cache,n);
+}
+std::vector<G1> generators(std::size_t n){
+ auto view=generatorView(n);
+ const std::lock_guard<std::mutex>lock(generatorMutex());
+ statsFor(n).copy_bytes+=n*sizeof(G1);
+ return {view.data(),view.data()+n};
+}
+void writeOptimizationStats(std::ostream&out){
+ const std::lock_guard<std::mutex>lock(generatorMutex());
+ const auto&stats=optimizationStats();
+ for(std::size_t i=0;i<stats.size();++i){
+  const auto&s=stats[i];
+  if(!s.generator_requests && !s.weight_calls)continue;
+  out<<"A3_OPT_STATS {\"dimension\":"<<(std::size_t(1)<<i)<<",\"generator_requests\":"<<s.generator_requests
+     <<",\"prefix_hits\":"<<s.prefix_hits<<",\"generators_derived\":"<<s.derived
+     <<",\"generator_api_copy_bytes\":"<<s.copy_bytes<<",\"generator_seconds\":"<<s.generator_seconds
+     <<",\"verifier_weights_calls\":"<<s.weight_calls<<",\"verifier_weights_muls\":"<<s.weight_muls
+     <<",\"verifier_weights_seconds\":"<<s.weights_seconds<<",\"verifier_terminal_seconds\":"<<s.terminal_seconds<<"}\n";
+ }
+}
+G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generatorView(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  ++measurement().dot_product_calls;
  dimension(a.size());need(tau.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
- publicBinding(io,"A3/statement",binding.b);auto g=generators(a.size());
+ publicBinding(io,"A3/statement",binding.b);auto g=generatorView(a.size());
  if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
- auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+ auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g.data(),g.size(),w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g.data(),w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");
@@ -110,7 +193,7 @@ void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const 
  // by the trusted-model verifier, and R1's role-specific derivation is exact.
  const auto&g=r1::generators(approved).g;
  if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
- auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g,w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g,w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+ auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g.data(),g.size(),w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g.data(),w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 // Legacy bounded ColumnMajor PC API. Current RowMajor Classified FS and
 // Interactive controllers call dotProduct / dotProductTrustedR6Basis through

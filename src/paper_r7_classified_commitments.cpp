@@ -8,6 +8,8 @@
 #include <openssl/evp.h>
 #include <chrono>
 #include <iostream>
+#include <iomanip>
+#include <numeric>
 #include <cstring>
 #include <sys/resource.h>
 namespace zkgpt::r7::oneblock::classified {
@@ -58,35 +60,96 @@ bool Commitments::usesBaseCoordinates(const Claim&c)const{
  // baseCoordinate lookup for each nonconstant location. Custom test maps do not.
  auto it=layout_.views.find(c.map_id);return c.map_id.rfind("native-base/",0)==0 || (it!=layout_.views.end() && it->second.mapped);
 }
-void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i)const{
+void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i,const void*descriptor)const{
  need(!category_failed_ && auth.session==session_ && auth.transcript.lock()==io_.transcriptOwner() && io_.session()==session_,"category prepared mapping cross-session/failed lifecycle");
- auto started=processCPU();auto wall=Clock::now();auto&p=auth.claims.at(i);need(!p.ready,"category mapping already prepared");
- need(auth.map_bytes<=auth.map_budget,"category shared mapping budget");
- mapping::Builder builder(p,auth.store,auth.map_budget-auth.map_bytes,roots_.size());
- auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);MapHash digest(&auth_metrics_);Fr bias=0;
- auto failure=[&]{return std::runtime_error("category mapping freeze failed: claim="+c.id+" reason="+p.reason+" RAM_used="+std::to_string(auth.map_bytes+p.bytes())+" RAM_limit="+std::to_string(auth.map_budget)+" file_used="+std::to_string(auth.store.bytes)+" file_limit="+std::to_string(auth.store.limit));};
- const bool baseMapped=usesBaseCoordinates(c);
- for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);++p.callback_calls;auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;
-  need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
-  if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");
-  digest.append(l);
-  if(!l.bias.isZero()){bias+=weights->at(j)*l.bias;++auth_metrics_.weight_products;}
-  if(!l.constant){builder.append(j,l.coordinate);auth_metrics_.mapping_ram_peak=std::max<std::uint64_t>(auth_metrics_.mapping_ram_peak,auth.map_bytes+builder.workingBytes());auth_metrics_.mapping_file_peak=std::max<std::uint64_t>(auth_metrics_.mapping_file_peak,auth.store.bytes);if(builder.failed())throw failure();}
+ const auto started=processCPU();
+ const auto wall=Clock::now();
+ auto&p=auth.claims.at(i);need(!p.ready,"category mapping already prepared");
+ auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);
+ auto existing=descriptor?auth.templates.find(descriptor):auth.templates.end();
+ const bool hit=existing!=auth.templates.end();
+ Fr bias=0;
+ if(hit){
+  p.mapping=existing->second;
+  need(p.mapping->padded==c.padded && p.mapping->only_root==c.only_root,"category template descriptor shape");
+  for(const auto&run:p.mapping->bias_runs){
+   auto j=run.begin,count=run.count;
+   while(count){
+    if(count<64){for(std::size_t k=0;k<count;++k){bias+=weights->at(j+k)*run.value;++auth_metrics_.weight_products;}break;}
+    unsigned free=0;
+    for(std::size_t n=1;n<=count/2 && !(j&n);n*=2)++free;
+    auto term=run.value;
+    // For an aligned logical block its freely varying low-bit weights sum to one.
+    for(unsigned bit=free;bit<c.point.size();++bit)
+     term*=((j>>bit)&1)?c.point[bit]:Fr(1)-c.point[bit];
+    bias+=term;auth_metrics_.weight_products+=c.point.size()-free;
+    const auto block=std::size_t(1)<<free;j+=block;count-=block;
+   }
+  }
+ }else{
+  need(auth.map_bytes<=auth.map_budget,"category shared mapping budget");
+  auto mapping=std::make_shared<Authentication::MappingTemplate>();
+  mapping->padded=c.padded;mapping->only_root=c.only_root;
+  mapping::Builder builder(*mapping,auth.store,auth.map_budget-auth.map_bytes,roots_.size());
+  MapHash digest(&auth_metrics_);
+  auto failure=[&]{return std::runtime_error("category mapping freeze failed: claim="+c.id+" reason="+mapping->reason+" RAM_used="+std::to_string(auth.map_bytes+mapping->bytes())+" RAM_limit="+std::to_string(auth.map_budget)+" file_used="+std::to_string(auth.store.bytes)+" file_limit="+std::to_string(auth.store.limit));};
+  const bool baseMapped=usesBaseCoordinates(c);
+  bool cache=descriptor!=nullptr;
+  const auto bias_limit=(Authentication::bias_budget-auth.bias_bytes)/sizeof(Authentication::MappingTemplate::BiasRun);
+  auto&runs=mapping->bias_runs;
+  for(std::size_t j=0;j<c.padded;++j){
+   const auto l=c.map(j);++p.callback_calls;auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;
+   need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");
+   if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");
+   digest.append(l);
+   if(!l.bias.isZero()){
+    bias+=weights->at(j)*l.bias;++auth_metrics_.weight_products;
+    if(cache){
+     if(!runs.empty() && runs.back().begin+runs.back().count==j && runs.back().value==l.bias)++runs.back().count;
+     else if(runs.size()==bias_limit){decltype(mapping->bias_runs){}.swap(runs);cache=false;}
+     else{
+      if(runs.size()==runs.capacity())runs.reserve(std::min(bias_limit,std::max<std::size_t>(4,2*runs.capacity())));
+      runs.push_back({j,1,l.bias});
+     }
+    }
+   }
+   if(!l.constant){
+    builder.append(j,l.coordinate);
+    auth_metrics_.mapping_ram_peak=std::max<std::uint64_t>(auth_metrics_.mapping_ram_peak,auth.map_bytes+builder.workingBytes());
+    auth_metrics_.mapping_file_peak=std::max<std::uint64_t>(auth_metrics_.mapping_file_peak,auth.store.bytes);
+    if(builder.failed())throw failure();
+   }
+  }
+  mapping->digest=digest.finish();builder.finish(true);if(!mapping->frozen)throw failure();
+  auth.map_bytes+=mapping->bytes();
+  if(cache){
+   auth.bias_bytes+=runs.capacity()*sizeof(runs.front());
+   auth.templates.emplace(descriptor,mapping);
+  }
+  p.mapping=std::move(mapping);p.full_scans=1;
+  ++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
+  auth_metrics_.template_runs+=p.mapping->run_count;
+  auth_metrics_.bias_descriptor_bytes=auth.bias_bytes;
+  // Storage owned by cached templates. Container implementation overhead is separate.
+  if(cache)auth_metrics_.template_cache_bytes+=sizeof(*p.mapping)+p.mapping->bytes()+runs.capacity()*sizeof(runs.front());
  }
- auto canonical=digest.finish();builder.finish(true);if(!p.frozen)throw failure();
- p.digest=canonical;p.bias=bias;p.ready=true;p.full_scans=1;c.map_digest=canonical;
- auth.map_bytes+=p.bytes();
+ p.bias=bias;p.ready=true;c.map_digest=p.mapping->digest;
  if(weights->bytes()<=auth.weight_budget-auth.weight_bytes){auth.weight_bytes+=weights->bytes();p.weights=std::move(weights);}
- ++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;auth_metrics_.map_cpu+=processCPU()-started;auth_metrics_.map_wall+=std::chrono::duration<double>(Clock::now()-wall).count();
- auth_metrics_.frozen_ram_claims+=std::string(p.reason)=="FROZEN_ROOT_RAM";auth_metrics_.frozen_file_claims+=std::string(p.reason)=="FROZEN_ROOT_FILE";
+ const auto elapsed=std::chrono::duration<double>(Clock::now()-wall).count();
+ ++auth_metrics_.mapping_claims;auth_metrics_.template_hits+=hit;
+ auth_metrics_.map_cpu+=processCPU()-started;auth_metrics_.map_wall+=elapsed;
+ const auto phase=c.map_id.rfind("native-base/gkr/",0)==0?0:c.id.rfind("Classified/source/",0)==0?1:c.id.rfind("r7/",0)==0?2:3;
+ auto&phase_stats=auth_metrics_.mapping_phases[phase];
+ ++phase_stats.claims;phase_stats.hits+=hit;phase_stats.scanned+=p.callback_calls;phase_stats.avoided+=hit?c.padded:0;phase_stats.wall+=elapsed;
+ const auto&plan=p.plan();
+ auth_metrics_.frozen_ram_claims+=std::string(plan.reason)=="FROZEN_ROOT_RAM";auth_metrics_.frozen_file_claims+=std::string(plan.reason)=="FROZEN_ROOT_FILE";
  auth_metrics_.mapping_ram_peak=std::max<std::uint64_t>(auth_metrics_.mapping_ram_peak,auth.map_bytes);auth_metrics_.mapping_file_peak=std::max<std::uint64_t>(auth_metrics_.mapping_file_peak,auth.store.bytes);
- if(opt2MetricsEnabled())std::cerr<<"OPT3B_PLAN {\"claim\":"<<i<<",\"id\":\""<<c.id<<"\",\"status\":\""<<p.reason<<"\",\"frozen\":true,\"runs\":"<<p.run_count<<",\"RAM_bytes\":"<<p.bytes()<<",\"shared_RAM_bytes\":"<<auth.map_bytes<<",\"file_bytes\":"<<auth.store.bytes<<",\"file_limit\":"<<auth.store.limit<<",\"mapping_callback_calls\":"<<p.callback_calls<<",\"complete_mapping_scans\":"<<p.full_scans<<",\"prepare_wall_seconds\":"<<std::chrono::duration<double>(Clock::now()-wall).count()<<"}\n";
- // The authenticated frozen stream is now the only mapping source. In particular
- // no native-base index closure or caller-owned mutable state survives here.
+ if(opt2MetricsEnabled())std::cerr<<"OPT3B_PLAN {\"claim\":"<<i<<",\"id\":"<<std::quoted(c.id)<<",\"status\":"<<std::quoted(plan.reason)<<",\"frozen\":true,\"template_hit\":"<<(hit?"true":"false")<<",\"runs\":"<<plan.run_count<<",\"RAM_bytes\":"<<plan.bytes()<<",\"shared_RAM_bytes\":"<<auth.map_bytes<<",\"file_bytes\":"<<auth.store.bytes<<",\"file_limit\":"<<auth.store.limit<<",\"mapping_callback_calls\":"<<p.callback_calls<<",\"complete_mapping_scans\":"<<p.full_scans<<",\"prepare_wall_seconds\":"<<elapsed<<"}\n";
+ // The authenticated frozen stream is the only remaining mapping source.
  c.map={};
 }
 Fr Commitments::prepareClaim(const Claim&c,Authentication&auth,std::size_t i)const{
- if(layout_.category_mode){need(!category_failed_ && auth.session==session_ && auth.transcript.lock()==io_.transcriptOwner() && io_.session()==session_,"category prepared mapping cross-session/failed lifecycle");const auto&p=auth.claims.at(i);need(p.ready && p.frozen && p.digest==c.map_digest && !c.map,"category missing prepared frozen mapping");return p.bias;}
+ if(layout_.category_mode){need(!category_failed_ && auth.session==session_ && auth.transcript.lock()==io_.transcriptOwner() && io_.session()==session_,"category prepared mapping cross-session/failed lifecycle");const auto&p=auth.claims.at(i);need(p.ready && p.mapping && p.mapping->frozen && p.mapping->digest==c.map_digest && !c.map,"category missing prepared frozen mapping");return p.bias;}
  auto started=processCPU();auto wall=Clock::now();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;
  auto&p=auth.claims[i];mapping::Builder builder(p,auth.store,auth.map_budget-auth.map_bytes,roots_.size());
  auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);Fr bias=0;
@@ -223,19 +286,27 @@ std::shared_ptr<const StaticBaseMap>Commitments::staticBase(){
 }
 VectorOracle Commitments::view(const std::string&id){
  need(sealed_ && !authenticated_,"classified view lifecycle");const auto&v=layout_.views.at(id);VectorOracle out;out.id=id;out.actual=v.actual;out.padded=v.padded;
+ if(io_.prover() && !v.mapped && v.pieces.size()==1 && v.pieces[0].begin==0 && v.pieces[0].count==v.padded){
+  const auto start=v.pieces[0].start;
+  const auto&root=roots_.at(start.root);
+  if(root.sealed_span && (single_public_roots_.empty() || !single_public_roots_.at(start.root))){
+   const auto span=root.sealed_span(start.index,v.padded);
+   if(span.count==v.padded)out.contiguous=span.data;
+  }
+ }
  if(static_source_enabled_ && (v.mapped || !v.pieces.empty())){
   auto&plan=static_sources_[id];if(!plan){plan=std::make_shared<const StaticSourceMap>(layout_,v,*staticBase());++auth_metrics_.static_source_builds;auth_metrics_.static_locator_bytes+=plan->bytes();}else ++auth_metrics_.static_source_hits;
   if(io_.prover())out.value=[this,plan](std::size_t j){auto l=publicLocation(plan->at(j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
   const auto map_id=v.id;const auto padded=v.padded;const int hint=!v.mapped && v.pieces.size()<=1?int(v.start.root):-1;
-  out.open=[this,plan,map_id,padded,hint](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h,"classified opening missing private evaluation");value=*h;}else value.handle=q.evaluation;Claim c{name,map_id,value,q.point,padded,[plan](std::size_t j){return plan->at(j);}};c.only_root=hint;c.static_locator=true;deferTrusted(std::move(c));};return out;
+  out.open=[this,plan,map_id,padded,hint,descriptor=&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h,"classified opening missing private evaluation");value=*h;}else value.handle=q.evaluation;Claim c{name,map_id,value,q.point,padded,[plan](std::size_t j){return plan->at(j);}};c.only_root=hint;c.static_locator=true;deferTrusted(std::move(c),descriptor);};return out;
  }
  if(io_.prover())out.value=[this,&v](std::size_t j){auto l=publicLocation(locate(layout_,v,j));return l.constant?l.bias:roots_.at(l.coordinate.root).value(l.coordinate.index)+l.bias;};
- out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h,"classified opening missing private evaluation");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);deferTrusted(std::move(c));};return out;
+ out.open=[this,&v](IO&live,const Query&q,const Hidden*h,Random*,std::string name){need(&live==&io_,"classified foreign IO session");Hidden value;if(live.prover()){need(h,"classified opening missing private evaluation");value=*h;}else value.handle=q.evaluation;Claim c{name,v.id,value,q.point,v.padded,[this,&v](std::size_t j){return locate(layout_,v,j);}};if(!v.mapped && v.pieces.size()<=1)c.only_root=int(v.start.root);deferTrusted(std::move(c),&v);};return out;
 }
 void Commitments::defer(Claim c){
  need(!layout_.category_mode,"category untrusted raw Claim source: use verifier-owned view or deferBase rule");deferTrusted(std::move(c));
 }
-void Commitments::deferTrusted(Claim c){
+void Commitments::deferTrusted(Claim c,const void*descriptor){
  if(layout_.category_mode){
   need(!category_failed_ && sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_,"category failed/closed claim lifecycle");
   try{
@@ -244,7 +315,7 @@ void Commitments::deferTrusted(Claim c){
    if(!category_auth_){category_auth_=std::make_unique<Authentication>(0,layout_.master_actual!=0);category_auth_->session=session_;category_auth_->transcript=io_.transcriptOwner();}
    auto&auth=*category_auth_;need(auth.claims.size()==claims_.size(),"category prepared registration size");auth.claims.emplace_back();
    auto original=std::move(c.map);c.map=[this,original=std::move(original)](std::size_t j){return publicLocation(original(j));};
-   prepareCategoryClaim(c,auth,claims_.size());
+   prepareCategoryClaim(c,auth,claims_.size(),descriptor);
    Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);
    bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);names_.insert(c.id);claims_.push_back(std::move(c));
   }catch(...){category_failed_=true;category_auth_.reset();throw;}return;
@@ -253,15 +324,40 @@ void Commitments::deferTrusted(Claim c){
   if(c.only_root>=0)for(const auto&entry:single_public_coordinates_)if((entry.first>>32)==std::size_t(c.only_root)){c.only_root=-1;break;}}
  need(sealed_ && tails_constrained_ && !authenticated_ && io_.session()==session_,"classified unconstrained tails/closed session");need(c.map && c.padded && c.padded<=r1::kMaxVector && c.point.size()==r1::log2exact(c.padded) && names_.insert(c.id).second,"classified missing/duplicate/invalid claim");need(c.value.handle.session==session_,"R7 HiddenScalar session/role identity mismatch");c.map_digest=mapDigest(c);Writer w;w.text(suite);w.text(identity_);w.text(c.id);w.text(c.map_id);w.raw(Bytes(c.map_digest.begin(),c.map_digest.end()));w.raw(encode(c.value.handle));w.number(c.padded,8);for(auto&x:c.point)w.scalar(x);bindPublic(io_,"Classified/defer/"+std::to_string(claims_.size()),w.b);claims_.push_back(std::move(c));
 }
-void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){need(actual>0 && actual<=padded,"classified base claim shape");
- if(static_source_enabled_){auto base=staticBase();Claim c{id,"native-base/"+id,h,q,padded,[base,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};return {base->at(index(j)),Fr(0),false};}};c.static_locator=true;deferTrusted(std::move(c));return;}
- deferTrusted({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}});}
+void Commitments::deferBase(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q){
+ deferBaseMapped(id,actual,padded,std::move(index),h,q,nullptr);
+}
+void Commitments::deferNativeTerminal(const std::string&id,const std::vector<std::uint32_t>&indices,std::size_t padded,const Hidden&h,const std::vector<Fr>&q){
+ deferBaseMapped(id,indices.size(),padded,[&indices](std::size_t j){return indices.at(j);},h,q,&indices);
+}
+void Commitments::deferBaseMapped(const std::string&id,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>index,const Hidden&h,const std::vector<Fr>&q,const void*descriptor){need(actual>0 && actual<=padded,"classified base claim shape");
+ if(static_source_enabled_){auto base=staticBase();Claim c{id,"native-base/"+id,h,q,padded,[base,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};return {base->at(index(j)),Fr(0),false};}};c.static_locator=true;deferTrusted(std::move(c),descriptor);return;}
+ deferTrusted({id,"native-base/"+id,h,q,padded,[this,index=std::move(index),actual](std::size_t j)->Located{if(j>=actual)return {{},Fr(0),true};auto at=index(j);need(at<baseSize(layout_),"classified base map out of bounds");return {baseCoordinate(layout_,at),Fr(0),false};}},descriptor);}
 Digest Commitments::mapDigest(const Claim&c)const{auto started=processCPU();++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;MapHash h;const bool baseMapped=usesBaseCoordinates(c);for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;need(l.constant || (l.coordinate.root<roots_.size() && l.coordinate.index<roots_[l.coordinate.root].spec.actual),"classified map root/coordinate bounds");if(c.only_root>=0)need(!l.constant && l.bias.isZero() && l.coordinate.root==std::size_t(c.only_root),"classified invalid root-only map hint");h.append(l);}auto d=h.finish();auth_metrics_.map_cpu+=processCPU()-started;return d;}
 std::vector<Fr>Commitments::kernel(std::size_t k,const std::vector<Fr>&lambda)const{
  auto started=processCPU();++auth_metrics_.kernel_calls;auth_metrics_.kernel_peak_bytes=std::max<std::uint64_t>(auth_metrics_.kernel_peak_bytes,roots_.at(k).spec.padded*sizeof(Fr));std::vector<Fr>result(roots_.at(k).spec.padded,Fr(0));for(std::size_t i=0;i<claims_.size();++i){auto&c=claims_[i];if(c.only_root>=0 && std::size_t(c.only_root)!=k)continue;auth_metrics_.kernel_coordinates+=c.padded;auth_metrics_.weight_products+=c.padded;Weights w(c.point,&auth_metrics_);std::optional<MapHash> digest;if(!c.static_locator || c.map_id.rfind("native-base/",0)==0)digest.emplace();for(std::size_t j=0;j<c.padded;++j){auto l=c.map(j);if(digest)digest->append(l);if(!l.constant && l.coordinate.root==k){need(l.coordinate.index<roots_[k].spec.actual,"classified mapped coordinate outside actual root");result[l.coordinate.index]+=lambda[i]*w.at(j);}}if(digest)need(digest->finish()==c.map_digest,"classified source map changed after defer");}auth_metrics_.kernel_cpu+=processCPU()-started;if(opt2MetricsEnabled())std::cerr<<"OPT2_KERNEL {\"root\":"<<k<<",\"cpu_seconds\":"<<processCPU()-started<<"}\n";
  return result;
 }
-Commitments::~Commitments(){if(opt2MetricsEnabled()){auto&m=auth_metrics_;
+Commitments::~Commitments(){
+ const auto&m=auth_metrics_;
+ if(layout_.category_mode){
+  const char*names[]={"GKR terminals","Source Original Handles","Range/Exp/Lasso/Memory/Product","public and other"};
+  for(unsigned i=0;i<m.mapping_phases.size();++i){
+   const auto&phase=m.mapping_phases[i];
+   std::cerr<<std::setprecision(12)<<"MAPPING_TEMPLATE_PHASE {\"phase\":"<<std::quoted(names[i])<<",\"claims\":"<<phase.claims
+    <<",\"hits\":"<<phase.hits<<",\"scanned_coordinates\":"<<phase.scanned<<",\"avoided_callbacks\":"<<phase.avoided
+    <<",\"prepare_wall_seconds\":"<<phase.wall<<"}\n";
+  }
+  const auto avoided=std::accumulate(m.mapping_phases.begin(),m.mapping_phases.end(),std::uint64_t(0),[](auto sum,const auto&phase){return sum+phase.avoided;});
+  std::cerr<<"MAPPING_TEMPLATE_TOTAL {\"claims\":"<<m.mapping_claims<<",\"unique_templates\":"<<m.map_calls
+   <<",\"reused_claims\":"<<m.template_hits<<",\"hit_rate\":"<<(m.mapping_claims?double(m.template_hits)/m.mapping_claims:0)
+   <<",\"scanned_coordinates\":"<<m.map_coordinates<<",\"avoided_callbacks\":"<<avoided<<",\"avoided_maphash_bytes\":"<<41*avoided
+   <<",\"frozen_runs\":"<<m.template_runs<<",\"frozen_run_ram_bytes\":"<<(category_auth_?category_auth_->map_bytes:0)
+   <<",\"frozen_file_storage_bytes\":"<<(category_auth_?category_auth_->store.bytes:0)
+   <<",\"cache_payload_ram_bytes\":"<<m.template_cache_bytes<<",\"bias_descriptor_bytes\":"<<m.bias_descriptor_bytes
+   <<",\"prepare_wall_seconds\":"<<m.map_wall<<"}\n";
+ }
+ if(opt2MetricsEnabled()){
  if(layout_.category_mode)std::cerr<<"CATEGORY_MAPPING_TOTAL {\"complete_mapping_scans\":"<<m.map_calls<<",\"mapping_callback_calls\":"<<m.map_coordinates<<",\"frozen_RAM_claims\":"<<m.frozen_ram_claims<<",\"frozen_FILE_claims\":"<<m.frozen_file_claims<<",\"mapping_RAM_peak_bytes\":"<<m.mapping_ram_peak<<",\"mapping_file_peak_bytes\":"<<m.mapping_file_peak<<",\"prepare_wall_seconds\":"<<m.map_wall<<",\"K_wall_seconds\":"<<m.kernel_wall<<",\"endpoint_wall_seconds\":"<<m.endpoint_seconds<<",\"fallback_map_queries\":0}\n";
  std::cerr<<"PERF4_STATIC_SOURCE {\"base_builds\":"<<m.static_base_builds<<",\"view_builds\":"<<m.static_source_builds<<",\"view_hits\":"<<m.static_source_hits<<",\"owned_plan_bytes\":"<<m.static_locator_bytes<<",\"claim_digest_and_builder_reused\":"<<(layout_.category_mode?"true":"false")<<"}\n";
  std::cerr<<"PERF3_MAP {\"prepare_bias_serializations\":"<<m.map_bias_serializations<<",\"prepare_bias_encoding_reuses\":"<<m.map_bias_reuses<<"}\n";

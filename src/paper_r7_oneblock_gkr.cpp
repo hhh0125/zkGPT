@@ -1,5 +1,6 @@
 #include "paper_r7_oneblock_gkr.hpp"
 #include "paper_r7_native_masked.hpp"
+#include "paper_r7_matrix_arithmetic.hpp"
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include "paper_r7_perf6_options.hpp"
 #include <prover.hpp>
@@ -147,14 +148,14 @@ MatrixResult matrix(IO&io,const layer&l,const std::vector<Fr>&parent,const Hidde
       l.size_v[0]==domain(int(m+k)) && l.ori_id_u.size()==l.size_u[0] && l.ori_id_v.size()==l.size_v[0],"Oneblock GKR FC source layout");
  std::vector<Fr>row_point(parent.begin()+k,parent.begin()+k+sequence_bits),column_point(parent.begin(),parent.begin()+k);
  auto rows=beta(sequence_bits,row_point,Fr(1)),columns=beta(k,column_point,Fr(1));
- std::vector<Value>factors;
- if(io.prover()){
-  factors.push_back([p,&l,m,rows](std::size_t s){Fr sum=0;for(std::size_t j=0;j<rows.size();++j)sum+=rows[j]*p->val[0].at(l.ori_id_u.at(s+(j<<m)));return sum;});
-  factors.push_back([p,&l,m,columns](std::size_t s){Fr sum=0;for(std::size_t j=0;j<columns.size();++j)sum+=columns[j]*p->val[0].at(l.ori_id_v.at(s+(j<<m)));return sum;});
- }
- Expression expression;expression.factor_count=2;expression.terms.push_back({Fr(1),{0,1}});
+ const auto started=detail::MatrixArithmetic::Clock::now();
+ const auto width=domain(int(m));
+ detail::MatrixArithmetic arithmetic;
+ if(io.prover())arithmetic.materialize(width,p->val[0],l.ori_id_u,rows,l.ori_id_v,columns);
+ auto*private_factors=io.prover()?&arithmetic:nullptr;
  std::unique_ptr<native_masked::PhaseMeasure> matrix_measure;if(!native_masked::enabled()){matrix_measure=std::make_unique<native_masked::PhaseMeasure>(role,io.prover(),false);matrix_measure->rounds=m;}
- auto reduction=native_masked::enabled()?native_masked::matrix(io,domain(int(m)),initial,factors,rng,role):expressionSumcheck(io,domain(int(m)),initial,factors,expression,rng,role);
+ auto reduction=native_masked::enabled()?native_masked::matrix(io,width,initial,{},rng,role,private_factors):detail::matrixExpressionSumcheck(io,width,initial,private_factors,rng,role);
+ if(io.prover())arithmetic.report(role,detail::MatrixArithmetic::seconds(started));
  need(reduction.endpoints.size()==2 && reduction.point.size()==m,"Oneblock GKR FC reduction endpoints");
  MatrixResult result;result.x=reduction.endpoints[0];result.w=reduction.endpoints[1];result.x_point=reduction.point;result.w_point=reduction.point;
  result.x_point.insert(result.x_point.end(),row_point.begin(),row_point.end());result.w_point.insert(result.w_point.end(),column_point.begin(),column_point.end());

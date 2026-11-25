@@ -1,10 +1,7 @@
 #pragma once
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include <array>
-#include <cstdlib>
 namespace zkgpt::r7::oneblock::polynomial {
-// Experimental prover arithmetic only. Default retains the original implementation.
-inline unsigned mode(){const char*v=std::getenv("ZKGPT_PRODUCT_POLY");if(!v)return 0;need(v[0]>='0' && v[0]<='3' && !v[1],"ZKGPT_PRODUCT_POLY must be 0..3");return unsigned(v[0]-'0');}
 template<class F>using Cubic=std::array<F,4>;
 template<class F>using Quadratic=std::array<F,3>;
 template<class F>Quadratic<F> quadratic(const F&a,const F&b,const F&c,const F&d){
