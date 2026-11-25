@@ -5,6 +5,7 @@
 #include "paper_r7_classified_mapping_plan.hpp"
 #include "paper_r7_single_hyrax.hpp"
 #include <unordered_map>
+namespace zkgpt::r7::oneblock::unified::detail {class Workers;}
 namespace zkgpt::r7::oneblock::classified {
 class StaticBaseMap;class StaticSourceMap;
 struct Claim {std::string id,map_id;Hidden value;std::vector<Fr>point;std::size_t padded=0;std::function<Located(std::size_t)>map;int only_root=-1;Digest map_digest{};bool static_locator=false;};
@@ -16,8 +17,10 @@ struct Root {
  // an implicit zero suffix, helper secrets already store their padded length.
  const Fr*sealed_data=nullptr;std::size_t sealed_stored=0;
  std::function<bool()>sealed_storage_valid;
+ std::function<unified::InputWindow(std::size_t,std::size_t)>sealed_span;
 };
 struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
+ std::uint64_t kernel_run_visits=0,kernel_run_clips=0,kernel_run_intersections=0;
  std::uint64_t map_bias_serializations=0,map_bias_reuses=0;
  std::uint64_t static_base_builds=0,static_source_builds=0,static_source_hits=0,static_locator_bytes=0;
  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
@@ -35,15 +38,23 @@ class Commitments {
   std::vector<Fr>a_,b_;unsigned split_;
   public:explicit Weights(const std::vector<Fr>&,AuthMetrics* =nullptr);
   std::size_t bytes()const;Fr at(std::size_t)const;
+  std::size_t highSize()const{return b_.size();}
+  std::vector<Fr>aggregate(const Fr&lambda)const{
+   auto result=b_;for(auto&v:result)v*=lambda;return result;
+  }
+  std::size_t highGroups(std::size_t begin,std::size_t count,std::size_t step)const{
+   return step>=a_.size()?count:((begin+(count-1)*step)>>split_)-(begin>>split_)+1;
+  }
   // Logical intervals share b[high]; lambda is supplied only after its FS draw.
-  template<class F>std::size_t scaled(std::size_t begin,std::size_t count,const Fr&lambda,F&&consume,std::size_t step=1)const{
-   if(step!=1){std::size_t groups=0,previous=std::size_t(-1);Fr factor;for(std::size_t j=0;j<count;++j,begin+=step){auto high=begin>>split_;if(high!=previous){factor=lambda*b_[high];previous=high;++groups;}consume(factor*a_[begin&(a_.size()-1)]);}return groups;}
+  template<class F>std::size_t scaled(std::size_t begin,std::size_t count,const Fr&lambda,F&&consume,std::size_t step=1,const std::vector<Fr>*aggregate=nullptr)const{
+   if(step!=1){std::size_t groups=0,previous=std::size_t(-1);Fr factor;for(std::size_t j=0;j<count;++j,begin+=step){auto high=begin>>split_;if(high!=previous){factor=aggregate?(*aggregate)[high]:lambda*b_[high];previous=high;++groups;}consume(factor*a_[begin&(a_.size()-1)]);}return groups;}
    std::size_t groups=0,end=begin+count;
-   while(begin<end){auto high=begin>>split_;auto stop=std::min(end,(high+1)*a_.size());Fr factor=lambda*b_[high];++groups;
+   while(begin<end){auto high=begin>>split_;auto stop=std::min(end,(high+1)*a_.size());Fr factor=aggregate?(*aggregate)[high]:lambda*b_[high];++groups;
     for(;begin<stop;++begin)consume(factor*a_[begin&(a_.size()-1)]);
    }return groups;
   }
  };
+ class CategoryKernelPlan;
  struct Authentication {
  using Run=mapping::Run;
  struct Prepared:mapping::Plan {std::unique_ptr<Weights>weights;Fr bias=0;Digest digest{};bool ready=false;std::uint64_t callback_calls=0,full_scans=0;};
@@ -71,11 +82,11 @@ class Commitments {
  std::unordered_map<std::string,std::shared_ptr<const StaticSourceMap>>static_sources_;
  std::shared_ptr<const StaticBaseMap>staticBase();
  Located publicLocation(Located)const;
- void initializeSingle(Value,Prepared*,const std::vector<Fr>&);
- void initializeCategory(Value,Prepared*,const std::vector<Fr>&);
+ void initializeSingle(Value,Prepared*,const std::vector<Fr>&,const std::vector<Fr>*);
+ void initializeCategory(Value,Prepared*,const std::vector<Fr>&,const std::vector<Fr>*);
  void authenticateCategoryInput(const std::vector<Fr>&);
  void categoryKernelInto(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&,Fr*out)const;
- std::vector<Fr>categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&)const;
+ std::vector<Fr>categoryKernel(std::size_t root,std::size_t begin,std::size_t count,const std::vector<Fr>&,const Authentication&,unsigned optimization=0,unified::detail::Workers* =nullptr)const;
  void rootOpening(std::size_t,const Query&,const Hidden*,const std::string&);
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&)const;
  Digest mapDigest(const Claim&)const;
@@ -83,7 +94,7 @@ class Commitments {
  // Full base row knowledge registration is disabled; retain truthful legacy metrics.
  static constexpr std::uint64_t registration_bytes=0,registered_rows=0;
  std::uint64_t tail_response_bytes=0,tail_rows=0;
- Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr,const std::vector<Fr>*single_x=nullptr);
+ Commitments(IO&,const Layout&,Value onlyP_base,Prepared*onlyP_prepared,Random*,const model::Trust*trust=nullptr,model::Secret*onlyP_model=nullptr,const std::vector<model::Trust>*chunks=nullptr,std::vector<model::Secret>*onlyP_chunks=nullptr,const std::vector<Fr>*single_x=nullptr,const std::vector<Fr>*category_master=nullptr);
  Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const std::vector<Fr>&x):Commitments(io,layout,std::move(base),prepared,rng,nullptr,nullptr,nullptr,nullptr,&x){}
  ~Commitments();
  void constrainBaseTails();

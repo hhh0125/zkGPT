@@ -14,6 +14,7 @@ inline constexpr std::uint64_t absent=std::numeric_limits<std::uint64_t>::max();
 inline constexpr std::size_t block_runs=4096;
 struct RootSpan {std::uint64_t head=absent,tail=absent,runs=0;};
 struct Block {std::uint64_t next=absent,count=0;};
+struct ReadMetrics {std::uint64_t bytes=0,blocks=0;};
 class Store {
  int fd_=-1;
  void write(const void*data,std::size_t n,std::uint64_t at){
@@ -36,11 +37,13 @@ class Store {
   if(span.tail!=absent)write(&offset,sizeof(offset),span.tail);else span.head=offset;
   span.tail=offset;span.runs+=n;bytes+=size;return true;
  }
- template<class F>void each(const RootSpan&span,F&&consume)const{
+ template<class F>void each(const RootSpan&span,F&&consume,ReadMetrics*local=nullptr)const{
   if(span.head==absent){need(span.runs==0,"classified empty mapping plan");return;}
   std::array<Run,block_runs>buffer;auto at=span.head;std::uint64_t seen=0;
   while(at!=absent){Block h;read(&h,sizeof(h),at);need(h.count && h.count<=block_runs && h.count<=span.runs-seen,"classified mapping plan chain count");
-   read(buffer.data(),h.count*sizeof(Run),at+sizeof(h));read_bytes+=sizeof(h)+h.count*sizeof(Run);++read_blocks;
+   read(buffer.data(),h.count*sizeof(Run),at+sizeof(h));const auto bytes_read=sizeof(h)+h.count*sizeof(Run);
+   if(local){local->bytes+=bytes_read;++local->blocks;}
+   else{read_bytes+=bytes_read;++read_blocks;}
    for(std::size_t i=0;i<h.count;++i){consume(buffer[i]);}
    seen+=h.count;need(h.next==absent || h.next>at,"classified mapping plan chain order");at=h.next;
   }need(seen==span.runs,"classified mapping plan chain incomplete");
@@ -50,8 +53,8 @@ struct Plan {
  std::vector<Run>runs;std::vector<RootSpan>disk_roots;bool frozen=false;const char*reason="UNPREPARED";std::size_t run_count=0;
  std::size_t bytes()const{return runs.capacity()*sizeof(Run)+disk_roots.capacity()*sizeof(RootSpan);}
  bool hasRoot(std::size_t k)const{if(!disk_roots.empty())return disk_roots.at(k).runs!=0;auto first=std::lower_bound(runs.begin(),runs.end(),k,[](const Run&r,std::size_t root){return r.first.root<root;});return first!=runs.end() && first->first.root==k;}
- template<class F>void forRoot(std::size_t k,const Store&store,F&&consume)const{
-  if(!disk_roots.empty()){store.each(disk_roots.at(k),consume);return;}
+ template<class F>void forRoot(std::size_t k,const Store&store,F&&consume,ReadMetrics*local=nullptr)const{
+  if(!disk_roots.empty()){store.each(disk_roots.at(k),consume,local);return;}
   auto first=std::lower_bound(runs.begin(),runs.end(),k,[](const Run&r,std::size_t root){return r.first.root<root;});for(;first!=runs.end() && first->first.root==k;++first)consume(*first);
  }
 };

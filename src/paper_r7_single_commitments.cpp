@@ -11,8 +11,8 @@ single::Plan singlePlan(const Layout&layout,const std::vector<Fr>&x){
  std::vector<single::PublicCell>cells;need(baseSize(layout)>=x.size(),"single native X source bounds");for(std::size_t j=0;j<x.size();++j){auto c=baseCoordinate(layout,j);cells.push_back({std::size_t(c.root)+1,c.index,j});}
  return single::makePlan(unified::pack(blocks,power2(x.size())),actual,identity(layout),ids,cells);
 }
-void Commitments::initializeSingle(Value base,Prepared*prepared,const std::vector<Fr>&x){
- if(layout_.category_mode){initializeCategory(std::move(base),prepared,x);return;}
+void Commitments::initializeSingle(Value base,Prepared*prepared,const std::vector<Fr>&x,const std::vector<Fr>*master){
+ if(layout_.category_mode){initializeCategory(std::move(base),prepared,x,master);return;}
  need(io_.prover()?(bool(base) && prepared && rng_):(!base && !prepared && !rng_),"single classified P/V boundary");
  single_x_=x;need(baseSize(layout_)>=x.size(),"single native public X prefix bounds");
  single_public_roots_.resize(layout_.roots.size(),0);

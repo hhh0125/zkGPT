@@ -1,5 +1,6 @@
 #include "paper_r7_validated_layout.hpp"
 #include "paper_r7_u_fold_state.hpp"
+#include "paper_r7_parallel_fold.hpp"
 #include <algorithm>
 #include <chrono>
 #include <limits>
@@ -14,6 +15,7 @@
 namespace zkgpt::r7::oneblock::unified {
 namespace {
 using Clock=std::chrono::steady_clock;
+double seconds(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
 class FrBuffer {
  Fr* data_=nullptr;std::size_t size_=0,mapped_bytes_=0,page_size_=0;
  std::size_t aligned(std::size_t count) const {
@@ -57,7 +59,7 @@ class FrBuffer {
 };
 std::uint64_t residentBytes(){std::ifstream f("/proc/self/statm");std::uint64_t total=0,resident=0;if(!(f>>total>>resident))return 0;auto page=::sysconf(_SC_PAGESIZE);return page>0?resident*static_cast<std::uint64_t>(page):0;}
 std::uint64_t peakResidentBytes(){struct rusage r{};return ::getrusage(RUSAGE_SELF,&r)==0?static_cast<std::uint64_t>(r.ru_maxrss)*1024:0;}
-bool same(InputSpan a,InputSpan b){return a.data==b.data && a.stored==b.stored && a.padded==b.padded && bool(a.read)==bool(b.read) && a.storage_identity==b.storage_identity && a.storage_offset==b.storage_offset;}
+bool same(InputSpan a,InputSpan b){return a.data==b.data && a.stored==b.stored && a.padded==b.padded && bool(a.read)==bool(b.read) && bool(a.window)==bool(b.window) && a.storage_identity==b.storage_identity && a.storage_offset==b.storage_offset;}
 void shape(InputSpan s,std::size_t padded,bool callbacks){need(s.padded==padded && s.stored<=s.padded && (!s.stored || s.data || (callbacks && s.read && s.storage_identity)),"PERF4 U original storage shape");}
 }
 struct FoldedU::Impl {
@@ -69,6 +71,7 @@ struct FoldedU::Impl {
   roots.resize(s.size());point.reserve(bits);
   for(std::size_t k=0;k<s.size();++k){auto original=input(k);shape(original,s[k].padded,true);
    if(original.read)original.read=[](std::size_t)->Fr{throw std::runtime_error("U descriptor marker cannot read");};
+   if(original.window)original.window=[](std::size_t,std::size_t)->InputWindow{throw std::runtime_error("U descriptor marker cannot borrow");};
    roots[k].original=std::move(original);
   }
  }
@@ -95,32 +98,139 @@ InputSpan FoldedU::span(std::size_t k,const std::string&id,const std::vector<Fr>
 }catch(...){poison();throw;}}
 void FoldedU::capture(std::size_t,std::size_t,const Fr*,std::size_t){}
 void FoldedU::completeRound(const std::string&id,const std::vector<Fr>&prefix){try{p_->check(id,&prefix);need(p_->consuming,"U completion phase");for(const auto&r:p_->roots)need(r.seen,"U incomplete root consumption");p_->consuming=false;p_->ready=true;}catch(...){poison();throw;}}
-void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&original){auto start=Clock::now();auto cpu=crypto::processCPU();
- auto timing=[&]{p_->m.fold_wall_seconds+=std::chrono::duration<double>(Clock::now()-start).count();p_->m.fold_cpu_seconds+=crypto::processCPU()-cpu;};
+void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&original,detail::Workers*workers){
+ auto start=Clock::now();auto cpu=crypto::processCPU();
+ auto timing=[&]{p_->m.fold_wall_seconds+=seconds(start);p_->m.fold_cpu_seconds+=crypto::processCPU()-cpu;};
  try{
   p_->check(id);need(p_->ready && !p_->consuming && p_->point.size()<p_->bits && challenge.isValid() && original,"PERF4 U advancement order/challenge");
-  // Validate ALL descriptors before modifying any root. No callback is retained.
+  // Validate all descriptors before any allocation or mutation.
   for(std::size_t k=0;k<p_->roots.size();++k)need(same(original(k),p_->roots[k].original),"PERF4 U original span changed before advance");
-  const bool materializing=p_->point.empty();
+  const bool materializing=p_->point.empty(),parallel=workers && workers->count()>1;
   const auto released_before=p_->m.unmapped_tail_bytes;
   const auto original_before=p_->m.original_read_coordinates;
-  for(std::size_t k=0;k<p_->roots.size();++k){auto&root=p_->roots[k];
-   if(materializing){
-    const auto n=root.original.padded,count=std::max<std::size_t>(1,n/2);FrBuffer next(count);
-    p_->m.mapped_bytes+=next.mappedBytes();p_->m.mapped_capacity_peak_bytes=std::max(p_->m.mapped_capacity_peak_bytes,p_->m.mapped_bytes);
-    // Borrow the sealed reader for this Segment only. Never retain its owning
-    // closure in Root, and never allocate/copy an Original-U-sized buffer.
-    auto source=original(k);need(same(source,root.original),"R8 U materialization storage drift");
-    auto read=[&](std::size_t j)->Fr{if(j>=source.stored)return Fr(0);return source.data?source.data[j]:source.read(j);};
-    if(n==1)next[0]=read(0);else{for(std::size_t first=0;first<count;){auto end=first+std::min<std::size_t>(4096,count-first);for(std::size_t j=first;j<end;++j){auto left=read(2*j),right=read(2*j+1);next[j]=left+challenge*(right-left);}first=end;}p_->m.fold_input_coordinates+=n;p_->m.multiplications+=count;p_->m.additions+=n;}
-    p_->m.original_read_coordinates+=root.original.stored;p_->m.fold_write_coordinates+=count;root.values=std::move(next);++p_->m.roots_materialized;
-   }else if(root.values.size()>1){auto n=root.values.size();for(std::size_t j=0;j<n/2;++j){auto left=root.values[2*j],right=root.values[2*j+1];root.values[j]=left+challenge*(right-left);}auto before=root.values.mappedBytes();auto unmap_start=Clock::now();auto unmap_cpu=crypto::processCPU();root.values.shrinkTo(n/2);auto released=before-root.values.mappedBytes();if(released){++p_->m.unmap_calls;p_->m.unmapped_tail_bytes+=released;p_->m.mapped_bytes-=released;}p_->m.unmap_wall_seconds+=std::chrono::duration<double>(Clock::now()-unmap_start).count();p_->m.unmap_cpu_seconds+=crypto::processCPU()-unmap_cpu;p_->m.cache_fold_read_coordinates+=n;p_->m.fold_input_coordinates+=n;p_->m.fold_write_coordinates+=n/2;p_->m.multiplications+=n/2;p_->m.additions+=n;}
-   // A scalar is kept unchanged; global selector scaling belongs to streaming.
+  std::vector<std::size_t> counts;
+  if(parallel)counts.resize(p_->roots.size());
+  if(materializing){
+   // For direct spans, fold complete pairs without a padding test or callback
+   // in the inner loop. The partial pair and padded suffix still use zeros.
+   auto direct=[&](std::size_t k,std::size_t first,std::size_t end){
+    auto&root=p_->roots[k];const auto&source=root.original;
+    auto*out=root.values.data();
+    if(source.padded==1){out[0]=source.stored?source.data[0]:Fr(0);return;}
+    const auto full_end=std::min(end,source.stored/2);
+    for(;first<full_end;++first){
+     const auto&left=source.data[2*first];const auto&right=source.data[2*first+1];
+     out[first]=left+challenge*(right-left);
+    }
+    if(first<end && 2*first<source.stored){const auto&left=source.data[2*first];out[first++]=left+challenge*(Fr(0)-left);}
+    const Fr zero(0);
+    for(;first<end;++first)out[first]=zero+challenge*(zero-zero);
+   };
+   for(std::size_t k=0;k<p_->roots.size();++k){
+    auto&root=p_->roots[k];
+    const auto source=original(k);
+    need(same(source,root.original),"R8 U materialization storage drift");
+    const auto n=source.padded,count=std::max<std::size_t>(1,n/2);
+    auto map_start=Clock::now();
+    root.values=FrBuffer(count);
+    p_->m.mmap_allocation_seconds+=seconds(map_start);
+    p_->m.mapped_bytes+=root.values.mappedBytes();
+    p_->m.mapped_capacity_peak_bytes=std::max(p_->m.mapped_capacity_peak_bytes,p_->m.mapped_bytes);
+    if(parallel && (source.data || !source.stored)){
+     counts[k]=count;
+    }else{
+     auto arithmetic_start=Clock::now();
+     if(workers && (source.data || !source.stored)){
+      direct(k,0,count);
+     }else{
+      // Callback readers may have thread-affine owners or mutate counters.
+      std::uint64_t callback_coordinates=0;
+      auto read=[&](std::size_t j)->Fr{
+       if(j>=source.stored)return Fr(0);
+       if(source.data)return source.data[j];
+       ++callback_coordinates;
+       return source.read(j);
+      };
+      if(n==1)root.values[0]=read(0);
+      else for(std::size_t first=0;first<count;){
+       auto end=first+std::min<std::size_t>(4096,count-first);
+       if(workers && source.window && 2*first<source.stored){
+        const auto maximum=std::min(2*(end-first),source.stored-2*first);
+        const auto window=source.window(2*first,maximum);
+        need(window.count && window.count<=maximum,"U materialization source window bounds");
+        const auto pairs=window.count/2;
+        if(window.data && pairs){
+         for(std::size_t j=0;j<pairs;++j){
+          const auto&left=window.data[2*j];const auto&right=window.data[2*j+1];
+          root.values[first+j]=left+challenge*(right-left);
+         }
+         first+=pairs;
+         continue;
+        }
+        end=first+std::max<std::size_t>(1,pairs);
+       }
+       for(std::size_t j=first;j<end;++j){
+        auto left=read(2*j),right=read(2*j+1);
+        root.values[j]=left+challenge*(right-left);
+       }
+       first=end;
+      }
+      p_->m.original_callback_coordinates+=callback_coordinates;
+     }
+     p_->m.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
+    }
+    if(n>1){p_->m.fold_input_coordinates+=n;p_->m.multiplications+=count;p_->m.additions+=n;}
+    
+    p_->m.original_read_coordinates+=source.stored;
+    p_->m.fold_write_coordinates+=count;
+   }
+   if(parallel){
+    auto arithmetic_start=Clock::now();
+    const auto jobs=detail::foldRanges(counts,0,std::numeric_limits<std::size_t>::max(),*workers,false,direct);
+    p_->m.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
+    p_->m.parallel_materialization_jobs+=jobs;
+   }
+   p_->m.roots_materialized+=p_->roots.size();
+   p_->m.materialization_wall_seconds=seconds(start);
+   p_->m.materialization_cpu_seconds=crypto::processCPU()-cpu;
+  }else{
+   auto fold=[&](std::size_t k,std::size_t first,std::size_t end){
+    auto*values=p_->roots[k].values.data();
+    for(std::size_t j=first;j<end;++j){
+     auto left=values[2*j],right=values[2*j+1];values[j]=left+challenge*(right-left);
+    }
+   };
+   if(parallel){
+    for(std::size_t k=0;k<counts.size();++k)counts[k]=p_->roots[k].values.size()/2;
+    auto arithmetic_start=Clock::now();
+    p_->m.parallel_fold_jobs+=detail::foldInPlace(counts,*workers,fold);
+    p_->m.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
+   }
+   // Workers have joined. No thread can read a page while it is reclaimed.
+   for(std::size_t k=0;k<p_->roots.size();++k){
+    auto&root=p_->roots[k];const auto n=root.values.size();
+    if(n<=1)continue;
+    if(!parallel){
+     auto arithmetic_start=Clock::now();fold(k,0,n/2);
+     p_->m.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
+    }
+    auto before=root.values.mappedBytes();auto unmap_start=Clock::now();auto unmap_cpu=crypto::processCPU();
+    root.values.shrinkTo(n/2);
+    auto released=before-root.values.mappedBytes();
+    if(released){++p_->m.unmap_calls;p_->m.unmapped_tail_bytes+=released;p_->m.mapped_bytes-=released;}
+    p_->m.unmap_wall_seconds+=seconds(unmap_start);p_->m.unmap_cpu_seconds+=crypto::processCPU()-unmap_cpu;
+    p_->m.cache_fold_read_coordinates+=n;p_->m.fold_input_coordinates+=n;p_->m.fold_write_coordinates+=n/2;
+    p_->m.multiplications+=n/2;p_->m.additions+=n;
+   }
   }
-  if(materializing){p_->m.materialization_wall_seconds=std::chrono::duration<double>(Clock::now()-start).count();p_->m.materialization_cpu_seconds=crypto::processCPU()-cpu;}
-  p_->point.push_back(challenge);p_->ready=false;++p_->m.advances;p_->m.live_bytes=0;for(const auto&root:p_->roots)p_->m.live_bytes+=root.values.size()*sizeof(Fr);timing();
-  if(crypto::opt2MetricsEnabled())std::cerr<<"R8_U_FOLD_ROUND {\"round\":"<<p_->point.size()-1<<",\"effective_elements\":"<<p_->m.live_bytes/sizeof(Fr)<<",\"live_bytes\":"<<p_->m.live_bytes<<",\"mapped_bytes\":"<<p_->m.mapped_bytes<<",\"released_tail_bytes\":"<<p_->m.unmapped_tail_bytes-released_before<<",\"unmapped_tail_bytes\":"<<p_->m.unmapped_tail_bytes<<",\"rss_bytes\":"<<residentBytes()<<",\"peak_rss_bytes\":"<<peakResidentBytes()<<",\"fold_wall_seconds\":"<<std::chrono::duration<double>(Clock::now()-start).count()<<",\"fold_cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"original_read_elements\":"<<p_->m.original_read_coordinates-original_before<<",\"materialization\":"<<(materializing?"true":"false")<<"}\n";
-
+  p_->point.push_back(challenge);p_->ready=false;++p_->m.advances;p_->m.live_bytes=0;
+  for(const auto&root:p_->roots)p_->m.live_bytes+=root.values.size()*sizeof(Fr);
+  timing();
+  if(crypto::opt2MetricsEnabled()){
+   auto sample_start=Clock::now();const auto rss=residentBytes(),peak_rss=peakResidentBytes();
+   p_->m.resident_sampling_seconds+=seconds(sample_start);
+   std::cerr<<"R8_U_FOLD_ROUND {\"round\":"<<p_->point.size()-1<<",\"effective_elements\":"<<p_->m.live_bytes/sizeof(Fr)<<",\"live_bytes\":"<<p_->m.live_bytes<<",\"mapped_bytes\":"<<p_->m.mapped_bytes<<",\"released_tail_bytes\":"<<p_->m.unmapped_tail_bytes-released_before<<",\"unmapped_tail_bytes\":"<<p_->m.unmapped_tail_bytes<<",\"rss_bytes\":"<<rss<<",\"peak_rss_bytes\":"<<peak_rss<<",\"fold_wall_seconds\":"<<seconds(start)<<",\"fold_cpu_seconds\":"<<crypto::processCPU()-cpu<<",\"original_read_elements\":"<<p_->m.original_read_coordinates-original_before<<",\"materialization\":"<<(materializing?"true":"false")<<"}\n";
+  }
  }catch(...){poison();timing();throw;}
 }
 void FoldedU::poison()noexcept{p_->failed=true;for(auto&root:p_->roots)root.values.clear();p_->m.live_bytes=0;p_->m.mapped_bytes=0;}
@@ -132,6 +242,8 @@ void FoldedU::report()const{const auto&m=p_->m;std::cerr<<"PERF4_U_STATE {";
  U_METRIC(original_read_coordinates) U_METRIC(cache_fold_read_coordinates) U_METRIC(fold_input_coordinates) U_METRIC(fold_write_coordinates)
  U_METRIC(multiplications) U_METRIC(additions) U_METRIC(fold_wall_seconds) U_METRIC(fold_cpu_seconds)
  U_METRIC(materialization_wall_seconds) U_METRIC(materialization_cpu_seconds)
+ U_METRIC(original_callback_coordinates) U_METRIC(parallel_materialization_jobs) U_METRIC(parallel_fold_jobs)
+ U_METRIC(mmap_allocation_seconds) U_METRIC(fold_arithmetic_wall_seconds) U_METRIC(resident_sampling_seconds)
 #undef U_METRIC
  std::cerr<<"\"enabled\":"<<(enabled()?"true":"false")<<",\"failed\":"<<(p_->failed?"true":"false")<<",\"private_files\":0}\n";
 }
