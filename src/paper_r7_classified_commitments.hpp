@@ -79,7 +79,9 @@ class Commitments {
  mapping::Store store;
  std::vector<Prepared>claims;
  std::map<const void*,std::shared_ptr<const MappingTemplate>>templates;
+ std::set<const MappingTemplate*> claimed_templates;
  std::size_t map_bytes=0,weight_bytes=0,bias_bytes=0;
+ bool static_prepared=false;
  std::string session;std::weak_ptr<const void>transcript;
  explicit Authentication(std::size_t n,bool full12=false):Authentication(n,full12?256u<<20:map_limit,full12?256u<<20:weight_limit,4*(full12?256u<<20:map_limit)){}
  Authentication(std::size_t n,std::size_t maps,std::size_t weights,std::size_t files):map_budget(maps),weight_budget(weights),store(files),claims(n){}
@@ -119,6 +121,10 @@ class Commitments {
  void constrainBaseTails();
  VectorOracle view(const std::string&,bool source_mle=false);
  void defer(Claim);
+ // Prepares immutable public mappings without reading a query or touching IO.
+ // Terminal vectors belong to the live independently constructed circuit.
+ using TerminalMapping = std::pair<const std::vector<std::uint32_t>*,std::size_t>;
+ void prepareStaticMappings(const std::vector<TerminalMapping>&);
  // index is a verifier-local authoritative rule, never a prover-supplied map.
  // Category freezes its consumed result immediately, then releases the callback.
  void deferBase(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&);

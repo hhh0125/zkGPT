@@ -1,4 +1,5 @@
 #include "paper_r7_hyrax_a3.hpp"
+#include "paper_r7_a3_fold.hpp"
 #include "paper_r7_perf4_profile.hpp"
 #include <algorithm>
 #include <chrono>
@@ -51,7 +52,7 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const G1*g,std::size_t n,const
  }
 }
 // Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
-void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G1*bases,const DotWitness*w,Random*rng){
+void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G1*bases,const DotWitness*w,Random*rng,zkgpt::Workers* workers=nullptr){
  perf4::Scope core("IPA/core",io.prover()?"P":"V",a.size());
  const auto p=parameters(1);G1 U;if(!io.prover())U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
  if(io.prover()){perf4::Scope copy("IPA/input-copy","P",a.size(),a.size()*(sizeof(G1)+2*sizeof(Fr)));g.assign(bases,bases+a.size());aa=a;x=w->values;}
@@ -71,7 +72,7 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
   if(io.prover()){
    {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
    {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
-   {perf4::Scope phase("IPA/generator-fold",label,half);Fr scalars[2]{inv,c};for(std::size_t i=0;i<half;++i){G1 pair[2]{g[i],g[i+half]};G1::mulVec(g[i],pair,scalars,2);}}
+   {perf4::Scope phase("IPA/generator-fold",label,half);detail::foldGenerators(g.data(),half,inv,c,workers);}
    x.resize(half);aa.resize(half);g.resize(half);y+=c2*left+i2*right;blind+=c2*rl+i2*rr;
   }
   width=half;++round;
@@ -176,13 +177,13 @@ void writeOptimizationStats(std::ostream&out){
  }
 }
 G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generatorView(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
-void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
+void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng,zkgpt::Workers* workers){
  ++measurement().dot_product_calls;
  dimension(a.size());need(tau.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/statement",binding.b);auto g=generatorView(a.size());
  if(io.prover())need(w && rng && w->values.size()==a.size(),"A3 private input shape");
- auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g.data(),g.size(),w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g.data(),w,rng);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
+ auto start=std::chrono::steady_clock::now();knowledge(io,xi,tau,g.data(),g.size(),w,rng);auto next=std::chrono::steady_clock::now();measurement().guard_seconds+=std::chrono::duration<double>(next-start).count();prooflog(io,xi,tau,a,g.data(),w,rng,workers);measurement().core_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-next).count();
 }
 void dotProductTrustedR6Basis(IO&io,const r1::PCSpec&approved,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng){
  approved.validate();need(approved.layout==r1::Layout::RowMajor && a.size()==approved.columns && a.size() && a.size()<=maxTrustedR6Dot && !(a.size()&(a.size()-1)),"A3 trusted R6 RowMajor dimension/layout");

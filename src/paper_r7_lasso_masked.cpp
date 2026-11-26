@@ -25,14 +25,19 @@ void linear(IO&io,const std::vector<Hidden>&w,const std::vector<Fr>&a,Random*rng
 }
 struct Mask {
  unsigned m;std::size_t padded=1;std::vector<Fr>a;Fr blind=0,rho=0,claim=0;G1 commitment;Hidden sum;
- std::string role;Measure&measurement;
+ std::string role;Measure&measurement;Fr known_prefix=0,future_sum=0;
  Mask(IO&io,unsigned variables,const Hidden&initial,Random*rng,const std::string&name,Measure&measure):m(variables),role(name),measurement(measure){
   while(padded<1+3*m)padded*=2;
-  std::vector<Fr>t(padded,Fr(0));Fr cube=1;for(unsigned i=0;i<m;++i)cube+=cube;t[0]=cube;
-  if(m){Fr half;Fr::div(half,cube,Fr(2));for(unsigned i=1;i<=3*m;++i)t[i]=half;}
-  if(io.prover()){Timer timer(measure.seconds[0]);need(rng,"mask entropy required");a.assign(padded,Fr(0));for(unsigned i=0;i<=3*m;++i)a[i]=rng->scalar();blind=rng->scalar();}
-  {Timer timer(measure.seconds[1]);Writer w;if(io.prover()){commitment=hyrax_a3::vectorCommit(a,blind);w.point(commitment);}auto bytes=io.message(role+"/mask-vector",w.b);Reader r{bytes};commitment=r.point();r.end();sum=exchangeHidden(io,role+"/sum",io.prover()?r1::dot(a,t):Fr(0),rng);}
-  {Timer timer(measure.seconds[2]);open(io,sum,t,rng,role+"/sum-opening");}
+  std::vector<Fr>t(padded,Fr(0));t[0]=Fr(std::uint32_t(1)<<m);
+  if(m)std::fill(t.begin()+1,t.begin()+1+3*m,Fr(std::uint32_t(1)<<(m-1)));
+  if(io.prover()){Timer timer(measure.seconds[0]);perf5::Scope generation(perf5::MaskGeneration);
+   need(rng,"mask entropy required");a.assign(padded,Fr(0));
+   for(unsigned i=0;i<=3*m;++i)a[i]=rng->scalar();
+   blind=rng->scalar();
+   known_prefix=a[0];
+   for(unsigned i=1;i<=3*m;++i)future_sum+=a[i];}
+  {Timer timer(measure.seconds[1]);perf5::Scope commit(perf5::MaskCommitment);Writer w;if(io.prover()){commitment=hyrax_a3::vectorCommit(a,blind);w.point(commitment);}auto bytes=io.message(role+"/mask-vector",w.b);Reader r{bytes};commitment=r.point();r.end();sum=exchangeHidden(io,role+"/sum",io.prover()?r1::dot(a,t):Fr(0),rng);}
+  {Timer timer(measure.seconds[2]);perf5::Scope opening(perf5::MaskSumOpening);open(io,sum,t,rng,role+"/sum-opening");}
   rho=io.coin(role+"/rho");
   {Timer timer(measure.seconds[3]);Writer w;if(io.prover())w.scalar(initial.value+rho*sum.value);auto bytes=io.message(role+"/initial-claim",w.b);Reader r{bytes};claim=r.scalar();r.end();
    linear(io,{initial,sum,publicHidden(io,role+"/public-initial",claim)},{Fr(1),rho,Fr(-1)},rng,role+"/initial-boundary");
@@ -40,25 +45,40 @@ struct Mask {
  }
  void open(IO&io,const Hidden&h,const std::vector<Fr>&weights,Random*rng,const std::string&name){
   hyrax_a3::DotWitness witness;if(io.prover()){witness.values=a;witness.blind=blind;witness.evaluation=h;}
-  stage2::ScopedIO scoped(io,name);hyrax_a3::dotProduct(scoped,commitment,h.handle,weights,io.prover()?&witness:nullptr,rng);
+  perf5::Scope a3(perf5::A3);
+  stage2::ScopedIO scoped(io,name);
+  auto* workers=io.prover() && padded>=32?&detail::nativeWorkers():nullptr;
+  hyrax_a3::dotProduct(scoped,commitment,h.handle,weights,io.prover()?&witness:nullptr,rng,workers);
  }
- std::array<Fr,4>round(unsigned i,const std::vector<Fr>&r)const{
-  need(i<m && r.size()==i,"mask round index");Fr scale=1;for(unsigned j=i+1;j<m;++j)scale+=scale;
-  std::array<Fr,4>out{a[0],Fr(0),Fr(0),Fr(0)};
-  for(unsigned j=0;j<i;++j){Fr power=r[j];for(unsigned k=0;k<3;++k){out[0]+=a[1+3*j+k]*power;power*=r[j];}}
-  out[0]*=scale;
-  for(unsigned k=1;k<=3;++k)out[k]=scale*a[1+3*i+k-1];
-  if(i+1<m){Fr future=0;for(unsigned j=i+1;j<m;++j)for(unsigned k=0;k<3;++k)future+=a[1+3*j+k];Fr half;Fr::div(half,scale,Fr(2));out[0]+=half*future;}
+ std::array<Fr,4>round(unsigned i){
+  need(i<m,"mask round index");
+  const auto remaining=m-i-1;
+  const Fr scale=Fr(std::uint32_t(1)<<remaining);
+  const auto* local=a.data()+1+3*i;
+  future_sum-=local[0]+local[1]+local[2];
+  std::array<Fr,4> out{scale*known_prefix,scale*local[0],scale*local[1],scale*local[2]};
+  if(remaining)out[0]+=Fr(std::uint32_t(1)<<(remaining-1))*future_sum;
   return out;
  }
- Fr exchangeRound(IO&io,std::vector<Fr>coeff,unsigned i,const std::vector<Fr>&r){
-  Writer w;if(io.prover()){auto q=round(i,r);for(unsigned k=0;k<4;++k)w.scalar(coeff[k]+rho*q[k]);}
-  auto name=role+"/round/"+std::to_string(i);auto bytes=io.message(name+"/coefficients",w.b);Reader reader{bytes};for(auto&x:coeff)x=reader.scalar();reader.end();
+ Fr exchangeRound(IO&io,std::vector<Fr>coeff,unsigned i){
+  Writer w;if(io.prover()){auto q=round(i);for(unsigned k=0;k<4;++k)w.scalar(coeff[k]+rho*q[k]);}
+  auto name=role+"/round/"+std::to_string(i);
+  {
+   perf5::Scope transcript(perf5::Transcript);
+   auto bytes=io.message(name+"/coefficients",w.b);Reader reader{bytes};for(auto&x:coeff)x=reader.scalar();reader.end();
+  }
   {perf5::Scope recurrence(perf5::Recurrence);need(claim==Fr(2)*coeff[0]+coeff[1]+coeff[2]+coeff[3],"masked sumcheck recurrence equation failed");}
-  auto challenge=io.coin(name+"/r");claim=coeff[0]+challenge*(coeff[1]+challenge*(coeff[2]+challenge*coeff[3]));return challenge;
+  Fr challenge;
+  {perf5::Scope transcript(perf5::Transcript);challenge=io.coin(name+"/r");}
+  claim=coeff[0]+challenge*(coeff[1]+challenge*(coeff[2]+challenge*coeff[3]));
+  if(io.prover()){
+   const auto* local=a.data()+1+3*i;
+   known_prefix+=challenge*(local[0]+challenge*(local[1]+challenge*local[2]));
+  }
+  return challenge;
  }
  Hidden endpoint(IO&io,const std::vector<Fr>&r,Random*rng){
-  Timer timer(measurement.seconds[5]);need(r.size()==m,"mask endpoint dimension");std::vector<Fr>weights(padded,Fr(0));weights[0]=Fr(1);
+  Timer timer(measurement.seconds[5]);perf5::Scope opening(perf5::MaskEndpointOpening);need(r.size()==m,"mask endpoint dimension");std::vector<Fr>weights(padded,Fr(0));weights[0]=Fr(1);
   for(unsigned j=0;j<m;++j){Fr power=r[j];for(unsigned k=0;k<3;++k){weights[1+3*j+k]=power;power*=r[j];}}
   auto value=exchangeHidden(io,role+"/endpoint-mask",io.prover()?r1::dot(a,weights):Fr(0),rng);
   open(io,value,weights,rng,role+"/endpoint-opening");
@@ -87,7 +107,7 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
                                               equality_point?&(*equality_point)[round]:nullptr);
    std::copy(values.begin(),values.end(),coeff.begin());
   }
-  auto challenge=mask.exchangeRound(io,coeff,round,point);
+  auto challenge=mask.exchangeRound(io,coeff,round);
   if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs);
   point.push_back(challenge);current/=2;++round;
  }
@@ -118,7 +138,7 @@ Reduction single(IO&io,std::size_t n,const Hidden&initial,const std::vector<Valu
     if(!round){if(inputs){++c->c2_polynomial_calls;c->c2_polynomial_pairs+=current/2;}else c->poly_callbacks+=3*current;}
    }
   }
-  auto challenge=mask.exchangeRound(io,coeff,round,point);
+  auto challenge=mask.exchangeRound(io,coeff,round);
   if(io.prover()){
    perf5::Scope folding(perf5::Fold);
    perf5::Scope round_time(round?perf5::FoldLater:perf5::FoldFirst);

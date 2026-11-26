@@ -6,7 +6,7 @@ struct UFoldMetrics {
  std::uint64_t mapped_capacity_peak_bytes=0,mapped_bytes=0,unmapped_tail_bytes=0,unmap_calls=0,live_bytes=0,roots_materialized=0,advances=0;
  std::uint64_t original_read_coordinates=0,cache_fold_read_coordinates=0,fold_input_coordinates=0,fold_write_coordinates=0,multiplications=0,additions=0;
  double fold_wall_seconds=0,fold_cpu_seconds=0,materialization_wall_seconds=0,materialization_cpu_seconds=0;
- std::uint64_t original_callback_coordinates=0,parallel_materialization_jobs=0,parallel_fold_jobs=0;
+ std::uint64_t original_callback_coordinates=0,parallel_materialization_jobs=0,parallel_fold_jobs=0,parallel_window_coordinates=0;
  double unmap_wall_seconds=0,unmap_cpu_seconds=0;
  double mmap_allocation_seconds=0,fold_arithmetic_wall_seconds=0,resident_sampling_seconds=0;
 };

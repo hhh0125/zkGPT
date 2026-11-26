@@ -3,7 +3,7 @@
 #include "prover.hpp"
 #include "memory_diagnostics.hpp"
 #include "thread_joiner.hpp"
-#include "paper_r7_native_workers.hpp"
+#include "paper_r7_gkr_arithmetic.hpp"
 #include <iostream>
 #include <utils.hpp>
 #include <fstream>
@@ -15,7 +15,6 @@
 #include "cnpy.h"
 #include <mcl/bn.hpp>
 
-static vector<F> beta_gs, beta_u;
 using namespace mcl::bn;
 using std::unique_ptr;
 
@@ -130,333 +129,154 @@ void prover::sumcheckInit(const F &alpha_0, const F &beta_0)
 }
 static ThreadSafeQueue<int> workerq,endq;
 
-void sc_phase1_uni_worker(vector<uniGate> &beg, std::vector<linear_poly> (&mult_array)[2],vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R) //F*& uni_value, layer &cur_layer,
-{
-    int idx;
-    while (true)
-    {
-        bool ret=workerq.TryPop(idx);
-        if(ret==false)
-            return;
-        int l=L[idx],r=R[idx];
+namespace {
+using namespace zkgpt::r7::oneblock::detail;
 
-        for (size_t i = l; i <r ; ++i) 
-        {
-            auto &gate = beg[i];
-            bool idx = gate.lu != 0;
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * host_safety::field(gate.sc);
-        }
-        endq.Push(idx);
-    }
+void reportGkrInit(u32 layer, unsigned phase, const u32 (&total)[2],
+                   std::size_t unary_count, std::size_t binary_count,
+                   double workspace, double beta_time, double reduction,
+                   const GatePartitionTiming& unary, const GatePartitionTiming& binary,
+                   GkrClock::time_point started) {
+    if (!std::getenv("ZKGPT_PERF5_PROFILE")) return;
+    // This record contains public dimensions and timings. Private witness
+    // diagnostics still use cerr and remain suppressed by the caller.
+    std::clog << "GKR_INIT_V4 {\"layer\":" << layer << ",\"phase\":" << phase
+        << ",\"target_domain_0\":" << total[0] << ",\"target_domain_1\":" << total[1]
+        << ",\"unary_gates\":" << unary_count << ",\"binary_gates\":" << binary_count
+        << ",\"workspace_seconds\":" << workspace << ",\"beta_seconds\":" << beta_time
+        << ",\"unary_partition_seconds\":" << unary.partition_seconds
+        << ",\"binary_partition_seconds\":" << binary.partition_seconds
+        << ",\"unary_seconds\":" << unary.accumulate_seconds
+        << ",\"binary_seconds\":" << binary.accumulate_seconds
+        << ",\"unary_workers\":" << unary.workers << ",\"binary_workers\":" << binary.workers
+        << ",\"unary_worker_seconds\":" << unary.total_worker_seconds
+        << ",\"binary_worker_seconds\":" << binary.total_worker_seconds
+        << ",\"binary_dispatch_and_join_seconds\":"
+        << std::max(0.0, binary.accumulate_seconds-binary.max_worker_seconds)
+        << ",\"reduction_seconds\":" << reduction
+        << ",\"peak_partition_index_bytes\":" << std::max(unary.index_bytes,binary.index_bytes)
+        << ",\"seconds\":" << gkrElapsed(started) << "}\n" << std::flush;
 }
 
-void sc_phase1_bin_worker(layer& cur, vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<vector<F> >& val,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u32 sumcheck_id) //F*& uni_value, layer &cur_layer,
-{
-    int idx;
-    while (true)
-    {
-        bool ret=workerq.TryPop(idx);
-        if(ret==false)
-            return;
-        int l=L[idx],r=R[idx];
-
-        for (size_t i = l; i <r ; ++i) 
-        {
-            auto &gate = beg[i];
-            bool idx = gate.getLayerIdU(sumcheck_id) != 0;
-            auto val_lv =  !gate.getLayerIdV(sumcheck_id) ? val[0][cur.ori_id_v[gate.v]] : val[gate.getLayerIdV(sumcheck_id)][gate.v];
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * host_safety::field(gate.sc);  // Ahg for phase 1
-        }
-        endq.Push(idx);
+template<class Source>
+void initializeGkrWorkspace(std::vector<linear_poly> (&values)[2],
+                            std::vector<linear_poly> (&multipliers)[2],
+                            const u32 (&total)[2], const u32 (&actual)[2],
+                            NativeWorkers& workers, const Source& source) {
+    for (unsigned b = 0; b < 2; ++b) {
+        nativeRanges(total[b], workers, 4096, [&](std::size_t, std::size_t begin, std::size_t end) {
+            for (auto j = begin; j < end; ++j) {
+                multipliers[b][j].clear();
+                values[b][j] = j < actual[b] ? source(b, j) : F_ZERO;
+            }
+        });
     }
 }
+}
 
-void prover::sumcheckInitPhase1(const F &relu_rou_0) 
-{
-    //fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_id);
-    auto &cur = C.circuit[sumcheck_id];
-    total[0] = static_cast<u32>(checkedDomainSize(
-        cur.bit_length_u[0],"sumcheck phase 1 branch 0"));
-    total_size[0] = cur.size_u[0];
-    total[1] = static_cast<u32>(checkedDomainSize(
-        cur.bit_length_u[1],"sumcheck phase 1 branch 1"));
-    total_size[1] = cur.size_u[1];
-
-    for (int branch=0; branch<2; ++branch)
-        if (total_size[branch] > total[branch])
-            throw std::length_error(
-                "sumcheck phase 1 source size exceeds padded domain");
-    // No references or worker threads exist yet, so any resize/reallocation
-    // is complete before the phase exposes the workspace.
+void prover::sumcheckInitPhase1(const F& relu_rou_0, u32 graph_layer) {
+    const auto started = GkrClock::now();
+    const auto& cur = C.circuit[sumcheck_id];
+    auto& workers = nativeWorkers();
+    for (unsigned b = 0; b < 2; ++b) {
+        total[b] = static_cast<u32>(checkedDomainSize(cur.bit_length_u[b],"sumcheck phase 1 branch"));
+        total_size[b] = cur.size_u[b];
+        if (total_size[b] > total[b])
+            throw std::length_error("sumcheck phase 1 source size exceeds padded domain");
+    }
     prepareSumcheckWorkspace();
     if (zkgpt::memory_diagnostics::enabled())
         logWorkspaceMemory("gkr_layer_"+std::to_string(sumcheck_id)+"_phase1");
-
     r_u[sumcheck_id].resize(cur.max_bl_u);
-    timer useless_t;
-    useless_t.start();
-    beta_g.resize(1ULL << cur.bit_length);
     relu_rou = relu_rou_0;
     add_term.clear();
-    
-    for (int b = 0; b < 2; ++b)
-        for (u32 u = 0; u < total[b]; ++u)
-            mult_array[b][u].clear();
-    
-    
-        for (int b = 0; b < 2; ++b) 
-        {
-            auto dep = !b ? 0 : sumcheck_id - 1;
-            for (u32 u = 0; u < total[b]; ++u) 
-            {
-                if (u >= cur.size_u[b])
-                    V_mult[b][u].clear();
-                else 
-                {
-                    V_mult[b][u] = getCirValue(dep, cur.ori_id_u, u);
-                }
-            }
-        }
-    useless_t.stop();
-    throw_time[sumcheck_id].push_back(useless_t.elapse_sec());
+    initializeGkrWorkspace(V_mult, mult_array, total, total_size, workers,
+        [&](unsigned branch, u32 u) { return getCirValue(branch ? sumcheck_id-1 : 0, cur.ori_id_u, u); });
+    const auto workspace_time = gkrElapsed(started);
+    throw_time[sumcheck_id].push_back(workspace_time);
+
     prove_timer.start();
-    
-    initBetaTable(beta_g, cur.bit_length, r_0, r_1, alpha, beta);
-    if (cur.zero_start_id < cur.size) {
-        const u32 padded_size = 1ULL << cur.bit_length;
-        for (u32 g = cur.zero_start_id; g < padded_size; ++g)
-            beta_g.at(g) *= relu_rou;
-    }
-    
-    if(cur.uni_interval.size()>=2)
-    {
-        const int thd=32;
-        std::unique_ptr<int[]> left_owner(new int[cur.uni_interval.size()]);
-        std::unique_ptr<int[]> right_owner(new int[cur.uni_interval.size()]);
-        int *L=left_owner.get(),*R=right_owner.get();
-        for (u64 j = 0; j <cur.uni_interval.size(); ++j) 
-        {
-                workerq.Push(j);
-                L[j]=cur.uni_interval[j].first;
-                R[j]=cur.uni_interval[j].second;
-        }
-        vector<thread> workers;
-        zkgpt::ThreadJoiner joiner(workers);
-        for(int i=0;i<thd;i++)
-            workers.emplace_back(sc_phase1_uni_worker, std::ref(cur.uni_gates),
-                std::ref(mult_array), std::ref(beta_g), std::ref(beta_u),
-                std::ref(L), std::ref(R));
-        while(!workerq.Empty())
-            this_thread::sleep_for (std::chrono::microseconds(1));
-        while(endq.Size()!=cur.uni_interval.size())
-            this_thread::sleep_for (std::chrono::microseconds(1));
-        for (auto &worker : workers) worker.join();
-        endq.Clear();
-    }
-    else for (auto &gate: cur.uni_gates) 
-        {
-            bool idx = gate.lu != 0;
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + beta_g[gate.g] * host_safety::field(gate.sc);
-        }
-    if(cur.bin_interval.size()>=2)
-    {
-        const int thd=32;
-        std::unique_ptr<int[]> left_owner(new int[cur.bin_interval.size()]);
-        std::unique_ptr<int[]> right_owner(new int[cur.bin_interval.size()]);
-        int *L=left_owner.get(),*R=right_owner.get();
-        for (u64 j = 0; j <cur.bin_interval.size(); ++j) 
-        {
-                workerq.Push(j);
-                L[j]=cur.bin_interval[j].first;
-                R[j]=cur.bin_interval[j].second;
-        }
-        vector<thread> workers;
-        zkgpt::ThreadJoiner joiner(workers);
-        for(int i=0;i<thd;i++)
-            workers.emplace_back(sc_phase1_bin_worker, std::ref(cur),
-                std::ref(cur.bin_gates), std::ref(mult_array), std::ref(V_u0),
-                std::ref(V_u1), std::ref(val), std::ref(beta_g),
-                std::ref(beta_u), std::ref(L), std::ref(R), sumcheck_id);
-        while(!workerq.Empty())
-            this_thread::sleep_for (std::chrono::microseconds(1));
-        while(endq.Size()!=cur.bin_interval.size())
-            this_thread::sleep_for (std::chrono::microseconds(1));
-        for (auto &worker : workers) worker.join();
-        endq.Clear();
-    }
-    else  for (auto &gate: cur.bin_gates) 
-        {
-            bool idx = gate.getLayerIdU(sumcheck_id) != 0;
-            auto val_lv = getCirValue(gate.getLayerIdV(sumcheck_id), cur.ori_id_v, gate.v);
-            mult_array[idx][gate.u] = mult_array[idx][gate.u] + val_lv * beta_g[gate.g] * host_safety::field(gate.sc);  // Ahg for phase 1
-        }
+    const auto beta_start = GkrClock::now();
+    gkrBeta(beta_g, cur.bit_length, r_0, alpha, r_1, beta, workers,
+            cur.zero_start_id < cur.size ? cur.zero_start_id : std::size_t(-1), relu_rou);
+    const auto beta_time = gkrElapsed(beta_start);
+    const auto unary = accumulateGates(cur.uni_gates, workers, [](const uniGate& g) { return g.u; },
+        [&](const uniGate& gate) {
+            addScaled(mult_array[gate.lu != 0][gate.u].b, beta_g[gate.g], gate.sc);
+        });
+    const auto binary = accumulateGates(cur.bin_gates, workers, [](const binGate& g) { return g.u; },
+        [&](const binGate& gate) {
+            const auto branch = gate.getLayerIdU(sumcheck_id) != 0;
+            const auto v = getCirValue(gate.getLayerIdV(sumcheck_id), cur.ori_id_v, gate.v);
+            if (gate.sc != 0)
+                addScaled(mult_array[branch][gate.u].b, v * beta_g[gate.g], gate.sc);
+        });
     round = 0;
     prove_timer.stop();
-    //fprintf(stderr, "sumcheck level %d, phase1 init finished\n", sumcheck_id);
+    reportGkrInit(graph_layer, 1, total, cur.uni_gates.size(), cur.bin_gates.size(),
+                  workspace_time, beta_time, 0, unary, binary, started);
 }
 
-
-void sc_phase2_uni_worker( vector<uniGate> &beg, F& sum_value,F& V_u0,F&V_u1,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R) //F*& uni_value, layer &cur_layer,
-{
-    int idx;
-    while (true)
-    {
-        bool ret=workerq.TryPop(idx);
-        if(ret==false)
-            return;
-        int l=L[idx],r=R[idx];
-        F ss;
-        ss.clear();
-        for (size_t i = l; i <r ; ++i) 
-        {
-            auto &gate = beg[i];
-            auto V_u = !gate.lu ? V_u0 : V_u1;                  //V_u0 is claim 0, V_u1 is claim 1
-            ss +=beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
-        }
-        sum_value+=ss;
-        endq.Push(idx);
+void prover::sumcheckInitPhase2(u32 graph_layer) {
+    const auto started = GkrClock::now();
+    const auto& cur = C.circuit[sumcheck_id];
+    auto& workers = nativeWorkers();
+    for (unsigned b = 0; b < 2; ++b) {
+        total[b] = static_cast<u32>(checkedDomainSize(cur.bit_length_v[b],"sumcheck phase 2 branch"));
+        total_size[b] = cur.size_v[b];
+        if (total_size[b] > total[b])
+            throw std::length_error("sumcheck phase 2 source size exceeds padded domain");
     }
-}
-
-void sc_phase2_bin_worker( vector<binGate> &beg, std::vector<linear_poly> (&mult_array)[2],F& V_u0,F&V_u1,vector<F>& beta_g, vector<F>& beta_u,int*&L,int*&R,u32 sumcheck_id) //F*& uni_value, layer &cur_layer,
-{
-    int idx;
-    while (true)
-    {
-        bool ret=workerq.TryPop(idx);
-        if(ret==false)
-            return;
-        int l=L[idx],r=R[idx];
-
-        for (size_t i = l; i <r ; ++i) 
-        {
-            auto &gate = beg[i];
-            bool idx = gate.getLayerIdV(sumcheck_id);
-            auto V_u = !gate.getLayerIdU(sumcheck_id) ? V_u0 : V_u1;
-            mult_array[idx][gate.v] =mult_array[idx][gate.v]+beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
-        }
-        endq.Push(idx);
-    }
-}
-void prover::sumcheckInitPhase2() 
-{
-    // fprintf(stderr, "sumcheck level %d, phase2 init start\n", sumcheck_id);
-    auto &cur = C.circuit[sumcheck_id];
-    total[0] = static_cast<u32>(checkedDomainSize(
-        cur.bit_length_v[0],"sumcheck phase 2 branch 0"));
-    total_size[0] = cur.size_v[0];
-    total[1] = static_cast<u32>(checkedDomainSize(
-        cur.bit_length_v[1],"sumcheck phase 2 branch 1"));
-    total_size[1] = cur.size_v[1];
-    for (int branch=0; branch<2; ++branch)
-        if (total_size[branch] > total[branch])
-            throw std::length_error(
-                "sumcheck phase 2 source size exceeds padded domain");
     prepareSumcheckWorkspace();
     if (zkgpt::memory_diagnostics::enabled())
         logWorkspaceMemory("gkr_layer_"+std::to_string(sumcheck_id)+"_phase2");
-
-    timer useless_time;
-    useless_time.start();
     r_v[sumcheck_id].resize(cur.max_bl_v);
+    initializeGkrWorkspace(V_mult, mult_array, total, total_size, workers,
+        [&](unsigned branch, u32 v) { return getCirValue(branch ? sumcheck_id-1 : 0, cur.ori_id_v, v); });
+    const auto workspace_time = gkrElapsed(started);
+    throw_time[sumcheck_id].push_back(workspace_time);
 
-
-    beta_u.resize(1ULL << cur.max_bl_u);
-
-    
-
-    add_term.clear();
-    for (int b = 0; b < 2; ++b) 
-    {
-        for (u32 v = 0; v < total[b]; ++v)
-            mult_array[b][v].clear();
-    }
-    useless_time.stop();
-    throw_time[sumcheck_id].push_back(useless_time.elapse_sec());
     prove_timer.start();
-    initBetaTable(beta_u, cur.max_bl_u, r_u[sumcheck_id].begin(), F_ONE,32); //  beta_u is U in the code
-    for (int b = 0; b < 2; ++b) 
-    {
-        auto dep = !b ? 0 : sumcheck_id - 1;
-        for (u32 v = 0; v < total[b]; ++v) 
-        {
-            V_mult[b][v] = v >= cur.size_v[b] ? F_ZERO : getCirValue(dep, cur.ori_id_v, v);
-        }
-    }
-    
-    if(cur.uni_interval.size()>=2)
-    {
-        const int thd=32;
-        F sum[40];
-        
-        std::unique_ptr<int[]> left_owner(new int[cur.uni_interval.size()]);
-        std::unique_ptr<int[]> right_owner(new int[cur.uni_interval.size()]);
-        int *L=left_owner.get(),*R=right_owner.get();
-        for (u64 j = 0; j <cur.uni_interval.size(); ++j) 
-        {
-                workerq.Push(j);
-                L[j]=cur.uni_interval[j].first;
-                R[j]=cur.uni_interval[j].second;
-        }
-            vector<thread> workers;
-        zkgpt::ThreadJoiner joiner(workers);
-            for(int i=0;i<thd;i++)
-            {
-                sum[i].clear();
-                workers.emplace_back(sc_phase2_uni_worker,
-                    std::ref(cur.uni_gates), std::ref(sum[i]), std::ref(V_u0),
-                    std::ref(V_u1), std::ref(beta_g), std::ref(beta_u),
-                    std::ref(L), std::ref(R));
+    const auto beta_start = GkrClock::now();
+    gkrBeta(beta_u, cur.max_bl_u, r_u[sumcheck_id].begin(), F_ONE,
+            {}, F_ZERO, workers, std::size_t(-1), F_ONE);
+    const auto beta_time = gkrElapsed(beta_start);
+    struct alignas(64) Partial { std::array<F,2> value{F_ZERO,F_ZERO}; };
+    std::array<Partial,NativeWorkers::capacity> partial;
+    GatePartitionTiming unary;
+    const auto unary_start = GkrClock::now();
+    std::array<double,NativeWorkers::capacity> work{};
+    unary.workers = nativeRanges(cur.uni_gates.size(), workers, 8192,
+        [&](std::size_t k, std::size_t begin, std::size_t end) {
+            const auto start = GkrClock::now();
+            for (auto j = begin; j < end; ++j) {
+                const auto& gate = cur.uni_gates[j];
+                if (gate.sc == 0) continue;
+                addScaled(partial[k].value[gate.lu != 0], beta_g[gate.g]*beta_u[gate.u], gate.sc);
             }
-            while(!workerq.Empty())
-                this_thread::sleep_for (std::chrono::microseconds(1));
-            while(endq.Size()!=cur.uni_interval.size())
-                this_thread::sleep_for (std::chrono::microseconds(1));
-            for (auto &worker : workers) worker.join();
-            endq.Clear();
-            for(int i=0;i<thd;i++)
-                add_term+=sum[i];
+            work[k] = gkrElapsed(start);
+        });
+    unary.accumulate_seconds = gkrElapsed(unary_start);
+    const auto reduction_start = GkrClock::now();
+    std::array<F,2> sums{F_ZERO,F_ZERO};
+    for (unsigned k = 0; k < unary.workers; ++k) {
+        for (unsigned b = 0; b < 2; ++b) sums[b] += partial[k].value[b];
+        unary.total_worker_seconds += work[k];
     }
-    else for (auto &gate: cur.uni_gates) 
-    {
-        auto V_u = !gate.lu ? V_u0 : V_u1;                  //V_u0 is claim 0, V_u1 is claim 1
-        add_term = add_term + beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
-    }
-    if(cur.bin_interval.size()>=2)
-    {
-        const int thd=32;
-        std::unique_ptr<int[]> left_owner(new int[cur.bin_interval.size()]);
-        std::unique_ptr<int[]> right_owner(new int[cur.bin_interval.size()]);
-        int *L=left_owner.get(),*R=right_owner.get();
-        for (u64 j = 0; j <cur.bin_interval.size(); ++j) 
-        {
-                workerq.Push(j);
-                L[j]=cur.bin_interval[j].first;
-                R[j]=cur.bin_interval[j].second;
-        }
-            vector<thread> workers;
-        zkgpt::ThreadJoiner joiner(workers);
-            for(int i=0;i<thd;i++)
-                workers.emplace_back(sc_phase2_bin_worker,
-                    std::ref(cur.bin_gates), std::ref(mult_array),
-                    std::ref(V_u0), std::ref(V_u1), std::ref(beta_g),
-                    std::ref(beta_u), std::ref(L), std::ref(R), sumcheck_id);
-            while(!workerq.Empty())
-                this_thread::sleep_for (std::chrono::microseconds(1));
-            while(endq.Size()!=cur.bin_interval.size())
-                this_thread::sleep_for (std::chrono::microseconds(1));
-            for (auto &worker : workers) worker.join();
-            endq.Clear();
-    }
-    else for (auto &gate: cur.bin_gates) 
-    {
-        bool idx = gate.getLayerIdV(sumcheck_id);
-        auto V_u = !gate.getLayerIdU(sumcheck_id) ? V_u0 : V_u1;
-        mult_array[idx][gate.v] = mult_array[idx][gate.v] + beta_g[gate.g] * beta_u[gate.u] * V_u * host_safety::field(gate.sc);
-    }
+    add_term = sums[0]*V_u0 + sums[1]*V_u1;
+    const auto reduction = gkrElapsed(reduction_start);
 
+    const auto binary = accumulateGates(cur.bin_gates, workers, [](const binGate& g) { return g.v; },
+        [&](const binGate& gate) {
+            if (gate.sc == 0) return;
+            const auto branch = gate.getLayerIdV(sumcheck_id) != 0;
+            const auto& u = gate.getLayerIdU(sumcheck_id) ? V_u1 : V_u0;
+            addScaled(mult_array[branch][gate.v].b, beta_g[gate.g]*beta_u[gate.u]*u, gate.sc);
+        });
     round = 0;
     prove_timer.stop();
+    reportGkrInit(graph_layer, 2, total, cur.uni_gates.size(), cur.bin_gates.size(),
+                  workspace_time, beta_time, reduction, unary, binary, started);
 }
 
 void prover::sumcheckLassoInit(
@@ -1220,8 +1040,7 @@ void prover::logPrivateMemory(const std::string &stage) const {
     if (committed_rows_) logAllocation(stage,"committed_rows",1ULL<<(cc.l/2),sizeof(G1));
     logCircuit(stage,C);
     logVector(stage,"beta_g",beta_g);
-    logVector(stage,"process_static_beta_gs",beta_gs);
-    logVector(stage,"process_static_beta_u",beta_u);
+    logVector(stage,"beta_u",beta_u);
     std::size_t point_size=0,point_capacity=0;
     for (const auto &v:r_u) { point_size+=v.size(); point_capacity+=v.capacity(); }
     for (const auto &v:r_v) { point_size+=v.size(); point_capacity+=v.capacity(); }

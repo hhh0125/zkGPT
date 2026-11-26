@@ -39,8 +39,8 @@ public:
     void sumcheckInitAll(const vector<F>::const_iterator &r_0_from_v);
     void sumcheckInit(const F &alpha_0, const F &beta_0);
     void sumcheckDotProdInitPhase1();
-    void sumcheckInitPhase1(const F &relu_rou_0);
-    void sumcheckInitPhase2();
+    void sumcheckInitPhase1(const F &relu_rou_0, u32 graph_layer=0);
+    void sumcheckInitPhase2(u32 graph_layer=0);
 
     cubic_poly sumcheckDotProdUpdate1(const F &previous_random);
     quadratic_poly sumcheckUpdate1(const F &previous_random);
@@ -85,7 +85,7 @@ private:
     vector<F>::iterator r_0, r_1;         // current positions
     vector<vector<F>> r_u, r_v;             // next positions
 
-    vector<F> beta_g;
+    vector<F> beta_g, beta_u;
     
     F add_term;
     

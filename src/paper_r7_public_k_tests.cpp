@@ -165,6 +165,46 @@ void parallelFolds(){
        parallel_k.metrics().mmap_live_bytes==serial_k.metrics().mmap_live_bytes &&
        parallel_k.metrics().unmapped_tail_bytes==serial_k.metrics().unmapped_tail_bytes,"parallel fold reclamation differs");
 }
+void borrowedUFolds(){
+ const std::size_t n=1u<<18,stored=n-3;
+ const std::vector<Segment> segments{{0,n}};
+ std::vector<Fr> values;
+ for(std::size_t j=0;j<stored;++j)values.emplace_back(3+(j*101)%113);
+ const auto owner=std::this_thread::get_id();
+ std::size_t callback_reads=0;
+ const Inputs input=[&](std::size_t)->InputSpan{
+  InputSpan source{nullptr,stored,n,[&](std::size_t j){
+   check(std::this_thread::get_id()==owner,"borrowed U scalar callback escaped owner");
+   ++callback_reads;
+   return values.at(j);
+  },&values};
+  source.stable_windows=true;
+  source.window=[&](std::size_t j,std::size_t count){
+   check(std::this_thread::get_id()==owner,"borrowed U window callback escaped owner");
+   constexpr std::size_t extent=65537;
+   return InputWindow{values.data()+j,std::min(count,extent-j%extent)};
+  };
+  return source;
+ };
+ for(unsigned threads:{4u,8u,16u,32u}){
+  zkgpt::r7::oneblock::unified::detail::Workers workers(threads);
+  FoldedU u(n,segments,input,"u-borrow");
+  u.beginRound("u-borrow",{},segments);
+  u.span(0,"u-borrow",{},input(0));
+  u.completeRound("u-borrow",{});
+  const Fr r=17;
+  u.advance("u-borrow",r,input,&workers);
+  u.beginRound("u-borrow",{r},segments);
+  const auto state=u.span(0,"u-borrow",{r},input(0));
+  auto at=[&](std::size_t j){return j<stored?values[j]:Fr(0);};
+  for(std::size_t j=0;j<n/2;++j){
+   const auto a=at(2*j),b=at(2*j+1);
+   check(state.data[j]==a+r*(b-a),"stable-window first U fold differs from reference");
+  }
+  check(u.metrics().parallel_materialization_jobs>1,"borrowed U windows lack parallel materialization");
+ }
+ check(callback_reads==20,"borrowed U scalar fallback missed odd window boundaries or padding");
+}
 void foldBenchmark(){
  std::cout<<"layout,coordinates,mode,threads,repetition,U_materialization_seconds,U_later_fold_seconds,K_first_fold_seconds,K_later_fold_seconds,U_materialization_jobs,U_later_jobs,K_first_jobs,K_later_jobs\n";
  for(std::size_t n:{1u<<16,1u<<20})for(bool split:{false,true}){
@@ -301,13 +341,19 @@ extern "C" int __wrap_munmap(void*p,std::size_t n){
 int main(int argc,char**argv){try{
  struct rlimit core{0,0};setrlimit(RLIMIT_CORE,&core);r1::init();
  if(argc==2 && std::string(argv[1])=="--f1-microbench"){foldBenchmark();return 0;}
+ if(argc==2 && std::string(argv[1])=="--opt6-borrowed-u"){
+  borrowedUFolds();
+  check(mapped_live==0,"borrowed fold leaked mappings");
+  std::cout<<"PASS parallel borrowed U arithmetic, owner callbacks, odd windows and padding\n";
+  return 0;
+ }
  if(argc==2 && std::string(argv[1])=="--f1-differential"){
   parallelFolds();
   check(mapped_live==0,"parallel fold leaked mappings");
   std::cout<<"PASS F1 serial/parallel U/K state and endpoint differential\n";
   return 0;
  }
- once();directCompletion();guardedBounds();check(mapped_live==0,"build-once leak");buffer();folded();parallelFolds();failures();
+ once();directCompletion();guardedBounds();check(mapped_live==0,"build-once leak");buffer();folded();parallelFolds();borrowedUFolds();failures();
  check(mapped_live==0,"final mapping leak");
  std::cout<<"PASS PublicK build-once, legacy fold/endpoint oracle, isolated roots, move/shrink/overflow, tail reclamation, allocation/unmap/session/order failures; mmap calls="<<map_calls<<" unmaps="<<unmaps<<'\n';
  return 0;

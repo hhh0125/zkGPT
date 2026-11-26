@@ -4,7 +4,9 @@
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_k_terminal.hpp"
 #include "paper_r7_static_source_map.hpp"
+#include "paper_r7_native_workers.hpp"
 #include <algorithm>
+#include <atomic>
 #include <openssl/evp.h>
 #include <chrono>
 #include <iostream>
@@ -16,13 +18,26 @@ namespace zkgpt::r7::oneblock::classified {
 namespace {
 using Clock=std::chrono::steady_clock;
 void rootTiming(const char*phase,const std::string&id,Clock::time_point started){struct rusage usage{};getrusage(RUSAGE_SELF,&usage);std::cerr<<"OPT1_ROOT {\"phase\":\""<<phase<<"\",\"id\":\""<<id<<"\",\"seconds\":"<<std::chrono::duration<double>(Clock::now()-started).count()<<",\"cumulative_peak_rss_kib\":"<<usage.ru_maxrss<<"}\n";}
+constexpr std::size_t map_record_bytes=41;
+constexpr std::size_t reference_buffer_bytes=32u<<10;
+constexpr std::size_t mapping_buffer_bytes=64u<<10;
+bool serialMapReference(){
+ const auto*mode=std::getenv("ZKGPT_PERF3_MAP_REFERENCE");
+ return mode && std::strcmp(mode,"1")==0;
+}
+void putMapIndex(unsigned char*out,std::uint32_t n){
+ for(unsigned byte=0;byte<4;++byte)out[byte]=std::uint8_t(n>>(8*byte));
+}
 class MapHash {
  std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)>ctx_{EVP_MD_CTX_new(),EVP_MD_CTX_free};
- std::array<unsigned char,32768>buffer_{};std::size_t used_=0;
+ std::vector<unsigned char>buffer_;std::size_t used_=0;
  AuthMetrics*metrics_;
  std::array<unsigned char,32>bias_bytes_{};Fr bias_;bool have_bias_=false,reuse_bias_;
  void flush(){if(used_){const auto started=metrics_?Clock::now():Clock::time_point{};need(EVP_DigestUpdate(ctx_.get(),buffer_.data(),used_)==1,"classified map digest update");if(metrics_){++metrics_->maphash_updates;metrics_->maphash_bytes+=used_;metrics_->maphash_update_seconds+=std::chrono::duration<double>(Clock::now()-started).count();}used_=0;}}
- public:explicit MapHash(AuthMetrics*m=nullptr):metrics_(m){const auto*reference=std::getenv("ZKGPT_PERF3_MAP_REFERENCE");reuse_bias_=!reference || std::string(reference)!="1";need(ctx_ && EVP_DigestInit_ex(ctx_.get(),EVP_sha256(),nullptr)==1,"classified map digest init");}
+ public:explicit MapHash(AuthMetrics*m=nullptr,std::size_t buffer_bytes=reference_buffer_bytes):
+  buffer_(buffer_bytes),metrics_(m),reuse_bias_(!serialMapReference()){
+  need(buffer_bytes>=map_record_bytes && ctx_ && EVP_DigestInit_ex(ctx_.get(),EVP_sha256(),nullptr)==1,"classified map digest init");
+ }
  void append(const Located&l){
   if(used_+41>buffer_.size()){flush();}
   buffer_[used_++]=l.constant?1:0;for(auto n:{l.coordinate.root,l.coordinate.index})for(unsigned j=0;j<4;++j)buffer_[used_++]=std::uint8_t(n>>(8*j));
@@ -34,32 +49,115 @@ class MapHash {
    if(reuse_bias_){bias_=l.bias;std::memcpy(bias_bytes_.data(),buffer_.data()+used_,32);have_bias_=true;}
   }used_+=32;
  }
- // The stream still contains the exact canonical 41 bytes per location.
+ // Each run has one fixed record prefix and one canonical bias encoding.
+ // For physical runs only the four little-endian index bytes vary.
  void appendContiguous(Located l,std::size_t count){
   if(!count)return;
   if(!reuse_bias_){for(std::size_t j=0;j<count;++j){append(l);if(!l.constant)++l.coordinate.index;}return;}
   append(l);
-  if(!l.constant)++l.coordinate.index;
-  for(--count;count;){
-   if(used_+41>buffer_.size())flush();
-   const auto n=std::min(count,(buffer_.size()-used_)/41);
+  if(--count==0)return;
+  std::array<unsigned char,map_record_bytes>record;
+  std::memcpy(record.data(),buffer_.data()+used_-map_record_bytes,record.size());
+  auto next_index=static_cast<std::uint32_t>(l.coordinate.index+1);
+  for(;count;){
+   if(used_+map_record_bytes>buffer_.size())flush();
+   const auto n=std::min(count,(buffer_.size()-used_)/map_record_bytes);
    auto*out=buffer_.data()+used_;
-   for(std::size_t j=0;j<n;++j,out+=41){
-    out[0]=l.constant?1:0;
-    for(unsigned b=0;b<4;++b){
-     out[1+b]=std::uint8_t(l.coordinate.root>>(8*b));
-     out[5+b]=std::uint8_t(l.coordinate.index>>(8*b));
+   if(l.constant){
+    for(std::size_t j=0;j<n;++j,out+=map_record_bytes)std::memcpy(out,record.data(),record.size());
+   }else{
+    for(std::size_t j=0;j<n;++j,out+=map_record_bytes){
+     std::memcpy(out,record.data(),9);
+     putMapIndex(out+5,next_index++);
+     std::memcpy(out+9,bias_bytes_.data(),bias_bytes_.size());
     }
-    std::memcpy(out+9,bias_bytes_.data(),32);
-    if(!l.constant)++l.coordinate.index;
    }
-   used_+=41*n;
+   used_+=map_record_bytes*n;
    count-=n;
    if(metrics_)metrics_->map_bias_reuses+=n;
   }
  }
  Digest finish(){flush();Digest d{};unsigned n=0;need(EVP_DigestFinal_ex(ctx_.get(),d.data(),&n)==1 && n==32,"classified map digest end");return d;}
 };
+
+// A descriptor is borrowed from the trusted layout/circuit for this session.
+// The streaming cursor avoids storing terminal runs alongside the frozen plan.
+struct MappingDescriptor {
+ const void*identity;
+ const StaticSourceMap*source;
+ const std::vector<std::uint32_t>*terminal;
+ std::size_t padded;
+ int only_root;
+ std::size_t bias_runs=0;
+ const std::string*view_id=nullptr;
+};
+
+class MappingSpans {
+ const MappingDescriptor&descriptor_;
+ const StaticBaseMap&base_;
+ std::size_t next_=0,source_run_=0;
+ public:
+ MappingSpans(const MappingDescriptor&descriptor,const StaticBaseMap&base):descriptor_(descriptor),base_(base){}
+ bool next(StaticSourceMap::Run&run){
+  if(next_==descriptor_.padded)return false;
+  if(descriptor_.source){
+   run=descriptor_.source->runs().at(source_run_++);
+  }else{
+   const auto&indices=*descriptor_.terminal;
+   if(next_>=indices.size()){
+    run={next_,descriptor_.padded-next_,{{},Fr(0),true}};
+   }else{
+    const auto first=indices[next_];
+    const auto&pieces=base_.runs();
+    auto it=std::upper_bound(pieces.begin(),pieces.end(),first,
+      [](std::size_t at,const Piece&piece){return at<piece.begin;});
+    need(it!=pieces.begin(),"classified direct terminal prefix");
+    const auto&piece=*--it;
+    const auto offset=first-piece.begin;
+    need(offset<piece.count,"classified direct terminal coordinate");
+    const auto limit=std::min(indices.size()-next_,piece.count-offset);
+    std::size_t count=1;
+    while(count<limit && indices[next_+count]==std::size_t(first)+count)++count;
+    run={next_,count,{{piece.start.root,std::uint32_t(piece.start.index+offset)},Fr(0),false}};
+   }
+  }
+  need(run.begin==next_ && run.count && run.count<=descriptor_.padded-next_,"classified direct map coverage");
+  next_+=run.count;
+  return true;
+ }
+};
+
+using CandidateKey=std::array<std::uint64_t,13>;
+CandidateKey candidateKey(const MappingDescriptor&d,const StaticBaseMap&base){
+ CandidateKey key{d.padded,std::uint64_t(d.only_root)};
+ for(std::size_t i=2;i<key.size();++i){
+  const auto j=(d.padded-1)*(i-2)/(key.size()-3);
+  auto loc=d.source?d.source->at(j):
+   j<d.terminal->size()?Located{base.at((*d.terminal)[j]),Fr(0),false}:Located{{},Fr(0),true};
+  key[i]=loc.constant?std::uint64_t(-1):(std::uint64_t(loc.coordinate.root)<<32)|loc.coordinate.index;
+ }
+ return key;
+}
+
+bool sameMapping(const MappingDescriptor&a,const MappingDescriptor&b,const StaticBaseMap&base){
+ if(a.padded!=b.padded || a.only_root!=b.only_root)return false;
+ if(a.terminal && b.terminal && *a.terminal==*b.terminal)return true;
+ MappingSpans left(a,base),right(b,base);
+ StaticSourceMap::Run x,y;
+ left.next(x);right.next(y);
+ std::size_t j=0;
+ while(j<a.padded){
+  const auto&xl=x.first;
+  const auto&yl=y.first;
+  if(xl.constant!=yl.constant || xl.bias!=yl.bias || xl.coordinate.root!=yl.coordinate.root)return false;
+  if(xl.constant ? xl.coordinate.index!=yl.coordinate.index :
+     std::uint64_t(xl.coordinate.index)+j-x.begin!=std::uint64_t(yl.coordinate.index)+j-y.begin)return false;
+  j=std::min(x.begin+x.count,y.begin+y.count);
+  if(j==x.begin+x.count)left.next(x);
+  if(j==y.begin+y.count)right.next(y);
+ }
+ return true;
+}
 
 Fr fold(std::vector<Fr>&v,const std::vector<Fr>&q){std::size_t n=v.size();need(r1::log2exact(n)==q.size(),"classified public kernel query");for(auto&x:q){for(std::size_t j=0;j<n/2;++j)v[j]=v[2*j]+x*(v[2*j+1]-v[2*j]);n/=2;}return v[0];}
 std::vector<unified::Block>unifiedBlocks(const Layout&p){std::vector<unified::Block>b;for(auto&r:p.roots){unsigned category=r.model?1:(r.id.rfind("C_aux",0)==0?2:3);need(r.model || r.id.rfind("C_aux",0)==0 || r.id.rfind("C_lookup/",0)==0,"unified unknown classified root category");b.push_back({category,r.padded});}return b;}
@@ -84,6 +182,243 @@ bool Commitments::usesBaseCoordinates(const Claim&c)const{
  // baseCoordinate lookup for each nonconstant location. Custom test maps do not.
  auto it=layout_.views.find(c.map_id);return c.map_id.rfind("native-base/",0)==0 || (it!=layout_.views.end() && it->second.mapped);
 }
+void Commitments::prepareStaticMappings(const std::vector<TerminalMapping>&terminals){
+ if(!layout_.category_mode || !static_source_enabled_ || serialMapReference() || !single_public_coordinates_.empty())return;
+ const auto start=Clock::now();
+ need(!category_failed_ && sealed_ && tails_constrained_ && !authenticated_ &&
+      io_.session()==session_ && identity(layout_)==identity_,"category static mapping session lifecycle");
+ if(!category_auth_){
+  category_auth_=std::make_unique<Authentication>(claims_.size(),layout_.master_actual!=0);
+  category_auth_->session=session_;
+  category_auth_->transcript=io_.transcriptOwner();
+ }
+ auto&auth=*category_auth_;
+ need(!auth.static_prepared && auth.session==session_ && auth.transcript.lock()==io_.transcriptOwner(),
+      "category static mapping already prepared or cross-session");
+ try{
+  const auto base=staticBase();
+  std::vector<MappingDescriptor>descriptors;
+  descriptors.reserve(layout_.views.size()+terminals.size());
+  std::size_t bias_allowed=Authentication::bias_budget-auth.bias_bytes;
+  for(const auto&[id,view]:layout_.views){
+   if(!view.mapped && view.pieces.empty())continue;
+   if(auth.templates.count(&view))continue;
+   auto&source=static_sources_[id];
+   if(!source){
+    source=std::make_shared<const StaticSourceMap>(layout_,view,*base);
+    ++auth_metrics_.static_source_builds;
+    auth_metrics_.static_locator_bytes+=source->bytes();
+   }
+   const auto nonzero=std::count_if(source->runs().begin(),source->runs().end(),
+      [](const auto&run){return !run.first.bias.isZero();});
+   const auto bytes=std::size_t(nonzero)*sizeof(Authentication::MappingTemplate::BiasRun);
+   // The existing query-local path handles unusually fragmented bias plans.
+   if(bytes>bias_allowed)continue;
+   bias_allowed-=bytes;
+   const int hint=!view.mapped && view.pieces.size()<=1?int(view.start.root):-1;
+   descriptors.push_back({&view,source.get(),nullptr,view.padded,hint,std::size_t(nonzero),&id});
+  }
+  std::map<const void*,std::size_t>seen_terminals;
+  for(const auto&[indices,padded]:terminals){
+   need(indices && !indices->empty() && indices->size()<=padded && padded<=r1::kMaxVector,
+        "category static terminal shape");
+   const auto [seen,inserted]=seen_terminals.emplace(indices,padded);
+   need(seen->second==padded,"category static terminal descriptor shape");
+   if(!inserted || auth.templates.count(indices))continue;
+   descriptors.push_back({indices,nullptr,indices,padded,-1});
+  }
+  const auto describe_end=Clock::now();
+  std::map<CandidateKey,std::vector<std::size_t>>candidates;
+  std::vector<std::size_t>canonical(descriptors.size()),jobs;
+  std::uint64_t dedup_bytes=0,dedup_updates=0,comparisons=0;
+  double key_seconds=0,compare_seconds=0;
+  constexpr auto records_per_update=mapping_buffer_bytes/map_record_bytes;
+  for(std::size_t j=0;j<descriptors.size();++j){
+   const auto&descriptor=descriptors[j];
+   const auto key_start=Clock::now();
+   auto&group=candidates[candidateKey(descriptor,*base)];
+   key_seconds+=std::chrono::duration<double>(Clock::now()-key_start).count();
+   const auto compare_start=Clock::now();
+   const auto known=std::find_if(group.begin(),group.end(),[&](auto i){
+    ++comparisons;
+    return sameMapping(descriptors[i],descriptor,*base);
+   });
+   compare_seconds+=std::chrono::duration<double>(Clock::now()-compare_start).count();
+   if(known==group.end()){
+    canonical[j]=j;
+    group.push_back(j);
+    jobs.push_back(j);
+   }else{
+    canonical[j]=*known;
+    dedup_bytes+=descriptor.padded*map_record_bytes;
+    dedup_updates+=(descriptor.padded+records_per_update-1)/records_per_update;
+   }
+  }
+  std::stable_sort(jobs.begin(),jobs.end(),[&](auto a,auto b){
+   return descriptors[a].padded>descriptors[b].padded;
+  });
+  struct alignas(64) Result {
+   std::shared_ptr<Authentication::MappingTemplate> value;
+   AuthMetrics metrics;
+   double seconds=0,encoding_seconds=0;
+   unsigned worker=0;
+  };
+  std::vector<Result>results(jobs.size());
+  const auto index_bytes=auth.store.bytes;
+  const auto reserve_per_builder=mapping::block_runs*sizeof(mapping::Run)+
+      roots_.size()*(sizeof(mapping::RootSpan)+sizeof(std::size_t));
+  double hash_wall=0,publish_wall=0,critical=0,encoding=0,total_job_seconds=0;
+  std::array<double,detail::NativeWorkers::capacity>worker_active{};
+  std::array<unsigned,detail::NativeWorkers::capacity>worker_jobs{};
+  unsigned max_workers=0;
+  const auto run_job=[&](std::size_t slot,std::size_t budget,unsigned worker){
+   const auto job_start=Clock::now();
+   const auto&d=descriptors[jobs[slot]];
+   auto&out=results[slot];
+   out.worker=worker;
+   auto value=std::make_shared<Authentication::MappingTemplate>();
+   value->padded=d.padded;
+   value->only_root=d.only_root;
+   value->bias_runs.reserve(d.bias_runs);
+   mapping::Builder builder(*value,auth.store,budget,roots_.size());
+   MapHash digest(&out.metrics,mapping_buffer_bytes);
+   MappingSpans spans(d,*base);
+   StaticSourceMap::Run run;
+   const auto fail=[&]{
+    return std::runtime_error(std::string("category mapping freeze failed: ")+value->reason);
+   };
+   auto&metrics=out.metrics;
+   while(spans.next(run)){
+    const auto&loc=run.first;
+    if(!loc.constant){
+     const auto actual=roots_.at(loc.coordinate.root).spec.actual;
+     need(loc.coordinate.index<actual && run.count<=actual-loc.coordinate.index,"classified direct map span bounds");
+    }
+    if(d.only_root>=0)need(!loc.constant && loc.bias.isZero() && loc.coordinate.root==std::size_t(d.only_root),"classified invalid root-only map hint");
+    const auto encode_start=Clock::now();
+    digest.appendContiguous(loc,run.count);
+    out.encoding_seconds+=std::chrono::duration<double>(Clock::now()-encode_start).count();
+    if(!loc.bias.isZero()){
+     auto&bias=value->bias_runs;
+     if(!bias.empty() && bias.back().begin+bias.back().count==run.begin && bias.back().value==loc.bias)
+      bias.back().count+=run.count;
+     else bias.push_back({run.begin,run.count,loc.bias});
+    }
+    if(!loc.constant){
+     builder.appendContiguous(run.begin,run.count,loc.coordinate);
+     if(builder.failed())throw fail();
+    }
+    metrics.mapping_ram_peak=std::max<std::uint64_t>(metrics.mapping_ram_peak,builder.workingBytes());
+    ++metrics.direct_map_runs;
+    metrics.direct_map_coordinates+=run.count;
+   }
+   const auto finish_start=Clock::now();
+   value->digest=digest.finish();
+   out.encoding_seconds+=std::chrono::duration<double>(Clock::now()-finish_start).count();
+   out.encoding_seconds-=metrics.maphash_update_seconds;
+   builder.finish(true);
+   if(!value->frozen)throw fail();
+   out.value=std::move(value);
+   out.seconds=std::chrono::duration<double>(Clock::now()-job_start).count();
+  };
+  for(std::size_t first=0;first<jobs.size();){
+   const auto available=auth.map_budget-auth.map_bytes;
+   const auto batch=std::min(jobs.size()-first,std::max<std::size_t>(1,available/reserve_per_builder));
+   const auto budget=std::min(reserve_per_builder,available/batch);
+   const auto begin=Clock::now();
+   unsigned participants=1;
+   if(batch>1 && descriptors[jobs[first]].padded*map_record_bytes>=4096){
+    auto&pool=detail::nativeWorkers();
+    participants=unsigned(std::min<std::size_t>(batch,pool.count()));
+    std::atomic<std::size_t>next{0};
+    pool.run(participants,[&](std::size_t worker){
+     for(auto j=next.fetch_add(1,std::memory_order_relaxed);j<batch;
+         j=next.fetch_add(1,std::memory_order_relaxed))run_job(first+j,budget,unsigned(worker));
+    },participants>1);
+   }else{
+    for(std::size_t j=0;j<batch;++j)run_job(first+j,budget,0);
+   }
+   const auto joined=Clock::now();
+   hash_wall+=std::chrono::duration<double>(joined-begin).count();
+   max_workers=std::max(max_workers,participants);
+   for(std::size_t j=first;j<first+batch;++j){
+    auto&out=results[j];
+    const auto&m=out.metrics;
+    auto&total=auth_metrics_;
+    const auto&value=*out.value;
+    auth.map_bytes+=value.bytes();
+    auth.bias_bytes+=value.bias_runs.capacity()*sizeof(Authentication::MappingTemplate::BiasRun);
+    total.mapping_ram_peak=std::max<std::uint64_t>(total.mapping_ram_peak,auth.map_bytes);
+    total.map_calls++;
+    total.map_coordinates+=value.padded;
+    total.template_runs+=value.run_count;
+    total.template_cache_bytes+=sizeof(value)+value.bytes()+value.bias_runs.capacity()*sizeof(Authentication::MappingTemplate::BiasRun);
+    total.direct_map_runs+=m.direct_map_runs;
+    total.direct_map_coordinates+=m.direct_map_coordinates;
+    total.maphash_bytes+=m.maphash_bytes;
+    total.maphash_updates+=m.maphash_updates;
+    total.maphash_update_seconds+=m.maphash_update_seconds;
+    total.map_bias_serializations+=m.map_bias_serializations;
+    total.map_bias_reuses+=m.map_bias_reuses;
+    critical=std::max(critical,out.seconds);
+    encoding+=out.encoding_seconds;
+    total_job_seconds+=out.seconds;
+    worker_active[out.worker]+=out.seconds;
+    ++worker_jobs[out.worker];
+   }
+   publish_wall+=std::chrono::duration<double>(Clock::now()-joined).count();
+   first+=batch;
+  }
+  {
+   const auto begin=Clock::now();
+   std::vector<std::size_t>result_index(descriptors.size());
+   for(std::size_t j=0;j<jobs.size();++j)result_index[jobs[j]]=j;
+   // Workers are joined. Publish aliases in the original descriptor order.
+   for(std::size_t j=0;j<descriptors.size();++j)
+    auth.templates.emplace(descriptors[j].identity,results[result_index[canonical[j]]].value);
+   publish_wall+=std::chrono::duration<double>(Clock::now()-begin).count();
+  }
+  auth.static_prepared=true;
+  auth_metrics_.bias_descriptor_bytes=auth.bias_bytes;
+  auth_metrics_.mapping_file_peak=std::max(auth_metrics_.mapping_file_peak,auth.store.bytes);
+  const auto elapsed=std::chrono::duration<double>(Clock::now()-start).count();
+  auth_metrics_.map_wall+=elapsed;
+  auth_metrics_.map_cpu+=total_job_seconds;
+  const auto bytes=auth.store.bytes-index_bytes;
+  std::cerr<<std::setprecision(12)
+   <<"MAPPING_PARALLEL_BATCH {\"descriptors\":"<<descriptors.size()
+   <<",\"unique\":"<<jobs.size()<<",\"reused_descriptors\":"<<(descriptors.size()-jobs.size())
+   <<",\"avoided_bytes\":"<<dedup_bytes<<",\"avoided_updates\":"<<dedup_updates
+   <<",\"key_seconds\":"<<key_seconds<<",\"comparisons\":"<<comparisons
+   <<",\"compare_seconds\":"<<compare_seconds<<",\"workers\":"<<max_workers
+   <<",\"buffer_bytes\":"<<mapping_buffer_bytes<<",\"encoding_thread_seconds\":"<<encoding
+   <<",\"task_thread_seconds\":"<<total_job_seconds<<",\"hash_and_freeze_wall_seconds\":"<<hash_wall
+   <<",\"describe_wall_seconds\":"<<std::chrono::duration<double>(describe_end-start).count()
+   <<",\"publish_wall_seconds\":"<<publish_wall<<",\"critical_task_seconds\":"<<critical
+   <<",\"file_bytes\":"<<bytes<<",\"bias_bytes\":"<<auth.bias_bytes
+   <<",\"buffer_bytes_upper\":"<<max_workers*mapping_buffer_bytes
+   <<",\"temporary_task_bytes\":"<<results.capacity()*sizeof(Result)+descriptors.capacity()*sizeof(MappingDescriptor)
+   <<",\"wall_seconds\":"<<elapsed<<"}\n";
+  for(std::size_t j=0;j<jobs.size();++j){
+   const auto&d=descriptors[jobs[j]];
+   const auto&out=results[j];
+   std::cerr<<"MAPPING_PARALLEL_TEMPLATE {\"ordinal\":"<<jobs[j]
+    <<",\"family\":"<<std::quoted(d.source?"view":"terminal")
+    <<",\"padded\":"<<d.padded<<",\"bytes\":"<<out.metrics.maphash_bytes
+    <<",\"updates\":"<<out.metrics.maphash_updates
+    <<",\"SHA_update_seconds\":"<<out.metrics.maphash_update_seconds
+    <<",\"wall_seconds\":"<<out.seconds<<",\"worker\":"<<out.worker<<"}\n";
+  }
+  for(unsigned j=0;j<max_workers;++j)
+   std::cerr<<"MAPPING_PARALLEL_WORKER {\"id\":"<<j<<",\"jobs\":"<<worker_jobs[j]
+    <<",\"active_seconds\":"<<worker_active[j]
+    <<",\"idle_upper_seconds\":"<<std::max(0.0,hash_wall-worker_active[j])<<"}\n";
+ }catch(...){
+  category_failed_=true;
+  category_auth_.reset();
+  throw;
+ }
+}
 void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i,const void*descriptor,const StaticSourceMap*source,const std::vector<std::uint32_t>*indices){
  need(!category_failed_ && auth.session==session_ && auth.transcript.lock()==io_.transcriptOwner() && io_.session()==session_,"category prepared mapping cross-session/failed lifecycle");
  const auto started=processCPU();
@@ -91,7 +426,7 @@ void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i
  auto&p=auth.claims.at(i);need(!p.ready,"category mapping already prepared");
  auto weights=std::make_unique<Weights>(c.point,&auth_metrics_);
  auto existing=descriptor?auth.templates.find(descriptor):auth.templates.end();
- const bool hit=existing!=auth.templates.end();
+ bool hit=false;
  Fr bias=0;
  auto accumulateBias=[&](std::size_t j,std::size_t count,const Fr&value){
   while(count){
@@ -108,8 +443,9 @@ void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i
    const auto block=std::size_t(1)<<free;j+=block;count-=block;
   }
  };
- if(hit){
+ if(existing!=auth.templates.end()){
   p.mapping=existing->second;
+  hit=!auth.claimed_templates.insert(p.mapping.get()).second;
   need(p.mapping->padded==c.padded && p.mapping->only_root==c.only_root,"category template descriptor shape");
   for(const auto&run:p.mapping->bias_runs)accumulateBias(run.begin,run.count,run.value);
  }else{
@@ -172,25 +508,10 @@ void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i
    for(const auto&run:source->runs())appendSpan(run);
    need(covered==c.padded,"classified direct map coverage");
   }else if(indices){
-   const auto base=staticBase();
-   const auto&pieces=base->runs();
-   std::size_t j=0;
-   while(j<indices->size()){
-    const auto first=(*indices)[j];
-    auto it=std::upper_bound(pieces.begin(),pieces.end(),first,
-         [](std::size_t at,const Piece&p){return at<p.begin;});
-    need(it!=pieces.begin(),"classified direct terminal prefix");
-    const auto&piece=*--it;
-    const auto offset=first-piece.begin;
-    need(offset<piece.count,"classified direct terminal coordinate");
-    const auto limit=std::min(indices->size()-j,piece.count-offset);
-    std::size_t count=1;
-    while(count<limit && (*indices)[j+count]==std::size_t(first)+count)++count;
-    appendSpan({j,count,{{piece.start.root,std::uint32_t(piece.start.index+offset)},Fr(0),false}});
-    j+=count;
-   }
-   if(j<c.padded)appendSpan({j,c.padded-j,{{},Fr(0),true}});
-   need(covered==c.padded,"classified direct terminal coverage");
+   const MappingDescriptor terminal{descriptor,nullptr,indices,c.padded,c.only_root};
+   MappingSpans spans(terminal,*staticBase());
+   StaticSourceMap::Run run;
+   while(spans.next(run))appendSpan(run);
   }else for(std::size_t j=0;j<c.padded;++j){
    const auto l=c.map(j);++p.callback_calls;
    auth_metrics_.rowmajor_coordinate_lookups+=baseMapped && !l.constant;
@@ -201,6 +522,7 @@ void Commitments::prepareCategoryClaim(Claim&c,Authentication&auth,std::size_t i
   if(cache){
    auth.bias_bytes+=runs.capacity()*sizeof(runs.front());
    auth.templates.emplace(descriptor,mapping);
+   auth.claimed_templates.insert(mapping.get());
   }
   p.mapping=std::move(mapping);p.full_scans=1;
   ++auth_metrics_.map_calls;auth_metrics_.map_coordinates+=c.padded;

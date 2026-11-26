@@ -59,7 +59,7 @@ class FrBuffer {
 };
 std::uint64_t residentBytes(){std::ifstream f("/proc/self/statm");std::uint64_t total=0,resident=0;if(!(f>>total>>resident))return 0;auto page=::sysconf(_SC_PAGESIZE);return page>0?resident*static_cast<std::uint64_t>(page):0;}
 std::uint64_t peakResidentBytes(){struct rusage r{};return ::getrusage(RUSAGE_SELF,&r)==0?static_cast<std::uint64_t>(r.ru_maxrss)*1024:0;}
-bool same(InputSpan a,InputSpan b){return a.data==b.data && a.stored==b.stored && a.padded==b.padded && bool(a.read)==bool(b.read) && bool(a.window)==bool(b.window) && a.storage_identity==b.storage_identity && a.storage_offset==b.storage_offset;}
+bool same(InputSpan a,InputSpan b){return a.data==b.data && a.stored==b.stored && a.padded==b.padded && bool(a.read)==bool(b.read) && bool(a.window)==bool(b.window) && a.storage_identity==b.storage_identity && a.storage_offset==b.storage_offset && a.stable_windows==b.stable_windows;}
 void shape(InputSpan s,std::size_t padded,bool callbacks){need(s.padded==padded && s.stored<=s.padded && (!s.stored || s.data || (callbacks && s.read && s.storage_identity)),"PERF4 U original storage shape");}
 }
 struct FoldedU::Impl {
@@ -111,6 +111,26 @@ void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&origi
   std::vector<std::size_t> counts;
   if(parallel)counts.resize(p_->roots.size());
   if(materializing){
+   struct WindowTask {const Fr*source;Fr*output;std::size_t pairs;};
+   std::vector<WindowTask>windows;
+   constexpr std::size_t maximum_pending_windows=4096;
+   auto foldWindow=[&](const Fr*source,Fr*output,std::size_t first,std::size_t end){
+    for(auto j=first;j<end;++j){
+     const auto&left=source[2*j];const auto&right=source[2*j+1];
+     output[j]=left+challenge*(right-left);
+    }
+   };
+   auto flushWindows=[&]{
+    std::vector<std::size_t>lengths;
+    lengths.reserve(windows.size());
+    for(const auto&window:windows)lengths.push_back(window.pairs);
+    p_->m.parallel_materialization_jobs+=detail::foldRanges(lengths,0,std::numeric_limits<std::size_t>::max(),*workers,false,
+       [&](std::size_t k,std::size_t first,std::size_t end){
+        const auto&window=windows[k];
+        foldWindow(window.source,window.output,first,end);
+       });
+    windows.clear();
+   };
    // For direct spans, fold complete pairs without a padding test or callback
    // in the inner loop. The partial pair and padded suffix still use zeros.
    auto direct=[&](std::size_t k,std::size_t first,std::size_t end){
@@ -118,10 +138,7 @@ void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&origi
     auto*out=root.values.data();
     if(source.padded==1){out[0]=source.stored?source.data[0]:Fr(0);return;}
     const auto full_end=std::min(end,source.stored/2);
-    for(;first<full_end;++first){
-     const auto&left=source.data[2*first];const auto&right=source.data[2*first+1];
-     out[first]=left+challenge*(right-left);
-    }
+    if(first<full_end){foldWindow(source.data,out,first,full_end);first=full_end;}
     if(first<end && 2*first<source.stored){const auto&left=source.data[2*first];out[first++]=left+challenge*(Fr(0)-left);}
     const Fr zero(0);
     for(;first<end;++first)out[first]=zero+challenge*(zero-zero);
@@ -155,19 +172,21 @@ void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&origi
       else for(std::size_t first=0;first<count;){
        auto end=first+std::min<std::size_t>(4096,count-first);
        if(workers && source.window && 2*first<source.stored){
-        const auto maximum=std::min(2*(end-first),source.stored-2*first);
+        const bool defer=parallel && source.stable_windows;
+        const auto maximum=defer?source.stored-2*first:std::min(2*(end-first),source.stored-2*first);
         const auto window=source.window(2*first,maximum);
         need(window.count && window.count<=maximum,"U materialization source window bounds");
         const auto pairs=window.count/2;
         if(window.data && pairs){
-         for(std::size_t j=0;j<pairs;++j){
-          const auto&left=window.data[2*j];const auto&right=window.data[2*j+1];
-          root.values[first+j]=left+challenge*(right-left);
-         }
+         if(defer){
+          windows.push_back({window.data,root.values.data()+first,pairs});
+          p_->m.parallel_window_coordinates+=2*pairs;
+          if(windows.size()==maximum_pending_windows)flushWindows();
+         }else foldWindow(window.data,root.values.data()+first,0,pairs);
          first+=pairs;
          continue;
         }
-        end=first+std::max<std::size_t>(1,pairs);
+        end=first+std::min(end-first,std::max<std::size_t>(1,pairs));
        }
        for(std::size_t j=first;j<end;++j){
         auto left=read(2*j),right=read(2*j+1);
@@ -186,7 +205,13 @@ void FoldedU::advance(const std::string&id,const Fr&challenge,const Inputs&origi
    }
    if(parallel){
     auto arithmetic_start=Clock::now();
-    const auto jobs=detail::foldRanges(counts,0,std::numeric_limits<std::size_t>::max(),*workers,false,direct);
+    for(const auto&window:windows)counts.push_back(window.pairs);
+    auto run=[&](std::size_t k,std::size_t first,std::size_t end){
+     if(k<p_->roots.size()){direct(k,first,end);return;}
+     const auto&window=windows[k-p_->roots.size()];
+     foldWindow(window.source,window.output,first,end);
+    };
+    const auto jobs=detail::foldRanges(counts,0,std::numeric_limits<std::size_t>::max(),*workers,false,run);
     p_->m.fold_arithmetic_wall_seconds+=seconds(arithmetic_start);
     p_->m.parallel_materialization_jobs+=jobs;
    }
@@ -242,7 +267,7 @@ void FoldedU::report()const{const auto&m=p_->m;std::cerr<<"PERF4_U_STATE {";
  U_METRIC(original_read_coordinates) U_METRIC(cache_fold_read_coordinates) U_METRIC(fold_input_coordinates) U_METRIC(fold_write_coordinates)
  U_METRIC(multiplications) U_METRIC(additions) U_METRIC(fold_wall_seconds) U_METRIC(fold_cpu_seconds)
  U_METRIC(materialization_wall_seconds) U_METRIC(materialization_cpu_seconds)
- U_METRIC(original_callback_coordinates) U_METRIC(parallel_materialization_jobs) U_METRIC(parallel_fold_jobs)
+ U_METRIC(original_callback_coordinates) U_METRIC(parallel_materialization_jobs) U_METRIC(parallel_fold_jobs) U_METRIC(parallel_window_coordinates)
  U_METRIC(mmap_allocation_seconds) U_METRIC(fold_arithmetic_wall_seconds) U_METRIC(resident_sampling_seconds)
 #undef U_METRIC
  std::cerr<<"\"enabled\":"<<(enabled()?"true":"false")<<",\"failed\":"<<(p_->failed?"true":"false")<<",\"private_files\":0}\n";

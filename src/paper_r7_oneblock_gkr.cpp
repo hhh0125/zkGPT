@@ -12,6 +12,7 @@
 #include "paper_r7_r6_adapter.hpp"
 #include <array>
 #include <algorithm>
+#include "paper_r7_gkr_arithmetic.hpp"
 
 namespace zkgpt::r7::oneblock {
 using namespace crypto;
@@ -100,36 +101,85 @@ void zeroCarry(IO&io,const Hidden&previous,const Hidden&u1,const Hidden&v1,Rando
 void predicates(const layeredCircuit&graph,std::size_t id,const std::vector<Fr>&g0,const std::vector<Fr>&g1,
                 const Fr&alpha,const Fr&weight_beta,const Fr&zero_scale,const std::vector<Fr>&u,
                 const std::vector<Fr>*v,std::array<Fr,2>&uni,std::array<Fr,3>&bin){
- const auto&l=graph.circuit.at(id);auto bg=beta(unsigned(l.bit_length),g0,alpha);auto bg1=beta(unsigned(l.bit_length),g1,weight_beta);
- for(std::size_t j=0;j<bg.size();++j){bg[j]+=bg1[j];if(l.zero_start_id<l.size && j>=l.zero_start_id)bg[j]*=zero_scale;}
- auto bu=beta(unsigned(l.max_bl_u),u,Fr(1));uni={Fr(0),Fr(0)};bin={Fr(0),Fr(0),Fr(0)};
- using detail::NativeWorkers;
+ const auto& l = graph.circuit.at(id);
+ using namespace detail;
+ const auto started = GkrClock::now();
+ auto& workers = nativeWorkers();
+ const auto g_bits = unsigned(l.bit_length);
+ domain(l.bit_length);
+ domain(l.max_bl_u);
+ need((alpha.isZero() || g0.size() >= g_bits) &&
+      (weight_beta.isZero() || g1.size() >= g_bits) &&
+      u.size() >= unsigned(l.max_bl_u), "Oneblock GKR public predicate point dimension");
+ std::vector<Fr> bg, bu, bv;
+ gkrBeta(bg, g_bits, g0.begin(), alpha, g1.begin(), weight_beta, workers,
+         l.zero_start_id < l.size ? l.zero_start_id : std::size_t(-1), zero_scale);
+ gkrBeta(bu, unsigned(l.max_bl_u), u.begin(), F_ONE, {}, F_ZERO, workers,
+         std::size_t(-1), F_ONE);
+ uni = {Fr(0),Fr(0)};
+ bin = {Fr(0),Fr(0),Fr(0)};
  struct alignas(64) Partial {
   std::array<Fr,2> unary{Fr(0),Fr(0)};
   std::array<Fr,3> binary{Fr(0),Fr(0),Fr(0)};
+  std::size_t nonzero_binary = 0, gu_products = 0;
  };
  std::array<Partial,NativeWorkers::capacity> partial;
- auto&workers=detail::nativeWorkers();
- const auto unary_count=detail::nativeRanges(l.uni_gates.size(),workers,8192,
-  [&](std::size_t k,std::size_t begin,std::size_t end){
-   for(auto j=begin;j<end;++j){
-    const auto&gate=l.uni_gates[j];
-    need(gate.g<bg.size() && gate.u<bu.size(),"Oneblock GKR public unary gate index");
-    partial[k].unary[gate.lu==0?0:1]+=bg[gate.g]*bu[gate.u]*host_safety::field(gate.sc);
+ const auto unary_count = nativeRanges(l.uni_gates.size(),workers,8192,
+  [&](std::size_t k,std::size_t begin,std::size_t end) {
+   for (auto j = begin; j < end; ++j) {
+    const auto& gate = l.uni_gates[j];
+    if (gate.g >= bg.size() || gate.u >= bu.size())
+     need(false,"Oneblock GKR public unary gate index");
+    if (gate.sc != 0)
+     addScaled(partial[k].unary[gate.lu != 0], bg[gate.g]*bu[gate.u], gate.sc);
    }
   });
- for(unsigned k=0;k<unary_count;++k)for(unsigned j=0;j<2;++j)uni[j]+=partial[k].unary[j];
- if(!v)return;
- auto bv=beta(unsigned(l.max_bl_v),*v,Fr(1));for(auto&x:uni)x*=bv[0];
- const auto binary_count=detail::nativeRanges(l.bin_gates.size(),workers,8192,
-  [&](std::size_t k,std::size_t begin,std::size_t end){
-   for(auto j=begin;j<end;++j){
-    const auto&gate=l.bin_gates[j];
-    need(gate.g<bg.size() && gate.u<bu.size() && gate.v<bv.size() && gate.l<=2,"Oneblock GKR public binary gate index");
-    partial[k].binary[gate.l]+=bg[gate.g]*bu[gate.u]*bv[gate.v]*host_safety::field(gate.sc);
+ for (unsigned k = 0; k < unary_count; ++k)
+  for (unsigned j = 0; j < 2; ++j) uni[j] += partial[k].unary[j];
+ auto report = [&](unsigned binary_workers, std::size_t reuse) {
+  if (std::getenv("ZKGPT_PERF5_PROFILE"))
+   std::cerr << "GKR_PREDICATE_V4 {\"layer\":" << id << ",\"unary_workers\":" << unary_count
+             << ",\"binary_workers\":" << binary_workers
+             << ",\"gu_multiplications_eliminated\":" << reuse
+             << ",\"seconds\":" << gkrElapsed(started) << "}\n";
+ };
+ if (!v) {
+  report(0,0);
+  return;
+ }
+ domain(l.max_bl_v);
+ need(v->size() >= unsigned(l.max_bl_v), "Oneblock GKR public predicate point dimension");
+ gkrBeta(bv, unsigned(l.max_bl_v), v->begin(), F_ONE, {}, F_ZERO, workers,
+         std::size_t(-1), F_ONE);
+ for (auto& x : uni) x *= bv[0];
+ const auto binary_count = nativeRanges(l.bin_gates.size(),workers,8192,
+  [&](std::size_t k,std::size_t begin,std::size_t end) {
+   u32 last_g = std::numeric_limits<u32>::max(), last_u = 0;
+   Fr gu = 0;
+   std::size_t active = 0, products = 0;
+   for (auto j = begin; j < end; ++j) {
+    const auto& gate = l.bin_gates[j];
+    if (gate.g >= bg.size() || gate.u >= bu.size() || gate.v >= bv.size() || gate.l > 2)
+     need(false,"Oneblock GKR public binary gate index");
+    if (gate.sc == 0) continue;
+    ++active;
+    if (gate.g != last_g || gate.u != last_u) {
+     ++products;
+     gu = bg[gate.g]*bu[gate.u];
+     last_g = gate.g;
+     last_u = gate.u;
+    }
+    addScaled(partial[k].binary[gate.l], gu*bv[gate.v], gate.sc);
    }
+   partial[k].nonzero_binary = active;
+   partial[k].gu_products = products;
   });
- for(unsigned k=0;k<binary_count;++k)for(unsigned j=0;j<3;++j)bin[j]+=partial[k].binary[j];
+ std::size_t reused = 0;
+ for (unsigned k = 0; k < binary_count; ++k) {
+  for (unsigned j = 0; j < 3; ++j) bin[j] += partial[k].binary[j];
+  reused += partial[k].nonzero_binary - partial[k].gu_products;
+ }
+ report(binary_count,reused);
 }
 
 void finalRelation(IO&io,const Hidden&previous,const std::array<Hidden,4>&end,const std::array<Fr,2>&uni,
@@ -241,7 +291,7 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
    {
    native_masked::PhaseMeasure measure{role+"/phase1",io.prover(),native_masked::enabled()};
    std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_u),previous,rng,role+"/phase1/masked",measure);
-   if(io.prover())measureOp(0,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase1(zero_scale);});});
+   if(io.prover())measureOp(0,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase1(zero_scale,id);});});
    for(unsigned j=0;j<unsigned(l.max_bl_u);++j){
     quadratic_poly polynomial;if(io.prover())measureOp(1,[&]{executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate1(last);});});
     if(mask)last=u[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});
@@ -257,7 +307,7 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
    if(l.need_phase2){
     native_masked::PhaseMeasure measure{role+"/phase2",io.prover(),native_masked::enabled()};
     std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_v),previous,rng,role+"/phase2/masked",measure);
-    v[id].resize(unsigned(l.max_bl_v));last=0;if(io.prover())measureOp(3,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase2();});});
+    v[id].resize(unsigned(l.max_bl_v));last=0;if(io.prover())measureOp(3,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase2(id);});});
     for(unsigned j=0;j<unsigned(l.max_bl_v);++j){
      quadratic_poly polynomial;if(io.prover())measureOp(4,[&]{executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate2(last);});});
      if(mask)last=v[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});

@@ -3,6 +3,7 @@
 #include "paper_r1_pc.hpp"
 #include <iosfwd>
 #include <memory>
+namespace zkgpt { class Workers; }
 namespace zkgpt::r7::hyrax_a3 {
 using namespace crypto;
 inline constexpr const char* suite="R7-MCL-BN254-HYRAX-A3-INTERACTIVE-v1";
@@ -33,7 +34,7 @@ G1 vectorCommit(const std::vector<Fr>&,const Fr&);
 // Standard separate-input Schnorr knowledge guard, then PRIVATE literal Fig7–8.
 // Guard is linear communication, not part of the paper's logarithmic core.
 // No offline receipt/registered-input bypass exists in this phase.
-void dotProduct(IO&,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);
+void dotProduct(IO&,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*,zkgpt::Workers* workers=nullptr);
 // approved_spec is a verifier-owned external-anchor spec, never a P-supplied basis.
 // Both sides independently derive r1::generators(approved_spec).g.
 void dotProductTrustedR6Basis(IO&,const r1::PCSpec&approved_spec,const G1&xi,const Handle&,const std::vector<Fr>&public_a,const DotWitness*,Random*);

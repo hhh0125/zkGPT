@@ -1,7 +1,6 @@
 #include "paper_r7_classified_commitments.hpp"
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_unified_workers.hpp"
-#include "paper_r7_unified_workers.hpp"
 #include "paper_r7_category_tiles.hpp"
 #include "paper_r7_k_terminal.hpp"
 #include "paper_r7_carry_terminal.hpp"
@@ -95,14 +94,22 @@ struct alignas(64) KernelLocal {KernelTasks stats;};
 class Commitments::CategoryKernelPlan {
  // Keep the compact representation; report unsupported coordinates explicitly.
  struct Entry {
-  std::uint32_t begin,count,index,step,group;
+  std::uint32_t begin,count,index,step;
   std::int32_t stride;
  };
- static_assert(sizeof(Entry)==24,"category K compact entry size");
+ static_assert(sizeof(Entry)==20,"category K compact entry size");
  static constexpr std::size_t entries_per_page=256;
  using EntryPage=std::array<Entry,entries_per_page>;
  using PagePtr=std::unique_ptr<EntryPage>;
- struct Bucket {std::size_t lo,hi;std::vector<PagePtr>pages;std::size_t count=0;};
+ // The construction scan visits each mapping group exactly once per root.
+ // Record its exclusive end in each bucket once, without a group ID per slice.
+ struct GroupSpan {std::size_t end;std::uint32_t group;};
+ struct Bucket {
+  std::size_t lo,hi,tile;
+  std::vector<PagePtr>pages;
+  std::vector<GroupSpan>groups;
+  std::size_t count=0;
+ };
  struct Range {std::size_t first=0,count=0;};
  struct WeightCache {std::unique_ptr<Weights>weights;std::vector<Fr>aggregate;};
  const Commitments&c_;
@@ -122,7 +129,9 @@ class Commitments::CategoryKernelPlan {
  bool indexed_=false;
  std::uint64_t original_runs_=0,indexed_runs_=0,index_clips_=0,index_intersections_=0,index_entries_=0,index_fallbacks_=0;
  std::uint64_t noncompact_roots_=0,weight_rebuilds_=0,aggregate_mul_=0,parallel_tiles_=0,worker_peak_=1;
- double index_seconds_=0,weight_seconds_=0,parallel_seconds_=0;
+ std::uint64_t tile_slices_=0,extra_worker_slices_=0,extra_tile_slices_=0,empty_buckets_skipped_=0;
+ std::uint64_t noncontiguous_runs_=0,shared_group_runs_=0,shared_group_entries_=0,group_span_bytes_=0;
+ double index_seconds_=0,weight_seconds_=0,parallel_seconds_=0,worker_load_ratio_peak_=0;
  KernelTasks computed_;
  mapping::ReadMetrics index_reads_;
  unsigned parts(std::size_t count)const{
@@ -134,7 +143,18 @@ class Commitments::CategoryKernelPlan {
   return (c.only_root<0 || std::size_t(c.only_root)==root) && p.plan().hasRoot(root);
  }
  void clearIndex(){std::vector<Bucket>().swap(buckets_);index_bytes_=roots_.capacity()*sizeof(Range)+buckets_by_tile_.capacity()*sizeof(Range);indexed_=false;}
- void append(Bucket&bucket,const Entry&e){
+ void append(Bucket&bucket,const Entry&e,std::uint32_t group){
+  auto&groups=bucket.groups;
+  if(groups.empty() || groups.back().group!=group){
+   const auto old=groups.capacity();
+   groups.push_back({0,group});
+   if(groups.capacity()!=old){
+    index_peak_=std::max(index_peak_,index_bytes_+groups.capacity()*sizeof(GroupSpan));
+    const auto growth=(groups.capacity()-old)*sizeof(GroupSpan);
+    index_bytes_+=growth;group_span_bytes_+=growth;
+   }
+  }
+  groups.back().end=bucket.count+1;
   auto&pages=bucket.pages;
   const auto slot=bucket.count%entries_per_page;
   if(!slot){
@@ -191,11 +211,13 @@ class Commitments::CategoryKernelPlan {
   for(std::size_t k=range.first;k<range.first+range.count;++k){
    const auto&t=tiles_[k];const auto count=t.segment.padded;const auto n=parts(count);
    buckets_by_tile_[k]={buckets_.size(),n};
-   for(unsigned j=0;j<n;++j)buckets_.push_back({t.begin+count*j/n,t.begin+count*(j+1)/n,{}});
+   for(unsigned j=0;j<n;++j)buckets_.push_back({t.begin+count*j/n,t.begin+count*(j+1)/n,k,{},{}});
   }
   const auto actual=c_.roots_[root].spec.actual;
   const auto entries_before=index_entries_,runs_before=indexed_runs_;
   const auto root_base=index_bytes_;
+  const auto skipped_before=empty_buckets_skipped_,tiles_before=tile_slices_;
+  const auto spans_before=group_span_bytes_;
   for(std::size_t g=0;g<mapping_groups_.size();++g){
    const auto i=mapping_groups_[g].front();
    if(!onRoot(i,root))continue;
@@ -204,22 +226,47 @@ class Commitments::CategoryKernelPlan {
     ++indexed_runs_;
     const auto last=validateRun(r,root,actual,padded);
     const auto first=std::size_t(r.first.index),minimum=std::min(first,last),maximum=std::max(first,last);
-    auto b=std::lower_bound(buckets_.begin(),buckets_.end(),minimum,[](const Bucket&v,std::size_t at){return v.hi<=at;});
-    for(;b!=buckets_.end() && b->lo<=maximum;++b){
-     ++index_clips_;const auto slice=clipRun(r,b->lo,b->hi);
-     if(slice.first>=slice.last)continue;
-     ++index_intersections_;
-     const auto begin=r.begin+slice.first*r.logical_step,count=slice.last-slice.first;
-     constexpr auto u32=std::numeric_limits<std::uint32_t>::max();
-     if(begin>u32 || count>u32 || r.logical_step>u32 || g>u32
-        || r.stride<std::numeric_limits<std::int32_t>::min() || r.stride>std::numeric_limits<std::int32_t>::max()){
-      throw std::runtime_error("category K noncompact index representation required: root="+std::to_string(root)+" claim="+std::to_string(i)+" begin="+std::to_string(begin)+" count="+std::to_string(count)+" step="+std::to_string(r.logical_step)+" stride="+std::to_string(r.stride));
+    const auto past=[](const Bucket&bucket,std::size_t at){return bucket.hi<=at;};
+    auto b=std::lower_bound(buckets_.begin(),buckets_.end(),minimum,past);
+    const auto shared=mapping_groups_[g].size()>1;
+    shared_group_runs_+=shared;
+    noncontiguous_runs_+=(r.count>1 && (r.logical_step!=1 || r.stride>1 || r.stride<-1));
+    std::size_t run_tiles=0,run_entries=0,last_tile=std::size_t(-1);
+    while(b!=buckets_.end() && b->lo<=maximum){
+     ++index_clips_;
+     const auto slice=clipRun(r,b->lo,b->hi);
+     if(slice.first<slice.last){
+      ++index_intersections_;++run_entries;
+      if(last_tile!=b->tile){++run_tiles;last_tile=b->tile;}
+      const auto begin=r.begin+slice.first*r.logical_step,count=slice.last-slice.first;
+      constexpr auto u32=std::numeric_limits<std::uint32_t>::max();
+      if(begin>u32 || count>u32 || r.logical_step>u32 || g>u32
+         || r.stride<std::numeric_limits<std::int32_t>::min() || r.stride>std::numeric_limits<std::int32_t>::max()){
+       throw std::runtime_error("category K noncompact index representation required: root="+std::to_string(root)+" claim="+std::to_string(i)+" begin="+std::to_string(begin)+" count="+std::to_string(count)+" step="+std::to_string(r.logical_step)+" stride="+std::to_string(r.stride));
+      }
+      const auto index=std::uint32_t(std::int64_t(r.first.index)+std::int64_t(slice.first)*r.stride);
+      append(*b,{std::uint32_t(begin),std::uint32_t(count),index,std::uint32_t(r.logical_step),
+                 std::int32_t(r.stride)},std::uint32_t(g));
      }
-     const auto index=std::uint32_t(std::int64_t(r.first.index)+std::int64_t(slice.first)*r.stride);
-     const Entry entry{std::uint32_t(begin),std::uint32_t(count),index,std::uint32_t(r.logical_step),
-                       std::uint32_t(g),std::int32_t(r.stride)};
-     append(*b,entry);
+     // The next physical coordinate is also the next possible intersection.
+     // Unit strides reach the adjacent bucket and need no extra search.
+     if(maximum<b->hi)break;
+     auto next=b+1;
+     if(next!=buckets_.end() && (r.stride>1 || r.stride<-1)){
+      const auto ordinal=r.stride>0?slice.last:slice.first-1;
+      const auto coordinate=std::size_t(std::int64_t(first)+std::int64_t(ordinal)*r.stride);
+      if(next->hi<=coordinate){
+       const auto found=std::lower_bound(next,buckets_.end(),coordinate,past);
+       empty_buckets_skipped_+=found-next;
+       next=found;
+      }
+     }
+     b=next;
     }
+    tile_slices_+=run_tiles;
+    extra_worker_slices_+=run_entries-run_tiles;
+    if(run_tiles)extra_tile_slices_+=run_tiles-1;
+    if(shared)shared_group_entries_+=run_entries;
    },&index_reads_);
   }
   indexed_=true;
@@ -227,7 +274,8 @@ class Commitments::CategoryKernelPlan {
   std::cerr<<"CATEGORY_K_ROOT_INDEX {\"root\":"<<root<<",\"entries\":"<<(index_entries_-entries_before)
    <<",\"runs\":"<<(indexed_runs_-runs_before)<<",\"bytes\":"<<index_bytes_
    <<",\"worker_buckets\":"<<buckets_.size()<<",\"metadata_and_buckets_bytes\":"<<root_base<<",\"build_seconds\":"<<elapsed
-   <<",\"budget_fallback\":false}\n";
+   <<",\"tile_slices\":"<<(tile_slices_-tiles_before)<<",\"group_span_bytes\":"<<(group_span_bytes_-spans_before)
+   <<",\"empty_worker_buckets_skipped\":"<<(empty_buckets_skipped_-skipped_before)<<",\"budget_fallback\":false}\n";
  }
  void apply(const mapping::Run&r,std::size_t claim,const Weights&w,const std::vector<Fr>*aggregate,
             std::size_t lo,Fr*out,KernelTasks&m)const{
@@ -294,34 +342,31 @@ class Commitments::CategoryKernelPlan {
   if(bucket){
    struct ClaimWeights {const Weights*source;const std::vector<Fr>*aggregate;std::unique_ptr<Weights>scratch;};
    std::vector<ClaimWeights>group_weights;
-   std::size_t active_group=std::size_t(-1);
-   auto remaining=bucket->count;
-   for(const auto&page:bucket->pages){
-    const auto n=std::min(remaining,entries_per_page);
-    for(std::size_t j=0;j<n;++j){
-     const auto&e=(*page)[j];
-     ++m.visits;++m.intersections;
-     const mapping::Run run{e.begin,e.count,{std::uint32_t(root),e.index},e.stride,e.step};
-     const auto&group=mapping_groups_[e.group];
-     if(group.size()==1){consume(run,group.front());continue;}
-     if(active_group!=e.group){
-      active_group=e.group;group_weights.clear();group_weights.reserve(group.size());
-      for(auto i:group){
-       const auto&p=auth_.claims[i];const auto*cache=weights_.empty()?nullptr:&weights_[i];
-       const auto*source=p.weights.get();if(!source && cache)source=cache->weights.get();
-       if(source){++m.weight_cache_uses;group_weights.push_back({source,cache && !cache->aggregate.empty()?&cache->aggregate:nullptr,{}});}
-       else{
-        auto local=std::make_unique<Weights>(c_.claims_[i].point);
-        ++m.weight_rebuilds;group_weights.push_back({local.get(),nullptr,std::move(local)});
-       }
+   std::size_t pos=0;
+   for(const auto&span:bucket->groups){
+    const auto&group=mapping_groups_[span.group];
+    if(group.size()>1){
+     group_weights.clear();group_weights.reserve(group.size());
+     for(auto i:group){
+      const auto&p=auth_.claims[i];const auto*cache=weights_.empty()?nullptr:&weights_[i];
+      const auto*source=p.weights.get();if(!source && cache)source=cache->weights.get();
+      if(source){++m.weight_cache_uses;group_weights.push_back({source,cache && !cache->aggregate.empty()?&cache->aggregate:nullptr,{}});}
+      else{
+       auto local=std::make_unique<Weights>(c_.claims_[i].point);
+       ++m.weight_rebuilds;group_weights.push_back({local.get(),nullptr,std::move(local)});
       }
      }
+    }
+    for(;pos<span.end;++pos){
+     const auto&e=(*bucket->pages[pos/entries_per_page])[pos%entries_per_page];
+     ++m.visits;++m.intersections;
+     const mapping::Run run{e.begin,e.count,{std::uint32_t(root),e.index},e.stride,e.step};
+     if(group.size()==1){consume(run,group.front());continue;}
      for(std::size_t k=0;k<group.size();++k){
       const auto&local=group_weights[k];
       apply(run,group[k],*local.source,local.aggregate,lo,out,m);
      }
     }
-    remaining-=n;
    }
    return;
   }
@@ -397,12 +442,16 @@ class Commitments::CategoryKernelPlan {
    workers_->run(n,job,true);++parallel_tiles_;worker_peak_=std::max<std::uint64_t>(worker_peak_,n);
    parallel_seconds_+=categorySeconds(parallel_started);
   }else job(0);
+  std::uint64_t total_coordinates=0,maximum_coordinates=0;
   for(unsigned j=0;j<n;++j){
    const auto&stats=local[j].stats;computed_.merge(stats);
+   total_coordinates+=stats.coordinates;
+   maximum_coordinates=std::max(maximum_coordinates,stats.coordinates);
    m.kernel_coordinates+=stats.coordinates;m.kernel_run_visits+=stats.visits;
    m.kernel_run_clips+=stats.clips;m.kernel_run_intersections+=stats.intersections;
    auth_.store.read_bytes+=stats.reads.bytes;auth_.store.read_blocks+=stats.reads.blocks;
   }
+  if(total_coordinates)worker_load_ratio_peak_=std::max(worker_load_ratio_peak_,double(maximum_coordinates)*n/total_coordinates);
   m.kernel_wall+=categorySeconds(started);
   if(indexed_ && k+1==roots_[root].first+roots_[root].count)clearIndex();
  }
@@ -413,6 +462,11 @@ class Commitments::CategoryKernelPlan {
    <<",\"unique_index_mapping_groups\":"<<mapping_groups_.size()<<",\"visited_runs\":"<<computed_.visits<<",\"intersecting_runs\":"<<computed_.intersections
    <<",\"clip_attempts\":"<<(computed_.clips+index_clips_)<<",\"indexed_runs\":"<<indexed_runs_
    <<",\"index_intersections\":"<<index_intersections_<<",\"index_entries\":"<<index_entries_
+   <<",\"tile_slices\":"<<tile_slices_<<",\"extra_tile_slices\":"<<extra_tile_slices_
+   <<",\"extra_worker_slices\":"<<extra_worker_slices_<<",\"empty_worker_buckets_skipped\":"<<empty_buckets_skipped_
+   <<",\"noncontiguous_runs\":"<<noncontiguous_runs_<<",\"shared_group_runs\":"<<shared_group_runs_
+   <<",\"shared_group_entries\":"<<shared_group_entries_<<",\"group_span_allocated_bytes\":"<<group_span_bytes_
+   <<",\"worker_coordinate_max_over_mean_peak\":"<<worker_load_ratio_peak_
    <<",\"index_fallback_roots\":"<<index_fallbacks_<<",\"index_noncompact_roots\":"<<noncompact_roots_
    <<",\"index_entry_bytes\":"<<sizeof(Entry)<<",\"index_seconds\":"<<index_seconds_
    <<",\"index_peak_bytes\":"<<index_peak_<<",\"index_limit_bytes\":"<<0
@@ -515,10 +569,13 @@ void Commitments::authenticateCategoryInput(const std::vector<Fr>&x){
     if(root.sealed_span){
      auto first=root.sealed_span(t.begin,s.stored);
      if(first.count==s.stored)s.data=first.data;
-     if(!s.data)s.window=[&,index=t.root,begin=t.begin,n=s.stored](std::size_t at,std::size_t count){
-      need(at<n && count && count<=n-at,"category input window relative bounds");
-      return roots_[index].sealed_span(begin+at,count);
-     };
+     if(!s.data){
+      s.window=[&,index=t.root,begin=t.begin,n=s.stored](std::size_t at,std::size_t count){
+       need(at<n && count && count<=n-at,"category input window relative bounds");
+       return roots_[index].sealed_span(begin+at,count);
+      };
+      s.stable_windows=true;
+     }
     }
    }
    if(!s.data)s.read=[&,index=t.root,begin=t.begin](std::size_t j){return roots_[index].value(begin+j);};

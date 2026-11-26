@@ -43,6 +43,15 @@ std::size_t foldRanges(const std::vector<std::size_t>&counts,std::size_t begin,
  return jobs.size();
 }
 
+// Between waves, every input below 2*begin has already been consumed.
+template<class Dispatch>
+void foldDependencyWaves(std::size_t largest,std::size_t prefix,const Dispatch& dispatch){
+ if(!largest)return;
+ dispatch(0,std::min(largest,prefix),true);
+ for(auto begin=prefix;begin<largest;begin*=2)
+  dispatch(begin,std::min(largest,begin*2),false);
+}
+
 template<class Fold>
 std::size_t foldInPlace(const std::vector<std::size_t>&counts,Workers&workers,Fold&&fold){
  std::size_t largest=0,total=0;
@@ -51,11 +60,10 @@ std::size_t foldInPlace(const std::vector<std::size_t>&counts,Workers&workers,Fo
   for(std::size_t k=0;k<counts.size();++k)if(counts[k])fold(k,0,counts[k]);
   return 0;
  }
- auto jobs=foldRanges(counts,0,fold_serial_prefix,workers,true,fold);
- // Earlier waves have consumed inputs below 2*begin. In this wave all
- // writes are below 2*begin and every read is at or above 2*begin.
- for(auto begin=fold_serial_prefix;begin<largest;begin*=2)
-  jobs+=foldRanges(counts,begin,begin*2,workers,false,fold);
+ std::size_t jobs=0;
+ foldDependencyWaves(largest,fold_serial_prefix,[&](auto begin,auto end,bool per_root){
+  jobs+=foldRanges(counts,begin,end,workers,per_root,fold);
+ });
  return jobs;
 }
 }

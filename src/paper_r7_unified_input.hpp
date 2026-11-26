@@ -52,6 +52,9 @@ struct InputWindow {const Fr*data=nullptr;std::size_t count=0;};
 struct InputSpan {const Fr*data=nullptr;std::size_t stored=0,padded=0;Value read={};const void*storage_identity=nullptr;std::size_t storage_offset=0;
  // Borrow a checked subrange, stopping at the backing-storage boundary.
  std::function<InputWindow(std::size_t,std::size_t)>window={};
+ // Only set for immutable backing that keeps all borrowed windows alive
+ // through subsequent queries and until the current fold has joined.
+ bool stable_windows=false;
 };
 using Inputs=std::function<InputSpan(std::size_t)>;
 enum UnifiedOpt : unsigned { U1=1, U2=2, U3=4, K1=8, K2=16, K3=32, K4=64, F1=128 };

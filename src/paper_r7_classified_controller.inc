@@ -55,6 +55,17 @@
  });
  for(auto id:{"public/Y","public/constants"})checked(io,id);
  std::optional<PendingGKR>pendingHolder;timed("all-native-GKR",[&]{pendingHolder.emplace(runHiddenGKR(io,*graph,isP?&witness.executionForR7():nullptr,ctx.plan.shape.sequence_length,rng));});auto&pending=*pendingHolder;
+ timed("static-mapping-prefreeze",[&]{
+  std::vector<classified::Commitments::TerminalMapping> mappings;
+  mappings.reserve(pending.terminals.size());
+  for(const auto&t:pending.terminals){
+   const auto&layer=graph->circuit.at(t.layer);
+   const auto&indices=t.port?layer.ori_id_v:layer.ori_id_u;
+   need(indices.size()==t.actual,"classified native terminal source shape");
+   mappings.emplace_back(&indices,t.padded);
+  }
+  pcs.prepareStaticMappings(mappings);
+ });
  std::set<std::string>objects,terminals;std::vector<VectorOracle>sources;
  timed("release-native-values-and-build-source-views",[&]{
  // Every later private read is served by sealed classified roots/model W.

@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <limits>
+#include <mutex>
 #include <unistd.h>
 namespace zkgpt::r7::oneblock::classified::mapping {
 // Public, fully observed coordinates only. Logical step preserves multiplicity
@@ -17,6 +18,7 @@ struct Block {std::uint64_t next=absent,count=0;};
 struct ReadMetrics {std::uint64_t bytes=0,blocks=0;};
 class Store {
  int fd_=-1;
+ std::mutex reservation_;
  void write(const void*data,std::size_t n,std::uint64_t at){
   auto*p=static_cast<const unsigned char*>(data);while(n){auto done=::pwrite(fd_,p,n,off_t(at));if(done<0 && errno==EINTR)continue;need(done>0,"classified mapping plan write failed");p+=done;n-=std::size_t(done);at+=std::size_t(done);}
  }
@@ -29,13 +31,22 @@ class Store {
  Store(const Store&)=delete;Store&operator=(const Store&)=delete;
  ~Store(){if(fd_>=0)::close(fd_);}
  bool append(RootSpan&span,const Run*runs,std::size_t n){
-  need(n && n<=block_runs,"classified mapping plan block count");auto size=sizeof(Block)+n*sizeof(Run);if(bytes>limit || size>limit-bytes)return false;
-  // Anonymous inode belongs to the fixed execution directory and this one
-  // authentication session; no historical file or shared cache is opened.
-  if(fd_<0){fd_=::open(".",O_TMPFILE|O_RDWR|O_CLOEXEC,0600);need(fd_>=0,"classified anonymous mapping plan open failed");}
-  auto offset=bytes;Block header{absent,n};write(&header,sizeof(header),offset);write(runs,n*sizeof(Run),offset+sizeof(header));
+  need(n && n<=block_runs,"classified mapping plan block count");
+  const auto size=sizeof(Block)+n*sizeof(Run);
+  std::uint64_t offset;
+  {
+   std::lock_guard<std::mutex> lock(reservation_);
+   if(bytes>limit || size>limit-bytes)return false;
+   // Reserve a disjoint region. Only its owning builder writes this RootSpan.
+   // Readers start after every builder has joined and the plans are published.
+   if(fd_<0){fd_=::open(".",O_TMPFILE|O_RDWR|O_CLOEXEC,0600);need(fd_>=0,"classified anonymous mapping plan open failed");}
+   offset=bytes;
+   bytes+=size;
+  }
+  Block header{absent,n};
+  write(&header,sizeof(header),offset);write(runs,n*sizeof(Run),offset+sizeof(header));
   if(span.tail!=absent)write(&offset,sizeof(offset),span.tail);else span.head=offset;
-  span.tail=offset;span.runs+=n;bytes+=size;return true;
+  span.tail=offset;span.runs+=n;return true;
  }
  template<class F>void each(const RootSpan&span,F&&consume,ReadMetrics*local=nullptr)const{
   if(span.head==absent){need(span.runs==0,"classified empty mapping plan");return;}

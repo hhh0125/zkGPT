@@ -26,7 +26,7 @@ void shape(const VectorOracle&v){need(v.actual>0 && v.actual<=v.padded && v.padd
 void pairShape(const VectorOracle&a,const VectorOracle&b){shape(a);if(&a==&b)return;shape(b);need(a.actual==b.actual && a.padded==b.padded,"lookup source/value dimensions");}
 std::vector<Fr> point(IO&io,std::size_t n,const std::string&role){std::vector<Fr>r;for(unsigned i=0,bits=r1::log2exact(n);i<bits;++i)r.push_back(io.coin(role+"/"+std::to_string(i)));return r;}
 std::vector<Fr> evaluateWeights(const std::vector<Fr>&r){
- perf5::Scope t(perf5::LeafWeights);auto w=polynomial::weights(r);perf5::leafWeights(w.size());return w;
+ perf5::Scope t(perf5::LeafWeights);auto w=detail::productEqualityWeights(r,detail::nativeWorkers());perf5::leafWeights(w.size());return w;
 }
 Fr privateEntry(const VectorOracle& oracle,std::size_t i){
  return oracle.contiguous?oracle.contiguous[i]:oracle.value(i);
@@ -47,7 +47,6 @@ Hidden evaluate(IO&io,const VectorOracle&v,const std::vector<Fr>&r,Random*rng,co
 Fr publicMLE(const Value&v,std::size_t n,const std::vector<Fr>&r){auto w=r1::weights(r);need(w.size()==n,"lookup public MLE dimension");Fr out=0;for(std::size_t i=0;i<n;++i)out+=v(i)*w[i];return out;}
 Fr active(std::size_t actual,const std::vector<Fr>&r){auto w=r1::weights(r);Fr out=0;for(std::size_t i=0;i<actual;++i)out+=w[i];return out;}
 std::size_t integer(const Fr&x,std::size_t bound){auto b=r1::encode(x);std::uint64_t k=0;for(unsigned j=0;j<8;++j)k|=std::uint64_t(b[j])<<(8*j);for(unsigned j=8;j<32;++j)need(!b[j],"lookup private integer overflow");need(k<bound,"lookup private integer outside table");return std::size_t(k);}
-Fr fingerprint(const Fr&a,const Fr&v,const Fr&c,const Fr&g,const Fr&g2,const Fr&t){return g2*a+g*v+c-t;}
 Value privateValues(IO&io,const std::shared_ptr<std::vector<Fr>>&v){if(!io.prover() || !v)return {};return [v](std::size_t i){return v->at(i);};}
 void tail(IO&io,const VectorOracle&q,Random*rng,const std::string&role){if(q.actual==q.padded)return;auto r=point(io,q.padded,role+"/random");auto w=std::make_shared<std::vector<Fr>>(r1::weights(r));Value kernel=[w,actual=q.actual](std::size_t i){return i<actual?Fr(0):w->at(i);};auto zero=known(io,role+"/zero",Fr(0));std::vector<Value>f;if(io.prover())f={q.value,kernel};Expression expr{2,{{Fr(1),{0,1}}}};auto end=expressionSumcheck(io,q.padded,zero,f,expr,rng,role+"/sumcheck");need(end.endpoints.size()==2,"lookup tail endpoint count");q.open(io,{end.point,end.endpoints[0].handle},io.prover()?&end.endpoints[0]:nullptr,rng,role+"/source");constant(io,end.endpoints[1],publicMLE(kernel,q.padded,end.point),rng,role+"/kernel");}
 }
@@ -70,7 +69,7 @@ void hiddenProduct(IO&io,std::size_t n,const Hidden&root,Value leaves,const Leaf
  }
  // The supplied root replaces the top level; only children are stored.
  Hidden carry=root;std::vector<Fr>row;const auto d=r1::log2exact(n);
- for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);std::shared_ptr<std::vector<Fr>>w;Value eq;if(io.prover()){perf5::Scope t(perf5::Weights);perf5::weights(width);w=std::make_shared<std::vector<Fr>>(polynomial::weights(row));if(perf5::context)perf5::context->weight_muls-=width-1;eq=[w](std::size_t j){return w->at(j);};}std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
+ for(unsigned layer=0;layer<d;++layer){auto width=std::size_t(1)<<layer;auto name=role+"/level/"+std::to_string(layer);std::shared_ptr<std::vector<Fr>>w;Value eq;if(io.prover()){perf5::Scope t(perf5::Weights);perf5::weights(width);w=std::make_shared<std::vector<Fr>>(detail::productEqualityWeights(row,detail::nativeWorkers()));if(perf5::context)perf5::context->weight_muls-=width-1;eq=[w](std::size_t j){return w->at(j);};}std::vector<Value>f;if(io.prover()){auto child=tree.at(d-layer-1);f={eq,[child](std::size_t j){return child->at(2*j);},[child](std::size_t j){return child->at(2*j+1);}};}
   Reduction end;
   if(contiguous){
    std::optional<ProductInputs>inputs;
@@ -99,14 +98,23 @@ void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,c
   {
    perf5::Scope t(perf5::TreeLeaf);
    auto write=std::make_shared<std::vector<Fr>>(n);
-   detail::nativeRanges(n,detail::nativeWorkers(),detail::product_parallel_minimum,[&](std::size_t,std::size_t first,std::size_t last){
-    const auto* read=base->data();auto* out=write->data();
-    const Fr one=1;
-    for(auto j=first;j<last;++j)out[j]=read[j]+one;
-   });
-   tree[0].push_back(std::move(write));tree[1].push_back(base);
+   tree[0].push_back(write);tree[1].push_back(base);
+   if(n>2){
+    std::array<std::shared_ptr<std::vector<Fr>>,2> parents;
+    {perf5::Scope allocate(perf5::TreeAllocInit);
+     for(auto& parent:parents)parent=std::make_shared<std::vector<Fr>>(n/2);
+    }
+    perf5::Scope fused(perf5::PairedLeafParent);
+    const auto partitions=detail::productPairedLeaves(*base,*write,parents[0]->data(),
+                                                      parents[1]->data(),detail::nativeWorkers());
+    if(auto* metrics=perf5::context){
+     metrics->tree_workers=std::max(metrics->tree_workers,partitions);
+     if(partitions>1)++metrics->parallel_tree_layers;
+    }
+    for(unsigned b=0;b<2;++b)tree[b].push_back(std::move(parents[b]));
+   }else detail::productPairedLeaves(*base,*write,nullptr,nullptr,detail::nativeWorkers());
   }
-  for(std::size_t width=n;width>2;width/=2){
+  for(std::size_t width=n/2;width>2;width/=2){
    std::array<std::shared_ptr<std::vector<Fr>>,2> next;
    {perf5::Scope t(perf5::TreeAllocInit);for(auto& values:next)values=std::make_shared<std::vector<Fr>>(width/2);}
    {perf5::Scope t(perf5::TreeParent);
@@ -120,7 +128,7 @@ void hiddenBatchedProduct(IO&io,std::size_t n,const std::array<Hidden,2>&roots,c
  for(unsigned layer=0;layer<d;++layer){
   auto width=std::size_t(1)<<layer;auto name=batch+"/level/"+std::to_string(layer);std::vector<Value>f;std::shared_ptr<std::vector<Fr>>weights;
   if(io.prover()){
-   {perf5::Scope t(perf5::Weights);perf5::weights(width);weights=std::make_shared<std::vector<Fr>>(polynomial::weights(row));if(perf5::context)perf5::context->weight_muls-=width-1;}
+   {perf5::Scope t(perf5::Weights);perf5::weights(width);weights=std::make_shared<std::vector<Fr>>(detail::productEqualityWeights(row,detail::nativeWorkers()));if(perf5::context)perf5::context->weight_muls-=width-1;}
    f.push_back([weights](std::size_t j){return weights->at(j);});
    for(unsigned b=0;b<2;++b){auto child=tree[b].at(d-layer-1);f.push_back([child](std::size_t j){return child->at(2*j);});f.push_back([child](std::size_t j){return child->at(2*j+1);});}
   }
@@ -147,38 +155,56 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
  auto read=factory(io,role+"/read",a.padded,a.padded,privateValues(io,readValues));auto final=factory(io,role+"/final",table.size(),table.size(),privateValues(io,finalValues));readValues.reset();finalValues.reset();
  auto g=io.coin(role+"/gamma"),tau=io.coin(role+"/tau");Fr g2;{perf4::Scope setup("Native/Fingerprint-setup",role,1);g2=g*g;}
  std::array<Hidden,3>roots;
- std::shared_ptr<std::vector<Fr>>base_leaves;Fr root0=1,root1=1;
+ std::shared_ptr<std::vector<Fr>>base_leaves;
+ std::array<Fr,2> paired_roots{Fr(1),Fr(1)};
  if(io.prover()){
   perf4::Scope prepare("Native/Product01-base-leaves",role,a.padded);
-  base_leaves=std::make_shared<std::vector<Fr>>(a.padded,Fr(0));
-  struct alignas(64) Roots {Fr write=1,read=1;};
-  std::array<Roots,detail::NativeWorkers::capacity> partial;
-  auto* leaf=base_leaves->data();
-  const auto count=detail::nativeRanges(a.padded,detail::nativeWorkers(),detail::product_parallel_minimum,[&](std::size_t worker,std::size_t first,std::size_t last){
-   auto& roots=partial[worker];const Fr one=1;
-   for(auto i=first;i<last;++i){
-    auto z=fingerprint(privateEntry(a,i),privateEntry(v,i),privateEntry(read,i),g,g2,tau);
-    leaf[i]=z;roots.write*=z+one;roots.read*=z;
-   }
-  });
-  for(unsigned i=0;i<count;++i){root0*=partial[i].write;root1*=partial[i].read;}
- }
- // Preserve the root handle/RNG/message order despite computing 0/1 together.
- for(unsigned kind=0;kind<2;++kind)roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),kind==0?root0:root1,rng);
- std::shared_ptr<std::vector<Fr>> final_leaves;
- Fr root2=1;
- if(io.prover()){
-  perf4::Scope prepare("Native/Product2-root-leaves",role,table.size());
-  final_leaves=std::make_shared<std::vector<Fr>>(table.size());
-  for(std::size_t i=0;i<table.size();++i){
-   auto& leaf=(*final_leaves)[i];leaf=fingerprint(Fr(i),table[i],privateEntry(final,i),g,g2,tau);root2*=leaf;
+  const auto profile_role=role+"/prepare-product01";
+  perf5::Product profile(profile_role,a.padded,true);
+  perf5::Scope total(perf5::Total);
+  {perf5::Scope allocate(perf5::TreeAllocInit);base_leaves=std::make_shared<std::vector<Fr>>(a.padded);}
+  perf5::Scope prepare_roots(perf5::FingerprintRoot);
+  auto& workers=detail::nativeWorkers();
+  if(&a==&v){
+   const Fr scale=g2+g;
+   paired_roots=detail::productFingerprintPair(*base_leaves,[&](std::size_t i){
+    return scale*privateEntry(a,i)+privateEntry(read,i)-tau;
+   },workers);
+  }else{
+   paired_roots=detail::productFingerprintPair(*base_leaves,[&](std::size_t i){
+    return g2*privateEntry(a,i)+g*privateEntry(v,i)+privateEntry(read,i)-tau;
+   },workers);
   }
  }
- roots[2]=exchange(io,role+"/root/2",root2,rng);
- Fr initial=1;for(std::size_t i=0;i<table.size();++i)initial*=fingerprint(Fr(i),table[i],Fr(0),g,g2,tau);auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
+ // Keep the commitment and RNG sequence independent of arithmetic partitions.
+ for(unsigned kind=0;kind<2;++kind)roots[kind]=exchange(io,role+"/root/"+std::to_string(kind),paired_roots[kind],rng);
+ std::shared_ptr<std::vector<Fr>> final_leaves;
+ std::array<Fr,2> table_roots;
+ {
+  perf4::Scope prepare("Native/Product2-root-leaves",role,table.size());
+  const auto profile_role=role+"/prepare-product2";
+  perf5::Product profile(profile_role,table.size(),io.prover());
+  perf5::Scope total(perf5::Total);
+  if(io.prover()){
+   perf5::Scope allocate(perf5::TreeAllocInit);
+   final_leaves=std::make_shared<std::vector<Fr>>(table.size());
+  }
+  perf5::Scope prepare_roots(perf5::FingerprintRoot);
+  table_roots=detail::productFinalRoots(table,final_leaves.get(),g,g2,tau,
+                                       [&](std::size_t i){return privateEntry(final,i);},detail::nativeWorkers());
+ }
+ roots[2]=exchange(io,role+"/root/2",table_roots[1],rng);
+ const auto initial=table_roots[0];
+ auto product=exchange(io,role+"/multiset-product",io.prover()?roots[1].value*roots[2].value:Fr(0),rng);std::vector<Hidden>h{roots[0],roots[1],roots[2],product};Relations multiset;multiset.role=role+"/multiset";for(auto&x:h)multiset.handles.push_back(x.handle);multiset.products={{1,2,3}};multiset.linear={{initial,Fr(0),Fr(0),Fr(-1)}};sigma(io,multiset,io.prover()?&h:nullptr,rng);
  BatchedLeafAuthenticator shared_auth=[&](IO&live,const std::vector<Fr>&point,const std::array<Hidden,2>&leaf,Random*random,std::string name){
   std::array<Fr,3> values{Fr(0),Fr(0),Fr(0)};
-  if(live.prover())values=evaluateLeaves<3>({&a,&v,&read},evaluateWeights(point));
+  if(live.prover()){
+   const auto weights=evaluateWeights(point);
+   if(&a==&v){
+    const auto dots=evaluateLeaves<2>({&a,&read},weights);
+    values={dots[0],dots[0],dots[1]};
+   }else values=evaluateLeaves<3>({&a,&v,&read},weights);
+  }
   auto aa=authenticateEvaluation(live,a,point,values[0],random,name+"/address");
   auto vv=authenticateEvaluation(live,v,point,values[1],random,name+"/value");
   auto c=authenticateEvaluation(live,read,point,values[2],random,name+"/read");

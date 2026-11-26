@@ -121,6 +121,92 @@ void sharedTemplate(bool file,bool bench=false){
  for(unsigned k=0;k<3;++k)need(Access::tile(c,k,0,13,{Fr(7),Fr(11),Fr(13)},k_all)==expected[k],"shared template K differential");
  if(bench)std::cout<<"MAPPING_TEMPLATE PASS "<<n<<' '<<cold<<' '<<warm<<'\n';
 }
+void concurrentFrozenStore(){
+ cl::mapping::Store store(4u<<20);
+ std::array<cl::mapping::Plan,8>plans;
+ ui::detail::Workers workers(4);
+ workers.run(plans.size(),[&](std::size_t job){
+  cl::mapping::Builder builder(plans[job],store,480,3);
+  for(std::size_t j=0;j<1024;++j)
+   builder.append(j,{std::uint32_t(j%3),std::uint32_t((j*j+17*j+job)%1024)});
+  builder.finish();
+ },true);
+ for(std::size_t job=0;job<plans.size();++job){
+  const auto&plan=plans[job];
+  need(plan.frozen && std::string(plan.reason)=="FROZEN_ROOT_FILE","concurrent Store froze file plans");
+  for(std::size_t root=0;root<3;++root){
+   auto logical=root;
+   plan.forRoot(root,store,[&](const auto&run){
+    for(std::size_t j=0;j<run.count;++j){
+     const auto at=run.begin+j*run.logical_step;
+     const auto coordinate=std::int64_t(run.first.index)+std::int64_t(j)*run.stride;
+     need(at==logical && coordinate==std::int64_t((at*at+17*at+job)%1024),
+          "concurrent Store plans retain independent file regions");
+     logical+=3;
+    }
+   });
+   need(logical>=1024,"concurrent Store plan coverage");
+  }
+ }
+}
+void parallelTemplates(){
+ for(const auto budget:{std::size_t(640),std::size_t(1<<20)}){
+  LocalIO io;
+  OSRandom rng;
+  auto l=layout();
+  cl::Prepared prepared;
+  std::vector<Fr>x(13,Fr(2));
+  std::vector<std::uint32_t> terminal;
+  cl::View view{};
+  view.id="equivalent-a";view.mapped=true;view.actual=117;view.padded=128;
+  for(std::size_t j=0;j<view.actual;++j){
+   const auto at=(j*17+j*j)%39;
+   terminal.push_back(at);view.spans.push_back({at,1,Fr(0)});
+  }
+  l.views.emplace(view.id,view);view.id="equivalent-b";l.views.emplace(view.id,view);
+  view.id="different-bias";view.spans.at(113).bias=Fr(3);l.views.emplace(view.id,view);
+  auto copy=terminal;
+  auto changed=terminal;changed.at(113)=(changed[113]+1)%39;
+  cl::Commitments c(io,l,[](std::size_t){return Fr(2);},&prepared,&rng,x);
+  c.constrainBaseTails();Access::budget(c,budget,4u<<20);
+  c.prepareStaticMappings({{&terminal,128},{&copy,128},{&changed,128}});
+  auto h=oneblock::publicHidden(io,"parallel-template/hidden",Fr(0));
+  std::vector<Fr>q1(7,Fr(2)),q2(7,Fr(3));
+  for(const auto&name:{"equivalent-a","equivalent-b","different-bias"}){
+   auto v=c.view(name);v.open(io,{q1,h.handle},&h,&rng,name);
+  }
+  c.deferNativeTerminal("terminal",terminal,128,h,q1);
+  c.deferNativeTerminal("copy",copy,128,h,q2);
+  c.deferNativeTerminal("changed",changed,128,h,q2);
+  need(Access::shared(c,0,1) && Access::shared(c,0,3) && Access::shared(c,3,4),
+       "parallel frozen templates share fully equivalent descriptors");
+  need(!Access::shared(c,0,2) && !Access::shared(c,3,5),"parallel templates retain unequal bias and coordinates");
+  Bytes canonical;
+  for(std::size_t j=0;j<128;++j){
+   const auto loc=cl::locate(l,l.views.at("equivalent-a"),j);
+   canonical.push_back(loc.constant?1:0);
+   for(auto n:{loc.coordinate.root,loc.coordinate.index})
+    for(unsigned b=0;b<4;++b)canonical.push_back(std::uint8_t(n>>(8*b)));
+   auto bias=r1::encode(loc.bias);
+   canonical.insert(canonical.end(),bias.begin(),bias.end());
+  }
+  need(Access::digest(c,0)==r1::hash(canonical) && Access::digest(c,0)==Access::digest(c,4)
+       && Access::digest(c,0)!=Access::digest(c,2) && Access::digest(c,0)!=Access::digest(c,5),
+       "parallel frozen template canonical stream");
+  auto w1=r1::weights(q1),w2=r1::weights(q2);
+  need(Access::bias(c,2)==Fr(3)*w1[113],"parallel template bias");
+  const std::vector<Fr>rho{Fr(2),Fr(3),Fr(5),Fr(7),Fr(11),Fr(13)};
+  for(unsigned k=0;k<3;++k){
+   std::vector<Fr>expected(13,Fr(0));
+   for(std::size_t j=0;j<terminal.size();++j){
+    const auto a=cl::baseCoordinate(l,terminal[j]),b=cl::baseCoordinate(l,changed[j]);
+    if(a.root==k)expected[a.index]+=Fr(17)*w1[j]+Fr(11)*w2[j];
+    if(b.root==k)expected[b.index]+=Fr(13)*w2[j];
+   }
+   need(Access::k(c,k,rho)==expected,"parallel frozen run multiplicity and independent weights");
+  }
+ }
+}
 void microbench(){
  // A synthetic frozen map and public K output only. The tiny fixture seal is
  // completed before extending the isolated test root. No proof uses this root.
@@ -157,6 +243,36 @@ void microbench(){
  };
  for(auto mask:{0u,unsigned(ui::K1),unsigned(ui::K3),unsigned(ui::K4)})run(mask,1);
  run(ui::K2,4);run(k_all,1);run(k_all,2);for(const unsigned threads:{4u,8u,16u,32u})run(k_all,threads);
+}
+void sparseIndex(){
+ constexpr std::size_t width=1u<<20;
+ Fixture f;Access::budget(*f.c,800,1u<<20);Access::expandFixtureRoot(*f.c,width);
+ for(unsigned reverse:{0u,1u}){
+  auto c=claim(f,"bucket-gap/"+std::to_string(reverse),16,[reverse](std::size_t j){
+   const auto at=(j%2?0:1)+(j/2)*(1u<<17);
+   return j%2?cl::Located{{},Fr(0),true}:
+      cl::Located{{0,std::uint32_t(reverse?width-1-at:at)},Fr(0),false};
+  });
+  Access::add(*f.c,std::move(c));
+ }
+ const std::vector<Fr>rho{Fr(11),Fr(13)};
+ const auto expected=Access::k(*f.c,0,rho);
+ for(unsigned threads:{4u,8u,16u,32u}){
+  ui::detail::Workers workers(threads);
+  std::ostringstream captured;
+  auto* log=std::cerr.rdbuf(captured.rdbuf());
+  std::vector<Fr> actual;
+  try{actual=Access::tile(*f.c,0,0,width,rho,k_all,&workers);}
+  catch(...){std::cerr.rdbuf(log);throw;}
+  std::cerr.rdbuf(log);
+  std::cerr<<captured.str();
+  need(actual==expected,"sparse category K signed-stride differential");
+  need(captured.str().find("\"entries\":16")!=std::string::npos || threads==4,
+       "sparse category K entry count");
+  need(captured.str().find("\"empty_worker_buckets_skipped\":")!=std::string::npos,
+       "category K sparse bucket skip metrics missing");
+ }
+ std::cout<<"PASS sparse positive/reverse strides and category K at 4/8/16/32 workers\n";
 }
 void unboundedIndex(){
  constexpr std::size_t width=1u<<17,logical=1u<<23;
@@ -231,4 +347,4 @@ void directRunDifferential(){
  check(1<<20);
  check(640);
 }
-int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="direct-run"){directRunDifferential();return 0;}if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}if(std::string(argv[1])=="template-bench"){sharedTemplate(false,true);return 0;}sharedTemplate(false);sharedTemplate(true);compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="parallel-templates"){parallelTemplates();concurrentFrozenStore();return 0;}if(std::string(argv[1])=="direct-run"){directRunDifferential();return 0;}if(std::string(argv[1])=="sparse-index"){sparseIndex();return 0;}if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}if(std::string(argv[1])=="template-bench"){sharedTemplate(false,true);return 0;}sharedTemplate(false);sharedTemplate(true);parallelTemplates();concurrentFrozenStore();compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
