@@ -168,7 +168,7 @@ void streamingBench(){
   for(std::size_t j=0;j<n;++j){u[j]=Fr(engine());k[j]=Fr(engine());}
   const ui::Inputs inputs=[&](std::size_t){return ui::InputSpan{u.data(),n,n};};
   ui::Round expected[2];
-  for(const unsigned threads:{1u,2u,4u,8u,16u}){
+  for(const unsigned threads:{1u,2u,4u,8u,16u,32u}){
    ui::detail::Workers workers(threads);
    for(unsigned mask:{0u,1u,3u,7u}){
     if(threads!=1 && mask<3)continue;

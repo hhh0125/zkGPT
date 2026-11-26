@@ -54,5 +54,18 @@ Coverage discover(const R6PublicArtifacts&artifacts,bool include_native_report){
  return p;
 }
 std::string identity(const Coverage&p){r1::Fs f(p.context.plan.shape.layer_count==1?"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2":"R7-FULL12-NATIVE-COVERAGE-ROWMAJOR-v3");f.text("circuit",p.context.plan.circuit_id);f.text("layout",p.context.layout_sha256);for(auto&r:p.required){f.text("id",r.id);f.text("family",r.family);f.text("source",r.source);f.integer("domain",r.domain);f.integer("rounds",r.rounds);}auto d=f.digest();return crypto::hex(d);}
-void writeCoverage(std::ostream&o,const Coverage&p){o<<"{\"schema\":"<<quoted(p.context.plan.shape.layer_count==1?"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2":"R7-FULL12-NATIVE-COVERAGE-ROWMAJOR-v3")<<",\"coverage_sha256\":"<<quoted(identity(p))<<",\"circuit\":"<<quoted(p.context.plan.circuit_id)<<",\"native_plan_sha256\":"<<quoted(r5b::digestHex(Bytes(p.native_json.begin(),p.native_json.end())))<<",\"object_count\":"<<p.objects.size()<<",\"auxiliary_and_source_count\":"<<p.objects.size()-1<<",\"required_count\":"<<p.required.size()<<",\"FC_layers\":"<<p.fc_layers<<",\"native_master_terminals\":"<<p.native_terminals<<",\"object_padded_coordinates\":"<<p.object_padded_coordinates<<",\"direct_full_registration_response_bytes\":"<<p.full_representation_response_bytes<<",\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\",\"required\":[";bool first=true;for(auto&r:p.required){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(r.id)<<",\"family\":"<<quoted(r.family)<<",\"source\":"<<quoted(r.source)<<",\"domain\":"<<r.domain<<",\"sumcheck_rounds\":"<<r.rounds<<",\"status\":\"UNVERIFIED\"}";}o<<"],\"objects\":[";first=true;for(auto&v:p.objects){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(v.id)<<",\"parent\":"<<quoted(v.parent)<<",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<"}";}o<<"]}\n";}
+void writeCoverageBody(std::ostream&o,const Coverage&p,std::string_view status,bool verified){o<<"{\"schema\":"<<quoted(p.context.plan.shape.layer_count==1?"R7-ONEBLOCK-NATIVE-COVERAGE-ROWMAJOR-v2":"R7-FULL12-NATIVE-COVERAGE-ROWMAJOR-v3")<<",\"coverage_sha256\":"<<quoted(identity(p))<<",\"circuit\":"<<quoted(p.context.plan.circuit_id)<<",\"native_plan_sha256\":"<<quoted(r5b::digestHex(Bytes(p.native_json.begin(),p.native_json.end())))<<",\"object_count\":"<<p.objects.size()<<",\"auxiliary_and_source_count\":"<<p.objects.size()-1<<",\"required_count\":"<<p.required.size()<<",\"FC_layers\":"<<p.fc_layers<<",\"native_master_terminals\":"<<p.native_terminals<<",\"object_padded_coordinates\":"<<p.object_padded_coordinates<<",\"direct_full_registration_response_bytes\":"<<p.full_representation_response_bytes<<",\"status\":\""<<status<<"\",\"required\":[";bool first=true;for(auto&r:p.required){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(r.id)<<",\"family\":"<<quoted(r.family)<<",\"source\":"<<quoted(r.source)<<",\"domain\":"<<r.domain<<",\"sumcheck_rounds\":"<<r.rounds<<",\"status\":\""<<(verified?"VERIFIED":"UNVERIFIED")<<"\"}";}o<<"],\"objects\":[";first=true;for(auto&v:p.objects){if(!first)o<<',';first=false;o<<"{\"id\":"<<quoted(v.id)<<",\"parent\":"<<quoted(v.parent)<<",\"kind\":"<<unsigned(v.kind)<<",\"actual\":"<<v.actual<<",\"padded\":"<<v.padded<<"}";}o<<']';}
+void writeCoverage(std::ostream&o,const Coverage&p){
+ writeCoverageBody(o,p,"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED",false);
+ o<<"}\n";
+}
+void writeCoverageString(std::ostream&o,std::string_view value){
+ o<<'"';
+ for(const char c:value){
+  need(static_cast<unsigned char>(c)>=32,"coverage nonprintable ID");
+  if(c=='"' || c=='\\')o<<'\\';
+  o<<c;
+ }
+ o<<'"';
+}
 }

@@ -3,6 +3,9 @@
 #include "paper_r7_matrix_arithmetic.hpp"
 #include "paper_r7_oneblock_sumcheck.hpp"
 #include "paper_r7_perf6_options.hpp"
+#include "paper_r7_native_workers.hpp"
+#include <chrono>
+#include <iostream>
 #include <prover.hpp>
 #include <gkr_protocol.hpp>
 #include <host_safety.hpp>
@@ -100,16 +103,33 @@ void predicates(const layeredCircuit&graph,std::size_t id,const std::vector<Fr>&
  const auto&l=graph.circuit.at(id);auto bg=beta(unsigned(l.bit_length),g0,alpha);auto bg1=beta(unsigned(l.bit_length),g1,weight_beta);
  for(std::size_t j=0;j<bg.size();++j){bg[j]+=bg1[j];if(l.zero_start_id<l.size && j>=l.zero_start_id)bg[j]*=zero_scale;}
  auto bu=beta(unsigned(l.max_bl_u),u,Fr(1));uni={Fr(0),Fr(0)};bin={Fr(0),Fr(0),Fr(0)};
- for(const auto&gate:l.uni_gates){
-  need(gate.g<bg.size() && gate.u<bu.size(),"Oneblock GKR public unary gate index");
-  uni[gate.lu==0?0:1]+=bg[gate.g]*bu[gate.u]*host_safety::field(gate.sc);
- }
+ using detail::NativeWorkers;
+ struct alignas(64) Partial {
+  std::array<Fr,2> unary{Fr(0),Fr(0)};
+  std::array<Fr,3> binary{Fr(0),Fr(0),Fr(0)};
+ };
+ std::array<Partial,NativeWorkers::capacity> partial;
+ auto&workers=detail::nativeWorkers();
+ const auto unary_count=detail::nativeRanges(l.uni_gates.size(),workers,8192,
+  [&](std::size_t k,std::size_t begin,std::size_t end){
+   for(auto j=begin;j<end;++j){
+    const auto&gate=l.uni_gates[j];
+    need(gate.g<bg.size() && gate.u<bu.size(),"Oneblock GKR public unary gate index");
+    partial[k].unary[gate.lu==0?0:1]+=bg[gate.g]*bu[gate.u]*host_safety::field(gate.sc);
+   }
+  });
+ for(unsigned k=0;k<unary_count;++k)for(unsigned j=0;j<2;++j)uni[j]+=partial[k].unary[j];
  if(!v)return;
  auto bv=beta(unsigned(l.max_bl_v),*v,Fr(1));for(auto&x:uni)x*=bv[0];
- for(const auto&gate:l.bin_gates){
-  need(gate.g<bg.size() && gate.u<bu.size() && gate.v<bv.size() && gate.l<=2,"Oneblock GKR public binary gate index");
-  bin[gate.l]+=bg[gate.g]*bu[gate.u]*bv[gate.v]*host_safety::field(gate.sc);
- }
+ const auto binary_count=detail::nativeRanges(l.bin_gates.size(),workers,8192,
+  [&](std::size_t k,std::size_t begin,std::size_t end){
+   for(auto j=begin;j<end;++j){
+    const auto&gate=l.bin_gates[j];
+    need(gate.g<bg.size() && gate.u<bu.size() && gate.v<bv.size() && gate.l<=2,"Oneblock GKR public binary gate index");
+    partial[k].binary[gate.l]+=bg[gate.g]*bu[gate.u]*bv[gate.v]*host_safety::field(gate.sc);
+   }
+  });
+ for(unsigned k=0;k<binary_count;++k)for(unsigned j=0;j<3;++j)bin[j]+=partial[k].binary[j];
 }
 
 void finalRelation(IO&io,const Hidden&previous,const std::array<Hidden,4>&end,const std::array<Fr,2>&uni,
@@ -212,40 +232,50 @@ PendingGKR runHiddenGKR(IO&io,const layeredCircuit&graph,::prover*p,std::size_t 
    need(!alpha.isZero() || !weight_beta.isZero(),"Oneblock GKR nonzero layer has no authenticated output claim");
    std::unique_ptr<NativeLayerOracle>view;::prover*arithmetic=nullptr;
    if(io.prover())executePrivateWitness([&]{view=std::make_unique<NativeLayerOracle>(*p,graph,id);arithmetic=&view->start(g0,g1,alpha,weight_beta);});
+   using Clock=std::chrono::steady_clock;
+   std::array<double,8> elapsed{};
+   auto measureOp=[&](unsigned op,const auto&fn){
+    auto start=Clock::now();fn();elapsed[op]+=std::chrono::duration<double>(Clock::now()-start).count();
+   };
    Fr last=0;u[id].resize(unsigned(l.max_bl_u));
    {
    native_masked::PhaseMeasure measure{role+"/phase1",io.prover(),native_masked::enabled()};
    std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_u),previous,rng,role+"/phase1/masked",measure);
-   if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckInitPhase1(zero_scale);});
+   if(io.prover())measureOp(0,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase1(zero_scale);});});
    for(unsigned j=0;j<unsigned(l.max_bl_u);++j){
-    quadratic_poly polynomial;if(io.prover())executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate1(last);});
+    quadratic_poly polynomial;if(io.prover())measureOp(1,[&]{executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate1(last);});});
     if(mask)last=u[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});
     else{auto step=round(io,previous,polynomial,rng,role+"/phase1/round/"+std::to_string(j),measure.seconds[4]);previous=step.first;last=u[id][j]=step.second;++measure.rounds;}
     ++pending.rounds;
    }
    if(mask)previous=mask->finish(io,rng);
    }
-   Fr u0=0,u1=0;if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize1(last,u0,u1);});
+   Fr u0=0,u1=0;if(io.prover())measureOp(2,[&]{executePrivateWitness([&]{arithmetic->sumcheckFinalize1(last,u0,u1);});});
    end[0]=l.bit_length_u[0]>=0?exchangeHidden(io,role+"/final/u0",u0,rng):known(io,role+"/final/u0",Fr(0));
    end[1]=l.bit_length_u[1]>=0?exchangeHidden(io,role+"/final/u1",u1,rng):known(io,role+"/final/u1",Fr(0));
    Fr v0=0,v1=0;
    if(l.need_phase2){
     native_masked::PhaseMeasure measure{role+"/phase2",io.prover(),native_masked::enabled()};
     std::unique_ptr<native_masked::Mask> mask;if(native_masked::enabled())mask=std::make_unique<native_masked::Mask>(io,unsigned(l.max_bl_v),previous,rng,role+"/phase2/masked",measure);
-    v[id].resize(unsigned(l.max_bl_v));last=0;if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckInitPhase2();});
+    v[id].resize(unsigned(l.max_bl_v));last=0;if(io.prover())measureOp(3,[&]{executePrivateWitness([&]{arithmetic->sumcheckInitPhase2();});});
     for(unsigned j=0;j<unsigned(l.max_bl_v);++j){
-     quadratic_poly polynomial;if(io.prover())executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate2(last);});
+     quadratic_poly polynomial;if(io.prover())measureOp(4,[&]{executePrivateWitness([&]{polynomial=arithmetic->sumcheckUpdate2(last);});});
      if(mask)last=v[id][j]=mask->round(io,{polynomial.c,polynomial.b,polynomial.a});
      else{auto step=round(io,previous,polynomial,rng,role+"/phase2/round/"+std::to_string(j),measure.seconds[4]);previous=step.first;last=v[id][j]=step.second;++measure.rounds;}
      ++pending.rounds;
     }
     if(mask)previous=mask->finish(io,rng);
-    if(io.prover())executePrivateWitness([&]{arithmetic->sumcheckFinalize2(last,v0,v1);});
+    if(io.prover())measureOp(5,[&]{executePrivateWitness([&]{arithmetic->sumcheckFinalize2(last,v0,v1);});});
    }
    end[2]=l.need_phase2 && l.bit_length_v[0]>=0?exchangeHidden(io,role+"/final/v0",v0,rng):known(io,role+"/final/v0",Fr(0));
    end[3]=l.need_phase2 && l.bit_length_v[1]>=0?exchangeHidden(io,role+"/final/v1",v1,rng):known(io,role+"/final/v1",Fr(0));
-   std::array<Fr,2>uni;std::array<Fr,3>bin;predicates(graph,id,g0,g1,alpha,weight_beta,zero_scale,u[id],l.need_phase2?&v[id]:nullptr,uni,bin);
-   finalRelation(io,previous,end,uni,bin,rng,role);
+   std::array<Fr,2>uni;std::array<Fr,3>bin;measureOp(6,[&]{predicates(graph,id,g0,g1,alpha,weight_beta,zero_scale,u[id],l.need_phase2?&v[id]:nullptr,uni,bin);});
+   measureOp(7,[&]{finalRelation(io,previous,end,uni,bin,rng,role);});
+   std::cerr<<"ORDINARY_GKR_V3 {\"layer\":"<<id<<",\"prover\":"<<(io.prover()?"true":"false")
+     <<",\"phase1_init\":"<<elapsed[0]<<",\"phase1_polynomial_fold\":"<<elapsed[1]
+     <<",\"phase1_finalize\":"<<elapsed[2]<<",\"phase2_init\":"<<elapsed[3]
+     <<",\"phase2_polynomial_fold\":"<<elapsed[4]<<",\"phase2_finalize\":"<<elapsed[5]
+     <<",\"predicates\":"<<elapsed[6]<<",\"final_relation\":"<<elapsed[7]<<"}\n";
    checked(io,"gkr/layer/"+std::to_string(id)+"/phase1");
    if(l.need_phase2)checked(io,"gkr/layer/"+std::to_string(id)+"/phase2");
    checked(io,"gkr/layer/"+std::to_string(id)+"/predicate");

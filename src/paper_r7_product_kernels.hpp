@@ -17,7 +17,7 @@ std::array<Fr,N> reduceProductPairs(std::size_t pairs,NativeWorkers& workers,con
                                   std::uint64_t mul_per_pair,std::uint64_t add_per_pair,
                                   std::uint64_t mul_final,std::uint64_t add_final){
  const auto partitions=nativePartitions(pairs,workers,product_parallel_minimum);
- std::array<ProductPartial<N>,16> partial;
+ std::array<ProductPartial<N>,NativeWorkers::capacity> partial;
  nativeRanges(pairs,workers,product_parallel_minimum,[&](std::size_t k,std::size_t first,std::size_t last){
   auto& sum=partial[k].coefficients;
   for(auto j=first;j<last;++j)accumulate(sum,2*j);
@@ -108,7 +108,7 @@ void foldNativeProduct(std::size_t width,const Fr& challenge,std::vector<std::ve
 template<std::size_t N,class Load>
 std::array<Fr,N> productLeafDots(const std::vector<Fr>& weights,const Load& load,NativeWorkers& workers){
  perf5::Scope scope(perf5::LeafDot);
- std::array<ProductPartial<N>,16> partial;
+ std::array<ProductPartial<N>,NativeWorkers::capacity> partial;
  const auto count=nativeRanges(weights.size(),workers,product_parallel_minimum,[&](std::size_t k,std::size_t first,std::size_t last){
   auto& sum=partial[k].coefficients;
   for(auto i=first;i<last;++i){

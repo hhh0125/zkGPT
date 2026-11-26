@@ -175,7 +175,7 @@ void foldBenchmark(){
    const auto&segment=segments[k];return {original.data()+segment.offset,segment.padded,segment.padded};
   };
   const PublicK::BuildInto build=[&](std::size_t k,Fr*out,std::size_t count){std::copy_n(input(k).data,count,out);};
-  for(unsigned threads:{0u,1u,2u,4u,8u,16u}){
+  for(unsigned threads:{0u,1u,2u,4u,8u,16u,32u}){
    zkgpt::r7::oneblock::unified::detail::Workers workers(std::max(1u,threads));
    auto*pool=threads?&workers:nullptr;
    for(unsigned repeat=0;repeat<4;++repeat){

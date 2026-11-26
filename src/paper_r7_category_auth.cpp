@@ -386,7 +386,7 @@ class Commitments::CategoryKernelPlan {
   if(!count)return;
   indexRoot(root);
   const auto n=parts(count);
-  std::array<KernelLocal,16>local{};
+  std::array<KernelLocal,unified::detail::Workers::capacity>local{};
   const auto job=[&](std::size_t j){
    const auto lo=begin+count*j/n,hi=begin+count*(j+1)/n;
    const Bucket*b=indexed_?&buckets_[buckets_by_tile_[k].first+j]:nullptr;

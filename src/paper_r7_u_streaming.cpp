@@ -4,6 +4,7 @@
 #include "paper_r7_opt2_metrics.hpp"
 #include "paper_r7_public_k.hpp"
 #include "paper_r7_unified_workers.hpp"
+#include "paper_r7_native_workers.hpp"
 #include <thread_joiner.hpp>
 #include <algorithm>
 #include <chrono>
@@ -49,20 +50,20 @@ unsigned unifiedOptimizationMask(){
  const auto mask=std::stoul(text);need(mask<=255,"UnifiedInput optimization mask bounds");
  return unsigned(mask);
 }
-UOptions UOptions::environment(){UOptions out;out.optimization=unifiedOptimizationMask();if(out.optimization&(U2|U3))out.tile_pairs=16384;auto budget=zkgpt::workerThreadCount();out.threads=budget>=4?4:budget>=2?2:1;if(const auto*v=std::getenv("ZKGPT_U_THREADS")){std::string s(v);need(s=="1" || s=="2" || s=="4" || s=="8" || s=="16","OPT3D thread budget");out.threads=unsigned(std::stoul(s));need(out.threads<=budget,"OPT3D cannot exceed existing worker budget");}if(const auto*v=std::getenv("ZKGPT_PERF3_U_DOT")){std::string s(v);need(s=="0" || s=="1","PERF3 dot mode");out.striped_dot=s=="1";}if(const auto*v=std::getenv("ZKGPT_U_PROFILE_READ")){std::string text(v);need(text=="0" || text=="1","U read profiler switch");out.profile_reads=text=="1";}return out;}
+UOptions UOptions::environment(){UOptions out;out.optimization=unifiedOptimizationMask();if(out.optimization&(U2|U3))out.tile_pairs=16384;auto budget=::zkgpt::r7::oneblock::detail::nativeWorkerBudget();out.threads=budget>=16?16:budget>=8?8:budget>=4?4:budget>=2?2:1;if(const auto*v=std::getenv("ZKGPT_U_THREADS")){std::string s(v);need(s=="1" || s=="2" || s=="4" || s=="8" || s=="16" || s=="32","OPT3D thread budget");out.threads=unsigned(std::stoul(s));need(out.threads<=zkgpt::workerThreadCount(),"OPT3D cannot exceed existing worker budget");}if(const auto*v=std::getenv("ZKGPT_PERF3_U_DOT")){std::string s(v);need(s=="0" || s=="1","PERF3 dot mode");out.striped_dot=s=="1";}if(const auto*v=std::getenv("ZKGPT_U_PROFILE_READ")){std::string text(v);need(text=="0" || text=="1","U read profiler switch");out.profile_reads=text=="1";}return out;}
 static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment>&segments,const std::vector<Fr>&prefix,const Factors&provider,const Inputs&inputs,UOptions options,UMetrics*metrics,FoldedU*folded,const std::string&session,bool validated,PublicK*public_k,detail::Workers*shared_workers){
  try{
  if(folded){need(folded->domain()==n && bool(inputs),"PERF4 U domain/storage boundary");folded->beginRound(session,prefix,segments);}
  const bool cached=folded && folded->cached();
  need(!folded || (!options.elide_zero_suffix && !options.striped_dot),"PERF4 U cannot combine experimental scan/dot modes");
  if(!validated){validate(n,segments);}
- need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4 || options.threads==8 || options.threads==16) && options.tile_pairs && options.tile_pairs<=16384,"OPT3D bounded tile/thread options");
+ need(prefix.size()<32 && (n>>prefix.size())>=2 && provider,"OPT3D prefix/provider");need((options.threads==1 || options.threads==2 || options.threads==4 || options.threads==8 || options.threads==16 || options.threads==32) && options.tile_pairs && options.tile_pairs<=16384,"OPT3D bounded tile/thread options");
  const bool diagnostic=crypto::opt2MetricsEnabled();
  crypto::AllocationTrace allocation;UMetrics m;m.read_profile_enabled=options.profile_reads;std::set<const void*>source_chunks;Round out;const auto t=unsigned(prefix.size());
  // Check public allocation sizes BEFORE allocating any new private tile/pool.
  std::array<bool,33>seen{};std::array<bool,17>splits{};std::size_t planned=options.threads*1024*sizeof(Fr)+segments.size()*192+32768+(2*options.tile_pairs+4)*sizeof(Fr)+(inputs?options.threads-1:0)*((1u<<20)+4096);
  if(!cached)for(auto s:segments){auto d=std::min(t,r1::log2exact(s.padded)),split=std::min(d,16u);if(!seen[d]){planned+=(std::size_t(1)<<(d-split))*sizeof(Fr);seen[d]=true;}if(!splits[split]){planned+=(std::size_t(1)<<split)*sizeof(Fr);splits[split]=true;}}
- const std::size_t budget=(options.threads>4 || options.tile_pairs>4096)?24ull<<20:8ull<<20;
+ const std::size_t budget=(options.threads>4 || options.tile_pairs>4096)?(24ull+(options.threads>16?options.threads-16:0))<<20:8ull<<20;
  need(planned<=budget,"OPT3D extra RAM budget preflight");
  const bool borrow=public_k && inputs && (options.optimization&(U2|U3));
  const bool parallel_products=borrow && (options.optimization&U2);
@@ -70,7 +71,7 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
  need(!shared_workers || shared_workers->count()==options.threads,"UnifiedInput worker budget mismatch");
  detail::Workers local_workers(shared_workers?1:worker_count);
  auto&workers=shared_workers?*shared_workers:local_workers;
- std::array<UMetrics,16>reads{};std::vector<Fr>tile(2*options.tile_pairs+4,Fr(0));m.tile_bytes=tile.capacity()*sizeof(Fr);m.thread_bytes=(worker_count-1)*((1u<<20)+4096)+sizeof(detail::Workers)+16*sizeof(Fr)*8;
+ struct alignas(64) WorkerReads { UMetrics metrics; };std::array<WorkerReads,detail::Workers::capacity>reads{};std::vector<Fr>tile(2*options.tile_pairs+4,Fr(0));m.tile_bytes=tile.capacity()*sizeof(Fr);m.thread_bytes=(worker_count-1)*((1u<<20)+4096)+sizeof(detail::Workers)+sizeof(reads)+workers.count()*sizeof(Fr)*8;
  std::map<unsigned,std::vector<Fr>>shared_low;std::map<unsigned,std::unique_ptr<Weights>>weights;std::size_t weight_bytes=0;
  struct Pair{Fr a=0,b=0;};std::map<std::size_t,Pair>collapsed;
  const bool three=options.optimization & U1, terminal=(n>>t)==2;
@@ -88,7 +89,7 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
    ++pairs;
   }
  };
- std::array<Product,16> products_by_worker{};
+ std::array<Product,detail::Workers::capacity> products_by_worker{};
  auto&serial=products_by_worker[0];
  auto product=[&](const Fr&a0,const Fr&a1,const Fr&b0,const Fr&b1){serial.add(a0,a1,b0,b1,three,terminal);};
  for(std::size_t k=0;k<segments.size();++k){const auto s=segments[k];const auto d=r1::log2exact(s.padded),low=std::min(t,d);Weights*wp=nullptr;if(!cached){auto&owned=weights[low];if(!owned){auto weight_start=Clock::now();auto split=std::min(low,16u);auto&shared=shared_low[split];if(shared.empty()){shared=r1::weights({prefix.begin(),prefix.begin()+split});weight_bytes+=shared.capacity()*sizeof(Fr);}owned=std::make_unique<Weights>(prefix,low,shared);weight_bytes+=owned->bytes();m.weights_wall+=elapsed(weight_start);}wp=owned.get();}const auto block=std::size_t(1)<<low;
@@ -140,7 +141,7 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
     const auto tasks=count*shards;need(tasks<=tile.size(),"OPT3D tile task bound");auto scan=Clock::now();auto scan_cpu=diagnostic?crypto::processCPU():0;
     workers.run(tasks,[&](std::size_t job){auto local=job/shards,shard=job%shards;auto begin=(first+local)*block;
      auto lo=block*shard/shards,hi=block*(shard+1)/shards;
-     auto&rm=reads[job%options.threads];++rm.scan_calls;
+     auto&rm=reads[job%options.threads].metrics;++rm.scan_calls;
      std::array<Fr,1024>read_buffer;std::size_t buffer_begin=0,buffer_count=0;
      auto read=[&](std::size_t index)->Fr{
       if(!inputs){return a(index);}
@@ -194,7 +195,7 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
    m.k_callback_calls+=length;
   }
   need(calls==1,"OPT3D missing factor oracle");
-  m.mapping_calls=0;for(const auto&read_metrics:reads)m.mapping_calls+=read_metrics.mapping_calls;
+  m.mapping_calls=0;for(const auto&read_metrics:reads)m.mapping_calls+=read_metrics.metrics.mapping_calls;
   m.coordinates+=cached?length:s.padded;m.bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
   m.fused_load_bytes+=(inputs?span.stored:s.padded)*sizeof(Fr);
   // U was already root-local in OPT3-C: no Root-Centric map queries here.
@@ -220,7 +221,7 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
  m.product_additions+=serial.pairs*((three?5:6)+(terminal?2:0));
  if(three){out.coefficients[1]-=out.coefficients[0];out.coefficients[1]-=out.coefficients[2];m.product_additions+=2;}
  if(folded)folded->completeRound(session,prefix);
- m.allocations=allocation.count();m.allocated_bytes=allocation.bytes();for(const auto&r:reads){m.scan_calls+=r.scan_calls;m.timed_read_elements+=r.timed_read_elements;m.read_elements+=r.read_elements;m.profile_refills+=r.profile_refills;m.profile_hits+=r.profile_hits;m.profile_misses+=r.profile_misses;m.original_read_elements+=r.original_read_elements;m.u_span_elements+=r.u_span_elements;m.retained_read_elements+=r.retained_read_elements;m.read_wall+=r.read_wall;m.read_cpu+=r.read_cpu;}
+ m.allocations=allocation.count();m.allocated_bytes=allocation.bytes();for(const auto&local:reads){const auto&r=local.metrics;m.scan_calls+=r.scan_calls;m.timed_read_elements+=r.timed_read_elements;m.read_elements+=r.read_elements;m.profile_refills+=r.profile_refills;m.profile_hits+=r.profile_hits;m.profile_misses+=r.profile_misses;m.original_read_elements+=r.original_read_elements;m.u_span_elements+=r.u_span_elements;m.retained_read_elements+=r.retained_read_elements;m.read_wall+=r.read_wall;m.read_cpu+=r.read_cpu;}
  m.storage_chunks_touched=source_chunks.size();if(metrics){*metrics=m;}
  return out;
  }catch(...){if(folded)folded->poison();throw;}

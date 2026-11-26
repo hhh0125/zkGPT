@@ -5,6 +5,7 @@
 #include "memory_diagnostics.hpp"
 #include "stats.hpp"
 #include "host_safety.hpp"
+#include "paper_r7_native_workers.hpp"
 #include "r5b_numeric.hpp"
 #include "utils.hpp"
 #include "global_var.hpp"
@@ -638,31 +639,43 @@ void neuralNetwork::create(prover &pr, bool merge, WitnessTimings *timings)
             read_layer_norm(ln_id);
             measure(&WitnessTimings::layerNormParameters);
         }
-        auto sparsity_storage=std::make_unique<bool[]>(pr.fc_input_row[i]*pr.fc_input_col[i]);
-        bool *sparsity=sparsity_storage.get();
-        memset(sparsity,0,sizeof(bool)*pr.fc_input_row[i]*pr.fc_input_col[i]);
-        std::uint64_t cnt=0;
-        for(int j=0;j<pr.fc_real_input_row[i];j++)
-        for(int k=0;k<pr.fc_real_input_col[i];k++)
-        {
-            ++cnt;
-            sparsity[j*pr.fc_input_col[i]+k]=true;
+        auto layerStart=Clock::now();
+        auto layerMeasure=[&](const char*component,i64 first){
+            if(!timings)return;
+            auto now=Clock::now();
+            timings->components.push_back({block_id,first,layer_id,component,
+                std::chrono::duration<double>(now-layerStart).count()});
+            layerStart=now;
+        };
+        std::unique_ptr<bool[]> sparsity_storage;
+        if(!r5b_numerical_candidate_ && (i%4==0 || i%4==2)){
+            sparsity_storage=std::make_unique<bool[]>(pr.fc_input_row[i]*pr.fc_input_col[i]);
+            for(int row=0;row<pr.fc_real_input_row[i];++row)
+             for(int col=0;col<pr.fc_real_input_col[i];++col)
+                sparsity_storage[row*pr.fc_input_col[i]+col]=true;
         }
+        auto* sparsity=sparsity_storage.get();
+        layerMeasure("iteration_setup",layer_id);
         // 归一化计算
         if(i%4==0 || i%4==2)
         {
             if (i % 4 == 0) block_residual_offset = q_offset;
             else attention_residual_offset = q_offset;
+            auto first=layer_id;
             if(r5b_numerical_candidate_)r5bLayerNorm(&pr.C.circuit[layer_id],layer_id,ln_id,pr.fc_real_input_col[0]);
             else {
             ln_checker_layer1(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,pr.fc_real_input_col[0],sparsity);
             ln_checker_layer2(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,sparsity);
             ln_checker_layer3(pr.C.circuit[layer_id], layer_id,ln_id,input_e,input_c,pr.fc_real_input_col[0],sparsity);
             }
+            layerMeasure("layer_norm",first);
         }
         pr.fc_input_id[i]=q_offset;
         // 
+        auto first=layer_id;
         fullyConnLayer(pr.C.circuit[layer_id], layer_id, fc.weight_start_id,q_offset,0);
+        layerMeasure("fully_connected",first);
+        first=layer_id;
         int cx=7,ex=-8,cy=3,ey=-8;
         float c_A,e_A,c_B=1,e_B=-10,c_C,e_C;
         c_A=input_c;
@@ -675,6 +688,8 @@ void neuralNetwork::create(prover &pr, bool merge, WitnessTimings *timings)
         roundLayer(pr.C.circuit[layer_id], layer_id,
                    (float)c_A*c_B/c_C*pow(2,e_A+e_B-e_C),
                    NULL, fc.bias_start_id);
+        layerMeasure("bias_round_quantize",first);
+        first=layer_id;
         if (i % 4 == 1) {
             residualLayer(pr.C.circuit[layer_id], layer_id, block_residual_offset,
                           len * channel_out, "attention_residual");
@@ -682,12 +697,16 @@ void neuralNetwork::create(prover &pr, bool merge, WitnessTimings *timings)
             residualLayer(pr.C.circuit[layer_id], layer_id, attention_residual_offset,
                           len * channel_out, "mlp_residual");
         }
+        if(layer_id!=first)layerMeasure("residual",first);
         if(r6_engineering_ && i%4==1)r6_connections_.back().attention_residual=q_offset;
         if(r6_engineering_ && i%4==3){r6_connections_.back().output=q_offset;r6_connections_.back().last_layer=layer_id-1;}
         // 注意力机制
         if(i%4==0)
         {
+            first=layer_id;
             multi_head_matrix_QK(pr.C.circuit[layer_id], layer_id);
+            layerMeasure("attention_qk",first);
+            first=layer_id;
             const float activation_scale = pow(2,e_C)*c_C;
             if(r5b_numerical_candidate_)r5bAttention(&pr.C.circuit[layer_id],layer_id);
             else {
@@ -695,16 +714,19 @@ void neuralNetwork::create(prover &pr, bool merge, WitnessTimings *timings)
             softmax_layer_2(pr.C.circuit[layer_id], layer_id,activation_scale,activation_scale,activation_scale,activation_scale);
             softmax_layer_3(pr.C.circuit[layer_id], layer_id,activation_scale,activation_scale,activation_scale,activation_scale);
             }
+            layerMeasure("softmax_attention_av",first);
         }
         // GELU激活函数，前馈网络层
         if(i%4==2)
         {
+            first=layer_id;
             if(r5b_numerical_candidate_)r5bGelu(&pr.C.circuit[layer_id],layer_id,pr.fc_real_col[i]);
             else {
             gelu_checker_layer1(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
             gelu_checker_layer2(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
             gelu_checker_layer3(pr.C.circuit[layer_id], layer_id,pr.fc_real_col[i],-8,48, -8,217,-8, 252,-8, 615,ex,cx,ey,cy);
             }
+            layerMeasure("gelu",first);
         }
     }
    
@@ -2339,19 +2361,34 @@ void neuralNetwork::fullyConnLayer(layer &circuit, i64 &layer_id, i64 first_fc_i
         layer_id++;
         return;
     }
-    for (i64 i = 0; i < len; i++)
-    {
-        for (i64 co = 0; co < channel_out; ++co) 
-        {
-            i64 g = matIdx(i, co, channel_out);
-            val[layer_id][g]=0;
-            //circuit.uni_gates.emplace_back(g, first_bias_id + co, 0, 1);  // our protocol doesn't support adding bias for simplicity
-            for (i64 ci = 0; ci < channel_in; ++ci) 
-            {
-                i64 u = x_offset+matIdx(i, ci, channel_in);
-                i64 v = first_fc_id + matIdx(co, ci, channel_in);  // the matrix is distributed as (i,ci)*(co,ci)
-                val[layer_id][g]+=val[x_layer][u]*val[0][v];
+    const auto* inputs=val[x_layer].data()+x_offset;
+    const auto* weights=val[0].data()+first_fc_id;
+    auto* output=val[layer_id].data();
+    if (r6_engineering_) {
+        namespace workers=zkgpt::r7::oneblock::detail;
+        auto& pool=workers::nativeWorkers();
+        constexpr std::size_t columns_per_tile=32;
+        const std::size_t tiles_per_row=(channel_out+columns_per_tile-1)/columns_per_tile;
+        workers::nativeRanges(len*tiles_per_row,pool,1,[&](std::size_t,std::size_t first,std::size_t last){
+            for(auto tile=first;tile<last;++tile){
+                const auto row=tile/tiles_per_row;
+                const auto begin=(tile%tiles_per_row)*columns_per_tile;
+                const auto end=std::min(begin+columns_per_tile,std::size_t(channel_out));
+                const auto* input=inputs+row*channel_in;
+                for(auto col=begin;col<end;++col){
+                    Fr sum=0;
+                    const auto* weight=weights+col*channel_in;
+                    for(int k=0;k<channel_in;++k)sum+=input[k]*weight[k];
+                    output[row*channel_out+col]=sum;
+                }
             }
+        });
+    } else {
+        for(i64 row=0;row<len;++row)for(i64 col=0;col<channel_out;++col){
+            Fr sum=0;
+            for(int k=0;k<channel_in;++k)
+                sum+=inputs[row*channel_in+k]*weights[col*channel_in+k];
+            output[row*channel_out+col]=sum;
         }
     }
     layer_id++;

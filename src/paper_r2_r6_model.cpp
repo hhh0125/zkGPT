@@ -1,5 +1,7 @@
 #include "paper_r2_r6_model.hpp"
 #include "paper_r2_r5b_trust.hpp"
+#include <cybozu/sha2.hpp>
+#include <array>
 namespace zkgpt::r6 {
 PublicCircuit::PublicCircuit(unsigned blocks):network_(blocks,12,64,768,3072),
  graph_([&]{configure(network_);return network_.buildPublicCircuit();}()),
@@ -16,7 +18,24 @@ void serializePlan(std::ostream &o,const layeredCircuit&c,const LLM&nn,const r2:
  o<<"],\"ranges\":[";first=true;for(auto&r:nn.getWitnessRegistry().constraints()){if(!first)o<<',';first=false;o<<"{\"name\":\""<<r.name<<"\",\"offset\":"<<r.val0_offset<<",\"count\":"<<r.count<<",\"bits\":"<<r.bits<<",\"signed\":"<<(r.is_signed?"true":"false")<<"}";}
  o<<"],\"children\":[";first=true;for(auto&q:p.sources){if(!first)o<<',';first=false;o<<"{\"role\":\""<<q.spec.role<<"\",\"actual\":"<<q.spec.actual<<",\"padded\":"<<q.spec.padded<<",\"rows\":"<<q.spec.rows<<",\"columns\":"<<q.spec.columns<<",\"spans\":[";bool sf=true;for(auto&s:q.spans){if(!sf)o<<',';sf=false;o<<"{\"offset\":"<<s.offset<<",\"count\":"<<s.count<<",\"bias\":\""<<r5b::hex(r1::encode(s.bias))<<"\"}";}o<<"]}";}
  o<<"],\"terminal_plans\":[";first=true;
- auto coordinateDigest=[](const std::vector<u32>&ids){r1::Bytes bytes;bytes.reserve(ids.size()*4);for(auto i:ids)for(unsigned j=0;j<4;++j)bytes.push_back(std::uint8_t(i>>(8*j)));return r5b::digestHex(bytes);};
+ auto coordinateDigest=[](const std::vector<u32>&ids){
+  cybozu::Sha256 hash;
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  static_assert(sizeof(u32)==4,"canonical coordinate size");
+  if(!ids.empty())hash.update(ids.data(),ids.size()*sizeof(u32));
+#else
+  std::array<std::uint8_t,65536> bytes;
+  std::size_t used=0;
+  for(auto i:ids){
+   for(unsigned j=0;j<4;++j)bytes[used++]=std::uint8_t(i>>(8*j));
+   if(used==bytes.size()){hash.update(bytes.data(),used);used=0;}
+  }
+  if(used)hash.update(bytes.data(),used);
+#endif
+  r1::Bytes digest(32);
+  r1::require(hash.digest(digest.data(),digest.size(),nullptr,0)==digest.size(),"R6 coordinate digest");
+  return r5b::hex(digest);
+ };
  for(std::size_t i=1;i<c.circuit.size();++i){const auto&l=c.circuit[i];auto u=coordinateDigest(l.ori_id_u),v=coordinateDigest(l.ori_id_v);
   auto terminal=[&](const char*role,bool isv){const auto&ids=isv?l.ori_id_v:l.ori_id_u;if(!first)o<<',';first=false;o<<"{\"layer\":"<<i<<",\"role\":\""<<role<<"\",\"master_coordinate_count\":"<<ids.size()<<",\"coordinate_u32le_sha256\":\""<<(isv?v:u)<<"\",\"first\":"<<(ids.empty()?0:ids.front())<<",\"last\":"<<(ids.empty()?0:ids.back())<<"}";};
   if(l.bit_length_u[0]>=0)terminal("input-u0",false);if(l.bit_length_v[0]>=0)terminal("input-v0",true);if(l.ty==layerType::FCONN){terminal("matrix-u",false);terminal("matrix-v",true);}

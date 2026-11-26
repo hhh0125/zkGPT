@@ -65,7 +65,7 @@
  for(std::size_t k=1;k<witness.executionForR7().val.size();++k)std::vector<Fr>().swap(witness.executionForR7().val[k]);
  master={};
  }
- for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id));}
+ for(auto&source:ctx.plan.sources){auto id="r7/"+source.spec.role;need(objects.insert(id).second,"classified repeated source");sources.push_back(pcs.view(id,true));}
  });
  VectorFactory factory=[&](IO&live,std::string id,std::size_t,std::size_t,Value){need(&live==&io && objects.insert(id).second,"classified duplicate/foreign prepared view");return pcs.view(id);};
  timed("native-Range-Exp-Lasso-Memory-Product",[&]{for(auto&r:ctx.plan.ranges)hiddenRange(io,sources.at(r.child),r.bits,factory,rng,"r7/"+r.id,true);for(auto&e:ctx.plan.exps)hiddenExp(io,sources.at(e.index_child),sources.at(e.value_child),e.profile,factory,rng,"r7/"+e.id,true);});

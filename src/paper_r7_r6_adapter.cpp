@@ -107,6 +107,11 @@ void R7WitnessStore::generateR6(const R7Context&c,const std::string&manifest){
           <<",\"layer_execution_and_materialization_seconds\":"<<timings.layers
           <<",\"subset_and_graph_finalize_seconds\":"<<timings.finalize
           <<",\"total_seconds\":"<<Seconds(Clock::now()-began).count()<<"}\n";
+ for(const auto&c:timings.components)
+  std::cerr<<"WITNESS_LAYER {\"block\":"<<c.block<<",\"first_layer\":"<<c.firstLayer
+           <<",\"end_layer\":"<<c.endLayer<<",\"component\":\""<<c.name
+           <<"\",\"seconds\":"<<c.seconds<<"}\n";
+
 }
 const std::vector<Fr>& R7WitnessStore::baseMaster()const{r1::require(execution_ && !execution_->val.empty(),"R7 no witness");return execution_->val[0];}
 std::vector<Fr> R7WitnessStore::publicX()const{const auto&w=baseMaster();r1::require(network_!=nullptr,"R7 X network");std::vector<Fr>out;

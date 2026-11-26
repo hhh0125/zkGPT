@@ -21,6 +21,8 @@ struct Root {
 };
 struct AuthMetrics {std::uint64_t map_calls=0,map_coordinates=0,kernel_calls=0,kernel_coordinates=0,weights=0,weight_terms=0,weight_products=0,kernel_peak_bytes=0;
  std::uint64_t kernel_run_visits=0,kernel_run_clips=0,kernel_run_intersections=0;
+ std::uint64_t direct_map_runs=0,direct_map_coordinates=0,maphash_updates=0,maphash_bytes=0;
+ double maphash_update_seconds=0;
  std::uint64_t map_bias_serializations=0,map_bias_reuses=0;
  std::uint64_t static_base_builds=0,static_source_builds=0,static_source_hits=0,static_locator_bytes=0;
  std::uint64_t rowmajor_coordinate_lookups=0,kernel_matched=0,partial_coordinates=0,fallback_map_queries=0,frozen_coordinates=0,fr_multiplications=0,fr_additions=0,cpp_allocations=0,cpp_allocated_bytes=0;
@@ -84,8 +86,8 @@ class Commitments {
 };
  bool usesBaseCoordinates(const Claim&)const;
  Fr prepareClaim(const Claim&,Authentication&,std::size_t)const;
- void prepareCategoryClaim(Claim&,Authentication&,std::size_t,const void*descriptor)const;
- void deferTrusted(Claim,const void*descriptor=nullptr);
+ void prepareCategoryClaim(Claim&,Authentication&,std::size_t,const void*descriptor,const StaticSourceMap*,const std::vector<std::uint32_t>*);
+ void deferTrusted(Claim,const void*descriptor=nullptr,const StaticSourceMap*source=nullptr,const std::vector<std::uint32_t>*indices=nullptr);
  void deferBaseMapped(const std::string&,std::size_t actual,std::size_t padded,std::function<std::size_t(std::size_t)>,const Hidden&,const std::vector<Fr>&,const void*descriptor);
  std::unique_ptr<Authentication>category_auth_;bool category_failed_=false;
  std::vector<Fr>kernel(std::size_t,const std::vector<Fr>&,const Authentication&)const;
@@ -115,7 +117,7 @@ class Commitments {
  Commitments(IO&io,const Layout&layout,Value base,Prepared*prepared,Random*rng,const std::vector<Fr>&x):Commitments(io,layout,std::move(base),prepared,rng,nullptr,nullptr,nullptr,nullptr,&x){}
  ~Commitments();
  void constrainBaseTails();
- VectorOracle view(const std::string&);
+ VectorOracle view(const std::string&,bool source_mle=false);
  void defer(Claim);
  // index is a verifier-local authoritative rule, never a prover-supplied map.
  // Category freezes its consumed result immediately, then releases the callback.

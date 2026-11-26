@@ -7,6 +7,7 @@
 #include "utils.hpp"
 #include "thread_joiner.hpp"
 #include <cybozu/sha2.hpp>
+#include <cstring>
 
 #include <algorithm>
 #include <atomic>
@@ -25,39 +26,47 @@ using std::vector;
 
 class FingerprintWriter {
 public:
-    ~FingerprintWriter() { flush(); }
     void u64(std::uint64_t value) {
-        std::uint8_t bytes[8];
-        for (unsigned i=0;i<8;++i)
-            bytes[i]=static_cast<std::uint8_t>(value>>(8*i));
-        buffer_.insert(buffer_.end(),bytes,bytes+8);
-        if (buffer_.size()>=kFlushSize) flush();
+        if (used_+8>buffer_.size()) flush();
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        std::memcpy(buffer_.data()+used_,&value,8);
+#else
+        for (unsigned i=0;i<8;++i) buffer_[used_+i]=static_cast<std::uint8_t>(value>>(8*i));
+#endif
+        used_+=8;
     }
-    void digest(const std::array<std::uint8_t,32> &value) {
-        buffer_.insert(buffer_.end(),value.begin(),value.end());
+    void digest(const std::array<std::uint8_t,32>&value) {
+        write(value.data(),value.size());
     }
-    void text(const char *value) {
-        const string text_value(value);
-        u64(text_value.size());
-        buffer_.insert(buffer_.end(),text_value.begin(),text_value.end());
+    void text(const char*value) {
+        const auto size=std::strlen(value);
+        u64(size);
+        write(value,size);
     }
     std::array<std::uint8_t,32> finish() {
         flush();
         std::array<std::uint8_t,32> result{};
         if (hash_.digest(result.data(),result.size(),nullptr,0)!=result.size())
             throw std::runtime_error("failed to finalize circuit fingerprint");
-        finished_=true;
         return result;
     }
 private:
-    static constexpr size_t kFlushSize=1ULL<<20;
     cybozu::Sha256 hash_;
-    vector<std::uint8_t> buffer_;
-    bool finished_=false;
+    std::array<std::uint8_t,65536> buffer_;
+    std::size_t used_=0;
     void flush() {
-        if (!finished_ && !buffer_.empty()) {
-            hash_.update(buffer_.data(),buffer_.size());
-            buffer_.clear();
+        if (used_) {
+            hash_.update(buffer_.data(),used_);
+            used_=0;
+        }
+    }
+    void write(const void*data,std::size_t size) {
+        auto*begin=static_cast<const std::uint8_t*>(data);
+        while(size){
+            if(used_==buffer_.size())flush();
+            const auto count=std::min(size,buffer_.size()-used_);
+            std::memcpy(buffer_.data()+used_,begin,count);
+            used_+=count;begin+=count;size-=count;
         }
     }
 };

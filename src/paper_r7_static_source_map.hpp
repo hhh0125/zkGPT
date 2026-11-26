@@ -10,10 +10,11 @@ class StaticBaseMap {
  std::size_t bytes()const{return sizeof(*this)+runs_.capacity()*sizeof(Piece)+directory_.capacity()*sizeof(std::uint32_t);}
 };
 class StaticSourceMap {
- struct Run {std::size_t begin,count;Located first;};
- std::size_t padded_;std::vector<Run>runs_;
+ public:struct Run {std::size_t begin,count;Located first;};
+ private:std::size_t padded_;std::vector<Run>runs_;
  public:StaticSourceMap(const Layout&,const View&,const StaticBaseMap&);
  Located at(std::size_t)const;
+ const std::vector<Run>&runs()const{return runs_;}
  std::size_t bytes()const{return sizeof(*this)+runs_.capacity()*sizeof(Run);}
 };
 }

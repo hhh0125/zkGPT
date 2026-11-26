@@ -156,7 +156,7 @@ void microbench(){
            <<"],\"median_seconds\":"<<samples[1]<<"}\n";
  };
  for(auto mask:{0u,unsigned(ui::K1),unsigned(ui::K3),unsigned(ui::K4)})run(mask,1);
- run(ui::K2,4);run(k_all,1);run(k_all,2);run(k_all,4);
+ run(ui::K2,4);run(k_all,1);run(k_all,2);for(const unsigned threads:{4u,8u,16u,32u})run(k_all,threads);
 }
 void unboundedIndex(){
  constexpr std::size_t width=1u<<17,logical=1u<<23;
@@ -195,4 +195,40 @@ void protocol(fs::FsIO&io,bool file){auto l=layout();cl::Prepared prepared;OSRan
  auto point=std::vector<Fr>(7,Fr(2));auto w=r1::weights(point);Fr value=0;for(std::size_t j=0;j<128;++j)value+=w[j]*Fr((j*17+j*j)%39+1);
  auto h=oneblock::exchangeHidden(io,"claim/evaluation",value,io.prover()?&rng:nullptr);std::size_t calls=0;c.deferBase("claim",128,128,[&](std::size_t j){++calls;return (j*17+j*j)%39;},h,point);need(calls==128,"protocol mapping initial scan");c.authenticateUnifiedInput(x);need(c.authenticated() && calls==128,"protocol no callbacks after freeze");Access::check(c,0,128);Access::check(c,1,16);need(std::string(Access::plan(c,0).reason)==(file?"FROZEN_ROOT_FILE":"FROZEN_ROOT_RAM"),"protocol RAM/file frozen");}
 }
-int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}if(std::string(argv[1])=="template-bench"){sharedTemplate(false,true);return 0;}sharedTemplate(false);sharedTemplate(true);compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+void directRunDifferential(){
+ auto check=[](std::size_t memory){
+  cl::mapping::Plan scalar_plan,direct_plan;
+  cl::mapping::Store scalar_store(1<<20),direct_store(1<<20);
+  cl::mapping::Builder scalar(scalar_plan,scalar_store,memory,3),direct(direct_plan,direct_store,memory,3);
+  std::size_t begin=0;
+  for(unsigned round=0;round<70;++round){
+   unsigned root=round%3;
+   const unsigned first=(round*11)%41;
+   const unsigned count=(round*7)%23+1;
+   direct.appendContiguous(begin,count,{root,first});
+   for(unsigned j=0;j<count;++j)scalar.append(begin+j,{root,first+j});
+   begin+=count+(round%2);
+   if(round%5==0){
+    direct.append(begin,{root,first});
+    scalar.append(begin,{root,first});
+    ++begin;
+   }
+  }
+  scalar.finish();direct.finish();
+  need(scalar_plan.frozen && direct_plan.frozen && scalar_plan.run_count==direct_plan.run_count,
+       "direct run scalar run count");
+  for(unsigned root=0;root<3;++root){
+   using Row=std::array<std::int64_t,5>;
+   std::vector<Row> a,b;
+   auto append=[](auto&v,const auto&r){
+    v.push_back({std::int64_t(r.begin),std::int64_t(r.count),r.first.index,r.stride,std::int64_t(r.logical_step)});
+   };
+   scalar_plan.forRoot(root,scalar_store,[&](const auto&r){append(a,r);});
+   direct_plan.forRoot(root,direct_store,[&](const auto&r){append(b,r);});
+   need(a==b,"direct run differs from scalar builder");
+  }
+ };
+ check(1<<20);
+ check(640);
+}
+int main(int argc,char**argv){try{r1::init();if(argc==2){if(std::string(argv[1])=="direct-run"){directRunDifferential();return 0;}if(std::string(argv[1])=="unbounded"){unboundedIndex();return 0;}if(std::string(argv[1])=="microbench"){microbench();return 0;}if(std::string(argv[1])=="template-bench"){sharedTemplate(false,true);return 0;}sharedTemplate(false);sharedTemplate(true);compare(false);compare(true);fast(false);fast(true);zeroStride();negative();std::cout<<"PASS frozen RAM/file, coefficients/bias/endpoint, budget/lifecycle/source guards, exact single scan\n";return 0;}need(argc==4,"prove|verify ram|file PROOF");bool p=std::string(argv[1])=="prove";fs::Binding binding{"OneblockSingleHyrax","category-frozen-mapping-test",fs::generatorIdentity(),Bytes{1,2,3}};std::unique_ptr<fs::FsIO>io;if(p)io=std::make_unique<fs::FsProverIO>(argv[3],binding);else io=std::make_unique<fs::FsVerifierIO>(argv[3],binding);protocol(*io,std::string(argv[2])=="file");io->finish();std::cout<<io->metadataJson()<<'\n';return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

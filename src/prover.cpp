@@ -3,6 +3,7 @@
 #include "prover.hpp"
 #include "memory_diagnostics.hpp"
 #include "thread_joiner.hpp"
+#include "paper_r7_native_workers.hpp"
 #include <iostream>
 #include <utils.hpp>
 #include <fstream>
@@ -651,18 +652,46 @@ quadratic_poly prover::sumcheckUpdateEach(const F &previous_random, bool idx)
     // deterministic; Stage A prioritizes witness integrity over throughput.
     if(total[idx]<(1U<<29))
     {
-        for (u32 i = 0; i < (total[idx] >> 1); ++i) 
-        {
-            u32 g0 = i << 1, g1 = i << 1 | 1;
-            if (g0 >= total_size[idx]) 
-            {
-                tmp_v[i].clear();
-                tmp_mult[i].clear();
-                continue;
+        const auto outputs=total[idx]>>1;
+        auto evaluate=[&](quadratic_poly&sum,std::size_t first,std::size_t last){
+            for(auto i=first;i<last;++i){
+                const auto g0=i*2,g1=g0+1;
+                if(g0>=total_size[idx]){
+                    tmp_v[i].clear();
+                    tmp_mult[i].clear();
+                    continue;
+                }
+                tmp_v[i]=interpolate(tmp_v[g0].eval(previous_random),tmp_v[g1].eval(previous_random));
+                tmp_mult[i]=interpolate(tmp_mult[g0].eval(previous_random),tmp_mult[g1].eval(previous_random));
+                const auto&v=tmp_v[i];
+                const auto&m=tmp_mult[i];
+                if(v.a.isZero() || v.b.isZero())sum=sum+m*v;
+                else{
+                    const Fr a=m.a*v.a,c=m.b*v.b;
+                    sum.a+=a;
+                    sum.b+=(m.a+m.b)*(v.a+v.b)-a-c;
+                    sum.c+=c;
+                }
             }
-            tmp_v[i] = interpolate(tmp_v[g0].eval(previous_random), tmp_v[g1].eval(previous_random));
-            tmp_mult[i] = interpolate(tmp_mult[g0].eval(previous_random), tmp_mult[g1].eval(previous_random));
-            ret = ret + tmp_mult[i] * tmp_v[i];
+        };
+        constexpr std::size_t first_wave=8192;
+        if(outputs<=first_wave)evaluate(ret,0,outputs);
+        else{
+            namespace worker=zkgpt::r7::oneblock::detail;
+            auto&pool=worker::nativeWorkers();
+            struct alignas(64) Partial {quadratic_poly sum;};
+            std::array<Partial,worker::NativeWorkers::capacity> partial;
+            for(auto&part:partial)part.sum.clear();
+            evaluate(ret,0,first_wave);
+            // Every wave reads at or above its exclusive output boundary.
+            // The prefix is serial because it also owns the first input pair.
+            for(std::size_t begin=first_wave;begin<outputs;begin*=2){
+                const auto end=std::min<std::size_t>(outputs,begin*2);
+                worker::nativeRanges(end-begin,pool,4096,[&](std::size_t k,std::size_t first,std::size_t last){
+                    evaluate(partial[k].sum,begin+first,begin+last);
+                });
+            }
+            for(unsigned k=0;k<pool.count();++k)ret=ret+partial[k].sum;
         }
     }
     else

@@ -75,12 +75,32 @@ class Tracked final:public IO,public EvidenceSink {
  void checkedRelation(const std::string&id)override{if(prover())return;need(expected_.count(id),("Oneblock unknown coverage evidence ID: "+id).c_str());done_.insert(id);evidence_[id]={frames_(),last_};}
  void authenticationComplete(){authenticated_=true;}
  void complete()const{need(authenticated_,"Classified authentication barrier incomplete");need(done_==expected_,("Oneblock uncovered mandatory relations: "+std::to_string(expected_.size()-done_.size())).c_str());}
- void save(bool accepted)const{if(prover() || saved_)return;std::ostringstream out;writeCoverage(out,plan_);auto raw=out.str();auto marker=raw.find("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"");need(marker!=std::string::npos,"coverage schema");raw.replace(marker,std::string("\"status\":\"DISCOVERED_NOT_CRYPTOGRAPHICALLY_VERIFIED\"").size(),std::string("\"status\":\"")+(accepted?coverageAccepted:"INCOMPLETE")+"\"");
- for(auto&id:done_){if(!accepted || !authenticated_)break;auto needle="\"id\":\""+id+"\"";auto at=raw.find(needle);need(at!=std::string::npos,"coverage ID absent");auto status=raw.find("\"status\":\"UNVERIFIED\"",at);need(status!=std::string::npos,"coverage status absent");raw.replace(status,21,"\"status\":\"VERIFIED\"");}
- raw.pop_back();raw.pop_back();raw+=",\"verified_count\":"+std::to_string(accepted && authenticated_?done_.size():0)+",\"session\":\""+session()+"\",\"evidence\":[";bool first=true;for(auto&[id,e]:evidence_){if(!first)raw+=',';first=false;raw+="{\"id\":\""+id+"\",\"through_frame\":"+std::to_string(e.first)+",\"last_checked_message\":\""+e.second+"\"}";}raw+="]}\n";output(fd("R7_ONEBLOCK_COVERAGE_FD"),raw);saved_=true;}
+ void save(bool accepted)const{
+  if(prover() || saved_)return;
+  const bool verified=accepted && authenticated_;
+  if(verified)complete();
+  std::ostringstream out;
+  writeCoverageBody(out,plan_,accepted?coverageAccepted:"INCOMPLETE",verified);
+  out<<",\"verified_count\":"<<(verified?done_.size():0)<<",\"session\":";
+  writeCoverageString(out,session());
+  out<<",\"evidence\":[";
+  bool first=true;
+  for(const auto& [id,e]:evidence_){
+   if(!first)out<<',';
+   first=false;
+   out<<"{\"id\":";
+   writeCoverageString(out,id);
+   out<<",\"through_frame\":"<<e.first<<",\"last_checked_message\":";
+   writeCoverageString(out,e.second);
+   out<<'}';
+  }
+  out<<"]}\n";
+  output(fd("R7_ONEBLOCK_COVERAGE_FD"),out.str());
+  saved_=true;
+ }
 };
 Value masterValue(R7WitnessStore&w){return [&w](std::size_t i){return i<w.baseMaster().size()?w.baseMaster()[i]:Fr(0);};}
-Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){bool stream=true;if(const auto*p=std::getenv("ZKGPT_SOURCE_MLE_STREAM")){std::string text(p);need(text=="0" || text=="1","source MLE mode");stream=text=="1";}SourceMLEMetrics m;auto y=sourceMLE(v.padded,v.value,q,stream,&m);std::cerr<<"SOURCE_MLE {\"streamed\":"<<(stream?"true":"false")<<",\"padded\":"<<v.padded<<",\"weight_peak_bytes\":"<<m.weight_peak_bytes<<",\"values_read\":"<<m.values_read<<",\"Fr_multiplications\":"<<m.multiplications<<",\"Fr_additions\":"<<m.additions<<",\"weights_wall\":"<<m.weights_wall<<",\"dot_wall\":"<<m.dot_wall<<"}\n";return y;}
+Fr evaluateOracle(const VectorOracle&v,const std::vector<Fr>&q){bool stream=true;if(const auto*p=std::getenv("ZKGPT_SOURCE_MLE_STREAM")){std::string text(p);need(text=="0" || text=="1","source MLE mode");stream=text=="1";}SourceMLEMetrics m;auto y=sourceMLE(v,q,stream,&m);std::cerr<<"SOURCE_MLE {\"streamed\":"<<(stream?"true":"false")<<",\"padded\":"<<v.padded<<",\"weight_peak_bytes\":"<<m.weight_peak_bytes<<",\"values_read\":"<<m.values_read<<",\"Fr_multiplications\":"<<m.multiplications<<",\"Fr_additions\":"<<m.additions<<",\"weights_wall\":"<<m.weights_wall<<",\"dot_wall\":"<<m.dot_wall<<"}\n";return y;}
 }
 namespace {
 using PhaseClock = std::chrono::steady_clock;

@@ -86,6 +86,21 @@ class Builder {
   if(plan_.runs.size()==plan_.runs.capacity())plan_.runs.reserve(std::min(maximum_,std::max<std::size_t>(8,plan_.runs.capacity()*2)));
   last_[k]=plan_.runs.size();plan_.runs.push_back({j,1,coordinate});++plan_.run_count;
  }
+ // Append a verified consecutive span while preserving the scalar builder's
+ // greedy grouping at its boundary with previous locations of this root.
+ void appendContiguous(std::size_t j,std::size_t count,Coordinate first){
+  while(count && fits_){
+   append(j,first);
+   if(!fits_ || --count==0)return;
+   ++j;++first.index;
+   auto&r=plan_.runs[last_[first.root]];
+   if(r.count>1 && r.logical_step==1 && r.stride==1 &&
+      j-r.begin==r.count && std::uint64_t(r.first.index)+r.count==first.index){
+    r.count+=count;
+    return;
+   }
+  }
+ }
  void finish(bool allow_empty=false){
   if(allow_empty && !appended_){plan_.reason="FROZEN_ROOT_RAM";plan_.frozen=true;return;}
   if(!fits_)return;

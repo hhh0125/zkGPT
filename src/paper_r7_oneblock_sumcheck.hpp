@@ -13,6 +13,8 @@ struct VectorOracle {
  std::function<void(IO&,const Query&,const Hidden*,Random*,std::string)>open;
  // A full, immutable window is optional. Its owner lives through all queries.
  const Fr* contiguous=nullptr;
+ struct SourceSpan {std::size_t end;const Fr* data;Fr bias;};
+ std::vector<SourceSpan> source_spans;
 };
 using VectorFactory=std::function<VectorOracle(IO&,std::string,std::size_t,std::size_t,Value)>;
 struct EvidenceSink {virtual ~EvidenceSink()=default;virtual void checkedRelation(const std::string&)=0;};

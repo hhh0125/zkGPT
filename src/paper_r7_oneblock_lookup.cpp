@@ -152,7 +152,7 @@ void hiddenMemory(IO&io,const VectorOracle&a,const VectorOracle&v,const std::vec
   perf4::Scope prepare("Native/Product01-base-leaves",role,a.padded);
   base_leaves=std::make_shared<std::vector<Fr>>(a.padded,Fr(0));
   struct alignas(64) Roots {Fr write=1,read=1;};
-  std::array<Roots,16> partial;
+  std::array<Roots,detail::NativeWorkers::capacity> partial;
   auto* leaf=base_leaves->data();
   const auto count=detail::nativeRanges(a.padded,detail::nativeWorkers(),detail::product_parallel_minimum,[&](std::size_t worker,std::size_t first,std::size_t last){
    auto& roots=partial[worker];const Fr one=1;

@@ -2,12 +2,20 @@
 #include "paper_r7_unified_workers.hpp"
 #include "thread_joiner.hpp"
 #include <algorithm>
+#include <sched.h>
 
 namespace zkgpt::r7::oneblock::detail {
 using NativeWorkers=unified::detail::Workers;
 
+inline unsigned nativeWorkerBudget(){
+ cpu_set_t affinity;
+ CPU_ZERO(&affinity);
+ const auto configured=std::min<std::size_t>(NativeWorkers::capacity,zkgpt::workerThreadCount());
+ if(sched_getaffinity(0,sizeof(affinity),&affinity)!=0)return configured;
+ return std::clamp<unsigned>(CPU_COUNT(&affinity),1,configured);
+}
 inline NativeWorkers& nativeWorkers(){
- static thread_local NativeWorkers workers(unsigned(std::min<std::size_t>(16,zkgpt::workerThreadCount())));
+ static thread_local NativeWorkers workers(nativeWorkerBudget());
  return workers;
 }
 

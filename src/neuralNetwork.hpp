@@ -76,6 +76,8 @@ public:
         witness_capacity_hint_=expected;
     }
     struct WitnessTimings {
+        struct Component {int block; i64 firstLayer,endLayer;const char*name;double seconds;};
+        std::vector<Component> components;
         double setup = 0, initialAllocation = 0, input = 0;
         double weights = 0, layerNormParameters = 0, layers = 0, finalize = 0;
     };

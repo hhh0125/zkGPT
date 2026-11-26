@@ -1,6 +1,7 @@
 #pragma once
 #include "paper_r7_streaming_master.hpp"
 #include <ostream>
+#include <string_view>
 namespace zkgpt::r7::oneblock {
 struct Obligation {std::string id,family,source;std::uint64_t domain=0,rounds=0;};
 struct Coverage {
@@ -12,4 +13,6 @@ Coverage discover(unsigned blocks=1);
 Coverage discover(const R6PublicArtifacts&,bool include_native_report=true);
 std::string identity(const Coverage&);
 void writeCoverage(std::ostream&,const Coverage&);
+void writeCoverageBody(std::ostream&,const Coverage&,std::string_view status,bool verified);
+void writeCoverageString(std::ostream&,std::string_view);
 }

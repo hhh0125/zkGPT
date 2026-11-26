@@ -3,6 +3,7 @@
 #ifndef KIND01_REFERENCE
 #include "paper_r7_product_kernels.hpp"
 #include "paper_r7_lookup_prepare.hpp"
+#include "paper_r7_source_mle.hpp"
 #endif
 #include "paper_r7_oneblock_vectors.hpp"
 #include "paper_r7_fs_io.hpp"
@@ -239,9 +240,9 @@ void lookupPrepareTest(unsigned width=32768){
  for(unsigned j=0;j<counts.size();++j)need((*final)[j]==Fr(counts[j]),"lookup indexed final");
  std::cout<<"PASS Lookup Range/Exp digit, read, final and padding at one and four workers\n";
 }
-void parallelArithmeticTest(){
+void parallelArithmeticTest(unsigned worker_count=4){
  const std::size_t n=65536;
- detail::NativeWorkers serial(1), parallel(4);
+ detail::NativeWorkers serial(1), parallel(worker_count);
  std::vector<Fr> rho(r1::log2exact(n),Fr(13));
  rho[0]=0;rho[1]=1;
  std::vector<std::vector<Fr>> data(5,std::vector<Fr>(n));
@@ -277,8 +278,36 @@ void parallelArithmeticTest(){
  }
  std::cout<<"PASS native Product tree, round coefficients and folds at one and four workers\n";
 }
+void sourceMLEDifferential(){
+ constexpr std::size_t n=1u<<18;
+ std::mt19937_64 random(20261125);
+ std::vector<Fr> a(n/4),b(n/4),point(18);
+ for(auto&x:a)x=Fr(random());
+ for(auto&x:b)x=Fr(random());
+ VectorOracle v;v.padded=n;v.actual=3*n/4;
+ v.source_spans={{n/4,a.data(),Fr(0)},{n/2,b.data(),Fr(7)},
+                 {3*n/4,nullptr,Fr(19)},{n,nullptr,Fr(0)}};
+ v.value=[&](std::size_t i)->Fr{
+  if(i<n/4)return a[i];
+  if(i<n/2)return b[i-n/4]+Fr(7);
+  return i<3*n/4?Fr(19):Fr(0);
+ };
+ for(unsigned trial=0;trial<4;++trial){
+  for(auto&x:point)x=Fr(random());
+  if(trial==1)point[0]=0;
+  if(trial==2)point[17]=1;
+  SourceMLEMetrics m;
+  const auto start=Clock::now();
+  auto actual=sourceMLE(v,point,true,&m);
+  const double direct=seconds(start);
+  const auto reference=Clock::now();
+  auto expected=sourceMLE(v,point,false);
+  std::cout<<"source_mle,"<<n<<','<<trial<<','<<direct<<','<<seconds(reference)<<','<<m.values_read<<'\n';
+  need(actual==expected && m.values_read==n/2,"Source MLE split span vs scalar");
+ }
+}
 void kernelBenchmark(std::size_t n){
- need(n>=65536 && n<=(1u<<22) && !(n&(n-1)),"kernelbench power-of-two domain bounds");
+ need(n>=4096 && n<=(1u<<22) && !(n&(n-1)),"kernelbench power-of-two domain bounds");
  std::vector<Fr> rho(r1::log2exact(n),Fr(13));
  const std::array<Fr,2> alpha{Fr(7),Fr(13)};
  const Fr challenge=137;
@@ -296,13 +325,17 @@ void kernelBenchmark(std::size_t n){
  lookup.plan.exps={{0,1,"exp",r1::ExpProfile::Unclamped}};
  const Value base=[&](std::size_t j){return Fr(j%10943);};
  std::cout<<"kernel,width,workers,trial,wall_seconds\n";
- for(unsigned workers:{1u,4u}){
+ for(unsigned workers:{4u,8u,16u,32u}){
   detail::NativeWorkers pool(workers);
   for(unsigned trial=1;trial<=3;++trial){
    const auto report=[&](const char* kernel,std::size_t w,Clock::time_point start){
     std::cout<<kernel<<','<<w<<','<<workers<<','<<trial<<','<<seconds(start)<<'\n';
    };
    auto start=Clock::now();
+   const auto standalone=detail::singleProductCoefficients(n,load,pool);
+   report("product-polynomial-single",n,start);
+   need(standalone[0].isValid(),"benchmark Product standalone output");
+   start=Clock::now();
    const auto poly=detail::batchProductCoefficients(n,load,alpha,&rho.front(),pool);
    report("product-polynomial-equality",n,start);
    need(poly==expected,"benchmark Product round differs");
@@ -439,6 +472,8 @@ int main(int argc,char**argv){try{
  if(mode=="productbench" || mode=="productverify"){need(argc==4,"productbench/productverify n proof-path");productBench(n,argv[3],mode=="productverify");return 0;}
 #ifndef KIND01_REFERENCE
  if(mode=="kernelbench"){kernelBenchmark(n);return 0;}
+ if(mode=="scaling-differential"){parallelArithmeticTest(n);return 0;}
+ if(mode=="source-mle-differential"){sourceMLEDifferential();return 0;}
 #endif
  if(mode=="rangesplit"){rangeSplitTest();return 0;}
  if(mode=="arithmetic"){arithmeticTest();

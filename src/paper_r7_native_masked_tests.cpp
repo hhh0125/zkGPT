@@ -70,7 +70,7 @@ void matrixProtocolDifferential(){
  }
 }
 void matrixArithmeticTest(bool bench){
- constexpr std::size_t n=1u<<14;
+ const std::size_t n=std::size_t(1)<<(bench?14:16);
  const std::size_t rows=bench?192:7;
  std::vector<Fr>source(n*rows),weights(rows);
  std::vector<std::uint32_t>indices(n*rows);

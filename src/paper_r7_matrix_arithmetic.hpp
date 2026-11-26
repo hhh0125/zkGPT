@@ -31,7 +31,7 @@ struct MatrixArithmetic {
   const auto start=Clock::now();
   auto&workers=nativeWorkers();
   struct alignas(64) Accumulator {std::array<Fr,3>coefficients{Fr(0),Fr(0),Fr(0)};};
-  std::array<Accumulator,16>sums;
+  std::array<Accumulator,NativeWorkers::capacity>sums;
   const auto*left=values[0].data();
   const auto*right=values[1].data();
   const auto used=nativeRanges(values[0].size()/2,workers,1024,[&](std::size_t worker,std::size_t first,std::size_t last){
@@ -83,7 +83,7 @@ struct MatrixArithmetic {
   constexpr std::size_t tile=128;
   const auto tiles=(width+tile-1)/tile;
   struct alignas(64) Counter {std::uint64_t direct=0;};
-  std::array<Counter,16>counts{};
+  std::array<Counter,NativeWorkers::capacity>counts{};
   auto&workers=nativeWorkers();
   const auto used=nativeRanges(tiles,workers,2,[&](std::size_t worker,std::size_t first,std::size_t last){
    auto&direct=counts[worker].direct;
