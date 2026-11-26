@@ -112,7 +112,12 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
    for(std::size_t first=0;first<length;){auto count=std::min<std::size_t>(length-first,2*options.tile_pairs);
     if(kernel && (options.optimization&U3) && (cached || block==1) && t<d &&
        !options.observe && first<span.stored){
-     auto available=std::min(count,span.stored-first);
+     // The fused path takes a synchronous borrow and does not use the staging
+     // tile. Dispatch a larger contiguous range to amortize worker wakeups.
+     constexpr std::size_t fused_tiles_per_dispatch=16;
+     const auto limit=parallel_products && (span.data || span.stable_windows)
+                      ? 2*options.tile_pairs*fused_tiles_per_dispatch : count;
+     auto available=std::min({limit,length-first,span.stored-first});
      InputWindow window{span.data?span.data+first:nullptr,available};
      if(!window.data && span.window){
       window=span.window(first,available);
@@ -136,6 +141,9 @@ static Round quadraticRoundStreamingImpl(std::size_t n,const std::vector<Segment
       continue;
      }
     }
+    // A window can decline a direct borrow. Keep the fallback in the
+    // existing staging allocation even if we requested a larger range.
+    count=std::min(count,2*options.tile_pairs);
     // When only 1 or 2 contractions remain, split their disjoint low-bit ranges.
     unsigned shards=(!cached && inputs && block>=(1u<<18) && count<options.threads)?options.threads/unsigned(count):1;while(shards>1 && block/shards< wp->low.size())shards/=2;
     const auto tasks=count*shards;need(tasks<=tile.size(),"OPT3D tile task bound");auto scan=Clock::now();auto scan_cpu=diagnostic?crypto::processCPU():0;

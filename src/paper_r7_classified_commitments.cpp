@@ -404,6 +404,7 @@ void Commitments::prepareStaticMappings(const std::vector<TerminalMapping>&termi
    const auto&out=results[j];
    std::cerr<<"MAPPING_PARALLEL_TEMPLATE {\"ordinal\":"<<jobs[j]
     <<",\"family\":"<<std::quoted(d.source?"view":"terminal")
+    <<",\"view_id\":"<<std::quoted(d.view_id?*d.view_id:"")
     <<",\"padded\":"<<d.padded<<",\"bytes\":"<<out.metrics.maphash_bytes
     <<",\"updates\":"<<out.metrics.maphash_updates
     <<",\"SHA_update_seconds\":"<<out.metrics.maphash_update_seconds

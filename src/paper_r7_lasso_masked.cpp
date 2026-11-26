@@ -97,23 +97,24 @@ std::array<Reduction,2> batch(IO&io,std::size_t n,const std::array<Hidden,2>&ini
  std::vector<Fr>alpha{io.coin(role+"/batch-alpha/0"),io.coin(role+"/batch-alpha/1")};
  auto aggregate=combine(io.session(),role+"/aggregate-initial",{initial[0],initial[1]},alpha);bindPublic(io,role+"/aggregate-initial",encode(aggregate.handle));
  Mask mask(io,r1::log2exact(n),aggregate,rng,role+"/masked",measurement);
- std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;std::size_t current=n;unsigned round=0;
+ std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;Fr equality_prefix=1;std::size_t current=n;unsigned round=0;
  while(current>1){
   Timer timer(measurement.seconds[4]);std::vector<Fr>coeff(4,Fr(0));
   if(io.prover()){
    perf5::Scope polynomial_time(perf5::Polynomial);
    perf5::Scope round_time(round?perf5::PolynomialLater:perf5::PolynomialFirst);
    const auto values=detail::batchProductRound(current,round,factors,folded,inputs,{alpha[0],alpha[1]},
-                                              equality_point?&(*equality_point)[round]:nullptr);
+                                              equality_point?&(*equality_point)[round]:nullptr,equality_prefix);
    std::copy(values.begin(),values.end(),coeff.begin());
   }
   auto challenge=mask.exchangeRound(io,coeff,round);
-  if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs);
+  if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs,
+                                            equality_point?&(*equality_point)[round]:nullptr,equality_prefix);
   point.push_back(challenge);current/=2;++round;
  }
  auto previous=mask.endpoint(io,point,rng);
  Timer terminal_time(measurement.seconds[6]);perf5::Scope terminal_scope(perf5::Endpoint);
- std::vector<Hidden>ends;for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));
+ std::vector<Hidden>ends;for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):k==0 && equality_point?equality_prefix:folded[k][0]):Fr(0),rng));
  std::vector<Hidden>w=ends;
  for(unsigned b=0;b<2;++b)w.push_back(exchangeHidden(io,role+"/terminal/product/"+std::to_string(b),io.prover()?ends[1+2*b].value*ends[2+2*b].value:Fr(0),rng));
  for(unsigned b=0;b<2;++b)w.push_back(exchangeHidden(io,role+"/terminal/weighted-input/"+std::to_string(b),io.prover()?ends[0].value*w[5+b].value:Fr(0),rng));

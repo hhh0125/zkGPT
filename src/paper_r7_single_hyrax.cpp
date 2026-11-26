@@ -2,6 +2,7 @@
 #include "paper_r7_streaming_master.hpp"
 #include "paper_r7_stage2_opening.hpp"
 #include "paper_r7_unified_workers.hpp"
+#include "paper_r7_native_workers.hpp"
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -331,7 +332,8 @@ void open(IO&io,const Public&p,const Query&q,const std::vector<Fr>&x,const Secre
  std::vector<Hidden>evaluations;std::size_t index=0;double preparation=0;const auto calls_before=hyrax_a3::measurement().dot_product_calls;
  mappedQueryTerms(p.plan(),q.point,[&](const QueryTerm&t){auto begin=std::chrono::steady_clock::now();auto f=fold(p,t,s);preparation+=std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count();auto name=role+"/term/"+std::to_string(index++);auto y=exchangeHidden(io,name+"/evaluation",s?r1::dot(f.witness.values,t.right):Fr(0),rng);
   if(s){f.witness.evaluation=y;}
-  stage2::ScopedIO scoped(io,name);hyrax_a3::dotProduct(scoped,f.commitment,y.handle,t.right,s?&f.witness:nullptr,rng);evaluations.push_back(y);
+  auto* workers=s && t.right.size()>=512?&detail::nativeWorkers():nullptr;
+  stage2::ScopedIO scoped(io,name);hyrax_a3::dotProduct(scoped,f.commitment,y.handle,t.right,s?&f.witness:nullptr,rng,workers);evaluations.push_back(y);
  });
  if(!p.plan().category_mode){evaluations.push_back(publicHidden(io,role+"/public-contribution",publicContribution(p.plan(),q.point,x)));}
  auto total=combine(io.session(),role+"/stitched",evaluations,std::vector<Fr>(evaluations.size(),Fr(1)));bindPublic(io,role+"/stitched",crypto::encode(total.handle));Hidden expected;if(h)expected=*h;else expected.handle=q.evaluation;

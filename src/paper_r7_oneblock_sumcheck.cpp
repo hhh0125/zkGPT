@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <array>
 namespace zkgpt::r7::oneblock {
-Hidden publicHidden(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=scalarCommit(value,Fr(0));return h;}
+Hidden publicHidden(IO&io,const std::string&role,const Fr&value){Hidden h;h.value=value;h.handle.session=io.session();h.handle.role=role;h.handle.point=publicScalarCommit(value);return h;}
 Hidden exchangeHidden(IO&io,const std::string&role,const Fr&value,Random*rng){Hidden h;
  if(io.prover()){
   need(rng,"Oneblock entropy required");
@@ -23,8 +23,7 @@ namespace {
 Hidden alias(IO&io,const Hidden&h,const std::string&role){auto out=h;out.handle.role=role;bindPublic(io,role,encode(out.handle));return out;}
 void endpoint(IO&io,const Hidden&claim,const std::vector<Hidden>&x,const Expression&e,Random*rng,const std::string&role){
  std::vector<Hidden>terms;std::vector<Fr>coeff;
- for(std::size_t j=0;j<e.terms.size();++j){auto&t=e.terms[j];auto term=publicHidden(io,role+"/term/"+std::to_string(j)+"/one",Fr(1));
-  if(!t.factors.empty())term=x[t.factors[0]];
+ for(std::size_t j=0;j<e.terms.size();++j){auto&t=e.terms[j];auto term=t.factors.empty()?publicHidden(io,role+"/term/"+std::to_string(j)+"/one",Fr(1)):x[t.factors[0]];
   for(std::size_t k=1;k<t.factors.size();++k){auto name=role+"/term/"+std::to_string(j)+"/mul/"+std::to_string(k);auto a=alias(io,term,name+"/left"),b=alias(io,x[t.factors[k]],name+"/right");auto z=exchangeHidden(io,name+"/output",io.prover()?a.value*b.value:Fr(0),rng);std::vector<Hidden>w{a,b,z};Relations r;r.role=name;r.handles={a.handle,b.handle,z.handle};r.products={{0,1,2}};sigma(io,r,io.prover()?&w:nullptr,rng);term=z;}
   terms.push_back(alias(io,term,role+"/sum-term/"+std::to_string(j)));coeff.push_back(t.coefficient);
  }
@@ -126,7 +125,7 @@ static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,co
  const std::vector<Fr>alpha{io.coin(role+"/batch-alpha/0"),io.coin(role+"/batch-alpha/1")};
  Hidden previous=combine(io.session(),role+"/aggregate-initial",{initial[0],initial[1]},alpha);
  bindPublic(io,role+"/aggregate-initial",encode(previous.handle));
- std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;
+ std::vector<std::vector<Fr>>folded(5);std::vector<Fr>point;Fr equality_prefix=1;
  auto current=n;unsigned round=0;
  while(current>1){
   std::vector<Fr>aggregate(4,Fr(0));
@@ -135,7 +134,7 @@ static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,co
    perf5::Scope t(perf5::Polynomial);
    perf5::Scope round_time(round?perf5::PolynomialLater:perf5::PolynomialFirst);
    const auto coeff=detail::batchProductRound(current,round,factors,folded,inputs,{alpha[0],alpha[1]},
-                                             equality_point?&(*equality_point)[round]:nullptr);
+                                             equality_point?&(*equality_point)[round]:nullptr,equality_prefix);
    std::copy(coeff.begin(),coeff.end(),aggregate.begin());
   }
   std::vector<Hidden>messages{previous};
@@ -150,11 +149,12 @@ static std::array<Reduction,2> batchedProductSumcheckImpl(IO&io,std::size_t n,co
    std::vector<Hidden>polynomial(messages.begin()+1,messages.end());auto label=name+"/derived";
    previous=combine(io.session(),label,polynomial,powers);bindPublic(io,label,encode(previous.handle));
   }
-  if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs);
+  if(io.prover())detail::foldBatchedProductRound(current,round,challenge,factors,folded,inputs,
+                                            equality_point?&(*equality_point)[round]:nullptr,equality_prefix);
   current/=2;++round;
  }
  perf5::Scope t(perf5::Endpoint);perf5::Scope b2_time(perf5::B2Message,b2);std::vector<Hidden>ends;
- for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):folded[k][0]):Fr(0),rng));
+ for(unsigned k=0;k<5;++k)ends.push_back(exchangeHidden(io,role+"/endpoint/"+std::to_string(k),io.prover()?(n==1?factors[k](0):k==0 && equality_point?equality_prefix:folded[k][0]):Fr(0),rng));
  // Preserve all five independent endpoint handles. Four multiplication
  // equations certify z_b=L_b*R_b and t_b=E*z_b; one explicit linear row binds
  // the final aggregate claim to alpha0*t0+alpha1*t1.

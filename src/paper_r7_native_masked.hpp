@@ -23,6 +23,7 @@ struct PhaseMeasure {
 };
 class Mask {
  unsigned variables_;std::size_t padded_=1;std::vector<Fr>coefficients_,point_;Fr blind_=0,rho_=0,claim_=0;
+ Fr evaluated_prefix_=0,remaining_sum_=0;
  G1 commitment_;std::string role_;PhaseMeasure&measure_;bool finished_=false;
  void open(IO&,const Hidden&,const std::vector<Fr>&,Random*,const std::string&);
  public:

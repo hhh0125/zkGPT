@@ -114,7 +114,7 @@ void streamingDifferential(){
   for(std::size_t root=0;root<u.size();++root)for(std::size_t j=0;j<u[root].size();++j)previous+=u[root][j]*k[root][j];
   ui::Round last;
   for(unsigned t=0;t<14;++t){
-   ui::UOptions options;options.threads=4;options.tile_pairs=4096;options.optimization=mask;
+   ui::UOptions options;options.threads=4;options.tile_pairs=2048;options.optimization=mask;
    if(!(mask&ui::U3))options.observe=[&](std::size_t root,std::size_t first,const Fr* values,std::size_t count){
     need(std::equal(values,values+count,u.at(root).begin()+first),"round U state differential");
    };
@@ -126,6 +126,8 @@ void streamingDifferential(){
    need(c[0]+c[0]+c[1]+c[2]==previous,"streaming recurrence");
    if(t==0 && (mask&ui::U2))
     need(metrics.product_workers_peak==4 && metrics.parallel_product_tiles>0,"round zero did not execute a four-worker product");
+   if(t==0 && (mask&ui::U3))
+    need(metrics.parallel_product_tiles==1,"contiguous U/K borrow should dispatch as one batch");
    if(t<2 && (mask&ui::U3))
     need(metrics.u_span_elements && metrics.k_span_elements && !metrics.k_callback_calls && metrics.fused_wall>0,"fused span path not used");
    if(t==0 && (mask&ui::U3))need(metrics.mapping_calls==original_u.back().size()+2,"callback fallback lost coordinates");

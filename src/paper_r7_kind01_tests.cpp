@@ -250,12 +250,17 @@ void parallelArithmeticTest(unsigned worker_count=4){
  for(unsigned k=1;k<5;++k)for(std::size_t j=0;j<n;++j)data[k][j]=Fr((k*61+j*117)%193);
  const std::array<Fr,2> alpha{Fr(3),Fr(14)};
  auto original=data;
+ auto suffix=data;
+ Fr equality_prefix=1;
  const auto load=[&](unsigned k,std::size_t i){return original[k][i];};
  const Expression expression{3,{{Fr(1),{0,1,2}}}};
  for(std::size_t width=n,round=0;width>1;width/=2,++round){
   auto current=[&](unsigned k,std::size_t i){return data[k][i];};
   auto optimized=detail::batchProductCoefficients(width,current,alpha,&rho[round],parallel);
   need(optimized==polynomial::equality<Fr>(width,current,alpha,rho[round],false),"parallel Equality coefficients");
+  const auto suffix_load=[&](unsigned k,std::size_t i){return suffix[k][i];};
+  need(optimized==detail::batchProductCoefficients(width,suffix_load,alpha,&rho[round],parallel,equality_prefix),
+       "factored Equality coefficients");
   need(detail::batchProductCoefficients(width,current,alpha,nullptr,parallel)==polynomial::bespoke<Fr>(width,current,alpha),"parallel ordinary cubic coefficients");
   std::vector<Value> factors;
   for(unsigned k=0;k<3;++k)factors.emplace_back([&,k](std::size_t j){return data[k][j];});
@@ -267,7 +272,13 @@ void parallelArithmeticTest(unsigned worker_count=4){
   detail::foldNativeProduct(width,challenge,next,round==0,load,parallel);
   detail::foldNativeProduct(width,challenge,data,round==0,load,serial);
   need(next==data,"parallel Product fold mismatch");
+  detail::foldNativeProduct(width,challenge,suffix,round==0,load,parallel,true);
+  const Fr lo=Fr(1)-rho[round];
+  equality_prefix*=lo+challenge*(rho[round]-lo);
+  for(std::size_t j=0;j<width/2;++j)need(equality_prefix*suffix[0][j]==data[0][j],"factored Equality folded value");
+  for(unsigned k=1;k<5;++k)need(suffix[k]==data[k],"factored Equality changed a child");
  }
+ need(equality_prefix==data[0][0] && suffix[0][0]==Fr(1),"factored Equality endpoint");
  std::array<std::vector<Fr>,2> child{original[1],original[2]};
  for(std::size_t width=n;width>1;width/=2){
   std::array<std::vector<Fr>,2> parents{std::vector<Fr>(width/2),std::vector<Fr>(width/2)};

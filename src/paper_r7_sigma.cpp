@@ -1,5 +1,7 @@
 #include "paper_r7_sigma.hpp"
 #include "paper_r7_perf6_options.hpp"
+#include "paper_r7_native_workers.hpp"
+#include "paper_r7_opt2_metrics.hpp"
 #include <set>
 namespace zkgpt::r7::crypto {
 void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
@@ -16,8 +18,46 @@ void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  std::vector<std::array<Fr,2>> masks;std::vector<std::array<Fr,5>> mulmasks;Writer first;
  if(perf6::messages){masks.reserve(io.prover()?s.handles.size():0);mulmasks.reserve(io.prover()?s.products.size():0);}
  if(io.prover()){
-  for(std::size_t i=0;i<s.handles.size();++i){masks.push_back({rng->scalar(),rng->scalar()});first.point(scalarCommit(masks.back()[0],masks.back()[1]));}
-  for(auto&p:s.products){std::array<Fr,5>b;for(auto&x:b)x=rng->scalar();mulmasks.push_back(b);first.point(scalarCommit(b[0],b[1]));first.point(scalarCommit(b[2],b[3]));auto pp=parameters(1);first.point(s.handles[p[0]].point*b[2]+pp.hiding*b[4]);}
+  const auto count=s.handles.size()+3*s.products.size();
+  if(count>=12 && !opt2MetricsEnabled() && oneblock::detail::nativeWorkerBudget()>1){
+   const auto params=parameters(1);
+   for(std::size_t i=0;i<s.handles.size();++i)masks.push_back({rng->scalar(),rng->scalar()});
+   for(std::size_t i=0;i<s.products.size();++i){
+    std::array<Fr,5> mask;
+    for(auto&scalar:mask)scalar=rng->scalar();
+    mulmasks.push_back(mask);
+   }
+   // Each worker does curve arithmetic on a disjoint output. Entropy,
+   // metrics and transcript serialization all remain on the owner thread.
+   std::array<G1,64+3*4> points;
+   auto& workers=oneblock::detail::nativeWorkers();
+   const auto jobs=std::min(4u,workers.count());
+   workers.run(jobs,[&](std::size_t job){
+    for(auto i=count*job/jobs;i<count*(job+1)/jobs;++i){
+     const Fr* scalars;
+     if(i<s.handles.size())scalars=masks[i].data();
+     else{
+      const auto relative=i-s.handles.size(),product=relative/3,term=relative%3;
+      const auto& mask=mulmasks[product];
+      if(term==2){
+       points[i]=s.handles[s.products[product][0]].point*mask[2]+params.hiding*mask[4];
+       continue;
+      }
+      scalars=mask.data()+2*term;
+     }
+     G1 bases[]{params.scalar,params.hiding};
+     G1::mulVec(points[i],bases,scalars,2);
+    }
+   },true);
+   const auto commitments=s.handles.size()+2*s.products.size();
+   auto& counters=metrics();
+   counters.msm_calls+=commitments;counters.msm_terms+=2*commitments;
+   counters.max_msm=std::max<std::uint64_t>(counters.max_msm,2);
+   for(std::size_t i=0;i<count;++i)first.point(points[i]);
+  }else{
+   for(std::size_t i=0;i<s.handles.size();++i){masks.push_back({rng->scalar(),rng->scalar()});first.point(scalarCommit(masks.back()[0],masks.back()[1]));}
+   for(auto&p:s.products){std::array<Fr,5>b;for(auto&x:b)x=rng->scalar();mulmasks.push_back(b);first.point(scalarCommit(b[0],b[1]));first.point(scalarCommit(b[2],b[3]));auto pp=parameters(1);first.point(s.handles[p[0]].point*b[2]+pp.hiding*b[4]);}
+  }
  }
  auto bytes=io.message(s.role+"/first-masks",first.b);Reader read{bytes};std::vector<G1>A;std::vector<std::array<G1,3>>M;
  if(!io.prover()){
@@ -39,9 +79,35 @@ void sigma(IO&io,const Relations&s,const std::vector<Hidden>*w,Random*rng){
  bytes=io.message(s.role+"/responses",response.b);
  if(io.prover())return;
  Reader rr{bytes};
- for(std::size_t i=0;i<s.handles.size();++i){auto x=rr.scalar(),r=rr.scalar();need(scalarCommit(x,r)==A[i]+s.handles[i].point*c,"R7 Sigma representation equation failed");}
- auto z=rr.scalar();need(parameters(1).hiding*z==B+residual*c,"R7 Sigma compressed linear relation failed");
- for(std::size_t i=0;i<s.products.size();++i){auto idx=s.products[i];std::array<Fr,5>v;for(auto&x:v)x=rr.scalar();need(M[i][0]+s.handles[idx[0]].point*c==scalarCommit(v[0],v[1]),"R7 product Sigma X equation failed");need(M[i][1]+s.handles[idx[1]].point*c==scalarCommit(v[2],v[3]),"R7 product Sigma Y equation failed");need(M[i][2]+s.handles[idx[2]].point*c==s.handles[idx[0]].point*v[2]+parameters(1).hiding*v[4],"R7 product Sigma multiplication equation failed");}
+ const auto params=parameters(1);
+ auto evaluate=[](G1 (&bases)[3],const Fr (&scalars)[3]){
+  auto& counters=metrics();
+  ++counters.msm_calls;counters.msm_terms+=3;
+  counters.max_msm=std::max<std::uint64_t>(counters.max_msm,3);
+  MSMTrace trace(3);
+  G1 out;G1::mulVec(out,bases,scalars,3);return out;
+ };
+ auto representation=[&](const G1&commitment,const G1&mask,const Fr&value,const Fr&blind){
+  G1 bases[]{params.scalar,params.hiding,commitment};
+  const Fr scalars[]{value,blind,-c};
+  return evaluate(bases,scalars)==mask;
+ };
+ for(std::size_t i=0;i<s.handles.size();++i){
+  const auto x=rr.scalar(),r=rr.scalar();
+  need(representation(s.handles[i].point,A[i],x,r),"R7 Sigma representation equation failed");
+ }
+ auto z=rr.scalar();need(params.hiding*z==B+residual*c,"R7 Sigma compressed linear relation failed");
+ for(std::size_t i=0;i<s.products.size();++i){
+  auto idx=s.products[i];std::array<Fr,5>v;for(auto&x:v)x=rr.scalar();
+  const auto&left=s.handles[idx[0]].point;
+  const auto&right=s.handles[idx[1]].point;
+  const auto&output=s.handles[idx[2]].point;
+  need(representation(left,M[i][0],v[0],v[1]),"R7 product Sigma X equation failed");
+  need(representation(right,M[i][1],v[2],v[3]),"R7 product Sigma Y equation failed");
+  G1 bases[]{left,params.hiding,output};
+  const Fr scalars[]{v[2],v[4],-c};
+  need(evaluate(bases,scalars)==M[i][2],"R7 product Sigma multiplication equation failed");
+ }
  rr.end();
 }
 }

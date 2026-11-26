@@ -18,12 +18,31 @@ std::array<DimensionStats,17>&optimizationStats(){static std::array<DimensionSta
 DimensionStats&statsFor(std::size_t n){unsigned bits=0;while(n>1){n>>=1;++bits;}return optimizationStats()[bits];}
 std::mutex&generatorMutex(){static std::mutex mutex;return mutex;}
 void dimension(std::size_t n){need(n && n<=maxDot && !(n&(n-1)),"A3 dot dimension must be power-of-two1..65536");}
+void recordMSM(std::size_t n){
+ auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);
+}
+G1 evaluateMSM(const G1*g,const Fr*x,std::size_t n){
+ // Bundled MCL uses caller-local GLV tables and leaves the inputs unchanged.
+ G1 out;G1::mulVec(out,const_cast<G1*>(g),x,n);return out;
+}
 G1 wideMSM(const G1*g,const Fr*x,std::size_t n){
  perf4::Scope phase("IPA/MSM","wideMSM",n);
- auto&m=metrics();++m.msm_calls;m.msm_terms+=n;m.max_msm=std::max<std::uint64_t>(m.max_msm,n);
- // In the bundled MCL, both GLV paths build private tables. The fallback
- // mulVecN also takes const point/scalar inputs despite mulVec's signature.
- MSMTrace trace(n);G1 out;G1::mulVec(out,const_cast<G1*>(g),x,n);return out;
+ recordMSM(n);
+ MSMTrace trace(n);return evaluateMSM(g,x,n);
+}
+G1 crossCommitment(const G1* bases,const Fr* witness,std::size_t half,
+                   const Parameters& parameters,const Fr& inner,const Fr& blind){
+ constexpr std::size_t small_half=8;
+ if(half<=small_half){
+  std::array<G1,small_half+2> points;
+  std::array<Fr,small_half+2> scalars;
+  std::copy_n(bases,half,points.data());
+  std::copy_n(witness,half,scalars.data());
+  points[half]=parameters.scalar;points[half+1]=parameters.hiding;
+  scalars[half]=inner;scalars[half+1]=blind;
+  return evaluateMSM(points.data(),scalars.data(),half+2);
+ }
+ return evaluateMSM(bases,witness,half)+parameters.scalar*inner+parameters.hiding*blind;
 }
 void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
 Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
@@ -65,10 +84,31 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
     perf4::Scope dot("IPA/inner-product","cross",width);
     for(std::size_t i=0;i<half;++i){left+=x[i]*aa[i+half];right+=x[i+half]*aa[i];}
    }
-   cross.point(wideMSM(g.data()+half,x.data(),half)+p.scalar*left+p.hiding*rl);
-   cross.point(wideMSM(g.data(),x.data()+half,half)+p.scalar*right+p.hiding*rr);
+   std::array<G1,2> points;
+   {
+    perf4::Scope phase("IPA/cross-commitments",tau.role,width);
+    const auto compute=[&](std::size_t side){
+     points[side]=side?crossCommitment(g.data(),x.data()+half,half,p,right,rr)
+                      :crossCommitment(g.data()+half,x.data(),half,p,left,rl);
+    };
+    const auto terms=half+(half<=8?2:0);
+    recordMSM(terms);recordMSM(terms);
+    // Diagnostic counters are owner-thread only. Leave the diagnostic
+    // MSM trace on this thread and parallelize the normal execution.
+    if(workers && workers->count()>1 && half>=512 && !opt2MetricsEnabled()){
+     workers->run(2,compute,true);
+    }else{
+     {MSMTrace trace(terms);compute(0);}
+     {MSMTrace trace(terms);compute(1);}
+    }
+   }
+   cross.point(points[0]);cross.point(points[1]);
   }
-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover()){folds.push_back(c);inverses.push_back(inv);}c2=c*c;i2=inv*inv;}if(!io.prover())U+=L*c2+R*i2;
+  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover()){folds.push_back(c);inverses.push_back(inv);}c2=c*c;i2=inv*inv;}if(!io.prover()){
+   perf4::Scope update("IPA/cross-verifier-update",tau.role,width);
+   G1 points[]{L,R};const Fr scalars[]{c2,i2};
+   U+=wideMSM(points,scalars,2);
+  }
   if(io.prover()){
    {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
    {perf4::Scope phase("IPA/coefficient-fold",label,half);for(std::size_t i=0;i<half;++i)aa[i]=inv*aa[i]+c*aa[i+half];}
@@ -179,6 +219,7 @@ void writeOptimizationStats(std::ostream&out){
 G1 vectorCommit(const std::vector<Fr>&x,const Fr&r){auto g=generatorView(x.size());return wideMSM(g.data(),x.data(),g.size())+parameters(1).hiding*r;}
 void dotProduct(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const DotWitness*w,Random*rng,zkgpt::Workers* workers){
  ++measurement().dot_product_calls;
+ perf4::Scope transaction(io.prover()?"A3/argument/P":"A3/argument/V",tau.role,a.size());
  dimension(a.size());need(tau.session==io.session(),"R7 HiddenScalar session/role identity mismatch");need(std::any_of(a.begin(),a.end(),[](const Fr&f){return !f.isZero();}),"A3 zero public vector unsupported: INCOMPLETE");
  Writer binding;binding.text(suite);binding.text(messageVersion);binding.text(crypto::suite);binding.text(io.session());auto parent=io.prefix();binding.raw(Bytes(parent.begin(),parent.end()));binding.number(a.size());binding.point(xi);binding.raw(encode(tau));for(auto&f:a)binding.scalar(f);
  publicBinding(io,"A3/statement",binding.b);auto g=generatorView(a.size());

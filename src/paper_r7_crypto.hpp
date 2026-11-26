@@ -33,6 +33,8 @@ Bytes encode(const Handle&);Handle decodeHandle(const Bytes&);
 void validate(const Handle&,const std::string&session,const std::string&role);
 Hidden hide(const std::string&session,const std::string&role,const Fr&,Random&);
 G1 scalarCommit(const Fr&,const Fr&);
+// Only for a scalar already public to both transcript participants.
+G1 publicScalarCommit(const Fr&);
 Hidden combine(const std::string&session,const std::string&role,const std::vector<Hidden>&,const std::vector<Fr>&);
 std::string hex(const Digest&);
 // Only a live verifier-side implementation may generate coins. No receipt import.

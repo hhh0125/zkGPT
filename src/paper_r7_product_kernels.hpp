@@ -107,7 +107,7 @@ polynomial::Cubic<Fr> singleProductCoefficients(std::size_t width,const Load& lo
 
 template<class Load>
 polynomial::Cubic<Fr> batchProductCoefficients(std::size_t width,const Load& load,const std::array<Fr,2>& alpha,
-                                               const Fr* rho,NativeWorkers& workers){
+                                               const Fr* rho,NativeWorkers& workers,const Fr& equality_prefix=Fr(1)){
  if(rho){
   const auto sums=reduceProductPairs<6>(width/2,workers,[&](auto& sum,std::size_t i){
    const Fr shared=load(0,i)+load(0,i+1);
@@ -116,10 +116,11 @@ polynomial::Cubic<Fr> batchProductCoefficients(std::size_t width,const Load& loa
     const auto child=polynomial::quadratic(load(k,i),load(k,i+1),load(k+1,i),load(k+1,i+1));
     for(unsigned j=0;j<3;++j)sum[3*b+j]+=shared*child[j];
    }
-  },12,15,12,7,product_polynomial_minimum);
+  },12,15,14,7,product_polynomial_minimum);
   const polynomial::Quadratic<Fr> left{sums[0],sums[1],sums[2]},right{sums[3],sums[4],sums[5]};
   const Fr constant=Fr(1)-*rho;
-  return polynomial::convolve(polynomial::blend(left,right,alpha),constant,*rho-constant);
+  return polynomial::convolve(polynomial::blend(left,right,alpha),
+                              equality_prefix*constant,equality_prefix*(*rho-constant));
  }
  const auto sums=reduceProductPairs<8>(width/2,workers,[&](auto& sum,std::size_t i){
   const Fr equality=load(0,i),delta=load(0,i+1)-equality;
@@ -151,7 +152,7 @@ unsigned productFoldRanges(std::size_t factors,std::size_t begin,std::size_t end
 
 template<class Load>
 void foldNativeProduct(std::size_t width,const Fr& challenge,std::vector<std::vector<Fr>>& folded,
-                       bool first,const Load& load,NativeWorkers& workers){
+                       bool first,const Load& load,NativeWorkers& workers,bool sum_first_factor=false){
  const auto next=width/2;
  const auto factors=folded.size();
  std::size_t jobs=0;
@@ -160,7 +161,9 @@ void foldNativeProduct(std::size_t width,const Fr& challenge,std::vector<std::ve
   for(auto& factor:folded)factor.resize(next);
   const auto count=productFoldRanges(factors,0,next,workers,product_first_fold_minimum,perf5::Kernel::FirstFold,
    [&](std::size_t k,std::size_t begin,std::size_t end){
-    for(auto j=begin;j<end;++j){
+    if(sum_first_factor && k==0){
+     for(auto j=begin;j<end;++j)folded[k][j]=load(k,2*j)+load(k,2*j+1);
+    }else for(auto j=begin;j<end;++j){
      const Fr x=load(k,2*j);
      folded[k][j]=x+challenge*(load(k,2*j+1)-x);
     }
@@ -169,7 +172,9 @@ void foldNativeProduct(std::size_t width,const Fr& challenge,std::vector<std::ve
  }else{
   const auto fold=[&](std::size_t k,std::size_t begin,std::size_t end){
    auto* values=folded[k].data();
-   for(auto j=begin;j<end;++j)values[j]=values[2*j]+challenge*(values[2*j+1]-values[2*j]);
+   if(sum_first_factor && k==0){
+    for(auto j=begin;j<end;++j)values[j]=values[2*j]+values[2*j+1];
+   }else for(auto j=begin;j<end;++j)values[j]=values[2*j]+challenge*(values[2*j+1]-values[2*j]);
   };
   if(productPartitions(factors*next,workers,product_later_fold_minimum)==1){
    productDispatch(factors*next,1,workers,perf5::Kernel::LaterFold,[&](std::size_t){
@@ -193,8 +198,9 @@ void foldNativeProduct(std::size_t width,const Fr& challenge,std::vector<std::ve
  }
  if(auto* metrics=perf5::context){
   metrics->parallel_fold_jobs+=jobs;
-  metrics->fold_mul+=factors*next;
-  metrics->fold_add+=2*factors*next;
+  const auto ordinary=factors-(sum_first_factor?1:0);
+  metrics->fold_mul+=ordinary*next;
+  metrics->fold_add+=(factors+ordinary)*next;
  }
 }
 
@@ -303,7 +309,8 @@ inline Fr readProductInput(const std::array<ProductInputs,2>& input,unsigned k,s
 
 inline polynomial::Cubic<Fr> batchProductRound(std::size_t width,unsigned round,
     const std::vector<Value>& factors,const std::vector<std::vector<Fr>>& folded,
-    const std::array<ProductInputs,2>* inputs,const std::array<Fr,2>& alpha,const Fr* rho){
+    const std::array<ProductInputs,2>* inputs,const std::array<Fr,2>& alpha,const Fr* rho,
+    const Fr& equality_prefix){
  if(auto* metrics=perf5::context){
   metrics->poly_mode=rho?3:0;
   metrics->a2_calls+=2;metrics->a2_pairs+=width;
@@ -313,13 +320,14 @@ inline polynomial::Cubic<Fr> batchProductRound(std::size_t width,unsigned round,
   }
  }
  auto& workers=nativeWorkers();
- if(round)return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return folded[k][i];},alpha,rho,workers);
- if(inputs)return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return readProductInput(*inputs,k,i);},alpha,rho,workers);
- return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return factors[k](i);},alpha,rho,workers);
+ if(round)return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return folded[k][i];},alpha,rho,workers,equality_prefix);
+ if(inputs)return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return readProductInput(*inputs,k,i);},alpha,rho,workers,equality_prefix);
+ return batchProductCoefficients(width,[&](unsigned k,std::size_t i){return factors[k](i);},alpha,rho,workers,equality_prefix);
 }
 
 inline void foldBatchedProductRound(std::size_t width,unsigned round,const Fr& challenge,
-    const std::vector<Value>& factors,std::vector<std::vector<Fr>>& folded,const std::array<ProductInputs,2>* inputs){
+    const std::vector<Value>& factors,std::vector<std::vector<Fr>>& folded,const std::array<ProductInputs,2>* inputs,
+    const Fr* rho,Fr& equality_prefix){
  perf5::Scope folding(perf5::Fold);
  perf5::Scope round_time(round?perf5::FoldLater:perf5::FoldFirst);
  if(!round && perf5::context){
@@ -327,6 +335,13 @@ inline void foldBatchedProductRound(std::size_t width,unsigned round,const Fr& c
   else perf5::context->fold_callbacks+=5*width;
  }
  const auto load=[&](unsigned k,std::size_t i){return inputs?readProductInput(*inputs,k,i):factors[k](i);};
- foldNativeProduct(width,challenge,folded,!round,load,nativeWorkers());
+ // The suffix factors sum to one along the folded bit. Apply its challenge
+ // factor once in the prefix, avoiding a field multiplication per coordinate.
+ foldNativeProduct(width,challenge,folded,!round,load,nativeWorkers(),rho!=nullptr);
+ if(rho){
+  const Fr low=Fr(1)-*rho;
+  equality_prefix*=low+challenge*(*rho-low);
+  if(auto* metrics=perf5::context){metrics->fold_mul+=2;metrics->fold_add+=3;}
+ }
 }
 }

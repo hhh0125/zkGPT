@@ -1,4 +1,5 @@
 #include "paper_r7_crypto.hpp"
+#include <mcl/window_method.hpp>
 #include "paper_r7_perf6_options.hpp"
 #include <sys/random.h>
 #include <cerrno>
@@ -51,6 +52,14 @@ G1 scalarCommit(const Fr&v,const Fr&r){
  const Fr scalars[]{v,r};
  auto&m=metrics();++m.msm_calls;m.msm_terms+=2;m.max_msm=std::max<std::uint64_t>(m.max_msm,2);
  MSMTrace trace(2);G1 out;G1::mulVec(out,bases,scalars,2);return out;
+}
+G1 publicScalarCommit(const Fr& value){
+ curve();
+ static const G1 base=trusted(1).scalar;
+ if(value.isOne())return base;
+ if(value.isZero()){G1 identity;identity.clear();return identity;}
+ static const mcl::fp::WindowMethod<G1> window(base,Fr::getBitSize(),4);
+ G1 out;window.mul(out,value);return out;
 }
 PCSpec PCSpec::make(const std::string&role,std::size_t actual,std::size_t padded){PCSpec s;s.role=role;s.actual=actual;s.padded=padded;unsigned d=r1::log2exact(padded);s.rows=std::size_t(1)<<(d/2);s.columns=padded/s.rows;validate(s);return s;}
 void validate(const PCSpec&s){need(s.suite==suite,"R7 wrong PC suite");need(!s.role.empty() && s.role.size()<=160 && s.layout=="column-major-i+R*j","R7 PC role/layout mismatch");need(s.actual && s.actual<=s.padded && s.padded<=maxN && !(s.padded&(s.padded-1)),"R7 PC dimensions/padding bound");auto d=r1::log2exact(s.padded);need(s.rows==(std::size_t(1)<<(d/2)) && s.columns==s.padded/s.rows,"R7 PC row/column mismatch");}
