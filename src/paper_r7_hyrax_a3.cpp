@@ -44,6 +44,19 @@ G1 crossCommitment(const G1* bases,const Fr* witness,std::size_t half,
  }
  return evaluateMSM(bases,witness,half)+parameters.scalar*inner+parameters.hiding*blind;
 }
+// Expand weights in the same high-bit order as the folded generator basis.
+void expandWeights(Fr* weights,const Fr* challenges,const Fr* inverses,unsigned rounds){
+ weights[0]=Fr(1);
+ std::size_t width=1;
+ for(unsigned round=0;round<rounds;++round){
+  for(std::size_t i=width;i-->0;){
+   const Fr prefix=weights[i];
+   weights[2*i]=prefix*inverses[round];
+   weights[2*i+1]=prefix*challenges[round];
+  }
+  width*=2;
+ }
+}
 void publicBinding(IO&io,const std::string&label,const Bytes&b){measurement().public_payload_bytes+=b.size();need(io.message(label,b)==b,"A3 suite/version/public input mismatch");}
 Bytes exchange(IO&io,const std::string&label,const Bytes&b,bool core){auto out=io.message(label,b);auto&m=measurement();(core?m.core_payload_bytes:m.guard_payload_bytes)+=out.size();return out;}
 Fr challenge(IO&io,const std::string&label){auto c=io.coin(label);need(!c.isZero(),"A3 zero verifier challenge");return c;}
@@ -54,7 +67,8 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const G1*g,std::size_t n,const
  perf4::Scope guard("IPA/guard",io.prover()?"P":"V",n);
  auto p=parameters(1);std::vector<Fr>d;Fr rv=0,dy=0,ry=0;Writer masks;
  if(io.prover()){
-  for(std::size_t i=0;i<n;++i){d.push_back(rng->scalar());}
+  d.reserve(n);
+  for(std::size_t i=0;i<n;++i)d.push_back(rng->scalar());
   rv=rng->scalar();dy=rng->scalar();ry=rng->scalar();
   masks.point(wideMSM(g,d.data(),n)+p.hiding*rv);masks.point(scalarCommit(dy,ry));
  }
@@ -65,9 +79,11 @@ void knowledge(IO&io,const G1&xi,const Handle&tau,const G1*g,std::size_t n,const
  if(io.prover()){for(std::size_t i=0;i<n;++i)response.scalar(d[i]+c*w->values[i]);response.scalar(rv+c*w->blind);response.scalar(dy+c*w->evaluation.value);response.scalar(ry+c*w->evaluation.blind);}
  b=exchange(io,"A3/knowledge/responses",response.b,false);
  if(!io.prover()){
-  Reader rr{b};std::vector<Fr>z;for(std::size_t i=0;i<n;++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
+  Reader rr{b};std::vector<Fr>z;z.reserve(n);for(std::size_t i=0;i<n;++i)z.push_back(rr.scalar());auto zv=rr.scalar(),zy=rr.scalar(),zr=rr.scalar();rr.end();
   need(wideMSM(g,z.data(),n)+p.hiding*zv==D+xi*c,"A3 vector knowledge equation failed");
-  need(scalarCommit(zy,zr)==B+tau.point*c,"A3 scalar knowledge equation failed");
+  G1 points[]{p.scalar,p.hiding,tau.point};
+  const Fr scalars[]{zy,zr,-c};
+  need(wideMSM(points,scalars,3)==B,"A3 scalar knowledge equation failed");
  }
 }
 // Literal Appendix A.3 Figures7–8. Public API always establishes knowledge first.
@@ -76,7 +92,15 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
  const auto p=parameters(1);G1 U;if(!io.prover())U=xi+tau.point;std::vector<G1>g;std::vector<Fr>aa,x;Fr y=0,blind=0;
  if(io.prover()){perf4::Scope copy("IPA/input-copy","P",a.size(),a.size()*(sizeof(G1)+2*sizeof(Fr)));g.assign(bases,bases+a.size());aa=a;x=w->values;}
  if(io.prover()){{perf4::Scope dot("IPA/inner-product","initial",a.size());y=r1::dot(x,a);}blind=w->blind+w->evaluation.blind;}
- std::vector<Fr>folds,inverses;std::size_t width=a.size();unsigned round=0;
+ // The supported dimension has at most 16 IPA rounds. The terminal
+ // equation adds U0, beta, the scalar base, the hiding base and ghat.
+ constexpr std::size_t max_rounds=16;
+ constexpr std::size_t terminal_terms=5;
+ std::array<Fr,max_rounds> folds,inverses;
+ std::array<G1,2*max_rounds+terminal_terms> cross_points;
+ std::array<Fr,2*max_rounds+terminal_terms> cross_scalars;
+ std::size_t cross_count=0;
+ std::size_t width=a.size();unsigned round=0;
  while(width>1){auto half=width/2;Writer cross;Fr rl=0,rr=0,left=0,right=0;
   if(io.prover()){
    rl=rng->scalar();rr=rng->scalar();
@@ -104,10 +128,10 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
    }
    cross.point(points[0]);cross.point(points[1]);
   }
-  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover()){folds.push_back(c);inverses.push_back(inv);}c2=c*c;i2=inv*inv;}if(!io.prover()){
-   perf4::Scope update("IPA/cross-verifier-update",tau.role,width);
-   G1 points[]{L,R};const Fr scalars[]{c2,i2};
-   U+=wideMSM(points,scalars,2);
+  const auto label="A3/reduce/"+std::to_string(round);auto b=exchange(io,label+"/cross",cross.b,true);G1 L,R;if(!io.prover()){Reader lr{b};L=lr.point();R=lr.point();lr.end();}Fr c,inv,c2,i2;{perf4::Scope powers("IPA/challenge-inverse",label,width);c=challenge(io,label+"/c");Fr::inv(inv,c);if(!io.prover()){folds[round]=c;inverses[round]=inv;}c2=c*c;i2=inv*inv;}if(!io.prover()){
+   perf4::Scope update("IPA/cross-verifier-record",tau.role,width);
+   cross_points[cross_count]=L;cross_scalars[cross_count++]=c2;
+   cross_points[cross_count]=R;cross_scalars[cross_count++]=i2;
   }
   if(io.prover()){
    {perf4::Scope phase("IPA/witness-fold",label,half);for(std::size_t i=0;i<half;++i)x[i]=c*x[i]+inv*x[i+half];}
@@ -123,7 +147,8 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
   // Independent verifier: expand the high-bit product weights and use a
   // single MSM over the original bases.
   auto start=Clock::now();
-  auto weights=verifierWeights(folds,inverses);
+  std::vector<Fr> weights(a.size());
+  expandWeights(weights.data(),folds.data(),inverses.data(),round);
   const auto weight_seconds=seconds(start);
   start=Clock::now();
   ghat=wideMSM(bases,weights.data(),a.size());ahat=r1::dot(a,weights);
@@ -135,27 +160,39 @@ void prooflog(IO&io,const G1&xi,const Handle&tau,const std::vector<Fr>&a,const G
  }
  need(!ahat.isZero(),"A3 zero final coefficient: INCOMPLETE degenerate public vector/challenges");
  Writer masks;Fr d=0,rd=0,rb=0;
- if(io.prover()){d=rng->scalar();rd=rng->scalar();rb=rng->scalar();masks.point(ghat*d+p.hiding*rd);masks.point(p.scalar*d+p.hiding*rb);}
+ if(io.prover()){
+  perf4::Scope terminal("IPA/terminal-commitments",tau.role,a.size());
+  d=rng->scalar();rd=rng->scalar();rb=rng->scalar();
+  G1 delta_bases[]{ghat,p.hiding};
+  const Fr delta_scalars[]{d,rd};
+  masks.point(wideMSM(delta_bases,delta_scalars,2));
+  masks.point(scalarCommit(d,rb));
+ }
  auto b=exchange(io,"A3/final/delta-beta",masks.b,true);G1 delta,beta;if(!io.prover()){Reader mr{b};delta=mr.point();beta=mr.point();mr.end();}auto c=challenge(io,"A3/final/c");Writer response;
  if(io.prover()){response.scalar(d+c*y);response.scalar(ahat*(c*blind+rb)+rd);}
  b=exchange(io,"A3/final/z1-z2",response.b,true);
- if(!io.prover()){Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();need((U*c+beta)*ahat+delta==(ghat+p.scalar*ahat)*z1+p.hiding*z2,"A3 Schnorr equation failed");}
+ if(!io.prover()){
+  Reader zr{b};auto z1=zr.scalar(),z2=zr.scalar();zr.end();
+  perf4::Scope terminal("IPA/terminal-check",tau.role,a.size());
+  // U is still xi + tau. Its deferred terms enter this one terminal
+  // equation, after both independent knowledge equations already passed.
+  const auto multiplier=c*ahat;
+  for(std::size_t i=0;i<cross_count;++i)cross_scalars[i]*=multiplier;
+  auto append=[&](const G1&point,const Fr&scalar){
+   cross_points[cross_count]=point;cross_scalars[cross_count++]=scalar;
+  };
+  append(U,multiplier);append(beta,ahat);
+  append(p.scalar,-(z1*ahat));append(p.hiding,-z2);
+  append(ghat,-z1);
+  need(wideMSM(cross_points.data(),cross_scalars.data(),cross_count)==-delta,"A3 Schnorr equation failed");
+ }
 }
 }
 Measurement& measurement(){static Measurement m;return m;}
 std::vector<Fr> verifierWeights(const std::vector<Fr>&challenges,const std::vector<Fr>&inverses){
  need(challenges.size()==inverses.size() && challenges.size()<=16,"A3 weight challenge dimensions");
  std::vector<Fr>weights(std::size_t(1)<<challenges.size());
- weights[0]=Fr(1);
- std::size_t width=1;
- for(std::size_t k=0;k<challenges.size();++k){
-  for(std::size_t i=width;i-- >0;){
-   const Fr prefix=weights[i];
-   weights[2*i]=prefix*inverses[k];
-   weights[2*i+1]=prefix*challenges[k];
-  }
-  width*=2;
- }
+ expandWeights(weights.data(),challenges.data(),inverses.data(),challenges.size());
  return weights;
 }
 GeneratorView generatorView(std::size_t n){

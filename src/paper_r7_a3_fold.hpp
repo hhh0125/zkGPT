@@ -69,7 +69,7 @@ inline void foldGenerators(crypto::G1* points, std::size_t half,
                            zkgpt::Workers* workers){
  const crypto::Fr scalars[2]{inverse,challenge};
  std::optional<PreparedPublicScalars> prepared;
- if(half>=512)prepared.emplace(scalars);
+ if(half>=512 || (half>=8 && half<=64))prepared.emplace(scalars);
  const auto fold=[&](std::size_t begin,std::size_t end){
   if(prepared){
    for(auto i=begin;i<end;i+=PreparedPublicScalars::batch_size)
